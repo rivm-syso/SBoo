@@ -147,7 +147,7 @@ ClassicNanoProcess <- R6::R6Class(
     
     NeedVars = function() {NULL}, #overwrite!
     
-    LoadKaas = function(k.loc=system.file("testdata","20190117 SimpleBox4.01-nano rev 21aug.xlsx",package="sboo"),
+    LoadKaas = function(k.loc=system.file("testdata","20190117 SimpleBox4.01-nano rev 21aug.xlsx",package="SBoo"),
                         Xcols=c(7,12), sheets=c("input","regional","continental","global")) {
       
       cells <- tidyxl::xlsx_cells(path = k.loc, check_filetype = T, include_blank_cells = F)

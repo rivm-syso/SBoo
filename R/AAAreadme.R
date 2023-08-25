@@ -10,7 +10,7 @@
 #  o_*.R files : functions related to the modules, but not (part of) a class
 #  s_*.R files : functions defining a solver
 #  w_*.R files : functions defining a flow
-#  fGeneralR   : file with General functions for sboo
+#  fGeneralR   : file with General functions for SBoo
 #  f_*.R       : files with General chemical/physical functions
 #  AAAreadme.R : this file
 
