@@ -1,0 +1,154 @@
+#' @import R6
+#' @export
+VariableModule <-
+  R6::R6Class(
+    "VariableModule",
+    inherit = CalcGraphModule,
+    public = list(
+      execute = function(debugAt = NULL) {
+        private$Execute(debugAt)
+      },
+      
+      initialize = function(TheCore, exeFunction, AggrBy, AggrFun){
+        super$initialize(TheCore, exeFunction)
+        private$aggrBy <- AggrBy
+        private$aggrFUN <- AggrFun
+      }
+    ),
+    active = list(
+      aggr.by =  function(value) {
+        if (missing(value)) {
+          private$aggrBy
+        } else {
+          stop("`$aggr.by` is set at initialize()", call. = FALSE)
+        }
+      },
+      aggr.FUN = function(value) {
+          if (missing(value)) {
+            private$aggrFUN
+          } else {
+            stop("`$aggr.FUN` is set at initialize()", call. = FALSE)
+          }
+        }
+    ),
+    
+    private = list(
+      aggrBy = NA,
+      aggrFUN = NA,
+      Execute = function(debugAt = NULL){ #debug can be list of (3D)names with values
+        Fpars <- formalArgs(self$exeFunction)
+        Fpars <- Fpars[Fpars!="..."] # leave out the obligatory?x param ...
+
+        # Variable defining functions can have all. as pre.. indicating the need for the whole table
+        all = as.logical(startsWith(unlist(Fpars), "all."))
+        Fpars[all] <- substring(Fpars[all],5)
+        
+        #fetch input tables
+        AllInput <- lapply(Fpars, private$MyCore$fetchData)
+        #the constants separate
+        InputIsDataFrame <- sapply(AllInput, function(x){
+          "data.frame" %in% class(x)
+        })
+        AllConstants <- AllInput[!InputIsDataFrame]
+        names(AllConstants) <- Fpars[!InputIsDataFrame]
+        
+        #and the all. type separate
+        if (any(all)) {
+          all.type <- AllInput[all]
+          names(all.type) <- paste("all", Fpars[all], sep = ".")
+        } else {
+          all.type <- list() #it should exist
+        }
+        
+        #the remainder, i.e. "normal" inputs
+        AllInput <- AllInput[InputIsDataFrame & !all]
+        
+        #make dimension-scaffold
+          #which dimensions?
+        dims <- unique( unlist( sapply(AllInput, function(x){
+          The3D[The3D %in% names(x)]
+        })))
+        To.3D <- paste("To.", The3D, sep = "")
+        To.dims <- unique( unlist( sapply(AllInput, function(x){
+          To.3D[To.3D %in% names(x)]
+        })))
+        if (length(To.dims) > 0 ) {
+          stop ("Not possible to use 6 dims for a variable; process/flux only") #scaffold would be 2 big
+        }
+        stopifnot(length(dims) > 0)
+        
+        scaffold <- data.frame(unique(private$MyCore$states$asDataFrame[,dims,drop = F]))
+
+        #merge data frames; expand2scaffold (expand to all permutations) is not a parameter (yet)
+        expand2scaffold <- T
+        if(expand2scaffold) {
+          mergeScaffold <- function(x,y) {merge(x,y,all.x = T)}
+          CalcTable <- Reduce(mergeScaffold, c(list(scaffold),AllInput))
+        } else {
+          CalcTable <- Reduce(merge, c(list(scaffold),AllInput))
+          CalcTable <- CalcTable[complete.cases(CalcTable),]
+        }
+        
+        DimColumns <- names(CalcTable) %in% The3D
+        DimTable <- CalcTable[,names(CalcTable)[DimColumns],drop = F]
+        
+        #names(DimTable) <- names(CalcTable)[DimColumns] #lost if 1 dimension only, pffff
+        CalcTable <- CalcTable[,names(CalcTable)[!DimColumns],drop = F]
+        #Call function for each row
+        NewData <- lapply(1:nrow(CalcTable), function(i) {
+          #fetch is the "hook" for the function to fetch data from DL
+          ParsList <- as.list(c(CalcTable[i,,drop = F], 
+                                AllConstants, 
+                                all.type   #,
+                                           # DimTable[i,,drop = F], 
+                                           # fetch = private$MyCore$fetchData
+                                ))
+          #needs debugging?
+          if (!is.null(debugAt)){
+            #test if names of debugAT are in the ParsList
+            stopifnot(all(names(debugAt) %in% names(ParsList)))
+            ToDebug <- T
+            if (length(debugAt) > 0){
+              for (j in 1:length(debugAt)){
+                if (ParsList[[names(debugAt)[j]]] != debugAt[j]){
+                  ToDebug <- F
+                  break
+                }
+              }
+            }
+            if (ToDebug) debugonce(self$exeFunction)
+          }
+          do.call(self$exeFunction, ParsList)
+        })
+        
+        CatchEmpty <- sapply(NewData, length) == 0
+        ResultIsNA <- sapply(NewData, function(x) {
+          is.na(x) | is.null(x)
+        }) 
+        CatchEmpty[!CatchEmpty] <- unlist(ResultIsNA)
+
+        #remove the rows with NA results
+        DimTable <- DimTable[!CatchEmpty,,drop=F]
+        DimTable[[self$myName]] <-  unlist(NewData[!CatchEmpty])
+        
+        if (!is.na(private$aggrBy)) {
+          #remove the aggrBy Dims 
+          KeepNames <- private$aggrBy
+          KeepNames <- KeepNames[KeepNames %in% names(DimTable)]
+          
+          if (is.na(private$aggrFUN)) {
+            FUN <- sum
+          } else {
+            FUN <- match.fun(private$aggrFUN)
+          }
+          DimTable <- aggregate(DimTable[,self$myName], by = DimTable[,unlist(KeepNames),drop = F],
+                               FUN = FUN)
+          #put correct names
+          names(DimTable)[names(DimTable) == "x"] <- private$MyName
+        }  
+        
+        return(DimTable)
+
+      }
+    )
+  )

@@ -1,0 +1,277 @@
+#' @title CalcGraphModule
+#' @description Mother of all Modules where a defining functions will be called
+#' @import R6
+#' @export
+CalcGraphModule <-
+  R6::R6Class(
+    "CalcGraphModule",
+    public = list(
+      #' @description init
+      #' @param TheCore the SBcore, parent object of self
+      #' @param exeFunction defining function, usually the name of, as character, 
+      #' for identification (a function does not know its own name)
+      #' @param ... other parameters for various uses, end up in private$MoreParams
+      initialize = function(TheCore, exeFunction, ...) {      
+        try(private$Function <- get(exeFunction),silent = T)
+        if (is.null(private$Function)) {
+          try(private$Function <- private[[exeFunction]],silent = T) }
+        if (is.null(private$Function)) { #still?
+          stop("`exeFunction` is unknown", call. = FALSE)
+        }
+        private$MyName <- exeFunction
+        private$MyCore <- TheCore
+        private$MoreParams <- list(...)
+      }
+    ),
+    active = list(
+      #' @field myName the name of the defining function AND used to identify self
+      myName = function(value) {
+        if (missing(value)) {
+          private$MyName
+        } else {
+          stop("`$MyName` is set at initialize()", call. = FALSE)
+        }
+      },
+      #' @field exeFunction r.o. property: the actual function that will be called
+      exeFunction = function(value) {
+        if (missing(value)) {
+          private$Function
+        } else {
+          stop("`$exeFunction` is set at initialize()", call. = FALSE)
+        }
+      },
+      #' @field myCore r.o. property, see parameter TheCore at initialize
+      myCore = function(value) {
+        if (missing(value)) {
+          private$MyCore
+        } else {
+          stop("`$myCore` is set at initialize()", call. = FALSE)
+        }
+      },
+      #' @field needVars parameter names of exefunction; used for the calculation graph
+      needVars = function(value) {
+        if (missing(value)) {
+          if (is.null(private$NeedVars)) {
+            private$NeedVars <- private$initNeedVars()
+          } 
+          private$NeedVars
+        } else {
+          private$NeedVars <- value
+        }
+      },
+      #' @field FromAndTo used for processes and flows; from which state(box) to what other state
+      FromAndTo = function(value) {
+        if (missing(value)) {
+          stop("Property FromAndTo must be overruled")
+        } else {
+          stop("FromAndTo is a property")
+        }
+      }
+    ),
+    
+    private = list(
+      
+      MyCore = NULL,
+      MyName = NULL,
+      Function = NULL,
+      MoreParams = NULL,
+      NeedVars = NULL,
+
+      Execute = function(debugAt = NULL){ #debug can be list of (3D)names with values
+        #All transfers from an to states for which the exefunction is called
+        AllIn <- self$FromAndTo
+        if (nrow(AllIn) == 0) {
+          stop(paste("No transfers found for", private$MyName))
+        }
+        #only the dimensions, for future use
+        DimsIn <- AllIn
+        
+        # prepare which parameters(variables) are needed for the process function and their properties
+        Fpars <- formalArgs(private$Function)
+        #stopifnot("..." %in% Fpars)
+        Fpars <- Fpars[Fpars!="..."] #not needed for Fpars
+        if (!is.null(self$Withflow) && !is.na(self$WithFlow)){ #special case of an advection process
+          #the body of the exeFunction is actually using flow from Flows
+          Fpars <- Fpars[Fpars!="flow"]
+        }
+        
+        #Cnts <- sapply(Fpars, length)
+        
+        Fpars <- data.frame(
+          FullName = unlist(Fpars),
+          from = as.logical(startsWith(unlist(Fpars), "from.")),
+          to = as.logical(startsWith(unlist(Fpars), "to.")),
+          all = as.logical(startsWith(unlist(Fpars), "all.")),
+          stringsAsFactors = F
+        )
+        Fpars$AttrName <- case_when( #strip the to. from. all. if present
+          Fpars$from ~ substring(Fpars$FullName,6),
+          Fpars$to ~ substring(Fpars$FullName,4),
+          Fpars$all ~ substring(Fpars$FullName,5),
+          T ~ Fpars$FullName)
+        # deal with .all separately:
+        all.tables <- list() #can remain empty => no lapply but for loop
+        for (allParRow in which(Fpars$all)) {
+          all.tables[[Fpars$FullName[allParRow]]] <- private$MyCore$fetchData(Fpars$AttrName[allParRow])
+        }
+        #continue with all other Fpars
+        Fpars <- Fpars[!Fpars$all,]
+        # get table name with attribute; each line separate, 
+        # because from. and to. can have identical AttrName
+        MetaData <- private$MyCore$metaData()
+        Fpars$Tables <- sapply(Fpars$AttrName, function(x){
+          MetaData$Tablenames[MetaData$AttributeNames == x]
+        })
+        #get the flows from the Flows table
+        flows <- private$MyCore$fetchData("Flows")
+        FlowNames <- private$withFlow
+        if ((!is.na(FlowNames)) && length(FlowNames) > 0) {
+          flowTables <- lapply(FlowNames, function(aFlow){
+            Aflowtable = private$MyCore$fetchData(aFlow)
+            names(Aflowtable)[names(Aflowtable) == "from.ScaleName"] <- "fromScaleName"
+            names(Aflowtable)[names(Aflowtable) == "to.ScaleName"] <- "toScaleName"
+            names(Aflowtable)[names(Aflowtable) == "from.SubCompart"] <- "fromSubCompart"
+            names(Aflowtable)[names(Aflowtable) == "to.SubCompart"] <- "toSubCompart"
+            Aflowtable
+          })
+          flowTable <- do.call(rbind, flowTables)
+          # future precaution; can there be multiple flows with identical from-to states?
+          Doubleflow <- aggregate(FlowName ~ fromScale + fromSubCompart + toScale + toSubCompart, data = flowTable, FUN = length)
+          if (any(Doubleflow$FlowName > 1)){
+            browser()
+          }
+          flowTable$FlowName <- NULL
+          # flowTables are limiting the dimensions, for processes: expanding to species!
+          AllIn <- merge(AllIn, flowTable) #
+          if (nrow(AllIn) == 0) {
+              stop(paste("No more inputs in", self$myName, "after merge with flows"))
+          }
+          #no longer needed in Fpars
+          Fpars <- Fpars[Fpars$AttrName != "flow",]
+        }
+
+        #quite an exception, but what to do if fpars is empty? skip those parameters!
+        if (nrow(Fpars) > 0) {
+          MultTable <- sapply(Fpars$Tables, length)
+          if (!all(MultTable > 0)) {
+            ErrorRow <- which(MultTable != 1)
+            #browser()
+            stop(paste("error: variable not found in tables;", Fpars$FullName[ErrorRow], ":" ,Fpars$Tables[ErrorRow]))
+          }
+          
+          # Which of the dimensions are key-field for the parameters; excluding the "all." tables
+          Dims <- as.data.frame(t(sapply(Fpars$Tables, function(x){
+            The3D %in% MetaData$AttributeNames[MetaData$Tablenames == x]
+          })))
+          names(Dims) <- The3D
+          
+          Fpars <- cbind(Fpars, Dims)
+          Fpars$Scale <- ifelse(Fpars$Scale==T,
+                                ifelse(Fpars$to, "toScale", "fromScale"),
+                                NA)
+          Fpars$SubCompart <- ifelse(Fpars$SubCompart==T,
+                                     ifelse(Fpars$to, "toSubCompart", "fromSubCompart"),
+                                     NA)
+          #Species are included for processes; NOT for flows; prevent permutations?
+          if (!"FlowModule" %in% class(self)) {
+            Fpars$Species <- ifelse(Fpars$Species==T,
+                                    ifelse(Fpars$to, "toSpecies", "fromSpecies"),
+                                    NA)
+          }
+          if (nrow(Fpars) == 0) { 
+            browser() #should go out?
+            stop(paste("no data for ", private$MyName))
+          }
+
+          # fetch the data
+          for (i in 1:nrow(Fpars)) {
+            TheDataColumn <- private$MyCore$fetchData(Fpars$AttrName[i]) 
+            if (class(TheDataColumn) == "numeric" && length(TheDataColumn) == 1) {#as Global (single number)
+              #browser()
+              AllIn[,Fpars$AttrName[i]] <- TheDataColumn
+            } else {
+              #rename column to FullName, also if default from. was used
+              names(TheDataColumn)[names(TheDataColumn) == Fpars$AttrName[i]] <- Fpars$FullName[i]
+              # merge, handling the to. and/or from. naming
+              ByX <- Fpars[i, names(TheDataColumn)[names(TheDataColumn)!=Fpars$FullName[i]]]
+              ByX <- ByX[!is.na(ByX)]
+              ByY <- The3D[The3D %in% names(TheDataColumn)]
+              names(ByY) <- ByX
+              AllIn <- dplyr::full_join(AllIn, TheDataColumn, by = ByY)#, by.x = ByX, by.y = ByY) 
+              if (anyNA(AllIn$process)) {
+                warning(paste("input data ignored; not all ", Fpars$FullName[i], "in FromDataAndTo"))
+                AllIn <- AllIn[!is.na(AllIn$process),]
+              }
+            }
+          }
+        }
+        
+
+        #The columns from AllIn are not used in the exefunction, will be removed; stored in DimsIn:
+        ColumnsToKeep <- names(AllIn)[!names(AllIn) %in% names(DimsIn)]
+        ColumnsForDims <- names(AllIn)[names(AllIn) %in% names(DimsIn)]
+        #redo DimsIn, because tidy reorders !
+        DimsIn <- AllIn[,ColumnsForDims, drop = FALSE]
+        AllIn <- AllIn[,ColumnsToKeep, drop = FALSE]
+
+        if (nrow(AllIn) == 0){  #what's going on??
+          
+        }
+        #Call function for each row; debug-mode if indicated by debugAt
+        res <- lapply(1:nrow(AllIn), function(i) {
+          #list of regular parameters, i.e. either to. or from. type
+          vCalc <- lapply(AllIn, function (x){ x[i] })
+          if (!is.null(debugAt)){
+            ToDebug <- T
+            if (length(debugAt) > 0){
+              for (j in 1:length(debugAt)){
+                if (!names(debugAt)[[j]] %in% names(vCalc)){
+                  stop(paste(names(debugAt)[[j]], "not in", names(vCalc)))
+                }
+                if (vCalc[[names(debugAt)[[j]]]] != debugAt[[j]]){
+                  ToDebug <- F
+                  break
+                }
+              }
+            }
+            if (ToDebug) debugonce(self$exeFunction)
+          }
+          do.call(self$exeFunction, c(vCalc, all.tables))
+        })
+        #check for anomalies
+        resLength <- sapply(res, length)
+        if(any(resLength != 1)) {
+          browser()
+          stop(paste ("error in row(s)", which(resLength != 1, arr.ind = T)), "check in AllIn")
+        }
+        
+        return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = unlist(res)))
+        
+      },
+      
+      initNeedVars = function(){
+        p.args <- formalArgs(private$Function)
+        #cut from. and to.
+        Puntfrom <- as.logical(startsWith(unlist(p.args), "from."))
+        Puntto <- as.logical(startsWith(unlist(p.args), "to."))
+        Puntall <- as.logical(startsWith(unlist(p.args), "all."))
+        p.args <- case_when(
+          Puntfrom ~ substring(p.args,6),
+          Puntto ~ substring(p.args,4),
+          Puntall ~ substring(p.args,5),
+          T ~ p.args
+        )
+        #exclude the ... -> always used for Dimensions
+        excld <- p.args == "..."
+        #special for those from the Mlike excel base to put them in the nodelist for the DAG
+        #ToDo elswhere ?
+        #MetaData <- private$MyCore$metaData()
+        #InSBdata <- sapply(p.args, function(x){
+        #  x %in% MetaData$AttributeNames
+        #})
+        #p.args[!InSBdata]
+        p.args[!excld]
+      }
+      
+    )
+  )
