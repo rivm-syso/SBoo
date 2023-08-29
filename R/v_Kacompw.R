@@ -1,12 +1,12 @@
 #'@title Dimensionless air/water PARTITION COEFFICIENT of molecular species specific to air compartment (scale)
-#'@name Kacompw air water partitioning coefficient
+#'@name Kacompw
 #'@description assess the Kaw if it's not given, if Pvap25 is NA or too large, MaxPvap is used
-#'@param Pvap25 vapour pressure of original species at 25°C [Pa]
-#'@param MaxPvap maximum vapour pressure of original species at 25°C [Pa]
+#'@param Pvap25 vapour pressure of original species at 25 C [Pa]
+#'@param MaxPvap maximum vapour pressure of original species at 25 C [Pa]
 #'@param ChemClass see QSAR table
-#'@param Sol25 water solubility of original species at 25°C [mol·m-3]
+#'@param Sol25 water solubility of original species at 25 C [mol.m-3]
 #'@param H0sol
-#'@param T25 const (25°C ==) 298 K
+#'@param T25 const (25 C ==) 298 K
 #'@param Tm melting temp
 #'@return Kacompw
 #'@export

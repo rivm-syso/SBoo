@@ -1,5 +1,5 @@
 #' @title Heteroagglomeration with aerosols
-#' @name k.HeteroAgglomeration.a
+#' @name k_HeteroAgglomeration.a
 #' @description Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with large (>0.45 um) natural particles
 #' @param to.alpha Attachment Efficiency of ENPs with other particulates [-]
 #' @param NumConc_Otherparticle Mass concentration of other particulates [kg.m-3]
@@ -13,7 +13,7 @@
 
 #' @param Temp Temperature of compartment [K]
 #' @param viscosity Dyanic viscosity of fluid matrix []
-#' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
+#' @return k_HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 #' @export
 #'
 k_HeteroAgglomeration.a <- function(rad_species, RadOther, rho_species, RhoOther, Temp,

@@ -1,18 +1,16 @@
 #'@title Adsorption of chemical to across an interface
 #'@name k_Adsorption
-#'@description
-#'The adsorption rate constant (k_Adsorption) is calculated based on the ... See 2015-0161 report.
-#'
-#'@param FRingas
-#'@param FRinw 
-#'@param MTC_2sd 
-#'@param MTC_2w
-#'@param MTC_2a
-#'@param MTC_2s
-#'@param FRorig
-#'@param Kacompw
-#'@param VertDistance
-#'@param to.landFRAC
+#'@description The adsorption rate constant (k_Adsorption) is calculated based on the ... See 2015-0161 report.
+#'@param FRingas see FRingas()
+#'@param FRinw see FRinw()
+#'@param MTC_2sd SBvariable, see MTC_2sd()
+#'@param MTC_2w SBvariable
+#'@param MTC_2a SBvariable
+#'@param MTC_2s SBvariable
+#'@param FRorig SBvariable
+#'@param Kacompw SBvariable
+#'@param VertDistance data
+#'@param to.landFRAC data
 #'@param Matrix # can use paraminherit to use description from another function! No need to copy paste same descriptions!
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export

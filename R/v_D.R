@@ -5,7 +5,6 @@
 #'@param FRorig 
 #'@param pKa
 #'@param Kow
-#'@return 
 #'@export
 D <- function(FRorig, pKa, Kow, ChemClass){
   

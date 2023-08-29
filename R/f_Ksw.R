@@ -1,5 +1,5 @@
-#'@title Ksw
-#'@name soil water partitioning coefficient
+#'@title soil water partitioning coefficient
+#'@name f_Ksw
 #'@description assess the Ksw if it's not given
 #'@param ChemClass Class of chemical, see
 #'@param Kow octanol water partitioning coefficient

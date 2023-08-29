@@ -12,9 +12,9 @@
 #' @param Temp Temperature of compartment [K]
 #' @param viscosity Dyanic viscosity of fluid matrix []
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
-#' @seealso \code{\link{fBrown}}, \code{\link{fInter}} and \code{\link{fGrav}}
+# #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
-k.HeteroAgglomeration.wsd <- function(to.alpha,
+k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       MasConc_Otherparticle,
                                       Shear,
                                       from.radius,

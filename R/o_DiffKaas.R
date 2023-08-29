@@ -7,8 +7,8 @@
 # 
 #' @name DiffKaas
 #' @description extra return a diff of two sets of k's
-#' @param ThisKaas
-#' @param OtherKaas 
+#' @param ThisKaas data.frame with k values from and to boxes (3 Dim each)
+#' @param OtherKaas to compare with
 #' @param withProcess include its name
 #' global, not to disrupt a logical object structure
 #' @export
