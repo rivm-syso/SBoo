@@ -3,9 +3,8 @@
 #'@description not the part suspended or colloidal 
 #'@param Kp.susp
 #'@param D , to calculate Kp.col
+#'@param FRorig_spw
 #'@param SUSP
-#'@param SUSP
-#'@return 
 #'@export
 FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, RHOsolid, KpCOL, 
                   Kacompw, SUSP, COL, Matrix){

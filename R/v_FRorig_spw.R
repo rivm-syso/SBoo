@@ -1,10 +1,9 @@
-#'@title Fraction of orginigal species - soil pore water
+#'@title Fraction of original species - soil pore water
 #'@name FRorig_spw
 #'@description Fraction original species in soil pore water
 #'@param pH pH of soil
 #'@param pKa Dissociation constant of (conjugated) acid (default = 7)
 #'@param ChemClass Class of chemical, in this case Acid, Base or other
-#'@return 
 #'@export
 FRorig_spw <- function(ChemClass, Matrix, 
                    pH,

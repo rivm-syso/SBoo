@@ -1,12 +1,12 @@
 #' @title k_Degradation
 #' @name k_Degradation
 #' @description calculate k for degradation in air; 
-#' @param FRingas 
-#' @param kdegG
-#' @param C.OHrad.n
-#' @param C.OHrad
-#' @param k0.OHrad
-#' @param Ea.OHrad
+#' @param FRingas see
+#' @param kdeg.air  kdeg.water kdeg.water
+#' @param C.OHrad.n ?
+#' @param C.OHrad ?
+#' @param k0.OHrad ?
+#' @param Ea.OHrad ?
 #' @param Temp [K]
 #' @param T25 = 298 K
 #' @return Degradation rate constant for molecular species

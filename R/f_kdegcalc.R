@@ -2,14 +2,14 @@
 #' @name kdegcalc
 #' @description If the degradation rate in sediment is not mentioned in the substance
 #'  data, it can be obtained from (European Commission, 2003a). Following section 3.3.12 of report 2015-0161.
-#' @param Ksw 
+#' @param Ksw see f_Ksw()
 #' @param Biodeg Biodegradability test result (r / r- / i / p)
-#' @param Q.10
-#' @param CorgStandard
-#' @param RHOsolid
-#' @param C.OHrad.n
-#' @param k0.OHrad
-#' @param Ea.OHrad
+#' @param Q.10 Const
+#' @param CorgStandard data
+#' @param RHOsolid data
+#' @param C.OHrad.n data
+#' @param k0.OHrad data
+#' @param Ea.OHrad data
 #' @return
 #' @export
 #' 
