@@ -75,77 +75,85 @@ VariableModule <-
         if (length(To.dims) > 0 ) {
           stop ("Not possible to use 6 dims for a variable; process/flux only") #scaffold would be 2 big
         }
-        stopifnot(length(dims) > 0)
-        
-        scaffold <- data.frame(unique(private$MyCore$states$asDataFrame[,dims,drop = F]))
-
-        #merge data frames; expand2scaffold (expand to all permutations) is not a parameter (yet)
-        expand2scaffold <- T
-        if(expand2scaffold) {
-          mergeScaffold <- function(x,y) {merge(x,y,all.x = T)}
-          CalcTable <- Reduce(mergeScaffold, c(list(scaffold),AllInput))
-        } else {
-          CalcTable <- Reduce(merge, c(list(scaffold),AllInput))
-          CalcTable <- CalcTable[complete.cases(CalcTable),]
-        }
-        
-        DimColumns <- names(CalcTable) %in% The3D
-        DimTable <- CalcTable[,names(CalcTable)[DimColumns],drop = F]
-        
-        #names(DimTable) <- names(CalcTable)[DimColumns] #lost if 1 dimension only, pffff
-        CalcTable <- CalcTable[,names(CalcTable)[!DimColumns],drop = F]
-        #Call function for each row
-        NewData <- lapply(1:nrow(CalcTable), function(i) {
-          #fetch is the "hook" for the function to fetch data from DL
-          ParsList <- as.list(c(CalcTable[i,,drop = F], 
-                                AllConstants, 
-                                all.type   #,
-                                           # DimTable[i,,drop = F], 
-                                           # fetch = private$MyCore$fetchData
-                                ))
-          #needs debugging?
+        #stopifnot(length(dims) > 0)
+        if (length(dims) == 0) {# any possible exeption will occur; all constants (and all.-data.frames)
           if (!is.null(debugAt)){
-            #test if names of debugAT are in the ParsList
-            stopifnot(all(names(debugAt) %in% names(ParsList)))
-            ToDebug <- T
-            if (length(debugAt) > 0){
-              for (j in 1:length(debugAt)){
-                if (ParsList[[names(debugAt)[j]]] != debugAt[j]){
-                  ToDebug <- F
-                  break
+            debugonce(self$exeFunction)
+          }
+          ParsList <- as.list(c(AllConstants, all.type))
+          ret <- do.call(self$exeFunction, ParsList)
+          names(ret) <- private$MyName
+          return(ret)
+
+        } else {#regular case with SB variables having dimensions
+          scaffold <- data.frame(unique(private$MyCore$states$asDataFrame[,dims,drop = F]))
+          
+          #merge data frames; expand2scaffold (expand to all permutations) is not a parameter (yet)
+          expand2scaffold <- T
+          if(expand2scaffold) {
+            mergeScaffold <- function(x,y) {merge(x,y,all.x = T)}
+            CalcTable <- Reduce(mergeScaffold, c(list(scaffold),AllInput))
+          } else {
+            CalcTable <- Reduce(merge, c(list(scaffold),AllInput))
+            CalcTable <- CalcTable[complete.cases(CalcTable),]
+          }
+          
+          DimColumns <- names(CalcTable) %in% The3D
+          DimTable <- CalcTable[,names(CalcTable)[DimColumns],drop = F]
+          
+          #names(DimTable) <- names(CalcTable)[DimColumns] #lost if 1 dimension only, pffff
+          CalcTable <- CalcTable[,names(CalcTable)[!DimColumns],drop = F]
+          #Call function for each row
+          NewData <- lapply(1:nrow(CalcTable), function(i) {
+            ParsList <- as.list(c(CalcTable[i,,drop = F], 
+                                  AllConstants, 
+                                  all.type
+            ))
+            #needs debugging?
+            if (!is.null(debugAt)){
+              #test if names of debugAT are in the ParsList
+              stopifnot(all(names(debugAt) %in% names(ParsList)))
+              ToDebug <- T
+              if (length(debugAt) > 0){
+                for (j in 1:length(debugAt)){
+                  if (ParsList[[names(debugAt)[j]]] != debugAt[j]){
+                    ToDebug <- F
+                    break
+                  }
                 }
               }
+              if (ToDebug) debugonce(self$exeFunction)
             }
-            if (ToDebug) debugonce(self$exeFunction)
-          }
-          do.call(self$exeFunction, ParsList)
-        })
-        
-        CatchEmpty <- sapply(NewData, length) == 0
-        ResultIsNA <- sapply(NewData, function(x) {
-          is.na(x) | is.null(x)
-        }) 
-        CatchEmpty[!CatchEmpty] <- unlist(ResultIsNA)
-
-        #remove the rows with NA results
-        DimTable <- DimTable[!CatchEmpty,,drop=F]
-        DimTable[[self$myName]] <-  unlist(NewData[!CatchEmpty])
-        
-        if (!is.na(private$aggrBy)) {
-          #remove the aggrBy Dims 
-          KeepNames <- private$aggrBy
-          KeepNames <- KeepNames[KeepNames %in% names(DimTable)]
+            do.call(self$exeFunction, ParsList)
+          })
           
-          if (is.na(private$aggrFUN)) {
-            FUN <- sum
-          } else {
-            FUN <- match.fun(private$aggrFUN)
-          }
-          DimTable <- aggregate(DimTable[,self$myName], by = DimTable[,unlist(KeepNames),drop = F],
-                               FUN = FUN)
-          #put correct names
-          names(DimTable)[names(DimTable) == "x"] <- private$MyName
-        }  
+          CatchEmpty <- sapply(NewData, length) == 0
+          ResultIsNA <- sapply(NewData, function(x) {
+            is.na(x) | is.null(x)
+          }) 
+          CatchEmpty[!CatchEmpty] <- unlist(ResultIsNA)
+          
+          #remove the rows with NA results
+          DimTable <- DimTable[!CatchEmpty,,drop=F]
+          DimTable[[self$myName]] <-  unlist(NewData[!CatchEmpty])
+          
+          if (!is.na(private$aggrBy)) {
+            #remove the aggrBy Dims 
+            KeepNames <- private$aggrBy
+            KeepNames <- KeepNames[KeepNames %in% names(DimTable)]
+            
+            if (is.na(private$aggrFUN)) {
+              FUN <- sum
+            } else {
+              FUN <- match.fun(private$aggrFUN)
+            }
+            DimTable <- aggregate(DimTable[,self$myName], by = DimTable[,unlist(KeepNames),drop = F],
+                                  FUN = FUN)
+            #put correct names
+            names(DimTable)[names(DimTable) == "x"] <- private$MyName
+          }  
+          
+        }
         
         return(DimTable)
 

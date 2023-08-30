@@ -219,6 +219,13 @@ SBcore <- R6::R6Class("SBcore",
       private$UpdateDL(VarFunName = aVariable)
     },
     
+    #' @description set a constant in the internal data, to enable use by SB variable etc.
+    #' @param ... named value
+    SetConst = function(...){
+      #test for length == 1, name...
+      private$UpdateDL(...)
+    },
+    
     #' @description runs (or tries to) the calculation for Variables,
     #' and continues from there to update all processes and variables 
     #' that have a depency of any of the Variables, recursively.
@@ -785,32 +792,39 @@ SBcore <- R6::R6Class("SBcore",
     #' #param VarFunName the name of the variable to be updated AND the name of the function
     #' #param DIMRestrict optional list of restrictions; each element is c(DimName, Comparator, Value)
     #' #return side-effect; vector?
-    UpdateDL = function(VarFunName, DIMRestrict = NULL) {
+    UpdateDL = function(VarFunName = NULL, DIMRestrict = NULL, ...) {
      
       MetaData <- self$metaData()
-      if ("data.frame" %in% class(VarFunName)) { 
-        NewData <- VarFunName
-        VarFunName <- names(NewData)[length(NewData)]
+      if (is.null(VarFunName)) {
+        inp <- list(...)
+        VarFunName <- names(inp)
+        NewData <- inp
         Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
-      } else { #
-        Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
-        #exist VarFunName as VariableModule?
-        if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
-        VarFun <- private$ModuleList[[VarFunName]]
-        NewData <- VarFun$execute()
-        #adjust column names 
-        if ("FlowModule" %in% class(VarFun)  ) {
-          #to conform the full Flows table)
-          NewData$FlowName <- VarFunName
-          if (!"toScale" %in% names(NewData)){
-            NewData$toScale <- NewData$fromScale
+      } else {
+        if ("data.frame" %in% class(VarFunName)) { 
+          NewData <- VarFunName
+          VarFunName <- names(NewData)[length(NewData)]
+          Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
+        } else { #
+          Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
+          #exist VarFunName as VariableModule?
+          if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
+          VarFun <- private$ModuleList[[VarFunName]]
+          NewData <- VarFun$execute()
+          #adjust column names 
+          if ("FlowModule" %in% class(VarFun)  ) {
+            #to conform the full Flows table)
+            NewData$FlowName <- VarFunName
+            if (!"toScale" %in% names(NewData)){
+              NewData$toScale <- NewData$fromScale
+            }
+            if (!"toSubCompart" %in% names(NewData)){
+              NewData$toSubCompart <- NewData$fromSubCompart
+            }
+          } 
+          if ("VariableModule" %in% class(VarFun)){
+            
           }
-          if (!"toSubCompart" %in% names(NewData)){
-            NewData$toSubCompart <- NewData$fromSubCompart
-          }
-        } 
-        if ("VariableModule" %in% class(VarFun)){
-          
         }
       }
       
@@ -829,14 +843,17 @@ SBcore <- R6::R6Class("SBcore",
           names(diffTable)[names(diffTable)==VarFunName] <- paste("old",VarFunName,sep = "_")
         }
       }
-      
-      #delete and merge the DL-table
-      if (VarFunName %in% names(private$SB4Ndata[[Target.Table]])){
-        
-        numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
-        private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
-      } 
-      private$SB4Ndata[[Target.Table]] <- merge(private$SB4Ndata[[Target.Table]], NewData, all = T)
+      #Special Case a "constant" or substance property
+      if (Target.Table == "Globals") {
+        private$SB4Ndata[[Target.Table]][names(NewData)] <- NewData
+      } else {
+        #delete and merge the DL-table
+        if (VarFunName %in% names(private$SB4Ndata[[Target.Table]])){
+          numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
+          private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
+        } 
+        private$SB4Ndata[[Target.Table]] <- merge(private$SB4Ndata[[Target.Table]], NewData, all = T)
+      }
       
       #just to show, side effect is in DL
       if (!exists("diffTable")){ #new in the DL

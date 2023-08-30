@@ -9,8 +9,9 @@
 #'@param CorgSoilStandard
 #'@param Matrix the medium, the formula is only applicable to soil and sediment
 #'@export
-Kp <- function(FRorig, Ksw, Ksw.alt, RHOsolid, Corg, CorgStandard, Matrix){
+Kp <- function(FRorig, Ksw, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matrix){
   if (Matrix %in% c("soil", "sediment","water")) {
+    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
     return(
       (FRorig*Ksw + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid) * (Corg / CorgStandard) #Corg
     )
