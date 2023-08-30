@@ -6,10 +6,9 @@
 #'@param FRorig_spw
 #'@param SUSP
 #'@export
-FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, RHOsolid, KpCOL, 
+FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, all.rhoMatrix, KpCOL, 
                   Kacompw, SUSP, COL, Matrix){
-  #TODO next formula in f_ function
-  
+  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
   switch(Matrix,
          "water" = 1/(1+Kp*SUSP/1000+KpCOL*COL/1000),
          "soil" = # for soil pore water
