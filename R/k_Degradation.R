@@ -13,7 +13,7 @@
 #' @export
 k_Degradation <- function(FRingas, kdeg.air, C.OHrad.n, C.OHrad, 
                           k0.OHrad, Ea.OHrad, Temp, T25, 
-                          kdeg.soil, kdeg.sediment, Q.10,
+                          kdeg.soil, kdeg.sed, Q.10,
                           kdeg.water, FRinw, BACTtest,BACTcomp, 
                           Matrix, SpeciesName) {
   
@@ -29,7 +29,7 @@ k_Degradation <- function(FRingas, kdeg.air, C.OHrad.n, C.OHrad,
            },
            "sediment" = {
              
-             Tempfactor.wsds(Q.10,Temp,T25)*kdeg.sediment
+             Tempfactor.wsds(Q.10,Temp,T25)*kdeg.sed
            },
            "water" = {
              kdeg.water*Tempfactor.wsds(Q.10,Temp,T25)*(BACTcomp/BACTtest)*FRinw
@@ -48,7 +48,7 @@ k_Degradation <- function(FRingas, kdeg.air, C.OHrad.n, C.OHrad,
            },
            "sediment" = {
              
-             kdeg.sediment # not corrected for temperature or other aspects
+             kdeg.sed # not corrected for temperature or other aspects
            },
            "water" = {
              kdeg.water # not corrected for temperature or other aspects

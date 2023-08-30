@@ -697,6 +697,11 @@ SBcore <- R6::R6Class("SBcore",
     ## '  @param ParamName.Dimensions data.frame with columns ParamName and the 3Dimensions() use merge x.all = T
     #' return vector values (if found; else NA)
     FetchData = function(varname) {
+      #hack; because of ugly deposition dependency
+      if (varname == "kaas") {
+        return(self$kaas)
+      }
+      #Now for the actual fetching of variables; either calculated or data
       if (varname %in% names(private$SB4Ndata)) {
         #give the full table
         return(private$SB4Ndata[[varname]])
@@ -823,7 +828,9 @@ SBcore <- R6::R6Class("SBcore",
             }
           } 
           if ("VariableModule" %in% class(VarFun)){
-            
+            if(is.null(names(NewData))){
+              names(NewData) <- VarFunName
+            }
           }
         }
       }

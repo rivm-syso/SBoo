@@ -76,13 +76,15 @@ VariableModule <-
           stop ("Not possible to use 6 dims for a variable; process/flux only") #scaffold would be 2 big
         }
         #stopifnot(length(dims) > 0)
-        if (length(dims) == 0) {# any possible exeption will occur; all constants (and all.-data.frames)
+        if (length(dims) == 0) {# any possible exeption will occur; all constants and/or all.-data.frames
           if (!is.null(debugAt)){
             debugonce(self$exeFunction)
           }
           ParsList <- as.list(c(AllConstants, all.type))
           ret <- do.call(self$exeFunction, ParsList)
-          names(ret) <- private$MyName
+          if (length(names(ret)) == 1){ #the defining function should take care otherwise 
+            names(ret) <- private$MyName
+          }
           return(ret)
 
         } else {#regular case with SB variables having dimensions
