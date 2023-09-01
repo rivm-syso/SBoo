@@ -32,7 +32,7 @@ SBstates <- R6::R6Class("SBstates",
       m<-regexpr("[RCAMT]",abbr)
       ScaleAbbr <- substr(abbr,m,m)
       SUbCompartAbbr <- substr(abbr,1,m-1)
-      #identical functioning; thus rename: s = soil -> s3 othersoil, sd = oceansediment -> sd2
+      #identical functioning; thus rename: s = soil -> s1 naturalsoil, sd = oceansediment -> sd2
       #lengthabbC <- sapply(CompartAbbr, nchar) #needed to detect missing Species
       SUbCompartAbbr[SUbCompartAbbr=="s"] <- "s3"
       SUbCompartAbbr[SUbCompartAbbr=="sd"] <- "sd2"

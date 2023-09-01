@@ -9,7 +9,7 @@
 #'@export
 Kscompw <- function(FRACw, FRACa, Kacompw, FRorig_spw, Kp, all.rhoMatrix, Matrix){
   if (Matrix == "soil") {
-    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
+    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
     return(FRACa*(Kacompw*FRorig_spw)+FRACw+(1-FRACa-FRACw)*Kp*RHOsolid/1000) 
     # we need to take care that RHOsolid above can be specific to the compartment
     # compared to generic one used in Kp in relation to Ksw!

@@ -17,7 +17,7 @@
 FRins <- function(Kp, SUSP, COL, KpCOL,
                 FRACw, FRACa, FRACs, Kacompw, 
                 FRorig_spw, all.rhoMatrix, Matrix){
-  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
+  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
   switch(Matrix,
          "soil" =  
            FRACs/(FRACa*(Kacompw*FRorig_spw)/(Kp*RHOsolid/1000)+FRACw/(Kp*RHOsolid/1000)+FRACs),
