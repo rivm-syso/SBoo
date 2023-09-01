@@ -9,7 +9,7 @@
 #'@export
 Ksdcompw <- function(FRACw, FRACs, Kp, all.rhoMatrix, Matrix){
   if (Matrix == "sediment") {
-    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
+    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
     return(FRACw+FRACs*Kp*RHOsolid/1000) # we need to take care that RHOsolid here can be specific to the compartment compared to generic one used in Kp in relation to Ksw!
   } else
     return(NA)

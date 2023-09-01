@@ -31,8 +31,8 @@ Area <- function (AreaLand,
     return(landFRAC * AreaLand)
   }
   
-  # on land, on global scales: only othersoil
-  if (SubCompartName == "othersoil") {
+  # on land, on global scales: only naturalsoil
+  if (SubCompartName == "naturalsoil") {
     return(AreaLand)
   }
   

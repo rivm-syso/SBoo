@@ -11,7 +11,7 @@
 #'@export
 Kp <- function(FRorig, Ksw, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matrix){
   if (Matrix %in% c("soil", "sediment","water")) {
-    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
+    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
     return(
       (FRorig*Ksw + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid) * (Corg / CorgStandard) #Corg
     )

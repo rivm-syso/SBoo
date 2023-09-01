@@ -22,7 +22,8 @@
 #'@export
 k_Deposition <- function(FRingas, 
                          WINDspeed,
-                         VertDistance, 
+                         VertDistance,
+                         RAINrate,
                          twet ,
                          tdry ,
                          COLLECTeff, # Can in SB5 be updated to (function from scavening in cloudwater stuf of SB4N!
@@ -31,38 +32,52 @@ k_Deposition <- function(FRingas,
                          FRorig,
                          SpeciesName,
                          OtherkAir,
-                         landFRAC,
+                         to.Area,
+                         from.Area,
                          Kaers,
                          Kaerw,
-                         FRACaer){ 
+                         FRinaerw,
+                         FRinaers,
+                         ScaleName,
+                         SubCompartName,
+                         to.SubCompartName){ 
   
   if (SpeciesName %in% c("Molecular")) {
     
-    HEIGHT.a <- VertDistance
+    # if(ScaleName %in% c("Arctic", "Moderate", "Tropic") &&
+    #    ( to.SubCompartName != c("sea") 
+    #      ||  to.SubCompartName != c("naturalsoil")
+    #    )
+    # )
+    # {
+    #   return(NA)
+    # }
+    
+    # HEIGHT.a <- VertDistance
     
     # NOT_deposition <- ((GASABS.a.w*(AREAFRAC.w0R+AREAFRAC.w1R+AREAFRAC.w2R)+
     #                       GASABS.a.s*(AREAFRAC.s1R+AREAFRAC.s2R+AREAFRAC.s3R))/HEIGHT.aR + 
     #                      KDEG.aR +
     #                      k.aR.aC) # problematic correction for other removal processes from air affection actual deposition.
-    FRinaerw = fFRinaerw(Kaers, Kaerw, FRACaer)
-      FRinaers = fFRinaers(Kaers, Kaerw, FRACaer)
-      DRYDEPaerosol <- AEROSOLdeprate*(FRinaerw+FRinaers)
-    AerosolWashout <- FRaers*(tdry+twet)/twet*COLLECTeff*RAINrate
+    # FRinaerw = fFRinaerw(Kaers, Kaerw, FRACaer)
+    #   FRinaers = fFRinaers(Kaers, Kaerw, FRACaer)
+    DRYDEPaerosol <- AEROSOLdeprate*(FRinaerw+FRinaers)
+    AerosolWashout <- FRinaers*(tdry+twet)/twet*COLLECTeff*RAINrate
     GasWashout <- FRingas*(tdry+twet)/twet*RAINrate/(Kacompw*FRorig)
     
-    kdry <- DRYDEPaerosol/HEIGHT.a  + OtherkAir
+    kdry <- DRYDEPaerosol/VertDistance  + OtherkAir
     
-    kwet <- (AerosolWashout+GasWashout)/HEIGHT.a + OtherkAir
+    kwet <- (AerosolWashout+GasWashout)/VertDistance + OtherkAir
     
     
     MeanRemAir <- ((1/kdry)*tdry/(tdry+twet)+(1/kwet)*twet/(tdry+twet)-
                      ((1/kwet-1/kdry)^2/(tdry+twet))*
-                     (1-EXP(-kdry*tdry))*(1-EXP(-kwet*twet))/(1-EXP(-kdry*tdry-kwet*twet)))^-1
+                     (1-exp(-kdry*tdry))*(1-exp(-kwet*twet))/(1-exp(-kdry*tdry-kwet*twet)))^-1
     
     
     
     
-    MeanDep <- (MeanRemAir - OtherkAir) * landFRAC
+    MeanDep <- (MeanRemAir - OtherkAir) * (to.Area/from.Area)
     
     return( MeanDep ) # the gasabs here is for the two compartmenbts for which this function is run (air to soil/water)
     

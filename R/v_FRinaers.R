@@ -7,6 +7,6 @@
 #' @returns The fraction of a chemical in the aerosol solid phase. Total: FRingas + FRinaerw + FRinaers = 1.
 #' @seealso [Fringas(), FRinw(), FRins()]
 #' @export
-FRinaers <- function (Kaers, Kaerw, FRACaers, FRACaerw) {
-  FRACaers*Kaers/(1+FRACaerw*Kaerw+FRACaers*Kaers)
+FRinaers <- function (Kaers, Kaerw, FRACs, FRACw) {
+  FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
 }
