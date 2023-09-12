@@ -14,34 +14,34 @@
 #' @param 
 #' @return k_CWscavenging
 #' @export
-k_CWscavenging <- function(RAINrate, FRACtwet,
-                           rad_species, rho_species, to.rhoMatrix, rhoMatrix,
-                           DynVisc, to.DynVisc,
-                           Temp,
+k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
+                           rad_species, rho_species, to.rhoMatrix, from.rhoMatrix, 
+                           from.DynVisc, to.DynVisc, from.SettlingVelocity,
+                           Temp, Matrix, SpeciesName, VertDistance,
                            SubCompartName){
   
   if(SubCompartName != "air") return(NA)
   
+  if(SpeciesName %in% c("Nanoparticle","Aggregated")){
   # variables for calculation of 3 types of collection mechanisms (Gravitational, Intercept, Brownian)
   
   rad_RainDrop <- f_RadRain(RAINrate, FRACtwet)
   
-  Settvel.Particle.a <- f_SettlingVelocity(rad_species, rho_species, 
-                                         matrix.Rho = rhoMatrix, DynVisc=DynVisc,
-                                         Matrix="air")
-  Settvel.Particle.cw <- f_SettlingVelocity(rad_species=rad_RainDrop, rho_species=to.rhoMatrix, 
-                                          matrix.Rho=rhoMatrix, DynVisc=DynVisc,
-                                          Matrix="air")
-  Relax.Particle.a <- ((rho_species-rhoMatrix)*(2*rho_species)^2*f_Cunningham(rad_species))/(18*DynVisc)
+  Cunningham.cw <- f_Cunningham(rad_RainDrop)
+  Settvel.Particle.cw <-  2*(rad_RainDrop^2 * (to.rhoMatrix - from.rhoMatrix)*
+                               constants::syms$gn*Cunningham.cw)/(9*from.DynVisc) 
   
-  StokesNumber.Particle.a  =(2*Relax.Particle.a*(Settvel.Particle.cw-Settvel.Particle.a))/(2*rad_RainDrop)
+  Relax.Particle.a <- ((rho_species-from.rhoMatrix)*(2*rad_species)^2*f_Cunningham(rad_species))/(18*from.DynVisc)
   
-  ReyNumber.cw =((2*rad_RainDrop)*Settvel.Particle.cw*rhoMatrix)/(2*DynVisc)
+  StokesNumber.Particle.a  = (2*Relax.Particle.a*(Settvel.Particle.cw-from.SettlingVelocity))/(2*rad_RainDrop)
   
-  SchmidtNumber.Particle.a = DynVisc/(to.rhoMatrix*
-                                            f_Diffusivity(Compartment, Temp, 
-                                                         DynVisc, rad_species, 
-                                                         Cunningham = f_Cunningham(rad_species)))
+  ReyNumber.cw =((2*rad_RainDrop)*Settvel.Particle.cw*from.rhoMatrix)/(2*from.DynVisc)
+  
+  SchmidtNumber.Particle.a = from.DynVisc/(from.rhoMatrix*f_Diffusivity(Matrix, 
+                                                                        Temp, 
+                                                                        from.DynVisc, 
+                                                                        rad_species,  
+                                                                        Cunningham = f_Cunningham(rad_species)))
   
   CritStokesNumb.cw = ((1.2+(1/12)*log(1+ReyNumber.cw))/(1+log(1+ReyNumber.cw)))
   
@@ -52,7 +52,7 @@ k_CWscavenging <- function(RAINrate, FRACtwet,
   
   # calculation of Interception collection efficiency
   Intercept.a.cw <- 4*(rad_species/rad_RainDrop)*
-    ((DynVisc/to.DynVisc)+(1+2*ReyNumber.cw^0.5*(rad_species/rad_RainDrop)))
+    ((from.DynVisc/to.DynVisc)+(1+2*ReyNumber.cw^0.5*(rad_species/rad_RainDrop)))
   
   # calculation of Brownian collection efficiency
   
@@ -64,8 +64,10 @@ k_CWscavenging <- function(RAINrate, FRACtwet,
   
   # RAINrate.wet <- RAINrate/FRACtwet
   
-  (3/2)*(fTotal*RAINrate)/(2*rad_RainDrop)
-  
+  (3/2)*(Total*RAINrate)/(2*rad_RainDrop)
+  } else if (SpeciesName == "Attached") {
+    ((tdry+twet)/twet*RAINrate*COLLECTeff)/VertDistance
+  } else return(NA)
 }
 
 
