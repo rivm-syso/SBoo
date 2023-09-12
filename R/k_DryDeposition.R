@@ -12,22 +12,22 @@
 #' #param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)
 #' @param to.alpha.surf depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016
 #' @param AEROresist aerodynamic resistance (Constant set to 74) [s.m-1]
-#' @param DynVisc TODO
-#' @param Cunningham TODO
-#' @param SetVel TODO
+#' @param DynVisc pm
 #' @param rad_species rad_particle
 #' @param rho_species rho_particle
+#' @param gamma.surf
+#' @param SettlingVelocity Settlings Velocity of particulate species in water or air [m.s-1]
 #' @param Matrix
 #' @return k_drydeposition, the rate constant for 1rst order process: dry deposition from air to soil or water [s-1]
 #' @export
-k_DryDeposition <- function(to.Area, from.Volume, AEROresist,
+k_DryDeposition <- function(to.Area, from.Volume, AEROresist, gamma.surf, FricVel,
                           DynVisc,rhoMatrix,ColRad,rad_species,rho_species,
-                          Temp,to.alpha.surf, SetVel, Matrix){
+                          Temp,to.alpha.surf, SettlingVelocity, Matrix){
   
   if (anyNA(c(AEROresist, DynVisc, rhoMatrix, rho_species, to.alpha.surf))) {
     return(NA)
   }
-  Cunningham <- f_Cunningham(radSpecies)
+  Cunningham <- f_Cunningham(rad_species)
   Diffusivity <- f_Diffusivity(Matrix, Temp, DynVisc, rad_species, Cunningham)
   
   SchmidtNumber <- DynVisc/(rhoMatrix*Diffusivity)
@@ -35,8 +35,8 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist,
   Brown <- SchmidtNumber^(-gamma.surf)
   
   StN <- ifelse(ColRad==0|is.na(ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016
-                (SetVel*FricVel)/DynVisc/rhoMatrix, # for smooth surfaces (water)
-                (SetVel*FricVel)/(g*ColRad)      # for vegetated surfaces (soil)
+                (SettlingVelocity*FricVel)/DynVisc/rhoMatrix, # for smooth surfaces (water)
+                (SettlingVelocity*FricVel)/(g*ColRad)      # for vegetated surfaces (soil)
   )
   Intercept <- ifelse(ColRad==0|is.na(ColRad),
                   0, # for smooth surfaces
@@ -53,13 +53,13 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist,
   SurfResist <- 1/(epsilon*FricVel*(Brown+ # Collection efficiency for Brownian diffusion
                                     Intercept+ # Collection efficiency for interception
                                     Impaction)*R1) # Collection efficiency for impaction
-  DRYDEPvelocity <- 1/(AEROresist+SURFresist)+SetVel
+  DRYDEPvelocity <- 1/(AEROresist+SurfResist)+SettlingVelocity
 
   # Currently implemented in SimpleBox for P species:
   # if (species == "P"){
   #   DRYDEPvelocity <- AEROSOLdeprate # AEROSOLdeprate constant given in xls version of SB4
   # }
-  (DRYDEPvelocity*to.Area)/Volume
+  (DRYDEPvelocity*to.Area)/from.Volume
 }
 
 
