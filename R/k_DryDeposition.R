@@ -22,21 +22,21 @@
 #' @export
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist,
                           DynVisc,rhoMatrix,ColRad,rad_species,rho_species,
-                          Temp,to.alpha.surf, Cunningham, SetVel, Matrix){
+                          Temp,to.alpha.surf, SetVel, Matrix){
   
-  if (anyNA(c(AEROresist, DynVisc, rhoMatrix, rho_species, to.alpha.surf, Cunningham))) {
+  if (anyNA(c(AEROresist, DynVisc, rhoMatrix, rho_species, to.alpha.surf))) {
     return(NA)
   }
-  
-  Diffusivity <- f_Diffusivity(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL)
+  Cunningham <- f_Cunningham(radSpecies)
+  Diffusivity <- f_Diffusivity(Matrix, Temp, DynVisc, rad_species, Cunningham)
   
   SchmidtNumber <- DynVisc/(rhoMatrix*Diffusivity)
   # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
   Brown <- SchmidtNumber^(-gamma.surf)
   
   StN <- ifelse(ColRad==0|is.na(ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016
-                (SetVel*FricVel)/DynVisc/rhoMatrix, # for smooth surfaces
-                (SetVel*FricVel)/(g*ColRad)      # for vegetated surfaces
+                (SetVel*FricVel)/DynVisc/rhoMatrix, # for smooth surfaces (water)
+                (SetVel*FricVel)/(g*ColRad)      # for vegetated surfaces (soil)
   )
   Intercept <- ifelse(ColRad==0|is.na(ColRad),
                   0, # for smooth surfaces
