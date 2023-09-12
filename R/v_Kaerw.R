@@ -1,16 +1,14 @@
 #' @title Aerosol water - air Partition coefficient
 #' @name Kaerw
-#' @description Fraction of some fraction
-#' @param Kaw 
-#' @param Corg
-#' @param Rho
+#' @description pm
+#' @param Kacompw 
 #' @param FRorig
-#' @param FRACaer
+#' @param SubCompartName
 #' @return FRears[]
 #' @export
-Kaerw <- function (Kacompw, FRorig, Matrix) {
+Kaerw <- function (Kacompw, FRorig, SubCompartName) {
 
-  switch(Matrix,
+  switch(SubCompartName,
          "air" = 1/(Kacompw*FRorig),
          NA)
   
