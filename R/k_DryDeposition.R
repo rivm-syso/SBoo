@@ -1,6 +1,8 @@
 #' @title Dry deposition from air to surface soil or water
 #' @name k_DryDeposition
-#' @description Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
+#' @description 
+#' Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
+#' Diffusivity is calculated from f_Diffusivity
 #' @param to.Area Surface area of receiving land or water compartment [m2]
 #' @param from.Volume Volume of air compartment [m3]
 #' @param Temp Temperature [K]
@@ -10,20 +12,24 @@
 #' #param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)
 #' @param to.alpha.surf depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016
 #' @param AEROresist aerodynamic resistance (Constant set to 74) [s.m-1]
-#' @param Diffusivity TODO
 #' @param DynVisc TODO
 #' @param Cunningham TODO
 #' @param SetVel TODO
 #' @param rad_species rad_particle
 #' @param rho_species rho_particle
+#' @param Matrix
 #' @return k_drydeposition, the rate constant for 1rst order process: dry deposition from air to soil or water [s-1]
 #' @export
-k_DryDeposition <- function(to.Area, from.Volume, AEROresist, Diffusivity,
+k_DryDeposition <- function(to.Area, from.Volume, AEROresist,
                           DynVisc,rhoMatrix,ColRad,rad_species,rho_species,
-                          Temp,to.alpha.surf, Cunningham, SetVel){
+                          Temp,to.alpha.surf, Cunningham, SetVel, Matrix){
+  
   if (anyNA(c(AEROresist, DynVisc, rhoMatrix, rho_species, to.alpha.surf, Cunningham))) {
     return(NA)
   }
+  
+  Diffusivity <- f_Diffusivity(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL)
+  
   SchmidtNumber <- DynVisc/(rhoMatrix*Diffusivity)
   # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
   Brown <- SchmidtNumber^(-gamma.surf)
