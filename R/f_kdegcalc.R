@@ -15,7 +15,7 @@
 #' 
 #'   
 
-kdegcalc <- function (Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
+f_kdegcalc <- function (Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
                     CorgStandard, RHOsolid,
                     Matrix) {
   

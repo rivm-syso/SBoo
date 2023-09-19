@@ -5,8 +5,12 @@
 #'@return  Temperature correction degradation rate water/sed/soil [-]
 #'@export
 
-Tempfactor.wsds <- function(Q.10,Temp, T25) {
+v_Tempfactor <- function(Q.10,Temp, T25, Matrix) {
 
-  Q.10^((Temp-T25)/10)
+  if (Matrix %in% c("soil", "sediment", "water")) {
+    return(Q.10^((Temp-T25)/10))
+  } else {
+    return(NA)
+  }
   
 }
