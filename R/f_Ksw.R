@@ -13,18 +13,22 @@
 #'@export
 f_Ksw <- function(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, alt_form, Ksw_orig){
 
-  switch(ChemClass,
-    "acid" = ifelse(alt_form, #default False!
-                        10^(0.11*log10(Kow)+1.54) * CorgStandard * RHOsolid / 1000,
-                        10^(0.54*log10(Kow)+1.11) * CorgStandard * RHOsolid / 1000),
-    "base" = ifelse(alt_form, #default False!
-                    10^(pKa^0.65*(Kow/(1+Kow)^0.14)) * CorgStandard * RHOsolid / 1000,
-                    10^(0.37*log10(Kow)+1.7) * CorgStandard * RHOsolid / 1000),
-    "metal" =  stop("Ksw Should be in the data"),
-    "particle" = stop("Ksw Should be in the data"),
-    #else
-    {
-      a * Kow^b * CorgStandard * RHOsolid / 1000
-    }
-  )
+  switch(alt_form,
+      # FALSE, NB not the alt_form
+      F = switch(ChemClass,
+          "acid" = 10^(0.54*log10(Kow)+1.11) * CorgStandard * RHOsolid / 1000,
+          "base" = 10^(0.37*log10(Kow)+1.7) * CorgStandard * RHOsolid / 1000,
+          "metal" = stop("Ksw Should be in the data"),
+          "particle" = stop("Ksw Should be in the data"),
+          #else
+          {a * Kow^b * CorgStandard * RHOsolid / 1000}
+      ),
+    # TRUE, so the alt_form
+    T = switch(ChemClass,
+          "acid" = 10^(0.11*log10(Kow)+1.54) * CorgStandard * RHOsolid / 1000,
+          "base" = 10^(pKa^0.65*(Kow/(1+Kow)^0.14)) * CorgStandard * RHOsolid / 1000,
+          #else
+          {a * Kow^b * CorgStandard * RHOsolid / 1000}      
+      )
+    )
 }

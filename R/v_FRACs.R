@@ -3,10 +3,11 @@
 #'@description either subFRACs or, when the main matrix, remainder after substracting subFRACa + subFRACw
 #'@return 
 #'@export
-FRACs <- function(FRACa, FRACw, FRACs, Matrix){
+FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
   if (Matrix %in% c("soil", "sediment")) {
-    if (Matrix == "sediment") FRACa <- 0 #not in data
-    return (1 - FRACw - FRACa)
+    if (Matrix == "sediment") FRACa <- 0
+    return (1 - subFRACw - subFRACa)
   } else
-    return (FRACs)
+    return (subFRACs)
 }
+
