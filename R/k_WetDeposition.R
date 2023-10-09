@@ -6,10 +6,10 @@
 #'
 #'
 
-k_WetDeposition <- function (to.Area, from.Volume, RAINrate)
-
+k_WetDeposition <- function (to.Area, from.Volume, RAINrate){
+  
   (RAINrate* to.Area)/from.Volume
-
+}
 # #Test of function
 #to.Area =2.49e-3 * 2.3e11
 #from.volume = 3e-7 * 2.3e14
