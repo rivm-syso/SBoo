@@ -21,7 +21,6 @@
 #'@return Transfer rate constant gaseous species air to soil or water #[s-1]
 #'@export
 k_Deposition <- function(FRingas, 
-                         WINDspeed,
                          VertDistance,
                          RAINrate,
                          twet ,
@@ -37,30 +36,10 @@ k_Deposition <- function(FRingas,
                          Kaers,
                          Kaerw,
                          FRinaerw,
-                         FRinaers,
-                         ScaleName,
-                         SubCompartName,
-                         to.SubCompartName){ 
+                         FRinaers){ 
   
   if (SpeciesName %in% c("Molecular")) {
     
-    # if(ScaleName %in% c("Arctic", "Moderate", "Tropic") &&
-    #    ( to.SubCompartName != c("sea") 
-    #      ||  to.SubCompartName != c("naturalsoil")
-    #    )
-    # )
-    # {
-    #   return(NA)
-    # }
-    
-    # HEIGHT.a <- VertDistance
-    
-    # NOT_deposition <- ((GASABS.a.w*(AREAFRAC.w0R+AREAFRAC.w1R+AREAFRAC.w2R)+
-    #                       GASABS.a.s*(AREAFRAC.s1R+AREAFRAC.s2R+AREAFRAC.s3R))/HEIGHT.aR + 
-    #                      KDEG.aR +
-    #                      k.aR.aC) # problematic correction for other removal processes from air affection actual deposition.
-    # FRinaerw = fFRinaerw(Kaers, Kaerw, FRACaer)
-    #   FRinaers = fFRinaers(Kaers, Kaerw, FRACaer)
     DRYDEPaerosol <- AEROSOLdeprate*(FRinaerw+FRinaers)
     AerosolWashout <- FRinaers*(tdry+twet)/twet*COLLECTeff*RAINrate
     GasWashout <- FRingas*(tdry+twet)/twet*RAINrate/(Kacompw*FRorig)

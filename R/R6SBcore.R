@@ -744,7 +744,8 @@ SBcore <- R6::R6Class("SBcore",
             ) & ! MetaData$Tablenames %in% c("SubstanceCompartments"),]
             grepVars <- do.call(paste,
                                 as.list(allVars$AttributeNames[grep(varname, allVars$AttributeNames, ignore.case=TRUE)]))
-            stop (paste("Cannot find property", varname, "; but found", grepVars))
+            warning (paste("Cannot find property", varname, "; but found", grepVars))
+            return(NA)
           } 
           
           #Attrn <- levels(Attrn)[Attrn] R Version 4 now 
