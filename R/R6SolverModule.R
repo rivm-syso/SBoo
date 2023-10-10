@@ -22,7 +22,7 @@ SolverModule <-
           private$MoreParams))
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
-        if (length(dim(private$Solution)) == 1) {
+        if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
           EqMass <- cbind(private$States$asDataFrame, private$Solution)
         } else {
           #it's a matrix with as many rows or columns as states?
