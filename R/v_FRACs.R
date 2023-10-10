@@ -5,7 +5,7 @@
 #'@export
 FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
   if (Matrix %in% c("soil", "sediment")) {
-    if (Matrix == "sediment") FRACa <- 0
+    if (Matrix == "sediment") subFRACa <- 0
     return (1 - subFRACw - subFRACa)
   } else
     return (subFRACs)
