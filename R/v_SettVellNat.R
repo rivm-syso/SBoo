@@ -6,7 +6,7 @@
 #'@param rhoMatrix
 #'@param DynVisc
 #'@export
-SettVellNat <- function(RadSPM, RhoSPM, rhoMatrix, DynVisc){
-  f_SettlingVelocity (RadSPM, RhoSPM, rhoMatrix, DynVisc,  
+SettVellNat <- function(RadCOL, RhoCOL, rhoMatrix, DynVisc){
+  f_SettlingVelocity (RadCOL, RhoCOL, rhoMatrix, DynVisc,  
                                 Matrix = "water")
 }
