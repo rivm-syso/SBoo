@@ -5,7 +5,7 @@
 #'@return  Temperature correction degradation rate water/sed/soil [-]
 #'@export
 
-v_Tempfactor <- function(Q.10,Temp, T25, Matrix) {
+Tempfactor <- function(Q.10,Temp, T25, Matrix) {
 
   if (Matrix %in% c("soil", "sediment", "water")) {
     return(Q.10^((Temp-T25)/10))

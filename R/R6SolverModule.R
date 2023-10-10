@@ -21,9 +21,23 @@ SolverModule <-
           list(ParentModule = self),
           private$MoreParams))
         # Solvers (should) return a vector [states] or
-        # a Matrix[states, time]
-        lastCol <- ncol(as.matrix(private$Solution))
-        EqMass <- cbind(private$States$asDataFrame, as.matrix(private$Solution)[,lastCol])
+        # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
+        if (length(dim(private$Solution)) == 1) {
+          EqMass <- cbind(private$States$asDataFrame, private$Solution)
+        } else {
+          #it's a matrix with as many rows or columns as states?
+          if (! length(dim(private$Solution)) == 2 && (nrow(private$States$asDataFrame) %in% dim(private$Solution))) {
+            warning("solver did not return as many rows nor cols as there are states")
+            return(NULL)
+          } #pick the last entry as steady state solution
+          if (nrow(private$States$asDataFrame) == nrow(private$Solution)) {
+            private$MatrixSolutionInRows <- F
+            EqMass <- cbind(private$States$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
+          } else { #same amount of colums => pick the last row
+            private$MatrixSolutionInRows <- T
+            EqMass <- cbind(private$States$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
+          }
+        }
         names(EqMass)[length(EqMass)] <- "EqMass" #last column
         EqMass 
       },
@@ -115,6 +129,30 @@ SolverModule <-
           to = private$States$asDataFrame$Abbr[ShowDiff[,2]],
           diff = Diff[ShowDiff]
         )
+      },
+      #' @description return dataframe with 
+      #' state in three columns, 
+      #' time input in one or t[est]vars in separate columns, 
+      #' and the Mass in the Mass column
+      SolutionAsRelational = function(){
+        if (is.null(self$SBtime.tvars)) {
+          warning("no calculation available")
+          return(NULL)
+        }
+        if ("SBtime" %in% names(self$SBtime.tvars)) {
+          if (private$MatrixSolutionInRows) {
+            ret2Blong <- cbind(private$States$asDataFrame[,The3D], 
+                  t(as.matrix(private$Solution)))
+          }
+          ret = tidyr::pivot_longer(ret2Blong, 
+                                    names(ret2Blong)[!names(ret2Blong) %in% The3D],
+                                    names_to = "SBtime", 
+                                    values_to = "Mass")
+          #replace the generated columnnames from SBtime into actual times
+          TheTimes <- unlist(self$SBtime.tvars)
+          ret$SBtime <- TheTimes[as.numeric(ret$SBtime)]
+          return(ret)
+        } # TODO else t[est]vars : uncertainty / sensitivity solvers etc.
       }
       
     ),
@@ -150,6 +188,13 @@ SolverModule <-
         } else {
           stop("`$SB.k` is set by PrepKaasM", call. = FALSE)
         }
+      },
+      SBtime.tvars = function(value) { 
+        if (missing(value)) {
+          private$lSBtime.tvars
+        } else {
+          private$lSBtime.tvars <- value
+        }
       }
     ),
     
@@ -160,6 +205,8 @@ SolverModule <-
       Solution = NULL,
       States = NULL,
       Emissions = NULL,
-      SB.K = NULL
+      SB.K = NULL,
+      MatrixSolutionInRows = NULL,
+      lSBtime.tvars = NULL
     )
   )

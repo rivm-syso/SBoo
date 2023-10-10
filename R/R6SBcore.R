@@ -125,9 +125,12 @@ SBcore <- R6::R6Class("SBcore",
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
     Solve = function(emissions, needdebug = F){
-      if (is.null(private$solver)) stop ("No active solver")
+      if (is.null(private$solver)) {
+        warning("No active solver")
+        return(NULL)
+      }
       private$solver$PrepKaasM()
-      if (!"data.frame" %in% class(emissions)) 
+      if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
         stop("emissions should be a dataframe(like) with columns")
       if (!all(c("Abbr", "Emis") %in% names(emissions))) 
         stop("emissions should contain Abbr and Emis as columns")
@@ -135,6 +138,15 @@ SBcore <- R6::R6Class("SBcore",
       # the solver does the actual work
       Solution = private$solver$execute(needdebug)
       private$UpdateDL(Solution)
+    },
+    
+    #' @description Injection from SolverModule
+    SolutionAsRelational = function(){
+      if (is.null(private$solver)) {
+        warning("No active solver")
+        return(NULL)
+      }
+      private$solver$SolutionAsRelational()
     },
     
     #' @description Obtain the names of the variables and tablename in which the data resides 
@@ -744,7 +756,8 @@ SBcore <- R6::R6Class("SBcore",
             ) & ! MetaData$Tablenames %in% c("SubstanceCompartments"),]
             grepVars <- do.call(paste,
                                 as.list(allVars$AttributeNames[grep(varname, allVars$AttributeNames, ignore.case=TRUE)]))
-            stop (paste("Cannot find property", varname, "; but found", grepVars))
+            warning (paste("Cannot find property", varname, "; but found", grepVars))
+            return(NA)
           } 
           
           #Attrn <- levels(Attrn)[Attrn] R Version 4 now 
