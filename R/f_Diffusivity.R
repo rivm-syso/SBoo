@@ -10,13 +10,13 @@
 #' @export
 f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL) {
   stopifnot(is.numeric(Temp), is.numeric(DynVisc), is.numeric(rad_species))
+  kboltz <- constants::syms$k
   if (Matrix == "air") {
     if (is.null(Cunningham))
       Cunningham <- f_Cunningham(rad_species)
-    kboltz <- constants::syms$k
     return (kboltz*Temp*Cunningham)/(6*pi*DynVisc*rad_species)
   } else {
-    (kboltz*Temp)/(6*pi*visc*rad_species)
+    (kboltz*Temp)/(6*pi*DynVisc*rad_species)
   }
 
 }
