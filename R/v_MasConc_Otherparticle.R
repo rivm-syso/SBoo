@@ -1,3 +1,5 @@
+# POTENTIALLY OBSOLETE
+
 #' @title MasConc_Otherparticle
 #' @name MasConc_Otherparticle
 #' @param mConcSusp concentration of ... in 
