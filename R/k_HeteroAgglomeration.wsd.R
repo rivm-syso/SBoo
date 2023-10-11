@@ -1,7 +1,7 @@
 #' @title Heteroagglomeration (20181102)
 #' @name k.HeteroAgglomeration.wsd
 #' @description Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with other particulates in water and soil
-#' @param to.alpha Attachment Efficiency of ENPs with other particulates [-]
+#' @param alpha Attachment Efficiency of ENPs with other particulates [-]
 #' @param MasConc_Otherparticle Mass concentration of other particulates [kg.m-3]
 #' @param from.radius Radius of nanoparticle [m] 
 #' @param from.rho Density of nanoparticle [kg.m-3]
@@ -14,12 +14,12 @@
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
-k_HeteroAgglomeration.wsd <- function(to.alpha,
+k_HeteroAgglomeration.wsd <- function(alpha,
                                       COL,
                                       SUSP,
                                       Shear,
-                                      from.RadS,
-                                      from.RhoS,
+                                      RadS,
+                                      RhoS,
                                       RadCOL,
                                       RadCP,
                                       Temp,DynVisc,
@@ -27,17 +27,17 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       RhoCP,
                                       rhoMatrix,
                                       Matrix,
-                                      to.Species){
+                                      to.SpeciesName){
   #for soil and sediment fIntercept assumed 0. Use g in formula, set to 0 in these comaprtments!
   
   switch (Matrix,
           "Water" = {
-            switch (to.Species,
-                    "Small" = {
-                      ColInter <- f_Inter(Shear,from.RadS,radius_Otherparticle = RadCOL)
+            switch (to.SpeciesName,
+                    "Aggregated" = {
+                      ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCOL)
                       
-                      ColBrown <- f_Brown(Temp,DynVisc,from.RadS,radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(DynVisc,from.RadS, from.RhoS,
+                      ColBrown <- f_Brown(Temp,DynVisc,RadS,radius_Otherparticle = RadCOL )
+                      ColGrav <- f_Grav(DynVisc,RadS, RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         g, rhoMatrix)
@@ -46,13 +46,13 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                                rho_particle=RhoCOL, 
                                                MasConc=COL)
                       
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
+                      return(alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
                     },
-                    "Large" = {
-                      ColInter <- f_Inter(Shear,from.RadS,radius_Otherparticle = RadCP)
+                    "Attached" = {
+                      ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCP)
                       
-                      ColBrown <- f_Brown(Temp,DynVisc,from.RadS,radius_Otherparticle = RadCP )
-                      ColGrav <- f_Grav(DynVisc,from.RadS, from.RhoS,
+                      ColBrown <- f_Brown(Temp,DynVisc,RadS,radius_Otherparticle = RadCP )
+                      ColGrav <- f_Grav(DynVisc,RadS, RhoS,
                                         radius_Otherparticle = RadCP,
                                         rho_Otherparticle = RhoCP, 
                                         g, rhoMatrix)
@@ -61,16 +61,16 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                                rho_particle=RhoCP, 
                                                MasConc=SUSP)
                       
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
+                      return(alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
                     },
                     return(NA)
             )
           },
           "Soil" = {
-            switch (to.Species,
-                    "Small" = {
-                      ColBrown <- f_Brown(Temp,DynVisc,from.RadS,radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(DynVisc,from.RadS, from.RhoS,
+            switch (to.SpeciesName,
+                    "Aggregated" = {
+                      ColBrown <- f_Brown(Temp,DynVisc,RadS,radius_Otherparticle = RadCOL )
+                      ColGrav <- f_Grav(DynVisc,RadS, RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         g, rhoMatrix)
@@ -79,19 +79,19 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                                rho_particle=RhoCOL, 
                                                MasConc=COL)
                       
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav))
+                      return(alpha*NumConcOther*(ColBrown+ColGrav))
                     },
-                    "Large" = {
+                    "Attached" = {
                       return(NA) # FP could be integrated here
                     },
                     return(NA)
             )
           },
           "Sediment" = {
-            switch (to.Species,
-                    "Small" = {
-                      ColBrown <- f_Brown(Temp,DynVisc,from.RadS,radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(DynVisc,from.RadS, from.RhoS,
+            switch (to.SpeciesName,
+                    "Aggregated" = {
+                      ColBrown <- f_Brown(Temp,DynVisc,RadS,radius_Otherparticle = RadCOL )
+                      ColGrav <- f_Grav(DynVisc,RadS, RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         g, rhoMatrix)
@@ -100,9 +100,9 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                                rho_particle=RhoCOL, 
                                                MasConc=COL)
                       
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav))
+                      return(alpha*NumConcOther*(ColBrown+ColGrav))
                     },
-                    "Large" = {
+                    "Attached" = {
                       return(NA) # FP could be integrated here
                     },
                     return(NA)
@@ -118,7 +118,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
   
   NumConcOther <- fNumConc(rad_particle=radius_Otherparticle ,rho_particle=rho_Otherparticle, MasConc_Otherparticle)
   
-  to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter)
+  alpha*NumConcOther*(ColBrown+ColGrav+ColInter)
 }
 
 
