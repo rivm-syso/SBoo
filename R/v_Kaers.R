@@ -6,7 +6,7 @@
 #' @param Kow
 #' @return Kaers
 #' @export
-Kaers <- function (Kaw25,Kow, Corg, RhoAcc, Matrix,
+Kaers <- function (Kaw25,Kow, Corg, RhoCOL, Matrix,
                    Pvap25, MaxPvap, Sol25, MW, T25, ChemClass) {
   
   #easy reading kBolts as R
@@ -22,7 +22,7 @@ Kaers <- function (Kaw25,Kow, Corg, RhoAcc, Matrix,
   }
   
   switch(Matrix,
-         "air" = 0.54 * (Kow/Kaw25) * Corg * (RhoAcc/1000),
+         "air" = 0.54 * (Kow/Kaw25) * Corg * (RhoCOL/1000),
          NA)
   
 }
