@@ -15,23 +15,48 @@ k_Degradation <- function(FRingas, kdeg.air, C.OHrad.n, C.OHrad,
                           k0.OHrad, Ea.OHrad, Temp, T25, 
                           kdeg.soil, kdeg.sed, Q.10,
                           kdeg.water, FRinw, BACTtest,BACTcomp, 
+                          Ksw, Biodeg, CorgStandard, RHOsolid,
                           Matrix, SpeciesName) {
+  
+  f_kdegcalc(Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
+                          CorgStandard, RHOsolid,
+                          Matrix) 
   
   if (SpeciesName %in% c("Molecular")) {
     
     switch(Matrix,
            "air" =   {
+             if (is.na(kdeg.air)){
+               kdeg.air <-   f_kdegcalc(Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
+                                        CorgStandard, RHOsolid,
+                                        Matrix)
+             }
+             
              Tempfactor <- exp((Ea.OHrad/constants::syms$r)*((Temp-T25)/T25^2))
              FRingas * kdeg.air * (C.OHrad / C.OHrad.n) * Tempfactor
            },
            "soil" = {
+             if (is.na(kdeg.soil)){
+               kdeg.soil <-   f_kdegcalc(Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
+                                        CorgStandard, RHOsolid,
+                                        Matrix)
+             }
              Tempfactor.wsds(Q.10,Temp,T25)*kdeg.soil
            },
            "sediment" = {
-             
+             if (is.na(kdeg.sed)){
+               kdeg.sed <-   f_kdegcalc(Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
+                                         CorgStandard, RHOsolid,
+                                         Matrix)
+             }
              Tempfactor.wsds(Q.10,Temp,T25)*kdeg.sed
            },
            "water" = {
+             if (is.na(kdeg.water)){
+               kdeg.water <-   f_kdegcalc(Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
+                                         CorgStandard, RHOsolid,
+                                         Matrix)
+             }
              kdeg.water*Tempfactor.wsds(Q.10,Temp,T25)*(BACTcomp/BACTtest)*FRinw
            }
            
