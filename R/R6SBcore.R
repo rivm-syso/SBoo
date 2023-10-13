@@ -623,9 +623,14 @@ SBcore <- R6::R6Class("SBcore",
           if (length(CanDo > 0)){
             for (i in 1:length(CanDo)){
               CalcMod <- private$ModuleList[[CanDo[i]]]
+              if (exists("verbose") && verbose){
+                cat(paste("calculating", CanDo[i]), "\n")
+              }
               if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
                 succes <- private$UpdateDL(CanDo[i])
-                if (nrow(succes) < 1) warning(paste(CanDo[i],"; no rows calculated"))
+                if (length(succes) != 1 && nrow(succes) < 1) {
+                  warning(paste(CanDo[i],"; no rows calculated"))
+                }
               } else { # a process; add kaas to the list
                 
                 kaaslist[[CalcMod$myName]] <- CalcMod$execute()
