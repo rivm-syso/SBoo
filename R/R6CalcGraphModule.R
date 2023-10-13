@@ -186,7 +186,7 @@ CalcGraphModule <-
           # fetch the data
           for (i in 1:nrow(Fpars)) {
             TheDataColumn <- private$MyCore$fetchData(Fpars$AttrName[i]) 
-            if (class(TheDataColumn) == "numeric" && length(TheDataColumn) == 1) {#as Global (single number)
+            if (length(TheDataColumn) == 1) {#from Global (atomic, not a dataframe)
               #browser()
               AllIn[,Fpars$AttrName[i]] <- TheDataColumn
             } else {
