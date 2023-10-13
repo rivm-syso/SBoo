@@ -6,7 +6,9 @@
 #'@param rhoMatrix
 #'@param DynVisc
 #'@export
-SettVellNat <- function(RadSPM, RhoSPM, rhoMatrix, DynVisc){
-  f_SettlingVelocity (RadSPM, RhoSPM, rhoMatrix, DynVisc,  
+SettVellNat <- function(Radius, RhoParticle, rhoMatrix, DynVisc){
+  f_SettlingVelocity (RadCOL, RhoCOL, rhoMatrix, DynVisc,  
                                 Matrix = "water")
 }
+
+## NOT SURE WHY WE NEED THIS VARIABLE! (Needed for COL and SUSP)
