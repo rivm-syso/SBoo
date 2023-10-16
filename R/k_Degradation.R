@@ -1,6 +1,6 @@
 #' @title k_Degradation
 #' @name k_Degradation
-#' @description calculate k for degradation in air; 
+#' @description calculate k for degradation; 
 #' @param FRingas see
 #' @param kdeg.air  kdeg.water kdeg.water
 #' @param C.OHrad.n ?
@@ -15,12 +15,13 @@ k_Degradation <- function(FRingas, kdeg.air, C.OHrad.n, C.OHrad,
                           k0.OHrad, Ea.OHrad, Temp, T25, 
                           kdeg.soil, kdeg.sed, Q.10,
                           kdeg.water, FRinw, BACTtest,BACTcomp, 
-                          Ksw, Biodeg, CorgStandard, RHOsolid,
+                          Ksw, Biodeg, CorgStandard, all.rhoMatrix,
                           Matrix, SpeciesName) {
   
+  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
+  
   f_kdegcalc(Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
-                          CorgStandard, RHOsolid,
-                          Matrix) 
+                          CorgStandard, RHOsolid, Matrix, T25) 
   
   if (SpeciesName %in% c("Molecular")) {
     
