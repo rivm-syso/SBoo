@@ -10,11 +10,7 @@
 #' @param C.OHrad.n data
 #' @param k0.OHrad data
 #' @param Ea.OHrad data
-#' @return
 #' @export
-#' 
-#'   
-
 f_kdegcalc <- function (Q.10, Ksw, Biodeg, C.OHrad.n, Ea.OHrad, k0.OHrad,
                     CorgStandard, RHOsolid, Matrix, T25) {
   

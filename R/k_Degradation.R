@@ -1,6 +1,6 @@
 #' @title k_Degradation
 #' @name k_Degradation
-#' @description calculate k for degradation in air; 
+#' @description calculate k for degradation; 
 #' @param FRingas see
 #' @param kdeg.air  kdeg.water kdeg.water
 #' @param C.OHrad.n ?
