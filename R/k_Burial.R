@@ -8,7 +8,7 @@
 #'@return k_Burial Burial from sediment [s-1]
 #'@export
 
-k_Burial <- function(VertDistance, all.NETsedrate, ScaleName, SubCompartName, ...){
+k_Burial <- function(VertDistance, all.NETsedrate, ScaleName, SubCompartName){
   # NETsedrate assumed identical to NETsedrate of the water column above the sediment
   waterabove <- switch (SubCompartName,
       "lakesediment" = "lake",
@@ -22,6 +22,8 @@ k_Burial <- function(VertDistance, all.NETsedrate, ScaleName, SubCompartName, ..
       NA
   )
   if (is.na(waterabove)) return (NA)
-  waterNETsedrate <- all.NETsedrate$NETsedrate[all.NETsedrate$SubCompart == waterabove & all.NETsedrate$Scale == ScaleName]
+  rightRow <- which(all.NETsedrate$SubCompart == waterabove & all.NETsedrate$Scale == ScaleName)
+  if (length(rightRow) != 1) return(NA)
+  waterNETsedrate <- all.NETsedrate$NETsedrate[rightRow]
   waterNETsedrate / VertDistance
 }
