@@ -29,7 +29,8 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                                       RhoCP,
                                       rhoMatrix,
                                       Matrix,
-                                      to.SpeciesName){
+                                      to.SpeciesName,
+                                      SubCompartName){
   #for soil and sediment fIntercept assumed 0. Use g in formula, set to 0 in these comaprtments!
   rhoWater = 998 # temp could be done more elegantly
   switch (tolower(Matrix),
@@ -38,7 +39,10 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                     "aggregated" = {
                       ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCOL)
                       
-                      ColBrown <- f_Brown(Temp,DynViscWaterStandard,RadS,radius_Otherparticle = RadCOL )
+                      ColBrown <- f_Brown(Temp=Temp,
+                                          viscosity=DynViscWaterStandard,
+                                          radius=RadS,
+                                          radius_Otherparticle = RadCOL )
                       ColGrav <- f_Grav(radius = RadS, rho= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
@@ -54,7 +58,10 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                     "attached" = {
                       ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCP)
                       
-                      ColBrown <- f_Brown(Temp,DynViscWaterStandard,RadS,radius_Otherparticle = RadCP )
+                      ColBrown <- f_Brown(Temp=Temp,
+                                          viscosity=DynViscWaterStandard,
+                                          radius=RadS,
+                                          radius_Otherparticle = RadCP )
                       ColGrav <-f_Grav(radius = RadS, rho= RhoS,
                                        radius_Otherparticle = RadCP,
                                        rho_Otherparticle = RhoCP, 
@@ -73,7 +80,10 @@ k_HeteroAgglomeration.wsd <- function(alpha,
           "soil" = {
             switch (tolower(to.SpeciesName),
                     "aggregated" = {
-                      ColBrown <- f_Brown(Temp,DynViscWaterStandard,RadS,radius_Otherparticle = RadCOL )
+                      ColBrown <-f_Brown(Temp=Temp,
+                                         viscosity=DynViscWaterStandard,
+                                         radius=RadS,
+                                         radius_Otherparticle = RadCOL )
                       ColGrav <- f_Grav(radius = RadS, rho= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
@@ -95,7 +105,10 @@ k_HeteroAgglomeration.wsd <- function(alpha,
           "sediment" = {
             switch (tolower(to.SpeciesName),
                     "aggregated" = {
-                      ColBrown <- f_Brown(Temp,DynViscWaterStandard,RadS,radius_Otherparticle = RadCOL )
+                      ColBrown <- f_Brown(Temp=Temp,
+                                          viscosity=DynViscWaterStandard,
+                                          radius=RadS,
+                                          radius_Otherparticle = RadCOL )
                       ColGrav <- f_Grav(radius = RadS, rho= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
