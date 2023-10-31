@@ -12,10 +12,10 @@
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 #' @export
 k_HeteroAgglomeration.sd <- function(Udarcy, rad_species, rho_species, to.RadOther, to.FRACs, to.alpha,
-                                     Temp, hamakerSP.w){
+                                     Temp, hamakerSP.w, DynViscWaterStandard){
 
   DiffS.w <- FetchOtherDim("Diffusivity", Scale = "Regional", SubCompart = "sea", Species = "Solid") # OR Dims(...) ??
-  DYNVISC.w <- FetchOtherDim("DynVisc", SubCompart = "sea")
+
   Rho.w <- FetchOtherDim("rhoMatrix", SubCompart = "sea") 
   Por <- 1-to.FRACs
   GammPDF <- (1-Por)^(1/3)
@@ -29,7 +29,7 @@ k_HeteroAgglomeration.sd <- function(Udarcy, rad_species, rho_species, to.RadOth
   
   InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
   
-  GravNumberS <- (2*rad_species^2*(rho_species-Rho.w)*g)/(9*DYNVISC.w*Udarcy)
+  GravNumberS <- (2*rad_species^2*(rho_species-Rho.w)*g)/(9*DynViscWaterStandard*Udarcy)
   GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
   
   fTotalSFP <- BrownSFP+InterceptSFP+GravSFP

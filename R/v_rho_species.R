@@ -15,27 +15,31 @@
 #' @export
 rho_species <- function (SpeciesName, SubCompartName,
                          RhoS, RadS, 
-                         NaturalRad, NaturalRho,
-                         RhoNuc, RadNuc,
-                         RhoAcc, RadAcc,
+                         RadCOL, RadCP, RhoCOL, RhoCP,
+                         RhoNuc, RadNuc, 
                          NumConcNuc, NumConcAcc, Df){
   
-  if (SpeciesName == "Nanoparticle"){ 
-    return (RhoS)
-  }
-  if (SpeciesName == "Molecular"){
-    return(NA)
-  }
-  if (SpeciesName == "Aggregated"  & SubCompartName == "air"){ 
-    #count weighted average for nucleation mode and Aitken accumulation mode 
-    SingleMass <- ((NumConcNuc*(RhoNuc*fVol(RadNuc)+RhoS*fVol(RadS)))+(NumConcAcc*(RhoAcc*(fVol(RadAcc))+RhoS*fVol(RadS)))) /
-      (NumConcNuc+NumConcAcc)
-    SingleVol <- ((NumConcNuc*(fVol(RadS)+((fVol(RadNuc)))))+(NumConcAcc*(fVol(RadS)+(fVol(RadAcc))))) /
-      (NumConcNuc+NumConcAcc)
-  }
-  else {
-    SingleMass <- RhoS*fVol(RadS) + NaturalRho*fVol(NaturalRad) #Requires update for DF is not 1/3, include matrix mass
-    SingleVol <- fVol((NaturalRad^3 + RadS^3)^(Df)) 
-  }
-  SingleMass/SingleVol
+  switch (SpeciesName,
+          "Nanoparticle" = return (RhoS),
+          "Aggregated" ={
+            if(SubCompartName == "air") {
+              SingleMass <- ((NumConcNuc*(RhoNuc*fVol(RadNuc)+RhoS*fVol(RadS)))+(NumConcAcc*(RhoCOL*(fVol(RadCOL))+RhoS*fVol(RadS)))) /
+                (NumConcNuc+NumConcAcc)
+              SingleVol <- ((NumConcNuc*(fVol(RadS)+((fVol(RadNuc)))))+(NumConcAcc*(fVol(RadS)+(fVol(RadCOL))))) /
+                (NumConcNuc+NumConcAcc)
+              return(SingleMass/SingleVol)
+            } else {
+              SingleMass <- RhoS*fVol(RadS) + RhoCOL*fVol(RadCOL) #Requires update for DF is not 1/3, include matrix mass
+              SingleVol <- fVol((RadCOL^3 + RadS^3)^(Df)) 
+              return(SingleMass/SingleVol)
+            }
+          },
+          "Attached" = {
+            SingleMass <- RhoS*fVol(RadS) + RhoCP*fVol(RadCP) #Requires update for DF is not 1/3, include matrix mass
+            SingleVol <- fVol((RadCP^3 + RadS^3)^(Df)) 
+            return(SingleMass/SingleVol)
+          },
+          return(NA)
+  )
+  
 }

@@ -12,7 +12,7 @@
 #' #param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)
 #' @param to.alpha.surf depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016
 #' @param AEROresist aerodynamic resistance (Constant set to 74) [s.m-1]
-#' @param DynVisc Dynamic viscosity of air
+#' @param DynViscAirStandard Dynamic viscosity of air
 #' @param rad_species rad_particle
 #' @param rho_species rho_particle
 #' @param gamma.surf
@@ -21,25 +21,25 @@
 #' @return k_drydeposition, the rate constant for 1rst order process: dry deposition from air to soil or water [s-1]
 #' @export
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, FricVel,
-                            from.DynVisc, rhoMatrix, to.ColRad, rad_species, rho_species,
+                            DynViscAirStandard, rhoMatrix, to.ColRad, rad_species, rho_species,
                             Temp,to.alpha.surf, from.SettlingVelocity, SpeciesName, SubCompartName){
   
   if (SpeciesName %in% c("Nanoparticle","Aggregated","Attached")) {
-    if (anyNA(c(AEROresist, from.DynVisc, rhoMatrix, rho_species, to.alpha.surf))) {
+    if (anyNA(c(AEROresist, DynViscAirStandard, rhoMatrix, rho_species, to.alpha.surf))) {
       return(NA)
     }
     switch(SubCompartName,
            "air" = {
              
              Cunningham <- f_Cunningham(rad_species)
-             Diffusivity <- f_Diffusivity(Matrix = "air", Temp, from.DynVisc, rad_species, Cunningham)
+             Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
              
-             SchmidtNumber <- from.DynVisc/(rhoMatrix*Diffusivity)
+             SchmidtNumber <- DynViscAirStandard/(rhoMatrix*Diffusivity)
              # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
              Brown <- SchmidtNumber^(-to.gamma.surf)
              
              StN <- ifelse(to.ColRad==0|is.na(to.ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016
-                           (from.SettlingVelocity*FricVel)/from.DynVisc/rhoMatrix, # for smooth surfaces (water)
+                           (from.SettlingVelocity*FricVel)/DynViscAirStandard/rhoMatrix, # for smooth surfaces (water)
                            (from.SettlingVelocity*FricVel)/(constants::syms$gn*to.ColRad)      # for vegetated surfaces (soil)
              )
              Intercept <- ifelse(to.ColRad==0|is.na(to.ColRad),

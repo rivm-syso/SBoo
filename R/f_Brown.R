@@ -4,9 +4,9 @@
 #' @param Temp temperature [K]
 #' @param viscosity Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]
 #' @param from.radius Radius of nanoparticle [m]
-#' @param radOther  Radius of Other particle [m]
+#' @param radius_Otherparticle  Radius of Other particle [m]
 #' @return fBrown [s-1]
 #' @export
-f_Brown <- function(Temp,viscosity,from.radius,radOther){
-  ((2*getConst("r")*Temp)/(3*viscosity))*(from.radius+radOther )^2/(from.radius*radOther)
+f_Brown <- function(Temp,viscosity,from.radius,radius_Otherparticle){
+  ((2*getConst("r")*Temp)/(3*viscosity))*(from.radius+radius_Otherparticle )^2/(from.radius*radius_Otherparticle)
 }

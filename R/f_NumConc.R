@@ -6,6 +6,6 @@
 #' @param MasConc Mass based concentration of particle per volume [kg.m-3]
 #' @return fNumConc [#.m-3]
 #' @export
-fNumConc <- function(rad_particle,rho_particle, MasConc){
+f_NumConc <- function(rad_particle,rho_particle, MasConc){
   (MasConc)/(fVol(rad_particle)*rho_particle)
 }
