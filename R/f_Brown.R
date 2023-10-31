@@ -7,6 +7,7 @@
 #' @param radius_Otherparticle  Radius of Other particle [m]
 #' @return fBrown [s-1]
 #' @export
-f_Brown <- function(Temp,viscosity,from.radius,radius_Otherparticle){
-  ((2*getConst("r")*Temp)/(3*viscosity))*(from.radius+radius_Otherparticle )^2/(from.radius*radius_Otherparticle)
+f_Brown <- function(Temp,viscosity,radius,radius_Otherparticle){
+  
+  ((2*constants::syms$k*Temp)/(3*viscosity))*((radius+radius_Otherparticle)^2)/(radius*radius_Otherparticle)
 }
