@@ -8,15 +8,15 @@
 #' @param rad_species particle radius []
 #' @param to.rhoMatrix density of cloud water []
 #' @param rhoMatrix density of air []
-#' @param DynVisc dynamic viscosity of air []
-#' @param to.DynVisc dynamic viscosity of (cloud) water []
+#' @param DynViscAirStandard dynamic viscosity of air []
+#' @param DynViscWaterStandard dynamic viscosity of (cloud) water []
 #' @param Temp tempreature [oC]
 #' @param 
 #' @return k_CWscavenging
 #' @export
 k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
                            rad_species, rho_species, to.rhoMatrix, from.rhoMatrix, 
-                           from.DynVisc, to.DynVisc, from.SettlingVelocity,
+                           DynViscAirStandard, DynViscWaterStandard, from.SettlingVelocity,
                            Temp, Matrix, SpeciesName, VertDistance,
                            SubCompartName){
   
@@ -29,17 +29,17 @@ k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
   
   Cunningham.cw <- f_Cunningham(rad_RainDrop)
   Settvel.Particle.cw <-  2*(rad_RainDrop^2 * (to.rhoMatrix - from.rhoMatrix)*
-                               constants::syms$gn*Cunningham.cw)/(9*from.DynVisc) 
+                               constants::syms$gn*Cunningham.cw)/(9*DynViscAirStandard) 
   
-  Relax.Particle.a <- ((rho_species-from.rhoMatrix)*(2*rad_species)^2*f_Cunningham(rad_species))/(18*from.DynVisc)
+  Relax.Particle.a <- ((rho_species-from.rhoMatrix)*(2*rad_species)^2*f_Cunningham(rad_species))/(18*DynViscAirStandard)
   
   StokesNumber.Particle.a  = (2*Relax.Particle.a*(Settvel.Particle.cw-from.SettlingVelocity))/(2*rad_RainDrop)
   
-  ReyNumber.cw =((2*rad_RainDrop)*Settvel.Particle.cw*from.rhoMatrix)/(2*from.DynVisc)
+  ReyNumber.cw =((2*rad_RainDrop)*Settvel.Particle.cw*from.rhoMatrix)/(2*DynViscAirStandard)
   
-  SchmidtNumber.Particle.a = from.DynVisc/(from.rhoMatrix*f_Diffusivity(Matrix, 
+  SchmidtNumber.Particle.a = DynViscAirStandard/(from.rhoMatrix*f_Diffusivity(Matrix, 
                                                                         Temp, 
-                                                                        from.DynVisc, 
+                                                                        DynViscAirStandard, 
                                                                         rad_species,  
                                                                         Cunningham = f_Cunningham(rad_species)))
   
@@ -52,7 +52,7 @@ k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
   
   # calculation of Interception collection efficiency
   Intercept.a.cw <- 4*(rad_species/rad_RainDrop)*
-    ((from.DynVisc/to.DynVisc)+(1+2*ReyNumber.cw^0.5*(rad_species/rad_RainDrop)))
+    ((DynViscAirStandard/DynViscWaterStandard)+(1+2*ReyNumber.cw^0.5*(rad_species/rad_RainDrop)))
   
   # calculation of Brownian collection efficiency
   

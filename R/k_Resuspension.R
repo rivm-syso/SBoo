@@ -12,7 +12,7 @@
 #'@export
 
 k_Resuspension <- function (SettVellNat, VertDistance, #SettlVelocitywater
-                            rad_species, rho_species, to.rhoMatrix, to.DynVisc,
+                            rad_species, rho_species, to.rhoMatrix, DynViscWaterStandard,
                             to.Matrix,to.NETsedrate,
                             RHOsolid, FRACs, to.SUSP, SpeciesName) {
   
@@ -20,7 +20,7 @@ k_Resuspension <- function (SettVellNat, VertDistance, #SettlVelocitywater
     # "Molecular" = SettlVelocitywater, In the molecular version
     "Molecular" = SettVellNat, # In the nano version
     #else
-    f_SettlingVelocity(rad_species, rho_species, to.rhoMatrix, to.DynVisc,  to.Matrix)
+    f_SettlingVelocity(rad_species, rho_species, to.rhoMatrix, DynViscWaterStandard,  to.Matrix)
   )
   #Gross sedimentation rate from water [m/s]
   GROSSEDrate <- SettlingVelocity*to.SUSP/(FRACs*RHOsolid)    #[m.s-1] possibly < NETsedrate
