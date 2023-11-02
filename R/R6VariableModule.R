@@ -63,6 +63,12 @@ VariableModule <-
         #the remainder, i.e. "normal" inputs
         AllInput <- AllInput[InputIsDataFrame & !all]
         
+        #TODO remove this wizard mode
+        #to debug the assembly of data 
+        if ("assembly" %in% names(debugAt)) {
+          browser()
+        }
+        
         #make dimension-scaffold
           #which dimensions?
         dims <- unique( unlist( sapply(AllInput, function(x){
@@ -88,9 +94,11 @@ VariableModule <-
           return(ret)
 
         } else {#regular case with SB variables having dimensions
+
+          # merge the data frames (each like the SBcore$fetchtable result) 
           scaffold <- data.frame(unique(private$MyCore$states$asDataFrame[,dims,drop = F]))
           
-          #merge data frames; expand2scaffold (expand to all permutations) is not a parameter (yet)
+          #TODO clean expand2scaffold, 
           expand2scaffold <- T
           if(expand2scaffold) {
             mergeScaffold <- function(x,y) {merge(x,y,all.x = T)}
@@ -105,6 +113,10 @@ VariableModule <-
           
           #names(DimTable) <- names(CalcTable)[DimColumns] #lost if 1 dimension only, pffff
           CalcTable <- CalcTable[,names(CalcTable)[!DimColumns],drop = F]
+          
+          #prep debugnames for use in loop
+          namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
+          
           #Call function for each row
           NewData <- lapply(1:nrow(CalcTable), function(i) {
             ParsList <- as.list(c(CalcTable[i,,drop = F], 
@@ -114,7 +126,7 @@ VariableModule <-
             #needs debugging?
             if (!is.null(debugAt)){
               #test if names of debugAT are in the ParsList
-              stopifnot(all(names(debugAt) %in% names(ParsList)))
+              stopifnot(all(namesdebugAt %in% names(ParsList)))
               ToDebug <- T
               if (length(debugAt) > 0){
                 for (j in 1:length(debugAt)){
