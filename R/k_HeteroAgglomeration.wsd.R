@@ -1,7 +1,7 @@
 #' @title Heteroagglomeration (20181102)
 #' @name k.HeteroAgglomeration.wsd
 #' @description Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with other particulates in water and soil
-#' @param alpha Attachment Efficiency of ENPs with other particulates [-]
+#' @param to.alpha Attachment Efficiency of ENPs with other particulates [-]
 #' @param MasConc_Otherparticle Mass concentration of other particulates [kg.m-3]
 #' @param from.radius Radius of nanoparticle [m] 
 #' @param from.rho Density of nanoparticle [kg.m-3]
@@ -15,7 +15,7 @@
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
-k_HeteroAgglomeration.wsd <- function(alpha,
+k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       COL,
                                       SUSP,
                                       Shear,
@@ -53,7 +53,7 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                                                rho_particle=RhoCOL, 
                                                MasConc=COL)
                       
-                      return(alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
+                      return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
                     },
                     "attached" = {
                       ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCP)
@@ -72,7 +72,7 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                                                rho_particle=RhoCP, 
                                                MasConc=SUSP)
                       
-                      return(alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
+                      return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
                     },
                     return(NA)
             )
@@ -94,7 +94,7 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                                                rho_particle=RhoCOL, 
                                                MasConc=COL)
                       
-                      return(alpha*NumConcOther*(ColBrown+ColGrav))
+                      return(to.alpha*NumConcOther*(ColBrown+ColGrav))
                     },
                     "attached" = {
                       return(NA) # FP could be integrated here
@@ -119,7 +119,7 @@ k_HeteroAgglomeration.wsd <- function(alpha,
                                                rho_particle=RhoCOL, 
                                                MasConc=COL)
                       
-                      return(alpha*NumConcOther*(ColBrown+ColGrav))
+                      return(to.alpha*NumConcOther*(ColBrown+ColGrav))
                     },
                     "attached" = {
                       return(NA) # FP could be integrated here
@@ -137,7 +137,7 @@ k_HeteroAgglomeration.wsd <- function(alpha,
   # 
   # NumConcOther <- f_NumConc(rad_particle=radius_Otherparticle ,rho_particle=rho_Otherparticle, MasConc_Otherparticle)
   # 
-  # alpha*NumConcOther*(ColBrown+ColGrav+ColInter)
+  # to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter)
 }
 
 
