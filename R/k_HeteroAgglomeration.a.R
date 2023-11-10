@@ -16,15 +16,25 @@
 #' @return k_HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 #' @export
 #'
-k_HeteroAgglomeration.a <- function(rad_species, RadOther, rho_species, RhoOther, Temp,
-                                    Diffusivity, 
-                                    NumConcNuc, NumConcAcc, NumConcCP){
-
+k_HeteroAgglomeration.a <- function(rad_species, 
+                                    RadNuc,
+                                    RadCOL,
+                                    RadCP,
+                                    rho_species, 
+                                    RhoNuc,
+                                    RhoCOL,
+                                    RhoCP, Temp,
+                                    DynViscAirStandard,
+                                    NumConcNuc, NumConcAcc, NumConcCP,
+                                    Matrix,
+                                    to.SpeciesName){
+  
   ThermVel <- function(Temp, Radius, Rho){
-   ((8*KBOLTZ*Temp)/(pi*fVol(Radius)*Rho))^0.5
+    kboltz <- constants::syms$k
+    ((8*kboltz*Temp)/(pi*fVol(Radius)*Rho))^0.5
   }
   
-  f.Fuchs <- function(Diff.P1,
+  f_Fuchs <- function(Diff.P1,
                       Diff.P2,
                       Rad.P1,
                       Rad.P2,
@@ -33,30 +43,42 @@ k_HeteroAgglomeration.a <- function(rad_species, RadOther, rho_species, RhoOther
     (1+(4*(Diff.P1+Diff.P2))/((Rad.P1+Rad.P2)*(Thermvel.P1+Thermvel.P2^2)^0.5))^-1
   }
   
-  ThermVelSpecies <- ThermVel(Temp, rad_species, rho_species)
-  radLarge <-  FetchOtherDim("rad_species", Species = "Large")
-  if (rad_species >= radLarge) { #else: for Small particle, it's more complicated
-    DiffOther <- fDiffusivity(Temp = Temp, visc = DynViscAirStandard, rad_particle = RadOther)
-    ThermVelOther <- ThermVel(Temp, RadOther, RhoOther)
-    Fuchs <- f.Fuchs (Diffusivity, DiffOther,
-                      rad_species, RadOther,
-                      ThermVelSpecies, ThermVelOther)
-    return(Fuchs*(4*PI()*(RadOther+rad_species)*(Diff.Other+Diffusivity))*NumConcCP)
-  } else { #rad_species < radLarge ??Solid also ?!
-    # for Acc
-    DiffAcc <- fDiffusivity(Temp = Temp, visc = DynViscAirStandard, rad_particle = RadAcc)
-    ThermVelAcc <- ThermVel(Temp, RadAcc, RhoAcc)
-    FuchsAcc <- f.Fuchs (Diffusivity, DiffAcc,
-                      rad_species, RadAcc,
-                      ThermVelSpecies, ThermVelAcc)
-    k_Acc <- FuchsAcc*(4*PI()*(RadAcc+rad_species)*(DiffNuc+Diffusivity))*NumConcAcc
-    # for Nuc
-    DiffNuc <- fDiffusivity(Temp = Temp, visc = DynViscAirStandard, rad_particle = RadNuc)
-    ThermVelNuc <- ThermVel(Temp, RadNuc, RhoNuc)
-    FuchsNuc <- f.Fuchs (Diffusivity, DiffNuc,
-                         rad_species, RadNuc,
-                         ThermVelSpecies, ThermVelNuc)
-    k_Nuc <- Fuchs*(4*PI()*(RadNuc+rad_species)*(DiffNuc+Diffusivity))*NumConcNuc
-    return(k_Acc + k_Nuc)
-  }
+  ThermVelSpecies <- ThermVel(Temp, Radius = rad_species, Rho = rho_species)
+  
+  Diffusivity <- f_Diffusivity(Matrix, Temp, DynVisc = DynViscAirStandard, rad_species)
+  
+  switch(tolower(to.SpeciesName),
+         "aggregated" = {
+           # for Acc
+           DiffAcc <- f_Diffusivity(Matrix, Temp = Temp, DynVisc = DynViscAirStandard, 
+                                    rad_species = RadCOL)
+           ThermVelAcc <- ThermVel(Temp, Radius = RadCOL, Rho = RhoCOL)
+           FuchsAcc <- f_Fuchs (Diff.P1 = Diffusivity, Diff.P2 = DiffAcc,
+                                Rad.P1 = rad_species, Rad.P2 = RadCOL,
+                                Thermvel.P1 = ThermVelSpecies, Thermvel.P2 = ThermVelAcc)
+           
+           k_Acc <- FuchsAcc*(4*pi*(RadCOL+rad_species)*(DiffAcc+Diffusivity))*NumConcAcc
+           # for Nuc
+           DiffNuc <- f_Diffusivity(Matrix, Temp = Temp, DynVisc = DynViscAirStandard, 
+                                    rad_species = RadNuc)
+           ThermVelNuc <- ThermVel(Temp, Radius = RadNuc, Rho = RhoNuc)
+           FuchsNuc <- f_Fuchs (Diff.P1 = Diffusivity, Diff.P2 = DiffNuc,
+                                Rad.P1 = rad_species, Rad.P2 = RadNuc,
+                                Thermvel.P1 = ThermVelSpecies, Thermvel.P2 = ThermVelNuc)
+           
+           k_Nuc <- FuchsNuc*(4*pi*(RadNuc+rad_species)*(DiffNuc+Diffusivity))*NumConcNuc
+           return(k_Acc + k_Nuc)
+         },
+         "attached" = {
+           DiffOther <- f_Diffusivity(Matrix, Temp = Temp, DynVisc = DynViscAirStandard, 
+                                      rad_species = RadCP)
+           ThermVelOther <- ThermVel(Temp, Radius = RadCP, Rho = RhoCP)
+           Fuchs <- f_Fuchs (Diff.P1 = Diffusivity, Diff.P2 = DiffOther,
+                             Rad.P1 = rad_species, Rad.P2 = RadCP,
+                             Thermvel.P1 = ThermVelSpecies, Thermvel.P2 = ThermVelOther)
+           
+           return(Fuchs*(4*pi*(RadCP+rad_species)*(DiffOther+Diffusivity))*NumConcCP)
+         },
+         return(NA)
+  )
 }
