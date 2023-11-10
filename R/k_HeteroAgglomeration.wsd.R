@@ -28,11 +28,17 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       RhoCOL,
                                       RhoCP,
                                       rhoMatrix,
+                                      Udarcy,
+                                      to.FRACs,
+                                      hamakerSP.w,
                                       Matrix,
                                       to.SpeciesName,
                                       SubCompartName){
-  #for soil and sediment fIntercept assumed 0. Use g in formula, set to 0 in these comaprtments!
+  
   rhoWater = 998 # temp could be done more elegantly
+  kboltz <- constants::syms$k
+  GN <- constants::syms$gn
+  
   switch (tolower(Matrix),
           "water" = {
             switch (tolower(to.SpeciesName),
@@ -97,7 +103,33 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                       return(to.alpha*NumConcOther*(ColBrown+ColGrav))
                     },
                     "attached" = {
-                      return(NA) # FP could be integrated here
+                      DiffS.w <- f_Diffusivity(Matrix=Matrix, 
+                                               Temp, DynVisc=DynViscWaterStandard, 
+                                               rad_species=RadS)
+                      
+                      rhoWater <- 998
+                      Por <- 1-to.FRACs
+                      GammPDF <- (1-Por)^(1/3)
+                      
+                      ASPDF <- (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6)
+                      aspectratioSFP <- RadS/RadCP
+                      PecletNumberFP <- (Udarcy*2*RadCP)/(DiffS.w)
+                      vdWaalsNumberSFP <- hamakerSP.w/(kboltz*Temp)
+                      
+                      BrownSFP <- 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053
+                      
+                      InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
+                      
+                      GravNumberS <- (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy)
+                      GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
+                      
+                      fTotalSFP <- BrownSFP+InterceptSFP+GravSFP
+                      
+                      Filter <- (3/2)*(1-Por)/(2*RadCP*Por)
+                      
+                      K_het.sd <- Filter*Udarcy*fTotalSFP*to.alpha 
+                      
+                      return(K_het.sd)
                     },
                     return(NA)
             )
@@ -122,7 +154,33 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                       return(to.alpha*NumConcOther*(ColBrown+ColGrav))
                     },
                     "attached" = {
-                      return(NA) # FP could be integrated here
+                      DiffS.w <- f_Diffusivity(Matrix=Matrix, 
+                                               Temp, DynVisc=DynViscWaterStandard, 
+                                               rad_species=RadS)
+                      
+                      rhoWater <- 998
+                      Por <- 1-to.FRACs
+                      GammPDF <- (1-Por)^(1/3)
+                      
+                      ASPDF <- (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6)
+                      aspectratioSFP <- RadS/RadCP
+                      PecletNumberFP <- (Udarcy*2*RadCP)/(DiffS.w)
+                      vdWaalsNumberSFP <- hamakerSP.w/(kboltz*Temp)
+                      
+                      BrownSFP <- 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053
+                      
+                      InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
+                      
+                      GravNumberS <- (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy)
+                      GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
+                      
+                      fTotalSFP <- BrownSFP+InterceptSFP+GravSFP
+                      
+                      Filter <- (3/2)*(1-Por)/(2*RadCP*Por)
+                      
+                      K_het.sd <- Filter*Udarcy*fTotalSFP*to.alpha 
+                      
+                      return(K_het.sd)
                     },
                     return(NA)
             )
