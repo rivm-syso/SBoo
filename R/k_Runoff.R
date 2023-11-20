@@ -5,7 +5,6 @@
 #'@param FRACrun Fraction run-off #[-]
 #'@param RAINrate Average precipitation #[m/s]
 #'@param VertDistance Mixing depth soil #[m]
-#'@param EROSIONsoil Soil erosion #[mm/yr]
 #'@return k_Run-off Run-off of particles from soil to water #[s-1]
 #'@export
 
