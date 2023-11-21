@@ -19,7 +19,7 @@ k_AdvectionSeaOcean <- function (to.Volume, from.Volume,
       
       if (ScaleName %in% c("Moderate", "Arctic")){ 
         return((OceanMixingFlow + OceanCurrent) / from.Volume)
-      } else if (Dims$fromScale == "Tropic") {
+      } else if (ScaleName == "Tropic") {
         return (OceanMixingFlow / from.Volume)
       } 
       

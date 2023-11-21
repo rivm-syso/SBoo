@@ -642,13 +642,10 @@ SBcore <- R6::R6Class("SBcore",
           } else {
             #anything left; enough?
             if (length(CantDo)>0){
-              if(is.null(aProcessModule)){
-                CantDoProcesses <- CantDo[private$ModuleList[CantDo]$ModuleType == "Process"]
-                stop(do.call(paste(c(list("Can't calculate"), as.list(CantDoProcesses)))))
-              } else {
-                #MissingVar <- TODO
-                stop(paste("Can't calculate", aProcessModule$myName))
-              }
+              lapply(names(private$ModuleList[CantDo]), function(aname){
+                warning(paste("Can't calculate", aname))
+                })
+              stop("Can't calculate all; see warnings()")
             }
             break #repeat
           }
