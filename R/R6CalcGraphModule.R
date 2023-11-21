@@ -79,8 +79,8 @@ CalcGraphModule <-
 
       Execute = function(debugAt = NULL){ #debug can be list of (3D)names with values
         #All transfers from an to states for which the exefunction is called
-        AllIn <- self$FromAndTo
-        if (nrow(AllIn) == 0) {
+        AllIn <- try(self$FromAndTo)
+        if (!isa(AllIn, "data.frame") || nrow(AllIn) == 0) {
           stop(paste("No transfers found for", private$MyName))
         }
         #only the dimensions, for future use
@@ -187,7 +187,6 @@ CalcGraphModule <-
           for (i in 1:nrow(Fpars)) {
             TheDataColumn <- private$MyCore$fetchData(Fpars$AttrName[i]) 
             if (length(TheDataColumn) == 1) {#from Global (atomic, not a dataframe)
-              #browser()
               AllIn[,Fpars$AttrName[i]] <- TheDataColumn
             } else {
               #rename column to FullName, also if default from. was used
