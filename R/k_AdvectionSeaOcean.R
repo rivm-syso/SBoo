@@ -1,4 +1,4 @@
-#' @title k_AdvectionSeaOcean
+#' @title Mixing of upper and deeper sea water layers (w2 and w3)
 #' @name k_AdvectionSeaOcean
 #' @param to.Volume Volume of the to box
 #' @param from.Volume Volume of the from box
