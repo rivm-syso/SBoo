@@ -8,7 +8,7 @@ x_ContRiver2Reg <- function (ScaleName, SubCompartName,
                            all.Runoff, RainOnFreshwater, 
                            dischargeFRAC, LakeFracRiver){
   if(ScaleName == "Continental" & SubCompartName == "river"){ #the one and only
-    SumRainRunoff <- sum(all.Runoff$flow[all.Runoff$fromScale == "Continental"])
+    SumRainRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == "Continental"])
     River2sea  <- RainOnFreshwater + SumRainRunoff * (1-dischargeFRAC)
     Lake2River <- LakeFracRiver * River2sea
     
