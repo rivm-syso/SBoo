@@ -13,8 +13,8 @@ x_FromModerate2ContWater <- function (all.Volume, all.TAUsea,
                      RegSea2Cont <- all.x_RegSea2Cont$flow[all.x_RegSea2Cont$fromSubCompart == "sea" & 
                                                              all.x_RegSea2Cont$fromScale == "Regional"]
                      toVolume <- all.Volume$Volume[all.Volume$SubCompart == SubCompartName &
-                                              all.Volume$Scale == ScaleName ]
-                     toTAUsea <- all.TAUsea$TAUsea[all.TAUsea$Scale == ScaleName ]
+                                              all.Volume$Scale == "Continental" ]
+                     toTAUsea <- all.TAUsea$TAUsea[all.TAUsea$Scale =="Continental" ]
                      return((toVolume/toTAUsea)-RegSea2Cont)}, 
                    NA
            )
