@@ -1,7 +1,11 @@
-#' @title Continental River 2 Regional
+#' @title Continental surface water to Regional
 #' @name x_ContRiver2Reg
-#' @param x_Runoff runoff flux
-#' @param dischargeFRAC fraction of ...
+#' @param Runoff runoff flow from soil to river
+#' @param dischargeFRAC fraction of discharge that is going from continental to regional surface water
+#' @param RainOnFreshwater 
+#' @param LakeFracRiver description
+#' @param ScaleName Name of the relevant scale
+#' @param SubCompartName Name of the relevant sub-compartment
 #' @return River Discharge for scale Continental
 #' @export
 x_ContRiver2Reg <- function (ScaleName, SubCompartName, 
