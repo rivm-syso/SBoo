@@ -5,7 +5,7 @@
 #' hence the all. (nesting!)
 #' @param all.FRACsea    sea fraction of scale, possibly including other scales,
 #' hence the all. (nesting!)
-#' @param ScaleName  indicating for which scale the funcion is called
+#' @param ScaleName  indicating for which scale the function is called
 #' @return Land in SystemArea
 #' @export
 AreaLand <- function (all.TotalArea,
