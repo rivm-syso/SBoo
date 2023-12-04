@@ -6,10 +6,21 @@
 #'@param from.Matrix Matrix/compartment from which the relevant process is taking place
 #'@return 
 #'@export
-MTC_2a <- function(WINDspeed, MW, Q.10, Temp, T25, kdeg.soil, Matrix){
-  ret <- switch(Matrix,
-    "water" = 0.01*(0.0004+0.00004*WINDspeed^2)*((0.032/MW)^(0.5*0.5)),
-    "soil" = 0.1*Tempfactor.wsds(Q.10,Temp,T25)*kdeg.soil, #KDEG still needs further implementation
-    NA
-  )
+MTC_2a <- function(WINDspeed, MW, Tempfactor, KdegDorC, 
+                   Matrix, SpeciesName, ScaleName, SubCompartName){
+  if (SpeciesName %in% c("Molecular")) {
+  switch(Matrix,
+         "water" = {
+           if (SubCompartName == "deepocean") return(NA)
+           if (ScaleName %in% c("Arctic", "Moderate", "Tropic") & 
+               SubCompartName %in% c("lake", "river")) return(NA)
+           0.01*(0.0004+0.00004*WINDspeed^2)*((0.032/MW)^(0.5*0.5))
+         },
+         "soil" = {
+           if (ScaleName %in% c("Arctic", "Moderate", "Tropic") & 
+               SubCompartName %in% c("othersoil", "agriculturalsoil")) return(NA)
+           0.1*Tempfactor*KdegDorC
+         }, #KDEG still needs further implementation
+         NA
+  )} else return(NA)
 }

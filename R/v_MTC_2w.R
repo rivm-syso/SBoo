@@ -8,7 +8,7 @@
 #'@return 
 #'@export
 MTC_2w <- function(WINDspeed, MW, kwsd.sed, Matrix){
-  ret <- switch(Matrix,
+  switch(Matrix,
     "air" =  0.01*(0.3+0.2*WINDspeed)*((0.018/MW)^(0.67*0.5)),
     "sediment" = kwsd.sed, 
     NA
