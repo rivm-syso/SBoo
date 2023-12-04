@@ -7,7 +7,7 @@
 #'@return 
 #'@export
 MTC_2s <- function(Mackay1, Mackay2, Matrix){
-  ret <- switch(Matrix,
+  switch(Matrix,
     "air" =  Mackay1/Mackay2,
     NA
   )

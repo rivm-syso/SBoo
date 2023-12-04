@@ -5,9 +5,12 @@
 #'@param from.Matrix
 #'@return 
 #'@export
-MTC_2sd <- function(kwsd.water, Matrix){
-  ret <- switch(Matrix,
-    "water" =  kwsd.water,
+MTC_2sd <- function(kwsd.water, Matrix, SubCompartName){
+  switch(Matrix,
+    "water" =  {
+      if(SubCompartName == "cloudwater") return (NA)
+      kwsd.water
+      },
     NA
   )
 }
