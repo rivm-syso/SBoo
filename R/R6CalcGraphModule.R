@@ -90,7 +90,7 @@ CalcGraphModule <-
         Fpars <- formalArgs(private$Function)
         #stopifnot("..." %in% Fpars)
         Fpars <- Fpars[Fpars!="..."] #not needed for Fpars
-        if (!is.null(self$Withflow) && !is.na(self$WithFlow)){ #special case of an advection process
+        if (!is.null(self$Withflow) && !anyNA(self$WithFlow)){ #special case of an advection process
           #the body of the exeFunction is actually using flow from Flows
           Fpars <- Fpars[Fpars!="flow"]
         }
@@ -125,7 +125,7 @@ CalcGraphModule <-
         #get the flows from the Flows table
         flows <- private$MyCore$fetchData("Flows")
         FlowNames <- private$withFlow
-        if ((!is.na(FlowNames)) && length(FlowNames) > 0) {
+        if ((!anyNA(FlowNames)) && length(FlowNames) > 0) {
           flowTables <- lapply(FlowNames, function(aFlow){
             Aflowtable = private$MyCore$fetchData(aFlow)
             names(Aflowtable)[names(Aflowtable) == "from.ScaleName"] <- "fromScaleName"

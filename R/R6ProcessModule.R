@@ -15,14 +15,16 @@ ProcessModule <-
     active = list(
       FromAndTo = function(value) {
         if (missing(value)) {
-          if (is.na(private$withFlow)){
+          if (anyNA(private$withFlow)){
             private$MyCore$FromDataAndTo(self$myName)
           } else { #it's an advection process; append all flows from withFlow
             all2from <- lapply(private$withFlow, function(flowname){
               theFlow <- private$MyCore$moduleList[[flowname]]
               theFlow$FromAndTo
             })
-            all2D2 <- do.call(rbind, all2from)
+            all2D2 <- dplyr::bind_rows(all2from)
+            #append process name
+            all2D2$process <- self$myName
             #expand to all species, but toSpecies == fromSpecies; 
             #first get species, the internal key is easiest fetched via the name
             SpeciesKeys <- data.frame(

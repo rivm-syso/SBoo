@@ -67,7 +67,7 @@ SBcore <- R6::R6Class("SBcore",
       } else {
         nodeProcess <- self$NewProcess(WithProcess)
       }
-      if(length(nodeProcess$WithFlow)==1 && is.na(nodeProcess$WithFlow)){
+      if(length(nodeProcess$WithFlow)==1 && anyNA(nodeProcess$WithFlow)){
         nodeProcess$WithFlow <- FlowFunction
       } else {
         nodeProcess$WithFlow <- c(nodeProcess$WithFlow, FlowFunction) 
@@ -632,7 +632,6 @@ SBcore <- R6::R6Class("SBcore",
                   warning(paste(CanDo[i],"; no rows calculated"))
                 }
               } else { # a process; add kaas to the list
-                
                 kaaslist[[CalcMod$myName]] <- CalcMod$execute()
               }
               TestTree$Params[TestTree$Params == CanDo[i]] <- ""
