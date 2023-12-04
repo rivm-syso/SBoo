@@ -10,9 +10,9 @@
 #' @param VertDistance compartment (mixed/mixk_Sedimentationing) DEPTH [m]
 #' @return k_Sedimentation, the rate constant for sedimentation as first order process
 #' @export
-k_Sedimentation <- function(SettVellNat, FRinw, SettlingVelocity, DynViscWaterStandard,
-                            SpeciesName, VertDistance, from.RhoCP, from.RadCP,
-                            SubCompartName, ScaleName){
+k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
+                            VertDistance, from.RhoCP, from.RadCP,
+                            SpeciesName, SubCompartName, ScaleName){
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
     return(NA)
   } 
