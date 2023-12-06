@@ -13,19 +13,14 @@
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
                             VertDistance, from.RhoCP, from.RadCP,
                             SpeciesName, SubCompartName, ScaleName){
-  # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
-  #   return(NA)
-  # } 
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
+    return(NA)
+  }
     # if (Matrix != "water") return (NA)
   
   if (SpeciesName == "Molecular") {
-    SettVellNat <- f_SetVelWater(radius = from.RadCP,
+    SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
                                       rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
-    return(SettVellNat(1-FRinw) / VertDistance)
-  } #else (return ends the function...)
-  
-  # SetVel <- f_SettlingVelocity (rad_species, rho_species, rhoMatrix, DynVisc,  
-  #                               Matrix)
-    
-  SettlingVelocity/VertDistance
+    return(SetlingVelocityCP*(1-FRinw) / VertDistance)
+  } else SettlingVelocity/VertDistance
 }

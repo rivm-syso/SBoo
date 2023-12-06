@@ -11,19 +11,20 @@
 #'@return k_Resuspension Resuspension flow from sediment #[s-1]
 #'@export
 
-k_Resuspension <- function (SettVellNat, VertDistance, #SettlVelocitywater
+k_Resuspension <- function (VertDistance, #SettlVelocitywater
                             rad_species, rho_species, to.rhoMatrix, DynViscWaterStandard,
                             to.Matrix,to.NETsedrate,
                             RHOsolid, FRACs, to.SUSP, SpeciesName) {
   
-  SettlingVelocity <- switch (SpeciesName,
-    # "Molecular" = SettlVelocitywater, In the molecular version
-    "Molecular" = SettVellNat, # In the nano version
-    #else
-    f_SettlingVelocity(rad_species, rho_species, to.rhoMatrix, DynViscWaterStandard,  to.Matrix)
+  SettlingVelocity2 <- switch (SpeciesName,
+                              # "Molecular" = SettlVelocitywater, In the molecular version
+                              "Molecular" =     f_SetVelWater(radius = from.RadCP,
+                                                              rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) , # In the nano version
+                              #else
+                              SettlingVelocity
   )
   #Gross sedimentation rate from water [m/s]
-  GROSSEDrate <- SettlingVelocity*to.SUSP/(FRACs*RHOsolid)    #[m.s-1] possibly < NETsedrate
+  GROSSEDrate <- SettlingVelocity2*to.SUSP/(FRACs*RHOsolid)    #[m.s-1] possibly < NETsedrate
   
   #Resuspension flow from sediment [m/s]; can't be < 0
   RESUSflow <- max(0, GROSSEDrate - to.NETsedrate) # for particulates this NETsedrate is not optimal!
