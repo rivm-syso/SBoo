@@ -28,7 +28,7 @@ k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
   rad_RainDrop <- f_RadRain(RAINrate, FRACtwet)
   
   Cunningham.cw <- f_Cunningham(rad_RainDrop)
-  Settvel.Particle.cw <-  2*(rad_RainDrop^2 * (to.rhoMatrix - from.rhoMatrix)*
+  Settvel.Particle.cw <-  2*(rad_RainDrop^2 * (to.rhoMatrix - from.rhoMatrix)* #rhoMatrix to be converted to RhoWater and RhoAir
                                constants::syms$gn*Cunningham.cw)/(9*DynViscAirStandard) 
   
   Relax.Particle.a <- ((rho_species-from.rhoMatrix)*(2*rad_species)^2*f_Cunningham(rad_species))/(18*DynViscAirStandard)

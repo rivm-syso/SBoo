@@ -34,7 +34,7 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
              Cunningham <- f_Cunningham(rad_species)
              Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
              
-             SchmidtNumber <- DynViscAirStandard/(rhoMatrix*Diffusivity)
+             SchmidtNumber <- DynViscAirStandard/(rhoMatrix*Diffusivity) #rhoMatrix to be converted to RhoWater or RhoAir
              # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
              Brown <- SchmidtNumber^(-to.gamma.surf)
              
