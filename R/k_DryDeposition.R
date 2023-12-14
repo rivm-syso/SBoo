@@ -1,4 +1,4 @@
-#' @title Dry deposition from air to surface soil or water
+#' @title Dry deposition from air to surface soil or water of particulate species
 #' @name k_DryDeposition
 #' @description 
 #' Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
@@ -34,7 +34,7 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
              Cunningham <- f_Cunningham(rad_species)
              Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
              
-             SchmidtNumber <- DynViscAirStandard/(rhoMatrix*Diffusivity)
+             SchmidtNumber <- DynViscAirStandard/(rhoMatrix*Diffusivity) #rhoMatrix to be converted to RhoWater or RhoAir
              # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
              Brown <- SchmidtNumber^(-to.gamma.surf)
              

@@ -8,8 +8,7 @@
 #'@return k_Run-off Run-off of particles from soil to water #[s-1]
 #'@export
 
-k_Runoff <- function(FRACrun, RAINrate, 
-                     Runoff,
+k_Runoff <- function(Runoff,VertDistance,
                      Volume, Kscompw,
                      relevant_depth_s, penetration_depth_s,
                      ScaleName, to.SubCompartName, SpeciesName){

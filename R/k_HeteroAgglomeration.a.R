@@ -9,8 +9,6 @@
 #' 
 #' 
 #' @param rho_Otherparticle Density (specific weight) of natural particle [kg/m3]
-#' @param rhoMatrix Density of fluid matrix (water) [kg/m3]
-
 #' @param Temp Temperature of compartment [K]
 #' @param viscosity Dyanic viscosity of fluid matrix []
 #' @return k_HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
