@@ -1,4 +1,4 @@
-#' @title Dry deposition from air to surface soil or water
+#' @title Dry deposition from air to surface soil or water of particulate species
 #' @name k_DryDeposition
 #' @description 
 #' Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
