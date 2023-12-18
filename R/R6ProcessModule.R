@@ -33,11 +33,8 @@ ProcessModule <-
             res <- merge(all2D2, SpeciesKeys)
             res$toSpecies <- res$fromSpecies
             #a flow gives 3 dimensions, we might need to extend it to the 4th
-            if ("toScale" %in% names(res)) {
-              res$toSubCompart <- res$fromSubCompart
-            } else {
-              res$toScale <- res$fromScale
-            }
+            res$toSubCompart[is.na(res$toSubCompart)] <- res$fromSubCompart[is.na(res$toSubCompart)]
+            res$toScale[is.na(res$toScale)] <- res$fromScale[is.na(res$toScale)]
             res
             
           }
