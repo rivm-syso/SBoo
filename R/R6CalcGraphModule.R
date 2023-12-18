@@ -83,6 +83,12 @@ CalcGraphModule <-
         if (!isa(AllIn, "data.frame") || nrow(AllIn) == 0) {
           stop(paste("No transfers found for", private$MyName))
         }
+        NArows <- AllIn[rowSums(is.na(AllIn))!=0,]
+        if (nrow(NArows) > 0 ){
+          browser()
+          warning(paste("FromAndTo for ", private$MyName, "has NA in its dimensions;", length(NArows), "rows are removed"))
+          AllIn <- complete.cases(AllIn)
+        }
         #only the dimensions, for future use
         DimsIn <- AllIn
         
@@ -125,24 +131,28 @@ CalcGraphModule <-
         #get the flows from the Flows table
         flows <- private$MyCore$fetchData("Flows")
         FlowNames <- private$withFlow
-        if ((!anyNA(FlowNames)) && length(FlowNames) > 0) {
-          flowTables <- lapply(FlowNames, function(aFlow){
-            Aflowtable = private$MyCore$fetchData(aFlow)
-            names(Aflowtable)[names(Aflowtable) == "from.ScaleName"] <- "fromScaleName"
-            names(Aflowtable)[names(Aflowtable) == "to.ScaleName"] <- "toScaleName"
-            names(Aflowtable)[names(Aflowtable) == "from.SubCompart"] <- "fromSubCompart"
-            names(Aflowtable)[names(Aflowtable) == "to.SubCompart"] <- "toSubCompart"
-            Aflowtable
-          })
-          flowTable <- do.call(rbind, flowTables)
-          # future precaution; can there be multiple flows with identical from-to states?
-          Doubleflow <- aggregate(FlowName ~ fromScale + fromSubCompart + toScale + toSubCompart, data = flowTable, FUN = length)
-          if (any(Doubleflow$FlowName > 1)){
-            browser()
+        if ("flow" %in% Fpars$FullName | (!anyNA(FlowNames)) && length(FlowNames) > 0) {
+          if ("flow" %in% Fpars$FullName) { #the process
+            AllIn <- merge(AllIn, flows[,names(flows)[names(flows) != "FlowName"]])
+          } else {
+            flowTables <- lapply(FlowNames, function(aFlow){
+              Aflowtable = private$MyCore$fetchData(aFlow)
+              names(Aflowtable)[names(Aflowtable) == "from.ScaleName"] <- "fromScaleName"
+              names(Aflowtable)[names(Aflowtable) == "to.ScaleName"] <- "toScaleName"
+              names(Aflowtable)[names(Aflowtable) == "from.SubCompart"] <- "fromSubCompart"
+              names(Aflowtable)[names(Aflowtable) == "to.SubCompart"] <- "toSubCompart"
+              Aflowtable
+            })
+            flowTable <- do.call(rbind, flowTables)
+            # future precaution; can there be multiple flows with identical from-to states?
+            Doubleflow <- aggregate(FlowName ~ fromScale + fromSubCompart + toScale + toSubCompart, data = flowTable, FUN = length)
+            if (any(Doubleflow$FlowName > 1)){
+              browser()
+            }
+            flowTable$FlowName <- NULL
+            # flowTables are limiting the dimensions, for processes: expanding to species!
+            AllIn <- merge(AllIn, flowTable) #
           }
-          flowTable$FlowName <- NULL
-          # flowTables are limiting the dimensions, for processes: expanding to species!
-          AllIn <- merge(AllIn, flowTable) #
           if (nrow(AllIn) == 0) {
               stop(paste("No more inputs in", self$myName, "after merge with flows"))
           }
@@ -198,7 +208,7 @@ CalcGraphModule <-
               names(ByY) <- ByX
               AllIn <- dplyr::full_join(AllIn, TheDataColumn, by = ByY)#, by.x = ByX, by.y = ByY) 
               if (anyNA(AllIn$process)) {
-                warning(paste("input data ignored; not all ", Fpars$FullName[i], "in FromDataAndTo"))
+                warning(paste("input data ignored; not all ", Fpars$FullName[i], "in FromAndTo property"))
                 AllIn <- AllIn[!is.na(AllIn$process),]
               }
             }
