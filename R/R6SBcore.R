@@ -614,7 +614,9 @@ SBcore <- R6::R6Class("SBcore",
         AllWant <- unique(TestTree$Calc)
         MetaData <- self$metaData()
         TestTree$Params[TestTree$Params %in% MetaData$AttributeNames] <- ""
-        
+        #Hardcoded the "keyword" flow; assuming it will be calculated by all (relevant) FlowModules
+        TestTree$Params[TestTree$Params == "flow"] <- ""
+        #Loop until all TestTree$Params == "", if possible
         repeat{
           TestTree$Check <- TestTree$Params == ""
           CountCantdo <- length(which(!TestTree$Check))
@@ -634,6 +636,7 @@ SBcore <- R6::R6Class("SBcore",
               } else { # a process; add kaas to the list
                 kaaslist[[CalcMod$myName]] <- CalcMod$execute()
               }
+              #skip them from the "todo" list 
               TestTree$Params[TestTree$Params == CanDo[i]] <- ""
               TestTree <- TestTree[-which(TestTree$Calc == CanDo[i]),] 
               AllWant <- AllWant[-which(AllWant == CanDo[i])]
@@ -641,10 +644,20 @@ SBcore <- R6::R6Class("SBcore",
           } else {
             #anything left; enough?
             if (length(CantDo)>0){
-              lapply(names(private$ModuleList[CantDo]), function(aname){
-                warning(paste("Can't calculate", aname))
+              NotToDo <- names(private$ModuleList[CantDo])
+              if (exists("verbose") && verbose) {
+                NotToDoString <- do.call(paste, as.list(NotToDo))
+                cat (paste("Can't calculate", NotToDoString, "\n"))
+                lapply(private$ModuleList[CantDo], function(aModule){
+                  if("ProcessModule" %in% class(aModule) | "FlowModule" %in% class(aModule)){
+                    pmissing <- TestTree$Params[TestTree$Calc == aModule$myName & TestTree$Params != ""]
+                    stopifnot(length(pmissing)>0) #can't be, would have been calculated
+                    missParams <- do.call(paste,as.list(pmissing))
+                    cat(paste(aModule$myName, "is missing", missParams, "\n"))
+                  } 
                 })
-              stop("Can't calculate all; see warnings()")
+              }
+              stop("Can't calculate all needed modules")
             }
             break #repeat
           }
