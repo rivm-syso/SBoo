@@ -37,6 +37,13 @@ SBcore <- R6::R6Class("SBcore",
     #' will be stored locally. The private method DoPostponed will add and execute them. (This is automised, 
     #' because it will be needed in sensitivity analyses etc.)
     PostponeVarProcess = function(VarFunctions = NULL, FlowFunctions = NULL, ProcesFunctions) {
+      #test if all exist
+      for (modname in c(VarFunctions, FlowFunctions, ProcesFunctions)){
+        TheModule <- self$moduleList[[modname]]
+        if (is.null(TheModule)) {
+          stop(paste("Module", modname, "does not exist; define it before setting it as postpone"))
+        }
+      }
       private$l_postPoneList <- list(VarFunctions, FlowFunctions, ProcesFunctions)
     },
     
@@ -213,12 +220,43 @@ SBcore <- R6::R6Class("SBcore",
       if (is.null(private$SBkaas) | !mergeExisting){
           private$SBkaas <- NewKaas[,c("i","j","k","process")]
       } else { #merge with existing kaas; update or append if new
-          Processes2Update <- unique(NewKaas$process)
-          private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
-          private$SBkaas <- merge(NewKaas[,c("i","j","k","process")], private$SBkaas, all = T)
+        Processes2Update <- unique(NewKaas$process)
+        private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
+        private$SBkaas <- merge(NewKaas[,c("i","j","k","process")], private$SBkaas, all = T)
       }
+      
+      # do postponed
+      browser()
+      for (postNames in do.call(c,private$l_postPoneList)){ #force order??
+        CalcMod <- private$ModuleList[[postNames]]
+        if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+          succes <- private$UpdateDL(postNames)
+          if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
+        } else { # a process; add kaas to the list
+          postKaas <- CalcMod$execute()
+          
+          private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
+          private$SBkaas <- rbind(private$SBkaas, 
+                                  data.frame(
+                                    i = private$FindStatefrom3D(data.frame(
+                                      Scale = postKaas$fromScale,
+                                      SubCompart = postKaas$fromSubCompart,
+                                      Species = postKaas$fromSpecies
+                                    )),
+                                    j = private$FindStatefrom3D(data.frame(
+                                      Scale = postKaas$toScale,
+                                      SubCompart = postKaas$toSubCompart,
+                                      Species = postKaas$toSpecies
+                                    )),
+                                    k = postKaas$k,
+                                    process = postKaas$process
+                                  ))
+          
+        }
+      }
+      
       #return only for purpose of transparent update; side effect is done
-      invisible(NewKaas)
+      invisible(private$SBkaas)
     },
     
     #' @description runs (or tries to) the calculation for aVariable and stores the results.
@@ -657,19 +695,9 @@ SBcore <- R6::R6Class("SBcore",
                   } 
                 })
               }
-              stop("Can't calculate all needed modules")
+              warning("Can't calculate all needed modules !!")
             }
             break #repeat
-          }
-        }
-        # do postponed
-        for (postNames in c(private$l_postPoneList["VarFunctions", "FlowFunctions", "ProcesFunctions"])){ #force that order
-          CalcMod <- private$ModuleList[[CanDo[i]]]
-          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-            succes <- private$UpdateDL(CanDo[i])
-            if (nrow(succes) < 1) warning(paste(CanDo[i],"; no rows calculated"))
-          } else { # a process; add kaas to the list
-            kaaslist[[CalcMod$myName]] <- CalcMod$execute()
           }
         }
       }

@@ -2,18 +2,11 @@
 #' @name v_OtherkAir
 #' @param all.kaas sneaky way to obtain other loss processes from air
 #' @export
-OtherkAir <- function (all.kaas){
-  OnlyMolecular <- all.kaas$fromSpecies == "Unbound" # Unbound and not Molecular as this is not SpeciesName
-  OnlyCalculated <- all.kaas$process != "LoadKaas" # Not sure if this is needed here, but at moment all.kaas consists also of LoadKaas which are doubled with the calculated K's
-  
-  # TODO incorporate OnlyCalculated in selection below
-  
-  return(data.frame(
-      Scale = all.kaas$fromScale[all.kaas$fromSubCompart == "air" & OnlyMolecular] ,
-      Species = all.kaas$fromSpecies[all.kaas$fromSubCompart == "air" & OnlyMolecular],
-      OtherkAir = all.kaas$k[all.kaas$fromSubCompart == "air" & OnlyMolecular]
-    ))
-  
-  
-  
+OtherkAir <- function (all.kaas, ScaleName, SpeciesName){
+  #is only for Molecular
+  if (SpeciesName != "Molecular") return (NA)
+  #else
+  #TODO clean fromScale comparison with ScaleName; which is strictly speaking not 1:1
+  return(sum(all.kaas$k[all.kaas$fromScale == ScaleName & all.kaas$fromSpecies == "Unbound" & all.kaas$fromSubCompart == "air"]))
+
 }
