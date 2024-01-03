@@ -7,8 +7,13 @@ ProcessModule <-
     public = list(
       execute = function(debugAt = NULL){ #debug can be list of (3D)names with values
         AllIO <- private$Execute(debugAt)
-        AllIO$DimsIn$k <- unlist(AllIO$AllOut)
-        return(AllIO$DimsIn[!is.na(AllIO$DimsIn$k),])
+        if (all(is.na(AllIO$AllOut))) {
+          #browser()
+          return(data.frame(NA))
+        } else {
+          AllIO$DimsIn$k <- unlist(AllIO$AllOut)
+          return(AllIO$DimsIn[!is.na(AllIO$DimsIn$k),])
+        }
       }
     ),
     

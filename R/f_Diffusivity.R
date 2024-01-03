@@ -9,7 +9,18 @@
 #' @return Diffusivity
 #' @export
 f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL) {
-  stopifnot(is.numeric(Temp), is.numeric(DynVisc), is.numeric(rad_species))
+  if(!is.numeric(Temp)){
+    warning("Temp missing in f_Diffusivity")
+    return(NA)
+  }
+  if(!is.numeric(DynVisc)){
+    warning("DynVisc missing in f_Diffusivity")
+    return(NA)
+  }
+  if(!is.numeric(rad_species)){
+    warning("rad_species missing in f_Diffusivity")
+    return(NA)
+  }
   kboltz <- constants::syms$k
   if (Matrix == "air") {
     if (is.null(Cunningham))

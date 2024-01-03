@@ -16,8 +16,12 @@ FlowModule <-
       
       execute = function(debugAt = NULL){ #debug can be list of (3D)names with values
         AllIO <- private$Execute(debugAt)
-        AllIO$DimsIn$flow <- AllIO$AllOut
-        return(AllIO$DimsIn[!is.na(AllIO$DimsIn$flow),])
+        if (all(is.na(AllIO$AllOut))) {
+          browser()
+        } else {
+          AllIO$DimsIn$flow <- AllIO$AllOut
+          return(AllIO$DimsIn[!is.na(AllIO$DimsIn$flow),])
+        }
       }
     ),
     

@@ -14,7 +14,9 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              DynViscWaterStandard,
                              DynViscAirStandard,
                              Matrix,SubCompartName) {
-  stopifnot(is.numeric(rho_species), is.numeric(rhoMatrix))
+  if (is.numeric(rho_species) | is.numeric(rhoMatrix)){
+    return(NA)
+  }
 
   GN <- constants::syms$gn
   

@@ -16,7 +16,7 @@
 #' @export
 k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
                            rad_species, rho_species, to.rhoMatrix, from.rhoMatrix, 
-                           DynViscAirStandard, DynViscWaterStandard, from.SettlingVelocity,
+                           DynViscAirStandard, DynViscWaterStandard, SettlingVelocity,
                            Temp, Matrix, SpeciesName, VertDistance,
                            SubCompartName){
   
@@ -33,22 +33,24 @@ k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,
   
   Relax.Particle.a <- ((rho_species-from.rhoMatrix)*(2*rad_species)^2*f_Cunningham(rad_species))/(18*DynViscAirStandard)
   
-  StokesNumber.Particle.a  = (2*Relax.Particle.a*(Settvel.Particle.cw-from.SettlingVelocity))/(2*rad_RainDrop)
+  StokesNumber.Particle.a <- (2*Relax.Particle.a*(Settvel.Particle.cw-SettlingVelocity))/(2*rad_RainDrop)
   
-  ReyNumber.cw =((2*rad_RainDrop)*Settvel.Particle.cw*from.rhoMatrix)/(2*DynViscAirStandard)
+  ReyNumber.cw <- ((2*rad_RainDrop)*Settvel.Particle.cw*from.rhoMatrix)/(2*DynViscAirStandard)
   
-  SchmidtNumber.Particle.a = DynViscAirStandard/(from.rhoMatrix*f_Diffusivity(Matrix, 
+  SchmidtNumber.Particle.a <- DynViscAirStandard/(from.rhoMatrix*f_Diffusivity(Matrix, 
                                                                         Temp, 
                                                                         DynViscAirStandard, 
                                                                         rad_species,  
                                                                         Cunningham = f_Cunningham(rad_species)))
   
-  CritStokesNumb.cw = ((1.2+(1/12)*log(1+ReyNumber.cw))/(1+log(1+ReyNumber.cw)))
+  CritStokesNumb.cw <- ((1.2+(1/12)*log(1+ReyNumber.cw))/(1+log(1+ReyNumber.cw)))
+  
+  if (is.na(StokesNumber.Particle.a)) return(NA)
   
   # calculation of graviational collection efficiency
-  if(StokesNumber.Particle.a>CritStokesNumb.cw){
-    Grav.a.cw = ((StokesNumber.Particle.a-CritStokesNumb.cw)/(StokesNumber.Particle.a-CritStokesNumb.cw+2/3))^(3/2)
-  } else Grav.a.cw = 0
+  if(StokesNumber.Particle.a > CritStokesNumb.cw){
+    Grav.a.cw <- ((StokesNumber.Particle.a-CritStokesNumb.cw)/(StokesNumber.Particle.a-CritStokesNumb.cw+2/3))^(3/2)
+  } else Grav.a.cw <- 0
   
   # calculation of Interception collection efficiency
   Intercept.a.cw <- 4*(rad_species/rad_RainDrop)*

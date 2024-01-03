@@ -79,13 +79,20 @@ CalcGraphModule <-
 
       Execute = function(debugAt = NULL){ #debug can be list of (3D)names with values
         #All transfers from an to states for which the exefunction is called
+        #TODO remove this wizard mode
+        #to debug the assembly of data 
+        if ("assembly" %in% names(debugAt)) {
+          browser()
+        }
+        
         AllIn <- try(self$FromAndTo)
         if (!isa(AllIn, "data.frame") || nrow(AllIn) == 0) {
-          stop(paste("No transfers found for", private$MyName))
+          warning(paste("No transfers found for", private$MyName))
+          return(list(DimsIn = NA, AllIn = AllIn, AllOut = data.frame(NA)))
         }
         NArows <- AllIn[rowSums(is.na(AllIn))!=0,]
         if (nrow(NArows) > 0 ){
-          browser()
+          #browser()
           warning(paste("FromAndTo for ", private$MyName, "has NA in its dimensions;", length(NArows), "rows are removed"))
           AllIn <- complete.cases(AllIn)
         }
@@ -154,7 +161,8 @@ CalcGraphModule <-
             AllIn <- merge(AllIn, flowTable) #
           }
           if (nrow(AllIn) == 0) {
-              stop(paste("No more inputs in", self$myName, "after merge with flows"))
+            warning(paste("No more inputs in", self$myName, "after merge with flows"))
+            return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
           }
           #no longer needed in Fpars
           Fpars <- Fpars[Fpars$AttrName != "flow",]
@@ -166,7 +174,8 @@ CalcGraphModule <-
           if (!all(MultTable > 0)) {
             ErrorRow <- which(MultTable != 1)
             #browser()
-            stop(paste("error: variable not found in tables;", Fpars$FullName[ErrorRow], ":" ,Fpars$Tables[ErrorRow]))
+            warning(paste("error: variable not found in tables;", Fpars$FullName[ErrorRow], ":" ,Fpars$Tables[ErrorRow]))
+            return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
           }
           
           # Which of the dimensions are key-field for the parameters; excluding the "all." tables
@@ -189,8 +198,9 @@ CalcGraphModule <-
                                     NA)
           }
           if (nrow(Fpars) == 0) { 
-            browser() #should go out?
-            stop(paste("no data for ", private$MyName))
+            #browser() #should go out?
+            warning(paste("no data for ", private$MyName))
+            return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
           }
 
           # fetch the data
@@ -198,6 +208,8 @@ CalcGraphModule <-
             TheDataColumn <- private$MyCore$fetchData(Fpars$AttrName[i]) 
             if (length(TheDataColumn) == 1) {#from Global (atomic, not a dataframe)
               AllIn[,Fpars$AttrName[i]] <- TheDataColumn
+              #rename from the name in datalayer to argument name, potentially including to. (or from. )
+              names(AllIn)[names(AllIn) == Fpars$AttrName[i]] <- Fpars$FullName[i] 
             } else {
               #rename column to FullName, also if default from. was used
               names(TheDataColumn)[names(TheDataColumn) == Fpars$AttrName[i]] <- Fpars$FullName[i]
@@ -224,16 +236,21 @@ CalcGraphModule <-
         AllIn <- AllIn[,ColumnsToKeep, drop = FALSE]
 
         if (nrow(AllIn) == 0){  #what's going on??
-          
+          warning(paste("no input rows for ", private$MyName))
+          return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
         }
+        
+        #prep debugnames for use in loop
+        namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
+        
         #Call function for each row; debug-mode if indicated by debugAt
         res <- lapply(1:nrow(AllIn), function(i) {
           #list of regular parameters, i.e. either to. or from. type
           vCalc <- lapply(AllIn, function (x){ x[i] })
           if (!is.null(debugAt)){
             ToDebug <- T
-            if (length(debugAt) > 0){
-              for (j in 1:length(debugAt)){
+            if (length(namesdebugAt) > 0){
+              for (j in 1:length(namesdebugAt)){
                 if (!names(debugAt)[[j]] %in% names(vCalc)){
                   stop(paste(names(debugAt)[[j]], "not in", names(vCalc)))
                 }
@@ -250,12 +267,13 @@ CalcGraphModule <-
         #check for anomalies
         resLength <- sapply(res, length)
         if(any(resLength != 1)) {
-          browser()
-          stop(paste ("error in row(s)", which(resLength != 1, arr.ind = T)), "check in AllIn")
+          #browser()
+          warning(paste ("error in row(s)", which(resLength != 1, arr.ind = T)), "check in AllIn")
+          return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
+        } else {
+          
+          return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = unlist(res)))
         }
-        
-        return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = unlist(res)))
-        
       },
       
       initNeedVars = function(){
