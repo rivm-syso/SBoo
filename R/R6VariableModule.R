@@ -6,7 +6,16 @@ VariableModule <-
     inherit = CalcGraphModule,
     public = list(
       execute = function(debugAt = NULL) {
-        private$Execute(debugAt)
+        ret <- private$Execute(debugAt)
+        if (any(is.na(ret))){
+          return(data.frame(NA))
+        } else { #an | for both cases would cause an error
+          if (nrow(ret) == 0) {
+            return(data.frame(NA))
+          } else {
+            return(ret)
+          }
+        }
       },
       
       initialize = function(TheCore, exeFunction, AggrBy, AggrFun){
@@ -68,10 +77,9 @@ VariableModule <-
         if ("assembly" %in% names(debugAt)) {
           browser()
         }
-        
         #make dimension-scaffold
           #which dimensions?
-        dims <- unique( unlist( sapply(AllInput, function(x){
+        dims <- unique( unlist( lapply(AllInput, function(x){
           The3D[The3D %in% names(x)]
         })))
         To.3D <- paste("To.", The3D, sep = "")
@@ -82,7 +90,7 @@ VariableModule <-
           stop ("Not possible to use 6 dims for a variable; process/flux only") #scaffold would be 2 big
         }
         #stopifnot(length(dims) > 0)
-        if (length(dims) == 0) {# any possible exeption will occur; all constants and/or all.-data.frames
+        if (length(dims) == 0) {# any possible exception will occur; all constants and/or all.-data.frames
           if (!is.null(debugAt)){
             debugonce(self$exeFunction)
           }
@@ -126,9 +134,11 @@ VariableModule <-
             #needs debugging?
             if (!is.null(debugAt)){
               #test if names of debugAT are in the ParsList
-              stopifnot(all(namesdebugAt %in% names(ParsList)))
+              if(!all(namesdebugAt %in% names(ParsList))){
+                warning(paste("!all(namesdebugAt %in% names(ParsList)) in", private$MyName))
+              }
               ToDebug <- T
-              if (length(debugAt) > 0){
+              if (length(namesdebugAt) > 0 ){
                 for (j in 1:length(debugAt)){
                   if (ParsList[[names(debugAt)[j]]] != debugAt[j]){
                     ToDebug <- F

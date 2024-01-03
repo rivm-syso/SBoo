@@ -226,7 +226,6 @@ SBcore <- R6::R6Class("SBcore",
       }
       
       # do postponed
-      browser()
       for (postNames in do.call(c,private$l_postPoneList)){ #force order??
         CalcMod <- private$ModuleList[[postNames]]
         if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
@@ -234,24 +233,25 @@ SBcore <- R6::R6Class("SBcore",
           if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
         } else { # a process; add kaas to the list
           postKaas <- CalcMod$execute()
-          
-          private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
-          private$SBkaas <- rbind(private$SBkaas, 
-                                  data.frame(
-                                    i = private$FindStatefrom3D(data.frame(
-                                      Scale = postKaas$fromScale,
-                                      SubCompart = postKaas$fromSubCompart,
-                                      Species = postKaas$fromSpecies
-                                    )),
-                                    j = private$FindStatefrom3D(data.frame(
-                                      Scale = postKaas$toScale,
-                                      SubCompart = postKaas$toSubCompart,
-                                      Species = postKaas$toSpecies
-                                    )),
-                                    k = postKaas$k,
-                                    process = postKaas$process
-                                  ))
-          
+          if (!any(is.na(postKaas))) {
+            private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
+            private$SBkaas <- rbind(private$SBkaas, 
+                                    data.frame(
+                                      i = private$FindStatefrom3D(data.frame(
+                                        Scale = postKaas$fromScale,
+                                        SubCompart = postKaas$fromSubCompart,
+                                        Species = postKaas$fromSpecies
+                                      )),
+                                      j = private$FindStatefrom3D(data.frame(
+                                        Scale = postKaas$toScale,
+                                        SubCompart = postKaas$toSubCompart,
+                                        Species = postKaas$toSpecies
+                                      )),
+                                      k = postKaas$k,
+                                      process = postKaas$process
+                                    ))
+            
+          }
         }
       }
       
@@ -627,7 +627,7 @@ SBcore <- R6::R6Class("SBcore",
     CalcTreeForward = function(DirtyVariables){ #calculation of variables and kaas
       if (is.null(DirtyVariables)) stop("Cannot CalcTreeForward without a(starting/dirty)Variable")
       TestTree <- private$nodeList
-      browser()
+      browser() #|TODO future feature to speed up application in loops, iteration ...
       AllCan <- TestTree$x
     },
     
@@ -667,10 +667,7 @@ SBcore <- R6::R6Class("SBcore",
                 cat(paste("calculating", CanDo[i]), "\n")
               }
               if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-                succes <- private$UpdateDL(CanDo[i])
-                if (length(succes) != 1 && nrow(succes) < 1) {
-                  warning(paste(CanDo[i],"; no rows calculated"))
-                }
+                private$UpdateDL(CanDo[i])
               } else { # a process; add kaas to the list
                 kaaslist[[CalcMod$myName]] <- CalcMod$execute()
               }
@@ -702,6 +699,7 @@ SBcore <- R6::R6Class("SBcore",
         }
       }
       #select kaas names only for all kaaslist - data.frames
+      kaaslist <- kaaslist[!sapply(kaaslist, anyNA)]
       kaaslist <- lapply(kaaslist, 
                          dplyr::select, c("process", "fromScale","fromSubCompart","fromSpecies",
                                       "toScale","toSubCompart","toSpecies","k"))
@@ -871,20 +869,27 @@ SBcore <- R6::R6Class("SBcore",
           if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
           VarFun <- private$ModuleList[[VarFunName]]
           NewData <- VarFun$execute()
-          #adjust column names 
-          if ("FlowModule" %in% class(VarFun)  ) {
-            #to conform the full Flows table)
-            NewData$FlowName <- VarFunName
-            if (!"toScale" %in% names(NewData)){
-              NewData$toScale <- NewData$fromScale
-            }
-            if (!"toSubCompart" %in% names(NewData)){
-              NewData$toSubCompart <- NewData$fromSubCompart
-            }
-          } 
-          if ("VariableModule" %in% class(VarFun)){
-            if(is.null(names(NewData))){
-              names(NewData) <- VarFunName
+          if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
+            warning(paste(VarFunName,"; no rows calculated"))
+            #force the result, see below
+            NewData <- data.frame(NA)
+            names(NewData) <- VarFunName #for the flow that returns NA
+          } else {
+            #adjust column names 
+            if ("FlowModule" %in% class(VarFun)  ) {
+              #to conform the full Flows table)
+              NewData$FlowName <- VarFunName
+              if (!"toScale" %in% names(NewData)){
+                NewData$toScale <- NewData$fromScale
+              }
+              if (!"toSubCompart" %in% names(NewData)){
+                NewData$toSubCompart <- NewData$fromSubCompart
+              }
+            } 
+            if ("VariableModule" %in% class(VarFun)){
+              if(is.null(names(NewData))){
+                names(NewData) <- VarFunName
+              }
             }
           }
         }
@@ -899,6 +904,9 @@ SBcore <- R6::R6Class("SBcore",
           names(diffTable)[names(diffTable)==VarFunName] <- paste("old",VarFunName,sep = "_")
         }
       } else {
+        if (all(is.na(NewData))){}
+          #set the result, as variable?!?! in the DataLayer (Globals), to have the graph continue
+          
         Target.Table <- private$WhichDataTable(names(NewData))
         if (!is.na(Attrn)){ #is already in the DL
           diffTable <- private$FetchData(VarFunName)

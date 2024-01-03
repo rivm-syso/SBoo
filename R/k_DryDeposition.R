@@ -22,7 +22,7 @@
 #' @export
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, FricVel,
                             DynViscAirStandard, rhoMatrix, to.ColRad, rad_species, rho_species,
-                            Temp,to.alpha.surf, from.SettlingVelocity, SpeciesName, SubCompartName){
+                            Temp,to.alpha.surf, SettlingVelocity, SpeciesName, SubCompartName){
   
   if (SpeciesName %in% c("Nanoparticle","Aggregated","Attached")) {
     if (anyNA(c(AEROresist, DynViscAirStandard, rhoMatrix, rho_species, to.alpha.surf))) {
@@ -39,8 +39,8 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
              Brown <- SchmidtNumber^(-to.gamma.surf)
              
              StN <- ifelse(to.ColRad==0|is.na(to.ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016
-                           (from.SettlingVelocity*FricVel)/DynViscAirStandard/rhoMatrix, # for smooth surfaces (water)
-                           (from.SettlingVelocity*FricVel)/(constants::syms$gn*to.ColRad)      # for vegetated surfaces (soil)
+                           (SettlingVelocity*FricVel)/DynViscAirStandard/rhoMatrix, # for smooth surfaces (water)
+                           (SettlingVelocity*FricVel)/(constants::syms$gn*to.ColRad)      # for vegetated surfaces (soil)
              )
              Intercept <- ifelse(to.ColRad==0|is.na(to.ColRad),
                                  0, # for smooth surfaces
@@ -58,7 +58,7 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
              SurfResist <- 1/(epsilon*FricVel*(Brown+ # Collection efficiency for Brownian diffusion
                                                  Intercept+ # Collection efficiency for interception
                                                  Impaction)*R1) # Collection efficiency for impaction
-             DRYDEPvelocity <- 1/(AEROresist+SurfResist)+from.SettlingVelocity
+             DRYDEPvelocity <- 1/(AEROresist+SurfResist)+SettlingVelocity
              
              # Currently implemented in SimpleBox for P species:
              # if (species == "P"){
