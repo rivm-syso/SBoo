@@ -225,32 +225,34 @@ SBcore <- R6::R6Class("SBcore",
         private$SBkaas <- merge(NewKaas[,c("i","j","k","process")], private$SBkaas, all = T)
       }
       
-      # do postponed
-      for (postNames in do.call(c,private$l_postPoneList)){ #force order??
-        CalcMod <- private$ModuleList[[postNames]]
-        if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-          succes <- private$UpdateDL(postNames)
-          if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
-        } else { # a process; add kaas to the list
-          postKaas <- CalcMod$execute()
-          if (!any(is.na(postKaas))) {
-            private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
-            private$SBkaas <- rbind(private$SBkaas, 
-                                    data.frame(
-                                      i = private$FindStatefrom3D(data.frame(
-                                        Scale = postKaas$fromScale,
-                                        SubCompart = postKaas$fromSubCompart,
-                                        Species = postKaas$fromSpecies
-                                      )),
-                                      j = private$FindStatefrom3D(data.frame(
-                                        Scale = postKaas$toScale,
-                                        SubCompart = postKaas$toSubCompart,
-                                        Species = postKaas$toSpecies
-                                      )),
-                                      k = postKaas$k,
-                                      process = postKaas$process
-                                    ))
-            
+      # do postponed if postponed exists
+      if (!is.null(private$l_postPoneList)){
+        for (postNames in do.call(c,private$l_postPoneList)){ #force order??
+          CalcMod <- private$ModuleList[[postNames]]
+          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+            succes <- private$UpdateDL(postNames)
+            if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
+          } else { # a process; add kaas to the list
+            postKaas <- CalcMod$execute()
+            if (!any(is.na(postKaas))) {
+              private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
+              private$SBkaas <- rbind(private$SBkaas, 
+                                      data.frame(
+                                        i = private$FindStatefrom3D(data.frame(
+                                          Scale = postKaas$fromScale,
+                                          SubCompart = postKaas$fromSubCompart,
+                                          Species = postKaas$fromSpecies
+                                        )),
+                                        j = private$FindStatefrom3D(data.frame(
+                                          Scale = postKaas$toScale,
+                                          SubCompart = postKaas$toSubCompart,
+                                          Species = postKaas$toSpecies
+                                        )),
+                                        k = postKaas$k,
+                                        process = postKaas$process
+                                      ))
+              
+            }
           }
         }
       }
