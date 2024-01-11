@@ -6,16 +6,16 @@ VariableModule <-
     inherit = CalcGraphModule,
     public = list(
       execute = function(debugAt = NULL) {
-        ret <- private$Execute(debugAt)
-        if (any(is.na(ret))){
-          return(data.frame(NA))
-        } else { #an | for both cases would cause an error
-          if (nrow(ret) == 0) {
-            return(data.frame(NA))
-          } else {
-            return(ret)
-          }
-        }
+        private$Execute(debugAt)
+        # if (any(is.na(ret))){
+        #   return(data.frame(NA))
+        # } else { #an | for both cases would cause an error
+        #   if (nrow(ret) == 0) {
+        #     return(data.frame(NA))
+        #   } else {
+        #     return(ret)
+        #   }
+        # }
       },
       
       initialize = function(TheCore, exeFunction, AggrBy, AggrFun){
