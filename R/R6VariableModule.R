@@ -95,10 +95,10 @@ VariableModule <-
             debugonce(self$exeFunction)
           }
           ParsList <- as.list(c(AllConstants, all.type))
-          ret <- do.call(self$exeFunction, ParsList)
-          if (length(names(ret)) == 1){ #the defining function should take care otherwise 
-            names(ret) <- private$MyName
-          }
+          ret <- data.frame(
+            OneOnly = do.call(self$exeFunction, ParsList)
+          ) 
+          names(ret) <- private$MyName
           return(ret)
 
         } else {#regular case with SB variables having dimensions
