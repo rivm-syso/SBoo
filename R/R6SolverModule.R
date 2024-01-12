@@ -56,7 +56,7 @@ SolverModule <-
         # copy, clean states (remove those without any k)
         stateInd <- unique(c(kaas$i, kaas$j))
         private$States <- SBstates$new(self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),])
-        if (private$States$nStates != self$myCore$nStates && exists("verbose") && verbose) {
+        if (private$States$nStates != self$myCore$states$nStates && exists("verbose") && verbose) {
           warning(paste(self$myCore$nStates - private$States$nStates,"without kaas, not in solver"))
         }
         nrowStates <- private$States$nStates
