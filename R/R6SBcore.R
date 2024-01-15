@@ -643,7 +643,7 @@ SBcore <- R6::R6Class("SBcore",
         kaaslist <- list() # all the dataframes of (future) new kaas
         if (is.null(aProcessModule)) {
           #exception for the CalcGraph* that are calculated after the tree i.e. molecular deposition special
-          TestTree <- private$nodeList[!private$nodeList %in% unlist(private$l_postPoneList)]
+          TestTree <- private$nodeList[!private$nodeList$Calc %in% unlist(private$l_postPoneList),]
         } else {
           if (! "ProcessModule" %in% class(aProcessModule)){ # assuming it's a string with the name of
             aProcessModule <- private$nodeList[[aProcessModule]]
