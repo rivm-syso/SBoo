@@ -6,15 +6,21 @@
 #' @param tmax time [s] for the simulation period
 #' @param nTIMES number of timesteps
 #' @return see: ode()
-SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100) {
+SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
 
   SB.K = ParentModule$SB.k
-  vEmis = ParentModule$emissions
   
   SBtime <- seq(0,tmax,length.out = nTIMES)
   ParentModule$SBtime.tvars <- list(SBtime = SBtime)
   
-  m0 <- rep(0,nrow(SB.K))
+  if (EmisasPulse) {
+    m0 = ParentModule$emissions
+    vEmis =  rep(0,nrow(SB.K))
+  } else { 
+    #The default behaviour
+    m0 <- rep(0,nrow(SB.K))
+    vEmis= ParentModule$emissions
+  }
   
   deS <- deSolve::ode(
     y = m0,

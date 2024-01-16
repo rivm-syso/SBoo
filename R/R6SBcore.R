@@ -131,7 +131,7 @@ SBcore <- R6::R6Class("SBcore",
     #' @param emissions data.frame-ish with columns "Abbr" (state defining character) and 
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
-    Solve = function(emissions, needdebug = F){
+    Solve = function(emissions, needdebug = F, ...){
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
@@ -143,7 +143,7 @@ SBcore <- R6::R6Class("SBcore",
         stop("emissions should contain Abbr and Emis as columns")
       private$solver$PrepemisV(emissions)
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug)
+      Solution = private$solver$execute(needdebug, ...)
       private$UpdateDL(Solution)
     },
     
