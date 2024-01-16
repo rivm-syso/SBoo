@@ -53,12 +53,26 @@ SolverModule <-
         if (is.null(kaas)) { #copy latest from core
           kaas <- self$myCore$kaas}
 
+        if (any(kaas$k == 0.0)){ #or a very small value?? for solver stability?
+          warning(paste(table(kaas$k == 0.0)["TRUE"]), " k values equal to 0; removed for solver")
+          kaas <- kaas[kaas$k > 0,]
+        }
         # copy, clean states (remove those without any k)
         stateInd <- unique(c(kaas$i, kaas$j))
-        private$States <- SBstates$new(self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),])
-        if (private$States$nStates != self$myCore$states$nStates && exists("verbose") && verbose) {
-          warning(paste(self$myCore$nStates - private$States$nStates,"without kaas, not in solver"))
+        #private$States <- SBstates$new(self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),])
+        newStates <- self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),]
+        if (nrow(newStates) != self$myCore$states$nStates && exists("verbose") && verbose) {
+          warning(paste(self$myCore$states$nStates - nrow(newStates),"states without kaas, not in solver"))
         }
+        #remove states without state in columns OR rows => matrix is singular 
+        #TODO  dynamic calculation is still possible! if emission is a source??
+        stateInd <- unique(kaas$i) 
+        stateIndBoth <- stateInd[stateInd %in% unique(kaas$j)]
+        if (length(stateInd) != length(stateIndBoth)) {
+          warning(paste(length(stateInd) - length(stateIndBoth), " states with no sources OR no sinks"))
+          newStates <- newStates[newStates$i %in% stateIndBoth,]
+        }
+        private$States <- SBstates$new(newStates)
         nrowStates <- private$States$nStates
         k2times <- as.integer(nrowStates*nrowStates)
         SB.K <- matrix(rep.int(0.0, k2times), nrow = nrowStates)
@@ -69,11 +83,12 @@ SolverModule <-
         }
         #Add the from quantities(i) to the to-states by
         #substracting the (negative) factors(i) to the diagonal
-        # store the diag (== degradation)
+        # store the diag (== degradation and other removal processes)
         degrdiag <- diag(SB.K)
         diag(SB.K) <- 0.0 #yes, irt colSums!
         diag(SB.K) <- - degrdiag - colSums(SB.K)
         private$SB.K <- SB.K
+        invisible(SB.K)
       },
 
       #' @description sync emissions as relational table with states into vector 
