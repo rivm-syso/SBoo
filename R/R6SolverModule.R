@@ -13,13 +13,17 @@ SolverModule <-
       
       #' @description prepare kaas for matrix calculations
       #' @param needdebug if T, the solver defining function execute in debugmode 
-      execute = function(needdebug = F){ 
+      execute = function(needdebug = F, ...){ 
         if (needdebug){
           debugonce(private$Function)
         }
         private$Solution <- do.call(private$Function, args = c(
           list(ParentModule = self),
-          private$MoreParams))
+          ...))
+        # old ?
+        # private$Solution <- do.call(private$Function, args = c(
+        #   list(ParentModule = self),
+        #   private$MoreParams))
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
         if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
