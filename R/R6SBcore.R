@@ -143,7 +143,7 @@ SBcore <- R6::R6Class("SBcore",
         stop("emissions should contain Abbr and Emis as columns")
       private$solver$PrepemisV(emissions)
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug, ...)
+      Solution = private$solver$execute(needdebug = needdebug, ...)
       private$UpdateDL(Solution)
     },
     
@@ -226,36 +226,7 @@ SBcore <- R6::R6Class("SBcore",
       }
       
       # do postponed if postponed exists
-      if (!is.null(private$l_postPoneList)){
-        for (postNames in do.call(c,private$l_postPoneList)){ #force order??
-          CalcMod <- private$ModuleList[[postNames]]
-          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-            succes <- private$UpdateDL(postNames)
-            if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
-          } else { # a process; add kaas to the list
-            postKaas <- CalcMod$execute()
-            if (!any(is.na(postKaas))) {
-              private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
-              private$SBkaas <- rbind(private$SBkaas, 
-                                      data.frame(
-                                        i = private$FindStatefrom3D(data.frame(
-                                          Scale = postKaas$fromScale,
-                                          SubCompart = postKaas$fromSubCompart,
-                                          Species = postKaas$fromSpecies
-                                        )),
-                                        j = private$FindStatefrom3D(data.frame(
-                                          Scale = postKaas$toScale,
-                                          SubCompart = postKaas$toSubCompart,
-                                          Species = postKaas$toSpecies
-                                        )),
-                                        k = postKaas$k,
-                                        process = postKaas$process
-                                      ))
-              
-            }
-          }
-        }
-      }
+      private$DoPostponed()
       
       #return only for purpose of transparent update; side effect is done
       invisible(private$SBkaas)
@@ -274,15 +245,25 @@ SBcore <- R6::R6Class("SBcore",
     #' @description set a constant in the internal data, to enable use by SB variable etc.
     #' @param ... named value
     SetConst = function(...){
-      #test for length == 1, name...
-      private$UpdateDL(...)
+      #if ... is a list with a single data.frame, the const has dimensions
+      Params <- list(...)
+      #there can only be one at a time
+      if (length(Params) != 1){
+        stop("SetConst can deal with one Const at a time")
+      }
+      if (isa(Params, "list") && isa(Params[[1]], "data.frame")) {
+        private$UpdateDL(Params[[1]])
+      } else {
+        private$UpdateDL(...)
+      }
     },
     
     #' @description runs (or tries to) the calculation for Variables,
     #' and continues from there to update all processes and variables 
     #' that have a depency of any of the Variables, recursively.
-    #' @param Variables the name(s) of the Variable(s) that would be "dirty"
-    UpdateDirty = function(Variables){#recalc DAG, starting from vector of Variables
+    #' @param Variables the name(s) of the Variable(s) that are "dirty" 
+    #' (Datalayer has been updated)
+    UpdateDirty = function(Variables){#recalc DAG, starting onwards from vector of Variables
       NotUsed <- Variables[!Variables %in% private$nodeList$Params]
       if (length(NotUsed)> 0) warning(do.call(paste, as.list(
             c("Not all Variables are used:", NotUsed))))
@@ -628,9 +609,42 @@ SBcore <- R6::R6Class("SBcore",
     
     CalcTreeForward = function(DirtyVariables){ #calculation of variables and kaas
       if (is.null(DirtyVariables)) stop("Cannot CalcTreeForward without a(starting/dirty)Variable")
-      TestTree <- private$nodeList
+      # determine modules that need updating by module dependencies, derived from params of SB vars etc.
+      # loop until Trunc does not grow anymore
+      TestTrunc <- NULL
+      grow <- private$nodeList[private$nodeList$Params %in% DirtyVariables,]
+      while (nrow(grow) != 0) {
+        TestTrunc <- rbind(TestTrunc, grow)
+        grow <- private$nodeList[private$nodeList$Params %in% grow$Calc,]
+      }
+      #remove kaas from postpones!! 
+      postkaas <- unlist(private$l_postPoneList)[
+        startsWith(unlist(private$l_postPoneList), "k_")]
+      
+      private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postkaas,]
+      
+      kaaslist <- list()
+      #NB there can be doubles, this is checked more eficiently down the road
+      Prevent <- unlist(private$l_postPoneList)
+      for (i in 1:nrow(TestTrunc)){ #these are in proper order, all should succeed
+        ModName <- TestTrunc$Calc[i]
+        if (!ModName %in% Prevent) { #double or postponed
+          CalcMod <- private$ModuleList[[ModName]]
+          Prevent <- c(Prevent, ModName)
+          if (exists("verbose") && verbose){
+            cat(paste("calculating", CanDo[i]), "\n")
+          }
+          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+            private$UpdateDL(ModName)
+          } else { # a process; add kaas to the list
+            kaaslist[[CalcMod$myName]] <- CalcMod$execute()
+          }
+        }
+      }
       browser() #|TODO future feature to speed up application in loops, iteration ...
-      AllCan <- TestTree$x
+      private$IntegrateKaaslist(kaaslist)
+      
+      private$DoPostponed()
     },
     
     CalcTreeBack = function(aProcessModule){ #calculation of variables and kaas
@@ -700,11 +714,16 @@ SBcore <- R6::R6Class("SBcore",
           }
         }
       }
+      
+      private$IntegrateKaaslist(kaaslist)
+    },
+
+    IntegrateKaaslist = function(kaaslist){
       #select kaas names only for all kaaslist - data.frames
       kaaslist <- kaaslist[!sapply(kaaslist, anyNA)]
       kaaslist <- lapply(kaaslist, 
                          dplyr::select, c("process", "fromScale","fromSubCompart","fromSpecies",
-                                      "toScale","toSubCompart","toSpecies","k"))
+                                          "toScale","toSubCompart","toSpecies","k"))
       VolleKaas <- do.call(rbind, kaaslist)
       
       if(length(VolleKaas) > 0) { #length is 0 if no processes 
@@ -727,7 +746,41 @@ SBcore <- R6::R6Class("SBcore",
       } else {return(NULL)}
       
     },
-
+    
+    DoPostponed = function() {
+      if (!is.null(private$l_postPoneList)){
+        for (postNames in do.call(c,private$l_postPoneList)){ #force order??
+          CalcMod <- private$ModuleList[[postNames]]
+          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+            succes <- private$UpdateDL(postNames)
+            if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
+          } else { # a process; add kaas to the list
+            postKaas <- CalcMod$execute()
+            if (!any(is.na(postKaas))) {
+              private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
+              private$SBkaas <- rbind(private$SBkaas, 
+                                      data.frame(
+                                        i = private$FindStatefrom3D(data.frame(
+                                          Scale = postKaas$fromScale,
+                                          SubCompart = postKaas$fromSubCompart,
+                                          Species = postKaas$fromSpecies
+                                        )),
+                                        j = private$FindStatefrom3D(data.frame(
+                                          Scale = postKaas$toScale,
+                                          SubCompart = postKaas$toSubCompart,
+                                          Species = postKaas$toSpecies
+                                        )),
+                                        k = postKaas$k,
+                                        process = postKaas$process
+                                      ))
+              
+            }
+          }
+        }
+      }
+      
+    },
+    
     #find the indices + states from a dataFrame with columns "Scale" "SubCompart" "Species"   
     FindStatefrom3D = function(df3Ds){
       stopifnot(all(The3D %in% names(df3Ds)))
@@ -848,7 +901,6 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #' #description calculate and update a variable in the "datalayer" (SB4Ndata-dataframes)
-    #' #param TableNm the name of the data.frame in SB4Ndata
     #' #param VarFunName the name of the variable to be updated AND the name of the function
     #' #param DIMRestrict optional list of restrictions; each element is c(DimName, Comparator, Value)
     #' #return side-effect; vector?

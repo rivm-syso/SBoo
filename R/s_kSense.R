@@ -8,46 +8,35 @@
 #' @param samplesize description
 #' @return States (i) (=mass)
 #' @export
-kSense = function(ParentModule, knamesdist, samplesize) {
+kSense = function(ParentModule, knames = NULL, tol=1e-30) {
   
-  ImplemDistr <- c("rnorm", "runif")
-  #check (knamesdist for) anomilies
-  stopifnot(all(c("kname", "distr", "sd") %in% names(knamesdist)))
-  stopifnot(knamesdist$distr %in% ImplemDistr)
   kaas <- ParentModule$myCore$kaas
-  #add k.Abbr if not present
-  if (!"k.Abbr" %in% names(kaas)) {
-    kaas$k.Abbr <- paste("k.", kaas$fromAbbr)
-    NonDiag <- kaas$toAbbr != kaas$fromAbbr
-    kaas$k.Abbr[NonDiag] <- paste(kaas$k.Abbr[NonDiag], kaas$toAbbr[NonDiag])
+  #check knames with kaas
+  if (is.null(knames)) {
+    knames <- unique(kaas$process)
+  } else {
+    stopifnot(all(knames %in% unique(kaas$process)))
   }
-  stopifnot(all(knamesdist$kname %in% kaas$Abbr))
+  # other preps; basic solution:
+  SB.K = ParentModule$SB.k
+  vEmis = ParentModule$emissions
+  basicSolv <- solve(SB.K, -vEmis, tol = tol)
   
-  # other preps
-  knamesInKaas <- match(knamesdist$k.Abbr, kaas$k.Abbr)
-  kaasInKnames <- match(kaas$k.Abbr, knamesdist$k.Abbr)
-  vEmis = ParentModule$PrepemisV()
-  #Current value in kaas becomes mean in knamesdist
-  # first and second parameter, depending on the distribution - type
-  # mean, sd for rnorm; min, max for runif
-  knamesdist$k.mean <- kaas$k[knamesInKaas]
-  maxminmin = knamesdist$sd * sqrt(12)
-  knamesdist$Minm <- knamesdist$k.mean - maxminmin / 2
-  knamesdist$Maxm <- knamesdist$k.mean + maxminmin / 2
-  rowsaslist <- list()
-  for (irow in 1:nrow(knamesdist)) {
-    rowsaslist[rowsaslist] <- switch(knamesdist$distr,
-      "rnorm", rnorm(samplesize, knamesdist$mean[irow], knamesdist$sd[irow]),
-      "runif", runif(samplesize, knamesdist$Minm[irow], knamesdist$Maxm[irow]))
-  }
-  kaassamples <- docall(rbind, rowsaslist)
-  
-  sresults <- list() #of frames to be rbind
-  for (samplecol in 1:samplesize){
-    kaas[kaasInKnames] <- kaassamples[,samplecol]
+  aslist <- list()
+  for (processNm in knames){
+    kaas$k[kaas$process %in% knames] <- kaas$k[kaas$process %in% knames] * 1.01
     SB.K = ParentModule$PrepKaasM(kaas)
-    sresults[samplecol] <- solve(SB.K, -vEmis)
+    aslist[[processNm]] <- solve(SB.K, -vEmis, tol = tol)
   }
-  do.call(rbind, sresults)
+  
+  # rowsaslist <- list()
+  # for (irow in 1:nrow(knamesdist)) {
+  #   rowsaslist[rowsaslist] <- switch(knamesdist$distr,
+  #     "rnorm", rnorm(samplesize, knamesdist$mean[irow], knamesdist$sd[irow]),
+  #     "runif", runif(samplesize, knamesdist$Minm[irow], knamesdist$Maxm[irow]))
+  # }
+  # kaassamples <- docall(rbind, rowsaslist)
+  
+  do.call(rbind, aslist)
   
 }

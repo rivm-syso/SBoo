@@ -19,7 +19,7 @@ SolverModule <-
         }
         private$Solution <- do.call(private$Function, args = c(
           list(ParentModule = self),
-          ...))
+          list(...)))
         # old ?
         # private$Solution <- do.call(private$Function, args = c(
         #   list(ParentModule = self),
