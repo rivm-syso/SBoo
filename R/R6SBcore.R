@@ -148,12 +148,12 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #' @description Injection from SolverModule
-    SolutionAsRelational = function(){
+    SolutionAsRelational = function(...){
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
       }
-      private$solver$SolutionAsRelational()
+      private$solver$SolutionAsRelational(...)
     },
     
     #' @description Obtain the names of the variables and tablename in which the data resides 
@@ -641,7 +641,6 @@ SBcore <- R6::R6Class("SBcore",
           }
         }
       }
-      browser() #|TODO future feature to speed up application in loops, iteration ...
       private$IntegrateKaaslist(kaaslist)
       
       private$DoPostponed()
@@ -972,11 +971,17 @@ SBcore <- R6::R6Class("SBcore",
         private$SB4Ndata[[Target.Table]][names(NewData)] <- NewData
       } else {
         #delete and merge the DL-table
-        if (VarFunName %in% names(private$SB4Ndata[[Target.Table]])){
-          numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
-          private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
-        } 
-        private$SB4Ndata[[Target.Table]] <- merge(private$SB4Ndata[[Target.Table]], NewData, all = T)
+        if (Target.Table == "Flows") {
+          WithoutPrevious <- private$SB4Ndata[[Target.Table]][
+            private$SB4Ndata[[Target.Table]]$FlowName != VarFunName,]
+          private$SB4Ndata[[Target.Table]] <- rbind(WithoutPrevious, NewData[,names(WithoutPrevious)])
+        } else { #a SBvariable
+          if (VarFunName %in% names(private$SB4Ndata[[Target.Table]])){
+            numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
+            private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
+          } 
+          private$SB4Ndata[[Target.Table]] <- merge(private$SB4Ndata[[Target.Table]], NewData, all = T)
+        }
       }
       
       #just to show, side effect is in DL

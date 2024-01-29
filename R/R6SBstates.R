@@ -50,6 +50,14 @@ SBstates <- R6::R6Class("SBstates",
       }
       sapply(1:length(abbr),FUN = PasteAndMatch)
     }
+
+    #' @description map vector abbr for scale species subcompart to index in State
+    #' @param aDimension a dimension or a member thereof
+    #' @return list(the found dimension = the member) or list(the found dimension = dimension). 
+    #' The found dimension is 1 of the 3dim
+    findDim = function (aDimension) {
+      
+    }
     
   ),
   active = list(

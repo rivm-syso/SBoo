@@ -30,8 +30,11 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
   basicSolv <- solve(SB.K, -vEmis, tol = tol)
 
   unif01LHS <- lhs::optimumLHS(n=n, k=nrow(vnamesDistSD), maxSweeps=2, eps=.1, verbose=FALSE)
+  #prep to save for analyses
+  vnamesDistSD <- cbind(vnamesDistSD, t(unif01LHS))
   
   aslist <- list()
+  
   for (i in 1:n) {
     for (vari in 1:nrow(vnamesDistSD)){
       vname <- vnamesDistSD$vnames[vari]
@@ -42,6 +45,7 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
         "normal" = qnorm(p = unif01LHS[i, vari], mean = 1, sd = vnamesDistSD$secondPar[vari]),
         "uniform" =  1 + vnamesDistSD$secondPar[vari] * (unif01LHS[i, vari] - 0.5)
       )
+      vnamesDistSD[vnamesDistSD$vnames == vname, as.character(i)] <- scalingF
       Updated[,vname] <- scalingF * Updated[,vname]
       
       asParam <- list(Updated)
@@ -54,9 +58,10 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
     ParentModule$PrepKaasM()
     SB.K = ParentModule$SB.k
     
-    aslist[[i]] <- solve(SB.K, -vEmis, tol = tol)
+    aslist[[as.character(i)]] <- solve(SB.K, -vEmis, tol = tol)
   }
   
+  ParentModule$vnamesDistSD <- vnamesDistSD
   # rowsaslist <- list()
   # for (irow in 1:nrow(knamesdist)) {
   #   rowsaslist[rowsaslist] <- switch(knamesdist$distr,
@@ -64,6 +69,9 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
   #     "runif", runif(samplesize, knamesdist$Minm[irow], knamesdist$Maxm[irow]))
   # }
   # kaassamples <- docall(rbind, rowsaslist)
+  
+  #Save base as last, this defines eqMass
+  aslist[["base"]] <- basicSolv
   
   do.call(rbind, aslist)
   

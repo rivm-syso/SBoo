@@ -153,8 +153,8 @@ SolverModule <-
       #' state in three columns, 
       #' time input in one or t[est]vars in separate columns, 
       #' and the Mass in the Mass column
-      SolutionAsRelational = function(){
-        if (is.null(self$SBtime.tvars)) {
+      SolutionAsRelational = function(...){
+        if (is.null(self$SBtime.tvars) && is.null(self$vnamesDistSD)) {
           warning("no calculation available")
           return(NULL)
         }
@@ -171,8 +171,33 @@ SolverModule <-
           TheTimes <- unlist(self$SBtime.tvars)
           ret$SBtime <- TheTimes[as.numeric(ret$SBtime)]
           return(ret)
+        } else {
+          if (!is.null(self$vnamesDistSD)) {
+            Params <- list(...)
+            #is there a formula "terms"
+            if ("terms" %in% names(Params)) {
+              FUN <- Params$FUN
+              if (is.null(FUN)) {
+                warning("no FUN found, no aggregation")
+              }
+              browser()
+              fAsList <- private$interprFormula(Params$terms)
+            }
+            if (length(Params) == 1 && is.character(Params[[1]])) {
+              VarName <- Params[[1]]
+              if (! VarName %in% self$vnamesDistSD$vnames) {
+                warning(paste(VarName, "not in analyses"))
+                return(data.frame(NA))
+              }
+              #Yes, we can
+              
+            } else {
+              warning("expected a variable name")
+            }
+            
+          }
         } # TODO else t[est]vars : uncertainty / sensitivity solvers etc.
-      }
+      } 
       
     ),
     active = list(
@@ -213,11 +238,47 @@ SolverModule <-
           private$lSBtime.tvars
         } else {
           private$lSBtime.tvars <- value
+          private$lvnamesDistSD <- NULL 
+        }
+      },
+      vnamesDistSD = function(value){
+        if (missing(value)) {
+          private$lvnamesDistSD
+        } else {
+          private$lvnamesDistSD <- value
+          private$lSBtime.tvars <- NULL
         }
       }
     ),
     
     private = list(
+      
+      #' @description return list with vectors of 
+      #' subcompartments, variables and filters from subcompartments ~ variables | filters
+      interprFormula = function(TheCall){ 
+        rfun <- function(x){
+          if (is.call(x) | "formula" %in% class(x)) {
+            elist <- lapply((x)[-1], rfun)
+            names(elist) <- as.list(x)[1]
+            elist
+          } else {
+            x
+          }
+        }
+        union <- function(v1, v2){
+          v1[v1 %in% v2]
+        }
+        res <- rapply(rfun(as.list(TheCall)), unlist, 
+               classes = "ANY", how = "unlist")
+        lhs <- unlist(unname(res[[grep("~",names(res))]]))
+        rhs <- unlist(unname(res[[grep("\\|",names(res))]]))
+        grpIndex <- (1:length(res))[union(  # all other indices
+          grep("~",names(res), invert = T), 
+          grep("\\|",names(res), invert = T))]
+        grp <- unlist(unname(res[[grpIndex]]))
+        list(lhs = lhs, rhs = rhs, grp = grp)
+      }
+      ,
       NeedVars = function(){ #overrule
         NULL
       },
@@ -226,6 +287,7 @@ SolverModule <-
       Emissions = NULL,
       SB.K = NULL,
       MatrixSolutionInRows = NULL,
-      lSBtime.tvars = NULL
+      lSBtime.tvars = NULL,
+      lvnamesDistSD = NULL
     )
   )
