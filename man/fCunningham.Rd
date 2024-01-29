@@ -5,10 +5,10 @@
 \alias{f_Cunningham}
 \title{Cunningham}
 \usage{
-f_Cunningham(radSpecies)
+f_Cunningham(rad_species)
 }
 \arguments{
-\item{radSpecies}{radius of the species}
+\item{rad_species}{radius of the species}
 }
 \value{
 Cunningham

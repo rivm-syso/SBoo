@@ -11,7 +11,7 @@ FRinw(
   FRACa,
   FRACs,
   Kp,
-  RHOsolid,
+  all.rhoMatrix,
   KpCOL,
   Kacompw,
   SUSP,

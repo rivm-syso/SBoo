@@ -14,7 +14,7 @@ FRins(
   FRACs,
   Kacompw,
   FRorig_spw,
-  RHOsolid,
+  all.rhoMatrix,
   Matrix
 )
 }
@@ -35,11 +35,11 @@ FRins(
 
 \item{FRorig_spw}{Fraction original species in porewater of soil}
 
-\item{RHOsolid}{Mineral DENSITY sediment and soil [kg.m-3]}
-
 \item{Matrix}{Type of compartment matrix (soil, water, sediment or air)}
 
 \item{KpCOLColloidal}{organic matter/water partition coefficient [L.kg-1]}
+
+\item{RHOsolid}{Mineral DENSITY sediment and soil [kg.m-3]}
 }
 \description{
 FRaction of chemical in solid phase soil (relevant to Molecular species)

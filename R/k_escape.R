@@ -1,5 +1,5 @@
 #' @title escape
-#' @name K_Escape
+#' @name k_Escape
 #' @description calculate k for escape from air compartment to stratosphere
 #' @return k
 #' @export

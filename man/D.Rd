@@ -4,7 +4,7 @@
 \alias{D}
 \title{D}
 \usage{
-D(FRorig, Kow, ChemClass)
+D(FRorig, pKa, Kow, ChemClass)
 }
 \arguments{
 \item{FRorig}{}

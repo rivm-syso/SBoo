@@ -4,16 +4,16 @@
 \alias{f_Brown}
 \title{Brownian motion or kinetic collision frequency coefficient (20181102)}
 \usage{
-f_Brown(Temp, viscosity, from.radius, radOther)
+f_Brown(Temp, viscosity, radius, radius_Otherparticle)
 }
 \arguments{
 \item{Temp}{temperature [K]}
 
 \item{viscosity}{Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]}
 
-\item{from.radius}{Radius of nanoparticle [m]}
+\item{radius_Otherparticle}{Radius of Other particle [m]}
 
-\item{radOther}{Radius of Other particle [m]}
+\item{from.radius}{Radius of nanoparticle [m]}
 }
 \value{
 fBrown [s-1]

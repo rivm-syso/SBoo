@@ -4,14 +4,14 @@
 \alias{Kaerw}
 \title{Aerosol water - air Partition coefficient}
 \usage{
-Kaerw(Kacompw, FRorig, Matrix)
+Kaerw(Kacompw, FRorig, SubCompartName)
 }
 \arguments{
-\item{Kaw}{}
+\item{Kacompw}{}
 }
 \value{
 FRears[]
 }
 \description{
-Fraction of some fraction
+pm
 }

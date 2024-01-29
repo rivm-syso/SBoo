@@ -37,6 +37,7 @@ return vector values (if found; else NA)
 \item \href{#method-SBcore-NewCalcVariable}{\code{SBcore$NewCalcVariable()}}
 \item \href{#method-SBcore-NewSolver}{\code{SBcore$NewSolver()}}
 \item \href{#method-SBcore-Solve}{\code{SBcore$Solve()}}
+\item \href{#method-SBcore-SolutionAsRelational}{\code{SBcore$SolutionAsRelational()}}
 \item \href{#method-SBcore-metaData}{\code{SBcore$metaData()}}
 \item \href{#method-SBcore-fetchData}{\code{SBcore$fetchData()}}
 \item \href{#method-SBcore-doInherit}{\code{SBcore$doInherit()}}
@@ -44,6 +45,7 @@ return vector values (if found; else NA)
 \item \href{#method-SBcore-whichDataTable}{\code{SBcore$whichDataTable()}}
 \item \href{#method-SBcore-UpdateKaas}{\code{SBcore$UpdateKaas()}}
 \item \href{#method-SBcore-CalcVar}{\code{SBcore$CalcVar()}}
+\item \href{#method-SBcore-SetConst}{\code{SBcore$SetConst()}}
 \item \href{#method-SBcore-UpdateDirty}{\code{SBcore$UpdateDirty()}}
 \item \href{#method-SBcore-whichUnresolved}{\code{SBcore$whichUnresolved()}}
 \item \href{#method-SBcore-CleanupCalcGraphAbove}{\code{SBcore$CleanupCalcGraphAbove()}}
@@ -190,7 +192,7 @@ the exact calculation is described in the function that defined the solve module
 This can be solving for the steady state or running the system for a period of time.
 Results are available
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBcore$Solve(emissions, needdebug = F)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$Solve(emissions, needdebug = F, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -203,6 +205,16 @@ Results are available
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-SolutionAsRelational"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-SolutionAsRelational}{}}}
+\subsection{Method \code{SolutionAsRelational()}}{
+Injection from SolverModule
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$SolutionAsRelational()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-metaData"></a>}}
@@ -323,6 +335,23 @@ when calculating processes, or other variables.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{aVariable}}{the name of the Variable}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-SetConst"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-SetConst}{}}}
+\subsection{Method \code{SetConst()}}{
+set a constant in the internal data, to enable use by SB variable etc.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$SetConst(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{named value}
 }
 \if{html}{\out{</div>}}
 }

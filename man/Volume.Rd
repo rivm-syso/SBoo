@@ -2,7 +2,7 @@
 % Please edit documentation in R/v_Volume.R
 \name{Volume}
 \alias{Volume}
-\title{Volume}
+\title{Volume of the SubCompartment}
 \usage{
 Volume(VertDistance, Area, FRACcldw, SubCompartName)
 }
@@ -17,5 +17,5 @@ Volume(VertDistance, Area, FRACcldw, SubCompartName)
 Volume
 }
 \description{
-Volume
+Volume of the SubCompartment
 }

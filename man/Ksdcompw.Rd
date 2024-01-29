@@ -2,9 +2,9 @@
 % Please edit documentation in R/v_Ksdcompw.R
 \name{Ksdcompw}
 \alias{Ksdcompw}
-\title{Dimensionless sed/water PARTITION COEFFICIENT for molecular species specific to sediment compertment}
+\title{Dimensionless sed/water PARTITION COEFFICIENT for molecular species specific to sediment compartment}
 \usage{
-Ksdcompw(FRACw, FRACs, Kp, RHOsolid, Matrix)
+Ksdcompw(FRACw, FRACs, Kp, all.rhoMatrix, Matrix)
 }
 \arguments{
 \item{Kp}{(sed/water PARTITION COEFFICIENT) of sediment}

@@ -12,7 +12,7 @@ x_LakeOutflow(
 )
 }
 \arguments{
-\item{LakeFracRiver}{see ppt}
+\item{LakeFracRiver}{Fraction (default 0.1) of r}
 
 \item{ScaleName}{different formula for scale Continental or Regional}
 
