@@ -4,10 +4,15 @@
 \alias{SBsolve}
 \title{SBsolve}
 \usage{
-SBsolve(ParentModule, tmax = 1e+10, nTIMES = 100)
+SBsolve(ParentModule, tmax = 1e+10, nTIMES = 100, EmisAsPulse = F)
 }
 \arguments{
-\item{tmax}{}
+\item{ParentModule}{SBcore object; to access SimpleBoxODE, states etc. 
+too much and to diverse to put them in parameters and complicate the execute method}
+
+\item{tmax}{time [s] for the simulation period}
+
+\item{nTIMES}{number of timesteps}
 }
 \value{
 see: ode()

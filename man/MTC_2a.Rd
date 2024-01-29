@@ -4,7 +4,16 @@
 \alias{MTC_2a}
 \title{PARTIAL MASS TRANSFER COEFFICIENT water and soil to air}
 \usage{
-MTC_2a(WINDspeed, MW, Q.10, Temp, T25, kdeg.soil, Matrix)
+MTC_2a(
+  WINDspeed,
+  MW,
+  Tempfactor,
+  KdegDorC,
+  Matrix,
+  SpeciesName,
+  ScaleName,
+  SubCompartName
+)
 }
 \arguments{
 \item{WINDspeed}{Windspeed in compartment/scale [m.s-1]}

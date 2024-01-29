@@ -4,7 +4,7 @@
 \alias{Kscompw}
 \title{Dimensionless soil/water Partition Coefficient of molecular species specific to soil subcompartment}
 \usage{
-Kscompw(FRACw, FRACa, Kacompw, FRorig_spw, Kp, RHOsolid, Matrix)
+Kscompw(FRACw, FRACa, Kacompw, FRorig_spw, Kp, all.rhoMatrix, Matrix)
 }
 \arguments{
 \item{FRACa}{NB FRACs is calculated as the remiander from FRACa and FRACw}

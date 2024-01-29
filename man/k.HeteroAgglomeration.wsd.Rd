@@ -2,48 +2,57 @@
 % Please edit documentation in R/k_HeteroAgglomeration.wsd.R
 \name{k.HeteroAgglomeration.wsd}
 \alias{k.HeteroAgglomeration.wsd}
+\alias{k_HeteroAgglomeration.wsd}
 \title{Heteroagglomeration (20181102)}
 \usage{
-k.HeteroAgglomeration.wsd(
+k_HeteroAgglomeration.wsd(
   to.alpha,
-  MasConc_Otherparticle,
+  COL,
+  SUSP,
   Shear,
-  from.radius,
-  radius_Otherparticle,
+  RadS,
+  RhoS,
+  RadCOL,
+  RadCP,
   Temp,
-  viscosity,
-  from.rho,
-  rho_Otherparticle,
-  rho.fluid
+  DynViscWaterStandard,
+  RhoCOL,
+  RhoCP,
+  rhoMatrix,
+  Udarcy,
+  to.FRACs,
+  hamakerSP.w,
+  Matrix,
+  to.SpeciesName,
+  SubCompartName
 )
 }
 \arguments{
 \item{to.alpha}{Attachment Efficiency of ENPs with other particulates [-]}
 
-\item{MasConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
-
 \item{Shear}{Shear rate of the fluid matrix [s-1]}
-
-\item{from.radius}{Radius of nanoparticle [m]}
-
-\item{radius_Otherparticle}{Radius of natural particle [m]}
 
 \item{Temp}{Temperature of compartment [K]}
 
-\item{viscosity}{Dyanic viscosity of fluid matrix []}
+\item{DynViscWaterStandard}{Dynamic viscosity of Water []}
+
+\item{MasConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
+
+\item{from.radius}{Radius of nanoparticle [m]}
 
 \item{from.rho}{Density of nanoparticle [kg.m-3]}
 
+\item{radius_Otherparticle}{Radius of natural particle [m]}
+
 \item{rho_Otherparticle}{Density (specific weight) of natural particle [kg/m3]}
 
-\item{rho.fluid}{Density of fluid matrix [kg/m3]}
+\item{rhoFluid}{Density of fluid matrix [kg/m3]}
+
+\item{DynViscAirStandard}{Dynamic viscosity of Air []}
 }
 \value{
 k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 }
 \description{
 Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with other particulates in water and soil
-}
-\seealso{
-\code{\link{fBrown}}, \code{\link{fInter}} and \code{\link{fGrav}}
 }

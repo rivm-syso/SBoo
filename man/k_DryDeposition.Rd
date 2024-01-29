@@ -2,22 +2,24 @@
 % Please edit documentation in R/k_DryDeposition.R
 \name{k_DryDeposition}
 \alias{k_DryDeposition}
-\title{Dry deposition from air to surface soil or water}
+\title{Dry deposition from air to surface soil or water of particulate species}
 \usage{
 k_DryDeposition(
   to.Area,
   from.Volume,
   AEROresist,
-  Diffusivity,
-  DynVisc,
+  to.gamma.surf,
+  FricVel,
+  DynViscAirStandard,
   rhoMatrix,
-  ColRad,
+  to.ColRad,
   rad_species,
   rho_species,
   Temp,
   to.alpha.surf,
-  Cunningham,
-  SetVel
+  SettlingVelocity,
+  SpeciesName,
+  SubCompartName
 )
 }
 \arguments{
@@ -27,15 +29,10 @@ k_DryDeposition(
 
 \item{AEROresist}{aerodynamic resistance (Constant set to 74) [s.m-1]}
 
-\item{Diffusivity}{TODO}
-
-\item{DynVisc}{TODO}
+\item{DynViscAirStandard}{Dynamic viscosity of air}
 
 \item{rhoMatrix}{Density of air [kg.m-3]
 #param from.viscosity Dynamic viscosity of air compartment [kg.m-1.s-1]}
-
-\item{ColRad}{Land surface particle collector radius [m] appendix A of LOTEUR.
-#param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)}
 
 \item{rad_species}{rad_particle}
 
@@ -45,13 +42,15 @@ k_DryDeposition(
 
 \item{to.alpha.surf}{depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016}
 
-\item{Cunningham}{TODO}
+\item{ColRad}{Land surface particle collector radius [m] appendix A of LOTEUR.
+#param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)}
 
-\item{SetVel}{TODO}
+\item{from.SettlingVelocity}{Settlings Velocity of particulate species in air [m.s-1]}
 }
 \value{
 k_drydeposition, the rate constant for 1rst order process: dry deposition from air to soil or water [s-1]
 }
 \description{
 Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
+Diffusivity is calculated from f_Diffusivity
 }

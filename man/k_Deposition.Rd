@@ -6,8 +6,8 @@
 \usage{
 k_Deposition(
   FRingas,
-  WINDspeed,
   VertDistance,
+  RAINrate,
   twet,
   tdry,
   COLLECTeff,
@@ -16,14 +16,18 @@ k_Deposition(
   FRorig,
   SpeciesName,
   OtherkAir,
-  landFRAC,
+  to.Area,
+  from.Area,
   Kaers,
   Kaerw,
-  FRACaer
+  FRinaerw,
+  FRinaers
 )
 }
 \arguments{
 \item{VertDistance}{Mixing depth air compartment #[m]}
+
+\item{RAINrate}{Average precipitation #[m/s]}
 
 \item{FRorig}{Fraction original species in water or porewater}
 
@@ -34,8 +38,6 @@ k_Deposition(
 \item{FRaers}{}
 
 \item{AREAFRAC}{Fraction of area compartment relative to the whole surface area of this scale (systemarea) [-]}
-
-\item{RAINrate}{Average precipitation #[m/s]}
 }
 \value{
 Transfer rate constant gaseous species air to soil or water #[s-1]

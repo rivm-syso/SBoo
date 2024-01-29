@@ -2,9 +2,10 @@
 % Please edit documentation in R/f_NumConc.R
 \name{fNumConc}
 \alias{fNumConc}
+\alias{f_NumConc}
 \title{Calculate number concentration from mass concentration}
 \usage{
-fNumConc(rad_particle, rho_particle, MasConc)
+f_NumConc(rad_particle, rho_particle, MasConc)
 }
 \arguments{
 \item{rad_particle}{Radius of particle [m]}

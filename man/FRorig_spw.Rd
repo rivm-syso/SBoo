@@ -2,7 +2,7 @@
 % Please edit documentation in R/v_FRorig_spw.R
 \name{FRorig_spw}
 \alias{FRorig_spw}
-\title{Fraction of orginigal species - soil pore water}
+\title{Fraction of original species - soil pore water}
 \usage{
 FRorig_spw(ChemClass, Matrix, pH, pKa)
 }

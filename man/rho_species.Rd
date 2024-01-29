@@ -9,12 +9,12 @@ rho_species(
   SubCompartName,
   RhoS,
   RadS,
-  NaturalRad,
-  NaturalRho,
+  RadCOL,
+  RadCP,
+  RhoCOL,
+  RhoCP,
   RhoNuc,
   RadNuc,
-  RhoAcc,
-  RadAcc,
   NumConcNuc,
   NumConcAcc,
   Df
@@ -33,15 +33,15 @@ rho_species(
 
 \item{RadNuc}{Nucleation mode aerosol particle radius [m]}
 
-\item{RhoAcc}{Accumulation mode aerosol particle  [kg/m3]}
-
-\item{RadAcc}{Accumulation mode aerosol particle radius [m]}
-
 \item{NumConcNuc}{Number concentration of Nucleation mode aerosol particles [#/m3]}
 
 \item{NumConcAcc}{Number concentration of Accumulation mode aerosol particles [#/m3]}
 
 \item{Df}{fractal dimension of combined heteroagglomerate [-]}
+
+\item{RadAcc}{Accumulation mode aerosol particle radius [m]}
+
+\item{RhoAcc}{Accumulation mode aerosol particle  [kg/m3]}
 }
 \value{
 rho_species, approach to calculate density of species in air or water [kg.m-3]
