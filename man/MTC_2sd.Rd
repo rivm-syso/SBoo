@@ -4,7 +4,7 @@
 \alias{MTC_2sd}
 \title{PARTIAL MASS TRANSFER COEFFICIENT water to sediment}
 \usage{
-MTC_2sd(kwsd.water, Matrix)
+MTC_2sd(kwsd.water, Matrix, SubCompartName)
 }
 \arguments{
 \item{kwsd.water}{Constant water side pMTC to sediment [m/s-1]}

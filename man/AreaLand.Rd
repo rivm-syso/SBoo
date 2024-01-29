@@ -13,7 +13,7 @@ hence the all. (nesting!)}
 \item{all.FRACsea}{sea fraction of scale, possibly including other scales,
 hence the all. (nesting!)}
 
-\item{ScaleName}{indicating for which scale the funcion is called}
+\item{ScaleName}{indicating for which scale the function is called}
 }
 \value{
 Land in SystemArea

@@ -10,8 +10,7 @@ k_Erosion(
   EROSIONsoil,
   VertDistance,
   ScaleName,
-  to.SubCompartName,
-  Matrix
+  to.SubCompartName
 )
 }
 \arguments{

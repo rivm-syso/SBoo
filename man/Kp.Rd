@@ -4,7 +4,7 @@
 \alias{Kp}
 \title{Kp}
 \usage{
-Kp(FRorig, Ksw, Ksw.alt, RHOsolid, Corg, CorgStandard, Matrix)
+Kp(FRorig, Ksw, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matrix)
 }
 \arguments{
 \item{FRorig, }{}

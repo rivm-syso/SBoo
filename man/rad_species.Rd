@@ -7,9 +7,9 @@
 rad_species(
   SpeciesName,
   SubCompartName,
-  NaturalRad,
+  RadCOL,
+  RadCP,
   RadNuc,
-  RadAcc,
   RadS,
   NumConcNuc,
   NumConcAcc,
@@ -21,11 +21,9 @@ rad_species(
 
 \item{SubCompartName}{description}
 
-\item{NaturalRad}{natural particle radius all but small in air [m]}
+\item{RadCOL}{Accumulation mode aerosol particle radius [m]}
 
 \item{RadNuc}{Nucleation mode aerosol particle radius [m]}
-
-\item{RadAcc}{Accumulation mode aerosol particle radius [m]}
 
 \item{RadS}{nanoparticle radius [m]}
 
@@ -34,6 +32,8 @@ rad_species(
 \item{NumConcAcc}{Number concentration of Accumulation mode aerosol particles [#/m3]}
 
 \item{Df}{fractal dimension of combined heteroagglomerate [-]}
+
+\item{NaturalRad}{natural particle radius all but small in air [m]}
 
 \item{...}{dimension(s, Species, Scales, SubCompart) of the}
 }

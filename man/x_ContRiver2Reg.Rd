@@ -2,7 +2,7 @@
 % Please edit documentation in R/x_ContRiver2Reg.R
 \name{x_ContRiver2Reg}
 \alias{x_ContRiver2Reg}
-\title{Continental River 2 Regional}
+\title{Continental surface water to Regional}
 \usage{
 x_ContRiver2Reg(
   ScaleName,
@@ -14,13 +14,21 @@ x_ContRiver2Reg(
 )
 }
 \arguments{
-\item{dischargeFRAC}{fraction of ...}
+\item{ScaleName}{Name of the relevant scale}
 
-\item{x_Runoff}{runoff flux}
+\item{SubCompartName}{Name of the relevant sub-compartment}
+
+\item{RainOnFreshwater}{}
+
+\item{dischargeFRAC}{fraction of discharge that is going from continental to regional surface water}
+
+\item{LakeFracRiver}{description}
+
+\item{Runoff}{runoff flow from soil to river}
 }
 \value{
 River Discharge for scale Continental
 }
 \description{
-Continental River 2 Regional
+Continental surface water to Regional
 }

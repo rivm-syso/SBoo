@@ -9,15 +9,14 @@ x_RiverDischarge(
   RainOnFreshwater,
   dischargeFRAC,
   all.x_ContRiver2Reg,
-  ScaleName
+  ScaleName,
+  SubCompartName
 )
 }
 \arguments{
-\item{dischargeFRAC}{see ppt}
+\item{dischargeFRAC}{Fraction discharge between freshwater compartment (w1) at regional and continental scale}
 
 \item{RainRunoff}{see ppt}
-
-\item{ContRiver2Reg}{see ppt}
 }
 \value{
 River Discharge

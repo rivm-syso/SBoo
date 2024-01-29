@@ -35,6 +35,7 @@ the general ODE for simplebox
 \item \href{#method-SolverModule-PrepemisV}{\code{SolverModule$PrepemisV()}}
 \item \href{#method-SolverModule-SimpleBoxODE}{\code{SolverModule$SimpleBoxODE()}}
 \item \href{#method-SolverModule-DiffSB.K}{\code{SolverModule$DiffSB.K()}}
+\item \href{#method-SolverModule-SolutionAsRelational}{\code{SolverModule$SolutionAsRelational()}}
 \item \href{#method-SolverModule-clone}{\code{SolverModule$clone()}}
 }
 }
@@ -51,7 +52,7 @@ the general ODE for simplebox
 \subsection{Method \code{execute()}}{
 prepare kaas for matrix calculations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$execute(needdebug = F)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$execute(needdebug = F, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -146,6 +147,19 @@ diff between kaas in this and k's in OtherSB.K
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SolverModule-SolutionAsRelational"></a>}}
+\if{latex}{\out{\hypertarget{method-SolverModule-SolutionAsRelational}{}}}
+\subsection{Method \code{SolutionAsRelational()}}{
+return dataframe with 
+state in three columns, 
+time input in one or t[est]vars in separate columns, 
+and the Mass in the Mass column
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$SolutionAsRelational()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-clone"></a>}}

@@ -13,3 +13,4 @@
 #  fGeneralR   : file with General functions for SBoo
 #  f_*.R       : files with General chemical/physical functions
 #  AAAreadme.R : this file
+The3D = c("Scale","SubCompart","Species")
