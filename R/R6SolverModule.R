@@ -158,7 +158,7 @@ SolverModule <-
           warning("no calculation available")
           return(NULL)
         }
-        if ("SBtime" %in% names(self$SBtime.tvars)) {
+        if (!is.null(self$SBtime.tvars)) {
           if (private$MatrixSolutionInRows) {
             ret2Blong <- cbind(private$States$asDataFrame[,The3D], 
                   t(as.matrix(private$Solution)))
@@ -174,25 +174,54 @@ SolverModule <-
         } else {
           if (!is.null(self$vnamesDistSD)) {
             Params <- list(...)
-            #is there a formula "terms"
-            if ("terms" %in% names(Params)) {
-              FUN <- Params$FUN
-              if (is.null(FUN)) {
-                warning("no FUN found, no aggregation")
-              }
+            if(length(Params) == 0) { #default uncertainty; return mean and sd.
               browser()
-              fAsList <- private$interprFormula(Params$terms)
-            }
-            if (length(Params) == 1 && is.character(Params[[1]])) {
-              VarName <- Params[[1]]
-              if (! VarName %in% self$vnamesDistSD$vnames) {
-                warning(paste(VarName, "not in analyses"))
-                return(data.frame(NA))
+              #now we know the structure / names
+              #exclude base calculation from the stats
+              exclNr <- which(rownames(private$Solution) == "base")
+              clMeans <- colMeans(private$Solution[-exclNr,])
+              clSD <- apply(private$Solution[-exclNr,], 2, sd)
+              pval <- list()
+              for (px in c(0.05, 0.25, 0.75, 0.95)) {
+                percname <- paste("p", round(100*px), sep = "")
+                pval[[percname]] <- apply(private$Solution[-exclNr,], 2, quantile, props = px)
               }
-              #Yes, we can
-              
+              ret <- do.call(rbind, pval)
+              ret <- rbind(rwMeans, clSD, ret)
             } else {
-              warning("expected a variable name")
+              #is there a formula "terms"
+              if ("terms" %in% names(Params)) {
+                FUN <- Params$FUN
+                if (is.null(FUN)) {
+                  warning("no FUN found, no aggregation")
+                  browser()
+                  leftRightHS <- private$interprFormula(Params$terms)
+                  #Add Name to attribute name, if needed
+                  fNasName <- sapply(fAsList, function(x) {
+                    browser()
+                    ifelse (any(x %in% The3D), paste(x, "Name", sep = ""), x)
+                  })
+                  
+                  ParsAndDims <- sapply(fAsList, function(x)
+                    self$states$findDim(x))
+                  
+                } else {
+                  #call and return aggregate
+                  aggregate(x = Params$terms, data = private$Solution, FUN = FUN)
+                }
+              }
+              if (length(Params) == 1 && is.character(Params[[1]])) {
+                VarName <- Params[[1]]
+                if (! VarName %in% self$vnamesDistSD$vnames) {
+                  warning(paste(VarName, "not in analyses"))
+                  return(data.frame(NA))
+                }
+                #Yes, we can
+                
+              } else {
+                warning("expected a variable name")
+              }
+              
             }
             
           }
@@ -256,27 +285,23 @@ SolverModule <-
       #' @description return list with vectors of 
       #' subcompartments, variables and filters from subcompartments ~ variables | filters
       interprFormula = function(TheCall){ 
-        rfun <- function(x){
-          if (is.call(x) | "formula" %in% class(x)) {
-            elist <- lapply((x)[-1], rfun)
-            names(elist) <- as.list(x)[1]
-            elist
+        
+        plusflat <- function(lisTree){
+          if (is.call(lisTree)) {
+            return(c(plusflat[2], plusflat[3]))
           } else {
-            x
-          }
+            return(structure(listree)) #remove formule attributes
+          } 
         }
-        union <- function(v1, v2){
-          v1[v1 %in% v2]
+        browser()
+        if (is.call(TheCall[1]) && TheCall[[1]] == "~") {
+          hasTilde <- T
+          lhs <- plusflat(TheCall[2])
+        } else {
+          hasTilde <- F
+          rhs <- plusflat(TheCall[3])
         }
-        res <- rapply(rfun(as.list(TheCall)), unlist, 
-               classes = "ANY", how = "unlist")
-        lhs <- unlist(unname(res[[grep("~",names(res))]]))
-        rhs <- unlist(unname(res[[grep("\\|",names(res))]]))
-        grpIndex <- (1:length(res))[union(  # all other indices
-          grep("~",names(res), invert = T), 
-          grep("\\|",names(res), invert = T))]
-        grp <- unlist(unname(res[[grpIndex]]))
-        list(lhs = lhs, rhs = rhs, grp = grp)
+        list(lhs = lhs, rhs = rhs)
       }
       ,
       NeedVars = function(){ #overrule
