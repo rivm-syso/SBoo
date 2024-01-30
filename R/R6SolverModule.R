@@ -19,7 +19,7 @@ SolverModule <-
         }
         private$Solution <- do.call(private$Function, args = c(
           list(ParentModule = self),
-          ...))
+          list(...)))
         # old ?
         # private$Solution <- do.call(private$Function, args = c(
         #   list(ParentModule = self),
@@ -153,12 +153,12 @@ SolverModule <-
       #' state in three columns, 
       #' time input in one or t[est]vars in separate columns, 
       #' and the Mass in the Mass column
-      SolutionAsRelational = function(){
-        if (is.null(self$SBtime.tvars)) {
+      SolutionAsRelational = function(...){
+        if (is.null(self$SBtime.tvars) && is.null(self$vnamesDistSD)) {
           warning("no calculation available")
           return(NULL)
         }
-        if ("SBtime" %in% names(self$SBtime.tvars)) {
+        if (!is.null(self$SBtime.tvars)) {
           if (private$MatrixSolutionInRows) {
             ret2Blong <- cbind(private$States$asDataFrame[,The3D], 
                   t(as.matrix(private$Solution)))
@@ -171,8 +171,62 @@ SolverModule <-
           TheTimes <- unlist(self$SBtime.tvars)
           ret$SBtime <- TheTimes[as.numeric(ret$SBtime)]
           return(ret)
+        } else {
+          if (!is.null(self$vnamesDistSD)) {
+            Params <- list(...)
+            if(length(Params) == 0) { #default uncertainty; return mean and sd.
+              browser()
+              #now we know the structure / names
+              #exclude base calculation from the stats
+              exclNr <- which(rownames(private$Solution) == "base")
+              clMeans <- colMeans(private$Solution[-exclNr,])
+              clSD <- apply(private$Solution[-exclNr,], 2, sd)
+              pval <- list()
+              for (px in c(0.05, 0.25, 0.75, 0.95)) {
+                percname <- paste("p", round(100*px), sep = "")
+                pval[[percname]] <- apply(private$Solution[-exclNr,], 2, quantile, props = px)
+              }
+              ret <- do.call(rbind, pval)
+              ret <- rbind(rwMeans, clSD, ret)
+            } else {
+              #is there a formula "terms"
+              if ("terms" %in% names(Params)) {
+                FUN <- Params$FUN
+                if (is.null(FUN)) {
+                  warning("no FUN found, no aggregation")
+                  browser()
+                  leftRightHS <- private$interprFormula(Params$terms)
+                  #Add Name to attribute name, if needed
+                  fNasName <- sapply(fAsList, function(x) {
+                    browser()
+                    ifelse (any(x %in% The3D), paste(x, "Name", sep = ""), x)
+                  })
+                  
+                  ParsAndDims <- sapply(fAsList, function(x)
+                    self$states$findDim(x))
+                  
+                } else {
+                  #call and return aggregate
+                  aggregate(x = Params$terms, data = private$Solution, FUN = FUN)
+                }
+              }
+              if (length(Params) == 1 && is.character(Params[[1]])) {
+                VarName <- Params[[1]]
+                if (! VarName %in% self$vnamesDistSD$vnames) {
+                  warning(paste(VarName, "not in analyses"))
+                  return(data.frame(NA))
+                }
+                #Yes, we can
+                
+              } else {
+                warning("expected a variable name")
+              }
+              
+            }
+            
+          }
         } # TODO else t[est]vars : uncertainty / sensitivity solvers etc.
-      }
+      } 
       
     ),
     active = list(
@@ -213,11 +267,43 @@ SolverModule <-
           private$lSBtime.tvars
         } else {
           private$lSBtime.tvars <- value
+          private$lvnamesDistSD <- NULL 
+        }
+      },
+      vnamesDistSD = function(value){
+        if (missing(value)) {
+          private$lvnamesDistSD
+        } else {
+          private$lvnamesDistSD <- value
+          private$lSBtime.tvars <- NULL
         }
       }
     ),
     
     private = list(
+      
+      #' @description return list with vectors of 
+      #' subcompartments, variables and filters from subcompartments ~ variables | filters
+      interprFormula = function(TheCall){ 
+        
+        plusflat <- function(lisTree){
+          if (is.call(lisTree)) {
+            return(c(plusflat[2], plusflat[3]))
+          } else {
+            return(structure(listree)) #remove formule attributes
+          } 
+        }
+        browser()
+        if (is.call(TheCall[1]) && TheCall[[1]] == "~") {
+          hasTilde <- T
+          lhs <- plusflat(TheCall[2])
+        } else {
+          hasTilde <- F
+          rhs <- plusflat(TheCall[3])
+        }
+        list(lhs = lhs, rhs = rhs)
+      }
+      ,
       NeedVars = function(){ #overrule
         NULL
       },
@@ -226,6 +312,7 @@ SolverModule <-
       Emissions = NULL,
       SB.K = NULL,
       MatrixSolutionInRows = NULL,
-      lSBtime.tvars = NULL
+      lSBtime.tvars = NULL,
+      lvnamesDistSD = NULL
     )
   )

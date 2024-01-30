@@ -49,6 +49,20 @@ SBstates <- R6::R6Class("SBstates",
                     Spec[abbrnr],sep=""), private$AsDataFrame$Abbr)
       }
       sapply(1:length(abbr),FUN = PasteAndMatch)
+    },
+
+    #' @description find an element in any dimension, or the name of a dimension
+    #' @param aDimension a dimension or an element therein
+    #' @return list(the found dimension = the member) or list(the found dimension = dimension). 
+    #' The found dimension is 1 of the 3dim
+    findDim = function (aDimension) {
+      browser()
+      InDims <- sapply(The3D, function(aDim) {
+        match(aDimension, private$AsDataFrame[,aDim])
+      })
+      if (sum(InDims>0)){
+        
+      }
     }
     
   ),

@@ -13,7 +13,7 @@ SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
   SBtime <- seq(0,tmax,length.out = nTIMES)
   ParentModule$SBtime.tvars <- list(SBtime = SBtime)
   
-  if (EmisasPulse) {
+  if (EmisAsPulse) {
     m0 = ParentModule$emissions
     vEmis =  rep(0,nrow(SB.K))
   } else { 
