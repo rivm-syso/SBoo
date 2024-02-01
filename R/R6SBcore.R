@@ -267,7 +267,12 @@ SBcore <- R6::R6Class("SBcore",
       NotUsed <- Variables[!Variables %in% private$nodeList$Params]
       if (length(NotUsed)> 0) warning(do.call(paste, as.list(
             c("Not all Variables are used:", NotUsed))))
-      private$CalcTreeForward(Variables[Variables %in% private$nodeList$Params])
+      NewKaas <- private$CalcTreeForward(Variables[Variables %in% private$nodeList$Params])
+      Processes2Update <- unique(NewKaas$process)
+      private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
+      private$SBkaas <- merge(NewKaas[,c("i","j","k","process")], private$SBkaas, all = T)
+      
+      private$DoPostponed()
     },
     
     #' @description Verifies the presence of needed variables for the calculation of 
@@ -641,9 +646,7 @@ SBcore <- R6::R6Class("SBcore",
           }
         }
       }
-      private$IntegrateKaaslist(kaaslist)
-      
-      private$DoPostponed()
+      return(private$IntegrateKaaslist(kaaslist))
     },
     
     CalcTreeBack = function(aProcessModule){ #calculation of variables and kaas

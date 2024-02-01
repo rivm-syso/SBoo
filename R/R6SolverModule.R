@@ -48,15 +48,22 @@ SolverModule <-
       
       #' @description prepare kaas for matrix calculations
       #' 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
-      #' including addition of kaas with identical (i,j)
+      #' including aggregation of kaas with identical (i,j)
       #' 2 The kaas are only describing removal, the where-to needs to be
       #' added to the from-masses by putting it to into the diagonal
+      #' NB emission depend on order of states; if available: resort!
       #' @param kaas k's
       #' @return matrix with kaas; ready to go
       PrepKaasM = function (kaas = NULL) {
+        if (!is.null(private$Emissions)){
+          SavedEmissions <- private$Emissions
+          private$Emissions <- NULL
+        } else { #know they should update
+          SavedEmissions <- NULL
+        }
+        
         if (is.null(kaas)) { #copy latest from core
           kaas <- self$myCore$kaas}
-
         if (any(kaas$k == 0.0)){ #or a very small value?? for solver stability?
           warning(paste(table(kaas$k == 0.0)["TRUE"]), " k values equal to 0; removed for solver")
           kaas <- kaas[kaas$k > 0,]
@@ -77,10 +84,21 @@ SolverModule <-
           newStates <- newStates[newStates$i %in% stateIndBoth,]
         }
         private$States <- SBstates$new(newStates)
+        
+        #Reinstate(s) emissions
+        if (!is.null(SavedEmissions)){
+          OldEmissions <- data.frame(
+            Abbr = names(SavedEmissions)[!is.na(names(SavedEmissions))],
+            Emis = SavedEmissions[!is.na(names(SavedEmissions))]
+          ) 
+          self$PrepemisV(OldEmissions)
+        }
+        
         nrowStates <- private$States$nStates
         k2times <- as.integer(nrowStates*nrowStates)
         SB.K <- matrix(rep.int(0.0, k2times), nrow = nrowStates)
         sumkaas <- aggregate(k ~ i + j, data = kaas, FUN = sum)
+
         for(SBi in (1:nrow(sumkaas))){
           SB.K[private$States$matchi(sumkaas$j[SBi]),
                private$States$matchi(sumkaas$i[SBi])] <- sumkaas$k[SBi] 
@@ -108,7 +126,6 @@ SolverModule <-
           stop("emissions should contain 'Abbr','Emis'. Note the capitals.", call. = FALSE)
         
         #private$Emissions <- value[,c('Abbr','Emis')]
-        
         vEmis <- rep(0.0, length.out = private$States$nStates)
         names(vEmis)[private$States$findState(emissions$Abbr)] <- emissions$Abbr
         vEmis[private$States$findState(emissions$Abbr)] <- emissions$Emis
@@ -175,7 +192,6 @@ SolverModule <-
           if (!is.null(self$vnamesDistSD)) {
             Params <- list(...)
             if(length(Params) == 0) { #default uncertainty; return mean and sd.
-              browser()
               #now we know the structure / names
               #exclude base calculation from the stats
               exclNr <- which(rownames(private$Solution) == "base")
@@ -184,10 +200,12 @@ SolverModule <-
               pval <- list()
               for (px in c(0.05, 0.25, 0.75, 0.95)) {
                 percname <- paste("p", round(100*px), sep = "")
-                pval[[percname]] <- apply(private$Solution[-exclNr,], 2, quantile, props = px)
+                pval[[percname]] <- apply(private$Solution[-exclNr,], 2, quantile, probs = px)
               }
               ret <- do.call(rbind, pval)
-              ret <- rbind(rwMeans, clSD, ret)
+              ret <- as.data.frame(t(rbind(clMeans, clSD, ret)))
+              return(cbind(private$States$asDataFrame[,The3D], ret))
+              
             } else {
               #is there a formula "terms"
               if ("terms" %in% names(Params)) {
