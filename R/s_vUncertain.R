@@ -26,8 +26,9 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
   
   # other preps; basic solution:
   SB.K = ParentModule$SB.k
-  vEmis = ParentModule$emissions
-  basicSolv <- solve(SB.K, -vEmis, tol = tol)
+  if (is.null(ParentModule$emissions))
+    stop("No emissions in vUncertain")
+  basicSolv <- solve(SB.K, -ParentModule$emissions, tol = tol)
 
   unif01LHS <- lhs::optimumLHS(n=n, k=nrow(vnamesDistSD), maxSweeps=2, eps=.1, verbose=FALSE)
   #prep to save for analyses
@@ -56,21 +57,19 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
     #update core and solve
     TheCore$UpdateDirty(vnamesDistSD$vnames)
     ParentModule$PrepKaasM()
-    SB.K = ParentModule$SB.k
-    
-    aslist[[as.character(i)]] <- solve(SB.K, -vEmis, tol = tol)
+
+    aslist[[as.character(i)]] <- solve(ParentModule$SB.k, -ParentModule$emissions, tol = tol)
   }
   
   ParentModule$vnamesDistSD <- vnamesDistSD
-  # rowsaslist <- list()
-  # for (irow in 1:nrow(knamesdist)) {
-  #   rowsaslist[rowsaslist] <- switch(knamesdist$distr,
-  #     "rnorm", rnorm(samplesize, knamesdist$mean[irow], knamesdist$sd[irow]),
-  #     "runif", runif(samplesize, knamesdist$Minm[irow], knamesdist$Maxm[irow]))
-  # }
-  # kaassamples <- docall(rbind, rowsaslist)
+
+  #reset variables to the originals
+  for (i in 1: length(baseVars)){
+    TheCore$SetConst(baseVars[[vname]])
+  }
+  TheCore$UpdateDirty(vnamesDistSD$vnames)
   
-  #Save base as last, this defines eqMass
+  #Save base as last, this reset eqMass
   aslist[["base"]] <- basicSolv
   
   do.call(rbind, aslist)
