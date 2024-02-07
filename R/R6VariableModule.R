@@ -124,33 +124,63 @@ VariableModule <-
           
           #prep debugnames for use in loop
           namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
+          if (length(debugAt) > 0 && names(debugAt) == "assembly") debugAt <- NULL # follow the apply case
           
-          #Call function for each row
-          NewData <- lapply(1:nrow(CalcTable), function(i) {
-            ParsList <- as.list(c(CalcTable[i,,drop = F], 
-                                  AllConstants, 
-                                  all.type
-            ))
-            #needs debugging?
-            if (!is.null(debugAt)){
-              #test if names of debugAT are in the ParsList
-              if(!all(namesdebugAt %in% names(ParsList))){
-                warning(paste("!all(namesdebugAt %in% names(ParsList)) in", private$MyName))
+          #needs debugging? If not: apply should be faster
+          if (is.null(debugAt) && 
+                !(length(CalcTable) != 1 | length(all.type) > 0)){
+            
+            if (length(CalcTable) == 1) {
+              NewData <- do.call(lapply, 
+                                 args = c(list(X = CalcTable[,1],
+                                             FUN = self$exeFunction),
+                                             AllConstants, all.type)
+                                 )
+                                #SIMPLIFY = F) #, USE.NAMES = USE.NAMES
+            } else {
+              argsVec <- lapply(1:length(CalcTable), function(x) CalcTable[,x])
+              names(argsVec) <- names(CalcTable)
+              if (length(AllConstants) > 0) {
+                  NewData <- do.call("mapply",
+                                     args = c(FUN = self$exeFunction, 
+                                              argsVec, 
+                                              MoreArgs = list(AllConstants),
+                                              list(SIMPLIFY = F)))
+              } else {
+                  NewData <- do.call("mapply",
+                                     args = c(FUN = self$exeFunction, 
+                                              argsVec, 
+                                              list(SIMPLIFY = F)))
               }
-              ToDebug <- T
-              if (length(namesdebugAt) > 0 ){
-                for (j in 1:length(debugAt)){
-                  if (ParsList[[names(debugAt)[j]]] != debugAt[j]){
-                    ToDebug <- F
-                    break
+            }
+          } else { #Call function for each row
+            NewData <- lapply(1:nrow(CalcTable), function(i) {
+              ParsList <- as.list(c(CalcTable[i,,drop = F], 
+                                  AllConstants, 
+                                  all.type))
+            
+              if (is.null(debugAt)) {
+                ToDebug <- F
+              } else {
+                if(!all(namesdebugAt %in% names(ParsList))){
+                  warning(paste("!all(namesdebugAt %in% names(ParsList)) in", private$MyName))
+                }
+                ToDebug <- T
+                if (length(namesdebugAt) > 0 ){
+                  for (j in 1:length(debugAt)){
+                    if (ParsList[[names(debugAt)[j]]] != debugAt[j]){
+                      ToDebug <- F
+                      break
+                    }
                   }
                 }
               }
+              #test if names of debugAT are in the ParsList
               if (ToDebug) debugonce(self$exeFunction)
-            }
-            do.call(self$exeFunction, ParsList)
-          })
-          
+            
+              do.call(self$exeFunction, ParsList)
+            })
+          }
           CatchEmpty <- sapply(NewData, length) == 0
           ResultIsNA <- sapply(NewData, function(x) {
             is.na(x) | is.null(x)
@@ -178,7 +208,8 @@ VariableModule <-
           }  
           
         }
-        
+        if (length(DimTable) == 0)
+          browser()
         return(DimTable)
 
       }

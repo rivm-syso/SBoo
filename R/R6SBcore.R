@@ -925,6 +925,9 @@ SBcore <- R6::R6Class("SBcore",
           if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
           VarFun <- private$ModuleList[[VarFunName]]
           NewData <- VarFun$execute()
+          if (exists("verbose") && verbose){
+            cat(paste(VarFunName, "\n"))
+          }
           if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
             warning(paste(VarFunName,"; no rows calculated"))
             #force the result, see below
