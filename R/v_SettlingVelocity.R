@@ -14,7 +14,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              DynViscWaterStandard,
                              DynViscAirStandard,
                              Matrix,SubCompartName) {
-  if (is.numeric(rho_species) | is.numeric(rhoMatrix)){
+  if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
 
