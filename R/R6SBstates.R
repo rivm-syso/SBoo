@@ -13,15 +13,7 @@ SBstates <- R6::R6Class("SBstates",
       if (!all(c("Abbr") %in% names(StatesAsDataFrame))) {
         stop("states should contain Abbr")
       }
-      if (!"i" %in% names(StatesAsDataFrame)) StatesAsDataFrame$i <- 1:nrow(StatesAsDataFrame)
-      private$AsDataFrame <- StatesAsDataFrame[,c("i", "Abbr", The3D)]
-    },
-    
-    #' @description return match (vector of i) in this states. i is the very original order of states
-    #' @param vi with i in order of vi 
-    matchi = function(vi) {
-      if (is.null(private$AsDataFrame )) stop("states not properly initialized")
-      match(vi, private$AsDataFrame$i)
+      private$AsDataFrame <- StatesAsDataFrame[,c("Abbr", The3D)]
     },
     
     #' @description map vector abbr for scale species subcompart to index in State

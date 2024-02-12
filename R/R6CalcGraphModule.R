@@ -270,7 +270,7 @@ CalcGraphModule <-
         
         #prep debugnames for use in loop; empty if only "assembly" is active
         namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
-        if (length(names(debugAt)) == 0) debugAt <- NULL
+        if (length(namesdebugAt) == 0) debugAt <- NULL
         
         #Call function for each row; debug-mode if indicated by debugAt
         res <- lapply(1:nrow(AllIn), function(i) {
