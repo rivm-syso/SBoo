@@ -189,6 +189,20 @@ SBcore <- R6::R6Class("SBcore",
       private$States$findState(abbr)
     },
     
+    #' @description limits the states according to the filter
+    #' @param ... the name of one of the dimensions of the states (ScaleName, SubCompartName, SpeciesName)
+    filterStates = function(...){
+      theFilter <- list(...)
+      if (!names(theFilter) %in% c("ScaleName", "SubCompartName", "SpeciesName")) {
+        stop("argument name expected one of ScaleName, SubCompartName, SpeciesName")
+      }
+      DimIdName <- private$FetchData(names(theFilter))
+      DimName <- names(DimIdName)[1]
+      DimValue <- DimIdName[DimIdName[,2] == unlist(theFilter), 1]
+      NwFrame <- private$States$asDataFrame[private$States$asDataFrame[,DimName] == DimValue,]
+      private$States <- SBstates$new(NwFrame)
+    },
+    
     #' @description returns the table, determined by the dimensions et al.
     #' @param KeyNames the dim (of The3D etc) determine which table
     whichDataTable = function(KeyNames){
@@ -230,6 +244,27 @@ SBcore <- R6::R6Class("SBcore",
       
       #return only for purpose of transparent update; side effect is done
       invisible(private$SBkaas)
+    },
+    
+    #' @description Tries to create all variable modules that current processes and all flows need
+    VarsFromprocesses = function(){
+      TestTree <- private$nodeList[private$nodeList$ModuleType %in% c("Process", "Flow"),]
+      
+      AllWant <- unique(TestTree$Calc)
+      MetaData <- self$metaData()
+      TestTree$Params[TestTree$Params %in% MetaData$AttributeNames] <- ""
+      TestTree <- TestTree[TestTree$Params != "" & !startsWith(TestTree$Params, "x_"),]
+      
+      #Loop until all vars are known
+      totVarsToGet <- NULL
+      while (nrow(TestTree)>0) {
+        VarsToGet <- unique(TestTree$Params)
+        totVarsToGet <- c(totVarsToGet, unique(TestTree$Params))
+        sapply(VarsToGet, self$NewCalcVariable)
+        TestTree <- private$nodeList[private$nodeList$Calc %in% VarsToGet,]
+        TestTree$Params[TestTree$Params %in% c(MetaData$AttributeNames, "kaas")] <- "" #annoying deposition needing other kaas exception
+        TestTree <- TestTree[TestTree$Params != "",]
+      }
     },
     
     #' @description runs (or tries to) the calculation for aVariable and stores the results.
@@ -716,7 +751,6 @@ SBcore <- R6::R6Class("SBcore",
           }
         }
       }
-      
       private$IntegrateKaaslist(kaaslist)
     },
 
@@ -925,6 +959,9 @@ SBcore <- R6::R6Class("SBcore",
           if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
           VarFun <- private$ModuleList[[VarFunName]]
           NewData <- VarFun$execute()
+          if (exists("verbose") && verbose){
+            cat(paste(VarFunName, "\n"))
+          }
           if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
             warning(paste(VarFunName,"; no rows calculated"))
             #force the result, see below

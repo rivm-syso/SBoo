@@ -86,6 +86,34 @@ CalcGraphModule <-
         }
         
         AllIn <- try(self$FromAndTo)
+        NeededNames <- names(AllIn)
+        #Limit to the actual states; Mind the relevant dimensions
+        #Species are included for processes; NOT for flows; 
+        #For flows a single to dimension is relevant and present
+        if ("FlowModule" %in% class(self)) {
+          AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
+                                     join_by(fromScale == Scale,
+                                             fromSubCompart == SubCompart))
+          if ("toScale" %in% names(AllIn)) {
+            AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
+                                       join_by(toScale == Scale))
+          } else {
+            AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
+                                       join_by(toSubCompart == SubCompart))
+          }
+          AllIn <- unique(AllIn[, NeededNames])
+        } else {
+          AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
+                                     join_by(fromScale == Scale,
+                                             fromSubCompart == SubCompart,
+                                             fromSpecies == Species))
+          AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
+                                     join_by(toScale == Scale,
+                                             toSubCompart == SubCompart,
+                                             toSpecies == Species))
+          AllIn <- unique(AllIn[, NeededNames])
+        }
+        
         if (!isa(AllIn, "data.frame") || nrow(AllIn) == 0) {
           warning(paste("No transfers found for", private$MyName))
           return(list(DimsIn = NA, AllIn = AllIn, AllOut = data.frame(NA)))
@@ -240,8 +268,9 @@ CalcGraphModule <-
           return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
         }
         
-        #prep debugnames for use in loop
+        #prep debugnames for use in loop; empty if only "assembly" is active
         namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
+        if (length(names(debugAt)) == 0) debugAt <- NULL
         
         #Call function for each row; debug-mode if indicated by debugAt
         res <- lapply(1:nrow(AllIn), function(i) {
