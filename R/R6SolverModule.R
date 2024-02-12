@@ -27,19 +27,19 @@ SolverModule <-
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
         if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
-          EqMass <- cbind(private$States$asDataFrame, private$Solution)
+          EqMass <- cbind(self$solveStates$asDataFrame, private$Solution)
         } else {
           #it's a matrix with as many rows or columns as states?
-          if (! length(dim(private$Solution)) == 2 && (nrow(private$States$asDataFrame) %in% dim(private$Solution))) {
+          if (! length(dim(private$Solution)) == 2 && (nrow(private$SolveStates$asDataFrame) %in% dim(private$Solution))) {
             warning("solver did not return as many rows nor cols as there are states")
             return(NULL)
           } #pick the last entry as steady state solution
-          if (nrow(private$States$asDataFrame) == nrow(private$Solution)) {
+          if (nrow(private$SolveStates$asDataFrame) == nrow(private$Solution)) {
             private$MatrixSolutionInRows <- F
-            EqMass <- cbind(private$States$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
+            EqMass <- cbind(private$SolveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
           } else { #same amount of colums => pick the last row
             private$MatrixSolutionInRows <- T
-            EqMass <- cbind(private$States$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
+            EqMass <- cbind(private$SolveStates$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
           }
         }
         names(EqMass)[length(EqMass)] <- "EqMass" #last column
@@ -69,22 +69,26 @@ SolverModule <-
           kaas <- kaas[kaas$k > 0,]
         }
         # copy, clean states (remove those without any k)
-        stateInd <- unique(c(kaas$i, kaas$j))
+        kaas$fromIndex <- self$myCore$FindStatefrom3D(data.frame(
+          Scale = kaas$fromScale,
+          SubCompart = kaas$fromSubCompart,
+          Species = kaas$fromSpecies
+        ))
+        kaas$toIndex <- self$myCore$FindStatefrom3D(data.frame(
+          Scale = kaas$toScale,
+          SubCompart = kaas$toSubCompart,
+          Species = kaas$toSpecies
+        ))
+        stateInd <- sort(unique(c(kaas$fromIndex, kaas$toIndex)))
         #private$States <- SBstates$new(self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),])
-        newStates <- self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),]
+        newStates <- self$myCore$states$asDataFrame[stateInd,]
         if (nrow(newStates) != self$myCore$states$nStates && exists("verbose") && verbose) {
           warning(paste(self$myCore$states$nStates - nrow(newStates),"states without kaas, not in solver"))
+          #remove states without state in columns OR rows => matrix is singular 
+          #TODO Will the matrix be sane?
+          private$SolveStates <- new(SBstates, newStates) 
         }
-        #remove states without state in columns OR rows => matrix is singular 
-        #TODO  dynamic calculation is still possible! if emission is a source??
-        stateInd <- unique(kaas$i) 
-        stateIndBoth <- stateInd[stateInd %in% unique(kaas$j)]
-        if (length(stateInd) != length(stateIndBoth)) {
-          warning(paste(length(stateInd) - length(stateIndBoth), " states with no sources OR no sinks"))
-          newStates <- newStates[newStates$i %in% stateIndBoth,]
-        }
-        private$States <- SBstates$new(newStates)
-        
+
         #Reinstate(s) emissions
         if (!is.null(SavedEmissions)){
           OldEmissions <- data.frame(
@@ -94,14 +98,14 @@ SolverModule <-
           self$PrepemisV(OldEmissions)
         }
         
-        nrowStates <- private$States$nStates
+        nrowStates <- self$solveStates$nStates
         k2times <- as.integer(nrowStates*nrowStates)
         SB.K <- matrix(rep.int(0.0, k2times), nrow = nrowStates)
-        sumkaas <- aggregate(k ~ i + j, data = kaas, FUN = sum)
+        sumkaas <- aggregate(k ~ fromIndex + toIndex, data = kaas, FUN = sum)
 
         for(SBi in (1:nrow(sumkaas))){
-          SB.K[private$States$matchi(sumkaas$j[SBi]),
-               private$States$matchi(sumkaas$i[SBi])] <- sumkaas$k[SBi] 
+          SB.K[sumkaas$toIndex[SBi],
+               sumkaas$fromIndex[SBi]] <- sumkaas$k[SBi] 
         }
         #Add the from quantities(i) to the to-states by
         #substracting the (negative) factors(i) to the diagonal
@@ -117,18 +121,14 @@ SolverModule <-
       #' @param emissions 
       #' @return matrix with kaas; ready to go
       PrepemisV = function (emissions) {
-        if (is.null(private$States)) {
-          stop("kaas should be set first, using PrepKaasM(), to set the clean states")
-        }
         if (!("data.frame" %in% class(emissions)))
           stop("emssions are expected in a data.frame-like class", call. = FALSE)
         if (!all(c("Abbr","Emis") %in% names(emissions)))
           stop("emissions should contain 'Abbr','Emis'. Note the capitals.", call. = FALSE)
         
-        #private$Emissions <- value[,c('Abbr','Emis')]
-        vEmis <- rep(0.0, length.out = private$States$nStates)
-        names(vEmis)[private$States$findState(emissions$Abbr)] <- emissions$Abbr
-        vEmis[private$States$findState(emissions$Abbr)] <- emissions$Emis
+        vEmis <- rep(0.0, length.out = self$solveStates$nStates)
+        names(vEmis) <- self$solveStates$AsDataFrame$Abbr
+        vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
         # from kg/yr to Mol/s
         Molweight <- self$myCore$fetchData("MW")
         private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
@@ -255,9 +255,13 @@ SolverModule <-
       },
       
       #' @field states injected from States
-      states = function(value) { # these might differ from the core states, they are cleaned
+      solveStates = function(value) { # these might differ from the core states, they are cleaned
         if (missing(value)) {
-          private$States
+          if (is.null(private$States)) {
+            return(self$myCore$states)
+          } else {
+            private$States
+          }
         } else {
           stop("`$states` are set by new()", call. = FALSE)
         }
@@ -326,7 +330,7 @@ SolverModule <-
         NULL
       },
       Solution = NULL,
-      States = NULL,
+      SolveStates = NULL,
       Emissions = NULL,
       SB.K = NULL,
       MatrixSolutionInRows = NULL,

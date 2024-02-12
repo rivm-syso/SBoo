@@ -124,6 +124,21 @@ SBcore <- R6::R6Class("SBcore",
       private$solver <- SolverModule$new(self, SolverFunction, ...)
     },
     
+    #find the indices + states from a dataFrame with columns "Scale" "SubCompart" "Species"   
+    FindStatefrom3D = function(df3Ds){
+      stopifnot(all(The3D %in% names(df3Ds)))
+      ret <- sapply(1:nrow(df3Ds), function(i){
+        which(private$States$asDataFrame$Scale == df3Ds$Scale[i] &
+                private$States$asDataFrame$SubCompart == df3Ds$SubCompart[i] &
+                private$States$asDataFrame$Species == df3Ds$Species[i])
+      })
+      if (anyNA(ret)) {
+        cat(df3Ds[is.na(ret), c("Scale", "SubCompart", "Species")])
+        stop("State(s) not found")
+      } else {
+        return(ret)
+      }
+    },
     #' @description Run the matrix with exchange constants; 
     #' the exact calculation is described in the function that defined the solve module.
     #' This can be solving for the steady state or running the system for a period of time.
@@ -227,16 +242,15 @@ SBcore <- R6::R6Class("SBcore",
         if (! "ProcessModule" %in% class(aProcessModule)){ # now it's an error
           stop(paste("unknown process", aProcessName))
         }
-        
         NewKaas <- private$CalcTreeBack(aProcessModule)
       }
-
+      
       if (is.null(private$SBkaas) | !mergeExisting){
-          private$SBkaas <- NewKaas[,c("i","j","k","process")]
+          private$SBkaas <- NewKaas
       } else { #merge with existing kaas; update or append if new
         Processes2Update <- unique(NewKaas$process)
         private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
-        private$SBkaas <- merge(NewKaas[,c("i","j","k","process")], private$SBkaas, all = T)
+        private$SBkaas <- merge(NewKaas, private$SBkaas, all = T)
       }
       
       # do postponed if postponed exists
@@ -305,7 +319,7 @@ SBcore <- R6::R6Class("SBcore",
       NewKaas <- private$CalcTreeForward(Variables[Variables %in% private$nodeList$Params])
       Processes2Update <- unique(NewKaas$process)
       private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
-      private$SBkaas <- merge(NewKaas[,c("i","j","k","process")], private$SBkaas, all = T)
+      private$SBkaas <- merge(NewKaas[,c("k","process")], private$SBkaas, all = T)
       
       private$DoPostponed()
     },
@@ -498,10 +512,9 @@ SBcore <- R6::R6Class("SBcore",
     #' @field kaas getter for r.o. property (all k's)
     kaas = function(value) {
       if (missing(value)) {
-        #create join met states
         if (is.null(private$SBkaas)) return(NULL)
         #else
-        private$ijAddState(private$SBkaas)
+        private$SBkaas
       } else {
         warning("`$kaas` should be set by UpdateKaas(), format is strict!", call. = FALSE)
         private$SBkaas <- value
@@ -610,26 +623,6 @@ SBcore <- R6::R6Class("SBcore",
       private$nodeList <- private$nodeList[private$nodeList$Calc %in% VarNameVector,]
     },
     
-    ijAddState = function(ijTable) {
-      #local and specific function to rename WasNames, adding PrePart if appropp 
-      PreNames <- function(WasNames, PrePart) {
-        for(WNi in 1:length(WasNames)){ #this doesn't take time
-          if (WasNames[WNi] %in% c("Scale","SubCompart","Species","Abbr" ))
-            WasNames[WNi] <- paste(PrePart, WasNames[WNi], sep = "")
-        }
-        return(WasNames)
-      }
-      fromS <- private$States$asDataFrame[ijTable$i,]
-      names(fromS) <- PreNames(names(fromS), "from")
-      toS <- private$States$asDataFrame[ijTable$j,]
-      names(toS) <-  PreNames(names(toS), "to")
-      #only 1 of 3D is different, leave it out for clarity?
-      toS$toSpecies [toS$toSpecies == fromS$fromSpecies] <- ""
-      toS$toSubCompart [toS$toSubCompart == fromS$fromSubCompart] <- ""
-      toS$toScale [toS$toScale == fromS$fromScale] <- ""
-      return(cbind(ijTable, fromS[,-match("i", names(fromS))], toS[,-match("i", names(toS))]))
-    },
-    
     CheckTree = function(){ #recursive checking the calculation of the DAG of processes/variables
       TestTree <- private$nodeList
       #remove the ones present in the data; these you have
@@ -677,6 +670,7 @@ SBcore <- R6::R6Class("SBcore",
           if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             private$UpdateDL(ModName)
           } else { # a process; add kaas to the list
+            browser()
             kaaslist[[CalcMod$myName]] <- CalcMod$execute()
           }
         }
@@ -763,22 +757,7 @@ SBcore <- R6::R6Class("SBcore",
       VolleKaas <- do.call(rbind, kaaslist)
       
       if(length(VolleKaas) > 0) { #length is 0 if no processes 
-        #format to old-school k names; merge with existing kaas and return a diff
-        # 1 match from and to states: i and j 
-        return( data.frame(
-          i = private$FindStatefrom3D(data.frame(
-            Scale = VolleKaas$fromScale,
-            SubCompart = VolleKaas$fromSubCompart,
-            Species = VolleKaas$fromSpecies
-          )),
-          j = private$FindStatefrom3D(data.frame(
-            Scale = VolleKaas$toScale,
-            SubCompart = VolleKaas$toSubCompart,
-            Species = VolleKaas$toSpecies
-          )),
-          k = VolleKaas$k,
-          process = VolleKaas$process
-        ) )
+        return(VolleKaas)
       } else {return(NULL)}
       
     },
@@ -794,43 +773,12 @@ SBcore <- R6::R6Class("SBcore",
             postKaas <- CalcMod$execute()
             if (!any(is.na(postKaas))) {
               private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
-              private$SBkaas <- rbind(private$SBkaas, 
-                                      data.frame(
-                                        i = private$FindStatefrom3D(data.frame(
-                                          Scale = postKaas$fromScale,
-                                          SubCompart = postKaas$fromSubCompart,
-                                          Species = postKaas$fromSpecies
-                                        )),
-                                        j = private$FindStatefrom3D(data.frame(
-                                          Scale = postKaas$toScale,
-                                          SubCompart = postKaas$toSubCompart,
-                                          Species = postKaas$toSpecies
-                                        )),
-                                        k = postKaas$k,
-                                        process = postKaas$process
-                                      ))
-              
+              private$SBkaas <- rbind(private$SBkaas, postKaas)
             }
           }
         }
       }
       
-    },
-    
-    #find the indices + states from a dataFrame with columns "Scale" "SubCompart" "Species"   
-    FindStatefrom3D = function(df3Ds){
-      stopifnot(all(The3D %in% names(df3Ds)))
-      ret <- sapply(1:nrow(df3Ds), function(i){
-        which(private$States$asDataFrame$Scale == df3Ds$Scale[i] &
-                private$States$asDataFrame$SubCompart == df3Ds$SubCompart[i] &
-                private$States$asDataFrame$Species == df3Ds$Species[i])
-      })
-      if (anyNA(ret)) {
-        cat(df3Ds[is.na(ret), c("Scale", "SubCompart", "Species")])
-        stop("State(s) not found")
-      } else {
-        return(ret)
-      }
     },
     
     #facilitate access to self$SB4Ndata
