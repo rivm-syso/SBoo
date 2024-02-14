@@ -8,7 +8,13 @@ SBcore <- R6::R6Class("SBcore",
     #' @param NewstateModule The stateModule with its States and standard input data
     initialize = function(NewstateModule){
       private$SB4Ndata <- NewstateModule$SB4N.data
-      private$States <- SBstates$new(NewstateModule$states) 
+      #hacked into SB4N.data directly, fetch routines are not yet available in this stage...
+      ToBeSorted <- merge(NewstateModule$states, NewstateModule$SB4N.data[["ScaleSheet"]][,c("Scale", "ScaleOrder")]) %>%
+        merge(NewstateModule$SB4N.data[["SubCompartSheet"]][,c("SubCompart", "SubCompartOrder")]) %>% 
+        merge(NewstateModule$SB4N.data[["SpeciesSheet"]][,c("Species", "SpeciesOrder")])
+      newOrder <- order(ToBeSorted$ScaleOrder, ToBeSorted$SubCompartOrder, ToBeSorted$SpeciesOrder)
+      private$States <- SBstates$new(ToBeSorted[newOrder, c("Scale", "SubCompart", "Species", "Abbr")])
+      private$States$myCore <- self
       private$substance <- NewstateModule$substance
       private$ModuleList <- list()
     },
@@ -162,6 +168,16 @@ SBcore <- R6::R6Class("SBcore",
       private$UpdateDL(Solution)
     },
     
+    #' @description Export the matrix of speed constants, aka Engine, to an excel file
+    exportEngine = function(excelFile) {
+      if (is.null(private$solver)) {
+        warning("No active solver")
+        return(NULL)
+      }
+      ToExport <- private$solver$PrepKaasM()
+      dframe2excel(as.data.frame(ToExport), outxlsx = excelFile)
+    },
+    
     #' @description Injection from SolverModule
     SolutionAsRelational = function(...){
       if (is.null(private$solver)) {
@@ -216,6 +232,7 @@ SBcore <- R6::R6Class("SBcore",
       DimValue <- DimIdName[DimIdName[,2] == unlist(theFilter), 1]
       NwFrame <- private$States$asDataFrame[private$States$asDataFrame[,DimName] == DimValue,]
       private$States <- SBstates$new(NwFrame)
+      private$States$myCore <- self
     },
     
     #' @description returns the table, determined by the dimensions et al.

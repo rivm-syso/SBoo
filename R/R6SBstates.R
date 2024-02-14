@@ -43,7 +43,32 @@ SBstates <- R6::R6Class("SBstates",
       sapply(1:length(abbr),FUN = PasteAndMatch)
     },
 
-    #' @description find an element in any dimension, or the name of a dimension
+    #' @description change any of the 3 Dim into factors and sort a data.frame accordingly
+    #' @param aDFwithD a data.frame to sort
+    #' @return sorted dataframe with dimensions from 3D as factor with levels/labels according data sheets
+    sortFactors = function (aDFwithD) {
+      Dcolumns <- The3D[The3D %in% names(aDFwithD)]
+      if (length(Dcolumns) == 0 && "Abbr" %in% names(aDFwithD)) {
+        aDFwithD <- merge(aDFwithD, private$AsDataFrame)
+        Dcolumns <- The3D[The3D %in% names(aDFwithD)] 
+      } else {
+        if (length(Dcolumns) == 0) {
+          stop("data.frame offered to sortFactors() does neither contain either of The3D, nore 'Abbr'")
+        }
+      }
+      #replace the columns with the factor with key levels
+      for (theD in Dcolumns) { #the3D = c(Scale, SubCompart, Species)
+        theName <- paste(theD, "Name", sep = "")
+        levs <- self$Dlevels[[theD]]
+        aDFwithD[, theD] <- factor(aDFwithD[, theD], levels = levs[,theD],
+                                   ordered = T, labels = levs[, theName])
+      } 
+      #and the sort
+      OrderOfDcolumns <- do.call(order, as.list(Dcolumns))
+      return(aDFwithD[OrderOfDcolumns,])
+    },
+    
+    #' @description find an element in any dimension, or the name of a dimension NOT FINISHED
     #' @param aDimension a dimension or an element therein
     #' @return list(the found dimension = the member) or list(the found dimension = dimension). 
     #' The found dimension is 1 of the 3dim
@@ -75,11 +100,41 @@ SBstates <- R6::R6Class("SBstates",
       } else {
         stop("property nStates is read-only", call. = FALSE)
       }
+    },
+    myCore = function(value) {
+      if (missing(value)) {
+        return(private$MyCore)
+      } else {
+        if ("SBcore" %in% class(value)) {
+          private$MyCore = value
+        } else {
+          stop("Core object expected, but not provided")
+        }
+      }
+    },
+    Dlevels = function(value) {
+      if (missing(value)) {
+        if (is.null(private$dlevels)) {
+          #make/save levels to factors (sorting, in ggplot)
+          ScaleOrder <- private$MyCore$fetchData("ScaleSheet")
+          SubCompartOrder <- private$MyCore$fetchData("SubCompartSheet")
+          SpeciesOrder <- private$MyCore$fetchData("SpeciesSheet")
+          private$dlevels <- list(
+            Scale = ScaleOrder[order(ScaleOrder$ScaleOrder), c("Scale", "ScaleName")],
+            SubCompart = SubCompartOrder[order(SubCompartOrder$SubCompartOrder), c("SubCompart", "SubCompartName")],
+            Species = SpeciesOrder[order(SpeciesOrder$SpeciesOrder), c("Species", "SpeciesName")]
+          )
+        }
+        return(private$dlevels)
+      } else {
+        warning("Dlevels cannot be set; late initialized")
+      }
     }
-    
     
   ),
   private = list(
-    AsDataFrame = NULL
+    AsDataFrame = NULL,
+    MyCore = NULL,
+    dlevels = NULL
   )
 )
