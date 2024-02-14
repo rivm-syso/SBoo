@@ -46,12 +46,12 @@ dframe2excel <- function(dframe, outxlsx = "sb2excel.xlsx") {
   sheetName <- attr(dframe, which = "sheetName")
   if (length((sheetName)==0) | !is.character(sheetName)) {
     sheetName <- do.call(paste0,as.list(names(dframe)))
-    if (nchar(sheetName) > 31) {
-      #maximaze length to 31 chrs
-      prtNames <- names(dframe)[1:min(31,length(names(dframe)))]
-      charsPName <- floor(31 / length(prtNames))
+    if (nchar(sheetName) > 28) {
+      #maximaze length to 28 chrs
+      prtNames <- names(dframe)[1:min(28,length(names(dframe)))]
+      charsPName <- floor(28 / length(prtNames))
       dfNames <- lapply(names(dframe), function(x) {substr(x,1,charsPName)})
-      sheetName <- do.call(paste0,dfNames)
+      sheetName <- substr(do.call(paste0,dfNames), start = 1, stop = 28)
     }
   } 
   if (sheetName %in% existSheets) 

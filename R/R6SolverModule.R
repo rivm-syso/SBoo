@@ -87,6 +87,7 @@ SolverModule <-
           #remove states without state in columns OR rows => matrix is singular 
           #TODO Will the matrix be sane?
           private$SolveStates <- new(SBstates, newStates) 
+          private$SolveStates$myCore <- private$myCore
         }
 
         #Reinstate(s) emissions
@@ -113,6 +114,8 @@ SolverModule <-
         degrdiag <- diag(SB.K)
         diag(SB.K) <- 0.0 #yes, irt colSums!
         diag(SB.K) <- - degrdiag - colSums(SB.K)
+        rownames(SB.K) <- newStates$Abbr
+        colnames(SB.K) <- newStates$Abbr
         private$SB.K <- SB.K
         invisible(SB.K)
       },
