@@ -45,6 +45,7 @@ Kacompw <- function(Kaw25,
   }
   
   if (is.na(H0sol) || H0sol == "NA") stop("H0sol is missing")
+  if (is.na(Pvap25) || Pvap25 == "NA") stop("Pvap25 is missing")
   Kaw25*exp((H0vap/R)*(1/T25-1/Temp))*exp(-(H0sol/R)*(1/T25-1/Temp))*(T25/Temp)
 }
 
