@@ -270,10 +270,14 @@ CalcGraphModule <-
         
         #prep debugnames for use in loop; empty if only "assembly" is active
         namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
-        if (length(namesdebugAt) == 0) debugAt <- NULL
-        
+        if (length(namesdebugAt) == 0) {
+          debugAt <- NULL
+        } else {
+          debugAt <- debugAt[namesdebugAt]
+        }
         #Call function for each row; debug-mode if indicated by debugAt
-        res <- lapply(1:nrow(AllIn), function(i) {
+        res <- list()
+        for (i in 1:nrow(AllIn)){
           #list of regular parameters, i.e. either to. or from. type
           vCalc <- lapply(AllIn, function (x){ x[i] })
           if (!is.null(debugAt)){
@@ -291,8 +295,8 @@ CalcGraphModule <-
             }
             if (ToDebug) debugonce(self$exeFunction)
           }
-          do.call(self$exeFunction, c(vCalc, all.tables))
-        })
+          res[[i]] <- do.call(self$exeFunction, c(vCalc, all.tables))
+        }
         #check for anomalies
         resLength <- sapply(res, length)
         if(any(resLength != 1)) {
