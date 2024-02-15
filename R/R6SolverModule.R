@@ -80,16 +80,33 @@ SolverModule <-
           Species = kaas$toSpecies
         ))
         stateInd <- sort(unique(c(kaas$fromIndex, kaas$toIndex)))
+        #TODO Will the matrix be sane?
         #private$States <- SBstates$new(self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),])
         newStates <- self$myCore$states$asDataFrame[stateInd,]
-        if (nrow(newStates) != self$myCore$states$nStates && exists("verbose") && verbose) {
-          warning(paste(self$myCore$states$nStates - nrow(newStates),"states without kaas, not in solver"))
-          #remove states without state in columns OR rows => matrix is singular 
-          #TODO Will the matrix be sane?
-          private$SolveStates <- new(SBstates, newStates) 
-          private$SolveStates$myCore <- private$myCore
-        }
-
+        if (nrow(newStates) != self$myCore$states$nStates) {
+          if (exists("verbose") && verbose) {
+            removedStates <- do.call(paste, as.list(
+                        self$myCore$states$asDataFrame$Abbr[!self$myCore$states$asDataFrame$Abbr %in% newStates$Abbr]
+            ))
+            warning(paste(self$myCore$states$nStates - nrow(newStates),"states without kaas, not in solver:", removedStates))
+            #remove states without state in columns OR rows => matrix is singular 
+          }
+          private$SolveStates <- SBstates$new(newStates) 
+          private$SolveStates$myCore <- private$MyCore
+          #redo the indices
+          # copy, clean states (remove those without any k)
+          kaas$fromIndex <- sapply(1:nrow(kaas), function(i){
+            which(newStates$Scale == kaas$fromScale[i] &
+                  newStates$SubCompart == kaas$fromSubCompart[i] &
+                  newStates$Species == kaas$fromSpecies[i])
+          })
+          kaas$toIndex <- sapply(1:nrow(kaas), function(i){
+            which(newStates$Scale == kaas$toScale[i] &
+                    newStates$SubCompart == kaas$toSubCompart[i] &
+                    newStates$Species == kaas$toSpecies[i])
+          })
+        }  
+        
         #Reinstate(s) emissions
         if (!is.null(SavedEmissions)){
           OldEmissions <- data.frame(
@@ -155,17 +172,24 @@ SolverModule <-
       DiffSB.K = function(OtherSB.K, tiny = 1e-20) {
         SB.K <- self$PrepKaasM()
         #match on row/colnames?!
-        rowMatch <- private$States$findState(rownames(OtherSB.K))
-        colMatch <- private$States$findState(colnames(OtherSB.K))
+        rowMatch <- self$solveStates$findState(rownames(OtherSB.K))
+        colMatch <- self$solveStates$findState(colnames(OtherSB.K))
         if (anyNA(c(rowMatch, colMatch))) {
+          browser()
+          #unique(is.NA(rowMeans))
           stop("unmatched row/col name(s) in OtherSB.K")
+        }
+        rowFind <- self$solveStates$asDataFrame$Abbr %in% rownames(OtherSB.K)
+        if (any(!rowFind)) {
+          NotFound <- do.call(paste, as.list(self$solveStates$asDataFrame$Abbr[!rowFind]))
+          stop(paste("States missing in OtherSB.K:", NotFound))
         }
         Diff <- SB.K[rowMatch, colMatch] - OtherSB.K
         ShowDiff <- which(abs(Diff) > tiny, arr.ind = T)
         
         data.frame(
-          from = private$States$asDataFrame$Abbr[ShowDiff[,1]],
-          to = private$States$asDataFrame$Abbr[ShowDiff[,2]],
+          from = self$solveStates$asDataFrame$Abbr[ShowDiff[,1]],
+          to = self$solveStates$asDataFrame$Abbr[ShowDiff[,2]],
           diff = Diff[ShowDiff]
         )
       },
@@ -180,7 +204,7 @@ SolverModule <-
         }
         if (!is.null(self$SBtime.tvars)) {
           if (private$MatrixSolutionInRows) {
-            ret2Blong <- cbind(private$States$asDataFrame[,The3D], 
+            ret2Blong <- cbind(private$SolveStates$asDataFrame[,The3D], 
                   t(as.matrix(private$Solution)))
           }
           ret = tidyr::pivot_longer(ret2Blong, 
@@ -207,7 +231,7 @@ SolverModule <-
               }
               ret <- do.call(rbind, pval)
               ret <- as.data.frame(t(rbind(clMeans, clSD, ret)))
-              return(cbind(private$States$asDataFrame[,The3D], ret))
+              return(cbind(private$SolveStates$asDataFrame[,The3D], ret))
               
             } else {
               #is there a formula "terms"
@@ -224,7 +248,7 @@ SolverModule <-
                   })
                   
                   ParsAndDims <- sapply(fAsList, function(x)
-                    self$states$findDim(x))
+                    self$SolveStates$findDim(x))
                   
                 } else {
                   #call and return aggregate
@@ -260,10 +284,10 @@ SolverModule <-
       #' @field states injected from States
       solveStates = function(value) { # these might differ from the core states, they are cleaned
         if (missing(value)) {
-          if (is.null(private$States)) {
+          if (is.null(private$SolveStates)) {
             return(self$myCore$states)
           } else {
-            private$States
+            private$SolveStates
           }
         } else {
           stop("`$states` are set by new()", call. = FALSE)
