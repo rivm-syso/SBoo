@@ -269,11 +269,13 @@ CalcGraphModule <-
         }
         
         #prep debugnames for use in loop; empty if only "assembly" is active
-        namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
-        if (length(namesdebugAt) == 0) {
-          debugAt <- NULL
-        } else {
-          debugAt <- debugAt[namesdebugAt]
+        if (!is.null(debugAt)) {
+          namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]
+          if (length(namesdebugAt) == 0) {
+            debugAt <- list()
+          } else {
+            debugAt <- debugAt[namesdebugAt]
+          }
         }
         #Call function for each row; debug-mode if indicated by debugAt
         res <- list()
