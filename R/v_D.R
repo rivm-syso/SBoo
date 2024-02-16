@@ -8,8 +8,12 @@
 #'@export
 D <- function(FRorig, pKa, Kow, ChemClass){
   
-  Kow.alt = 10^(log10(Kow)-3.5)
+  if (is.na(Kow) || Kow == "NA") {
+    Kow = 18 
+    warning("Kow is NA, default of 18 used!")
+  }
   
+  Kow.alt = 10^(log10(Kow)-3.5)
   
   switch(ChemClass,
          "acid" = 
