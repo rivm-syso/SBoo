@@ -17,17 +17,23 @@ k_Sedimentation(
 )
 }
 \arguments{
+\item{FRinw}{Fraction chemical dissolved in water [-]}
+
+\item{SettlingVelocity}{Settling velocity of particulate species [m.s-1]}
+
 \item{DynViscWaterStandard}{Dynamic viscosity of the fluid matrix}
 
-\item{VertDistance}{compartment (mixed/mixk_Sedimentationing) DEPTH [m]}
+\item{VertDistance}{Compartment depth/height [m]}
 
-\item{NaturalRho}{Density of natural particle}
+\item{SpeciesName}{Name of relevant species (Molecular or particulate) for which k_Sedimentation is being calculated}
 
-\item{rhoMatrix}{Density of matrix in which particle is present}
+\item{SubCompartName}{Name of relevant subcompartment for which k_Sedimentation is being calculated}
 
-\item{NaturalRad}{Radius of the natural particle}
+\item{ScaleName}{Name of relevant scale for which k_Sedimentation is being calculated}
 
-\item{CompartName}{function is defined for Water and Air; slightly different function}
+\item{RadCP}{Radius of the Coarse natural particle [m]}
+
+\item{RhoCP}{Density of the Coarse natural particle [m]}
 }
 \value{
 k_Sedimentation, the rate constant for sedimentation as first order process

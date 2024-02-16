@@ -12,7 +12,7 @@ KdegDorC(
   Ea.OHrad,
   T25,
   Q.10,
-  Ksw,
+  KswDorC,
   Biodeg,
   CorgStandard,
   rhoMatrix,

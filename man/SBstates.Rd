@@ -19,8 +19,9 @@ object in both SBcore as in SolverModule (slimmed down to existing kaas).
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-SBstates-new}{\code{SBstates$new()}}
-\item \href{#method-SBstates-matchi}{\code{SBstates$matchi()}}
 \item \href{#method-SBstates-findState}{\code{SBstates$findState()}}
+\item \href{#method-SBstates-sortFactors}{\code{SBstates$sortFactors()}}
+\item \href{#method-SBstates-findDim}{\code{SBstates$findDim()}}
 \item \href{#method-SBstates-clone}{\code{SBstates$clone()}}
 }
 }
@@ -37,23 +38,6 @@ init, based on
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{StatesAsDataFrame}}{dataframe of states with columns The3D Abbr and counter i}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SBstates-matchi"></a>}}
-\if{latex}{\out{\hypertarget{method-SBstates-matchi}{}}}
-\subsection{Method \code{matchi()}}{
-return match (vector of i) in this states. i is the very original order of states
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBstates$matchi(vi)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{vi}}{with i in order of vi}
 }
 \if{html}{\out{</div>}}
 }
@@ -76,6 +60,47 @@ map vector abbr for scale species subcompart to index in State
 }
 \subsection{Returns}{
 vector of indices
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBstates-sortFactors"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-sortFactors}{}}}
+\subsection{Method \code{sortFactors()}}{
+change any of the 3 Dim into factors and sort a data.frame accordingly
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBstates$sortFactors(aDFwithD)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{aDFwithD}}{a data.frame to sort}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+sorted dataframe with dimensions from 3D as factor with levels/labels according data sheets
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBstates-findDim"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-findDim}{}}}
+\subsection{Method \code{findDim()}}{
+find an element in any dimension, or the name of a dimension NOT FINISHED
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBstates$findDim(aDimension)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{aDimension}}{a dimension or an element therein}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+list(the found dimension = the member) or list(the found dimension = dimension). 
+The found dimension is 1 of the 3dim
 }
 }
 \if{html}{\out{<hr>}}

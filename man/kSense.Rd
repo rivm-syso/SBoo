@@ -4,7 +4,7 @@
 \alias{kSense}
 \title{kSense}
 \usage{
-kSense(ParentModule, knamesdist, samplesize)
+kSense(ParentModule, knames = NULL, tol = 1e-30)
 }
 \arguments{
 \item{ParentModule}{SBCore}
