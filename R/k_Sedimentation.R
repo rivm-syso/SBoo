@@ -1,13 +1,15 @@
 #' @title k_Sedimentation
 #' @name k_Sedimentation
 #' @description Calculate the rate constant for sedimentation [s-1]
-#' @param NaturalRho Density of natural particle
-#' @param rhoMatrix Density of matrix in which particle is present
+#' @param FRinw Fraction chemical dissolved in water [-]
+#' @param VertDistance Compartment depth/height [m]
 #' @param DynViscWaterStandard Dynamic viscosity of the fluid matrix
-#' @param NaturalRad Radius of the natural particle
-#' @param SettlingVelocity
-#' @param CompartName function is defined for Water and Air; slightly different function
-#' @param VertDistance compartment (mixed/mixk_Sedimentationing) DEPTH [m]
+#' @param RadCP Radius of the Coarse natural particle [m]
+#' @param RhoCP Density of the Coarse natural particle [m]
+#' @param SettlingVelocity Settling velocity of particulate species [m.s-1]
+#' @param SubCompartName Name of relevant subcompartment for which k_Sedimentation is being calculated
+#' @param ScaleName Name of relevant scale for which k_Sedimentation is being calculated
+#' @param SpeciesName Name of relevant species (Molecular or particulate) for which k_Sedimentation is being calculated
 #' @return k_Sedimentation, the rate constant for sedimentation as first order process
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
