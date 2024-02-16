@@ -4,7 +4,10 @@
 \alias{Ksw.alt}
 \title{Ksw.alt}
 \usage{
-Ksw.alt(Kow, pKa, CorgStandard, ChemClass, a, b, all.rhoMatrix, Ksw)
+Ksw.alt(Kow, pKa, CorgStandard, ChemClass, a, b, all.rhoMatrix, KswDorC)
+}
+\arguments{
+\item{rhoMatrix}{Density of the matrix used for getting RHOsolid [kg.m-3]}
 }
 \description{
 Ksw.alt

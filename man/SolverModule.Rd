@@ -14,6 +14,13 @@ the general ODE for simplebox
 \section{Super class}{
 \code{\link[sboo:CalcGraphModule]{sboo::CalcGraphModule}} -> \code{SolverModule}
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{states}}{injected from States}
+}
+\if{html}{\out{</div>}}
+}
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
@@ -69,9 +76,10 @@ prepare kaas for matrix calculations
 \subsection{Method \code{PrepKaasM()}}{
 prepare kaas for matrix calculations
 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
-including addition of kaas with identical (i,j)
+including aggregation of kaas with identical (i,j)
 2 The kaas are only describing removal, the where-to needs to be
 added to the from-masses by putting it to into the diagonal
+NB emission depend on order of states; if available: resort!
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SolverModule$PrepKaasM(kaas = NULL)}\if{html}{\out{</div>}}
 }
@@ -157,7 +165,7 @@ state in three columns,
 time input in one or t[est]vars in separate columns, 
 and the Mass in the Mass column
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$SolutionAsRelational()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$SolutionAsRelational(...)}\if{html}{\out{</div>}}
 }
 
 }

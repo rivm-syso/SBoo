@@ -3,20 +3,41 @@
 \name{k_CWscavenging}
 \alias{k_CWscavenging}
 \title{Cloud water scavenging coefficients as function of particle size and density}
+\usage{
+k_CWscavenging(
+  RAINrate,
+  FRACtwet,
+  tdry,
+  twet,
+  COLLECTeff,
+  rad_species,
+  rho_species,
+  to.rhoMatrix,
+  from.rhoMatrix,
+  DynViscAirStandard,
+  DynViscWaterStandard,
+  SettlingVelocity,
+  Temp,
+  Matrix,
+  SpeciesName,
+  VertDistance,
+  SubCompartName
+)
+}
 \arguments{
-\item{rho_species}{particle density []}
-
 \item{rad_species}{particle radius []}
 
-\item{to.rhoMatrix}{density of cloud water []}
+\item{rho_species}{particle density []}
 
-\item{rhoMatrix}{density of air []}
+\item{to.rhoMatrix}{density of cloud water []}
 
 \item{DynViscAirStandard}{dynamic viscosity of air []}
 
 \item{DynViscWaterStandard}{dynamic viscosity of (cloud) water []}
 
 \item{Temp}{tempreature [oC]}
+
+\item{rhoMatrix}{density of air []}
 }
 \value{
 k_CWscavenging

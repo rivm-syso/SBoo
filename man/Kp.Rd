@@ -4,16 +4,27 @@
 \alias{Kp}
 \title{Kp}
 \usage{
-Kp(FRorig, Ksw, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matrix)
+Kp(
+  FRorig,
+  KswDorC,
+  Ksw.alt,
+  all.rhoMatrix,
+  Corg,
+  CorgStandard,
+  Matrix,
+  ChemClass
+)
 }
 \arguments{
 \item{FRorig, }{}
 
-\item{Ksw, }{}
-
-\item{Ksw.alt, }{}
+\item{KswDorC, }{}
 
 \item{Matrix}{the medium, the formula is only applicable to soil and sediment}
+
+\item{ChemClass}{Chemical class, e.g. neutral or metal}
+
+\item{KswDorC.alt, }{}
 }
 \description{
 subcompartment/water PARTITION COEFFICIENT

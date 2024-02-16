@@ -20,7 +20,6 @@ description fetch the values for a dataframe with parameters/dimensions (any pur
 param varname name of variable to find
 return vector values (if found; else NA)
 #description calculate and update a variable in the "datalayer" (SB4Ndata-dataframes)
-#param TableNm the name of the data.frame in SB4Ndata
 #param VarFunName the name of the variable to be updated AND the name of the function
 #param DIMRestrict optional list of restrictions; each element is c(DimName, Comparator, Value)
 #return side-effect; vector?}
@@ -36,14 +35,18 @@ return vector values (if found; else NA)
 \item \href{#method-SBcore-NewFlow}{\code{SBcore$NewFlow()}}
 \item \href{#method-SBcore-NewCalcVariable}{\code{SBcore$NewCalcVariable()}}
 \item \href{#method-SBcore-NewSolver}{\code{SBcore$NewSolver()}}
+\item \href{#method-SBcore-FindStatefrom3D}{\code{SBcore$FindStatefrom3D()}}
 \item \href{#method-SBcore-Solve}{\code{SBcore$Solve()}}
+\item \href{#method-SBcore-exportEngine}{\code{SBcore$exportEngine()}}
 \item \href{#method-SBcore-SolutionAsRelational}{\code{SBcore$SolutionAsRelational()}}
 \item \href{#method-SBcore-metaData}{\code{SBcore$metaData()}}
 \item \href{#method-SBcore-fetchData}{\code{SBcore$fetchData()}}
 \item \href{#method-SBcore-doInherit}{\code{SBcore$doInherit()}}
 \item \href{#method-SBcore-findState}{\code{SBcore$findState()}}
+\item \href{#method-SBcore-filterStates}{\code{SBcore$filterStates()}}
 \item \href{#method-SBcore-whichDataTable}{\code{SBcore$whichDataTable()}}
 \item \href{#method-SBcore-UpdateKaas}{\code{SBcore$UpdateKaas()}}
+\item \href{#method-SBcore-VarsFromprocesses}{\code{SBcore$VarsFromprocesses()}}
 \item \href{#method-SBcore-CalcVar}{\code{SBcore$CalcVar()}}
 \item \href{#method-SBcore-SetConst}{\code{SBcore$SetConst()}}
 \item \href{#method-SBcore-UpdateDirty}{\code{SBcore$UpdateDirty()}}
@@ -184,6 +187,15 @@ for use in the defining function}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-FindStatefrom3D"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-FindStatefrom3D}{}}}
+\subsection{Method \code{FindStatefrom3D()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$FindStatefrom3D(df3Ds)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-Solve"></a>}}
 \if{latex}{\out{\hypertarget{method-SBcore-Solve}{}}}
 \subsection{Method \code{Solve()}}{
@@ -207,12 +219,22 @@ Results are available
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-exportEngine"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-exportEngine}{}}}
+\subsection{Method \code{exportEngine()}}{
+Export the matrix of speed constants, aka Engine, to an excel file
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$exportEngine(excelFile)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-SolutionAsRelational"></a>}}
 \if{latex}{\out{\hypertarget{method-SBcore-SolutionAsRelational}{}}}
 \subsection{Method \code{SolutionAsRelational()}}{
 Injection from SolverModule
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBcore$SolutionAsRelational()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$SolutionAsRelational(...)}\if{html}{\out{</div>}}
 }
 
 }
@@ -283,6 +305,23 @@ returns the state for a state-name. Injected from States property
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-filterStates"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-filterStates}{}}}
+\subsection{Method \code{filterStates()}}{
+limits the states according to the filter
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$filterStates(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{the name of one of the dimensions of the states (ScaleName, SubCompartName, SpeciesName)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-whichDataTable"></a>}}
 \if{latex}{\out{\hypertarget{method-SBcore-whichDataTable}{}}}
 \subsection{Method \code{whichDataTable()}}{
@@ -319,6 +358,16 @@ not mergeExisting, all process results (kaas) are cleared first}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-VarsFromprocesses"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-VarsFromprocesses}{}}}
+\subsection{Method \code{VarsFromprocesses()}}{
+Tries to create all variable modules that current processes and all flows need
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$VarsFromprocesses()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-CalcVar"></a>}}
@@ -370,7 +419,8 @@ that have a depency of any of the Variables, recursively.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Variables}}{the name(s) of the Variable(s) that would be "dirty"}
+\item{\code{Variables}}{the name(s) of the Variable(s) that are "dirty" 
+(Datalayer has been updated)}
 }
 \if{html}{\out{</div>}}
 }
