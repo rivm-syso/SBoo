@@ -170,7 +170,7 @@ SolverModule <-
         e_t <- parms$e(t)
         dm <- with(parms, K %*% m + e_t)
         return(list(dm))
-      }
+      },
       
       #' @description diff between kaas in this and k's in OtherSB.K
       #' @param OtherSB.K the 'other' kaas
