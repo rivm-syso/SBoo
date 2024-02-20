@@ -34,12 +34,12 @@ SolverModule <-
             warning("solver did not return as many rows nor cols as there are states")
             return(NULL)
           } #pick the last entry as steady state solution
-          if (nrow(private$SolveStates$asDataFrame) == nrow(private$Solution)) {
+          if (nrow(self$solveStates$asDataFrame) == nrow(private$Solution)) {
             private$MatrixSolutionInRows <- F
-            EqMass <- cbind(private$SolveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
+            EqMass <- cbind(self$solveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
           } else { #same amount of colums => pick the last row
             private$MatrixSolutionInRows <- T
-            EqMass <- cbind(private$SolveStates$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
+            EqMass <- cbind(self$solveStates$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
           }
         }
         names(EqMass)[length(EqMass)] <- "EqMass" #last column
@@ -152,6 +152,7 @@ SolverModule <-
         # from kg/yr to Mol/s
         Molweight <- self$myCore$fetchData("MW")
         private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+        names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
         private$Emissions
       },
       
@@ -237,7 +238,7 @@ SolverModule <-
               }
               ret <- do.call(rbind, pval)
               ret <- as.data.frame(t(rbind(clMeans, clSD, ret)))
-              return(cbind(private$SolveStates$asDataFrame[,The3D], ret))
+              return(cbind(self$solveStates$asDataFrame[,The3D], ret))
               
             } else {
               #is there a formula "terms"

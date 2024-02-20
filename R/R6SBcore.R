@@ -336,7 +336,7 @@ SBcore <- R6::R6Class("SBcore",
       NewKaas <- private$CalcTreeForward(Variables[Variables %in% private$nodeList$Params])
       Processes2Update <- unique(NewKaas$process)
       private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
-      private$SBkaas <- merge(NewKaas[,c("k","process")], private$SBkaas, all = T)
+      private$SBkaas <- rbind(NewKaas[,names(private$SBkaas)], private$SBkaas)
       
       private$DoPostponed()
     },
@@ -663,10 +663,14 @@ SBcore <- R6::R6Class("SBcore",
       # loop until Trunc does not grow anymore
       TestTrunc <- NULL
       grow <- private$nodeList[private$nodeList$Params %in% DirtyVariables,]
+
       while (nrow(grow) != 0) {
         TestTrunc <- rbind(TestTrunc, grow)
         grow <- private$nodeList[private$nodeList$Params %in% grow$Calc,]
       }
+      #clean doubles in TestTrunc, order by the last entry, reverse to set final calculation order
+      ToCalculate <- rev(unique(rev(TestTrunc$Calc)))
+      ToCalculate <- ToCalculate[!ToCalculate %in% private$l_postPoneList]
       #remove kaas from postpones!! 
       postkaas <- unlist(private$l_postPoneList)[
         startsWith(unlist(private$l_postPoneList), "k_")]
@@ -674,22 +678,16 @@ SBcore <- R6::R6Class("SBcore",
       private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postkaas,]
       
       kaaslist <- list()
-      #NB there can be doubles, this is checked more eficiently down the road
-      Prevent <- unlist(private$l_postPoneList)
-      for (i in 1:nrow(TestTrunc)){ #these are in proper order, all should succeed
-        ModName <- TestTrunc$Calc[i]
-        if (!ModName %in% Prevent) { #double or postponed
-          CalcMod <- private$ModuleList[[ModName]]
-          Prevent <- c(Prevent, ModName)
-          if (exists("verbose") && verbose){
-            cat(paste("calculating", CanDo[i]), "\n")
-          }
-          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+      for (i in 1:length(ToCalculate)){ #these are in proper order, all should succeed
+        ModName <- ToCalculate[i]
+        CalcMod <- private$ModuleList[[ModName]]
+        if (exists("verbose") && verbose){
+            cat(paste("calculating", ModName), "\n")
+        }
+        if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             private$UpdateDL(ModName)
-          } else { # a process; add kaas to the list
-            browser()
+        } else { # a process; add kaas to the list
             kaaslist[[CalcMod$myName]] <- CalcMod$execute()
-          }
         }
       }
       return(private$IntegrateKaaslist(kaaslist))
