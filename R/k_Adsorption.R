@@ -9,6 +9,7 @@
 #'@param MTC_2s SBvariable
 #'@param FRorig SBvariable
 #'@param Kacompw SBvariable
+#'@param to.Area Area of the receiving compartent
 #'@param VertDistance data
 #'@param Matrix # can use paraminherit to use description from another function! No need to copy paste same descriptions!
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
@@ -16,18 +17,18 @@
 k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
                           to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, FRorig, Kacompw, 
                           to.Kscompw, to.Matrix, VertDistance, 
-                          AreaLand, AreaSea, Area,
+                          AreaLand, AreaSea, to.Area,
                           from.SubCompartName, to.SubCompartName, ScaleName) {
 
   switch(to.Matrix,
          
          "water" = { # air to water
            GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*FRorig)+to.MTC_2a))
-           AreaFrac = Area/(AreaLand+AreaSea)
+           AreaFrac = to.Area/(AreaLand+AreaSea)
            return(GASABS/VertDistance*AreaFrac) },
          "soil" = { # air to soil
            GASABS = FRingas*(from.MTC_2s*to.MTC_2a)/(from.MTC_2s*(Kacompw*to.FRorig_spw)/to.Kscompw+to.MTC_2a)
-           AreaFrac = Area/(AreaLand+AreaSea)
+           AreaFrac = to.Area/(AreaLand+AreaSea)
            return(GASABS/VertDistance*AreaFrac) },
          "sediment" = { # water to sediment
            ADSORB = (from.MTC_2sd*to.MTC_2w)/(from.MTC_2sd+to.MTC_2w)*FRinw

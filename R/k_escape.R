@@ -1,7 +1,8 @@
 #' @title escape
 #' @name k_Escape
 #' @description calculate k for escape from air compartment to stratosphere
-#' @return k
+#' @param t_half_Escape Half life time in air [s] 
+#' @return k_Escape
 #' @export
 k_Escape <- function(t_half_Escape, to.SubCompartName, from.SubCompartName){
   # an exclusion of cloudwater is needed as this is now also seen as an air compartment.
@@ -9,7 +10,7 @@ k_Escape <- function(t_half_Escape, to.SubCompartName, from.SubCompartName){
   if(from.SubCompartName == "cloudwater") return (NA)
 
   switch (to.SubCompartName,
-    "air" =   return(log(2)/(t_half_Escape*365*24*3600)),
+    "air" =   return(log(2)/(t_half_Escape)),
     return(NA)
   )
 
