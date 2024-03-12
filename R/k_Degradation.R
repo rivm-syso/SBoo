@@ -14,8 +14,18 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName) {
-  
+                          Matrix, SpeciesName, SubCompartName, ScaleName) {
+  # exclusions of process:
+  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+                                                            SubCompartName == "lakesediment" |
+                                                            SubCompartName == "lake" |
+                                                            SubCompartName == "river" |
+                                                            SubCompartName == "agriculturalsoil"|
+                                                            SubCompartName == "othersoil")) | 
+      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+    return(NA)
+  }
+    
   if (SpeciesName %in% c("Molecular")) {
     
     switch(Matrix,
