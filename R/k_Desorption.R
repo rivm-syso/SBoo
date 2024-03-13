@@ -5,6 +5,12 @@
 #'@export
 k_Desorption <- function (Ksdcompw, MTC_2w, to.MTC_2sd, VertDistance,
                           SpeciesName, to.SubCompartName, ScaleName) {
+  if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
+    return(NA)
+  }
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & to.SubCompartName != "deepocean") {
+    return(NA)
+  }
   
   switch (SpeciesName,
     "Molecular" = {
