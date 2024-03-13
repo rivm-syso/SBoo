@@ -19,7 +19,9 @@ k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
                           to.Kscompw, to.Matrix, VertDistance, 
                           AreaLand, AreaSea, to.Area,
                           from.SubCompartName, to.SubCompartName, ScaleName) {
-
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompartName == "sea") {
+    return(NA)
+  }
   switch(to.Matrix,
          
          "water" = { # air to water
