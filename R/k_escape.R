@@ -1,6 +1,6 @@
 #' @title escape
 #' @name k_Escape
-#' @description calculate k for escape from air compartment to stratosphere
+#' @description calculate k for escape from air compartment to stratosphere based on t_half_Escape
 #' @param t_half_Escape Half life time in air [s] 
 #' @return k_Escape
 #' @export
