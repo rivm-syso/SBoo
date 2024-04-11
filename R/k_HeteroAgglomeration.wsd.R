@@ -12,9 +12,12 @@
 #' @param Temp Temperature of compartment [K]
 #' @param DynViscWaterStandard Dynamic viscosity of Water []
 #' @param DynViscAirStandard Dynamic viscosity of Air []
+#' @param SubCompartName Name of relevant subcompartment for which k_HeteroAgglomeration is being calculated
+#' @param ScaleName Name of relevant scale for which k_HeteroAgglomeration is being calculated
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
+
 k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       COL,
                                       SUSP,
@@ -33,8 +36,13 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       hamakerSP.w,
                                       Matrix,
                                       to.SpeciesName,
-                                      SubCompartName){
+                                      SubCompartName, 
+                                      ScaleName){
   
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & 
+      (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
+    return(NA)
+  }
   rhoWater = 998 # temp could be done more elegantly
   kboltz <- constants::syms$k
   GN <- constants::syms$gn
