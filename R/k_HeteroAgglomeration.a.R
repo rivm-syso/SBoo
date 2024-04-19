@@ -6,11 +6,11 @@
 #' @param RadS Radius of nanoparticle [m]
 #' @param RhoS Density of nanoparticle [kg.m-3]
 #' @param radius_Otherparticle Radius of natural particle [m]
-#' 
+#' @param f_Fuchs function describing Fuch's correction factor [-]
 #' 
 #' @param rho_Otherparticle Density (specific weight) of natural particle [kg/m3]
 #' @param Temp Temperature of compartment [K]
-#' @param viscosity Dyanic viscosity of fluid matrix []
+#' @param viscosity Dynamic viscosity of fluid matrix []
 #' @return k_HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 #' @export
 #'
@@ -38,7 +38,7 @@ k_HeteroAgglomeration.a <- function(rad_species,
                       Rad.P2,
                       Thermvel.P1,
                       Thermvel.P2){
-    (1+(4*(Diff.P1+Diff.P2))/((Rad.P1+Rad.P2)*(Thermvel.P1+Thermvel.P2^2)^0.5))^-1
+    (1+(4*(Diff.P1+Diff.P2))/((Rad.P1+Rad.P2)*(Thermvel.P1^2+Thermvel.P2^2)^0.5))^-1
   }
   
   ThermVelSpecies <- ThermVel(Temp, Radius = rad_species, Rho = rho_species)
@@ -80,3 +80,4 @@ k_HeteroAgglomeration.a <- function(rad_species,
          return(NA)
   )
 }
+

@@ -25,7 +25,7 @@ f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL)
   if (Matrix == "air") {
     if (is.null(Cunningham))
       Cunningham <- f_Cunningham(rad_species)
-    return (kboltz*Temp*Cunningham)/(6*pi*DynVisc*rad_species)
+    return ((kboltz*Temp*Cunningham)/(6*pi*DynVisc*rad_species))
   } else {
     (kboltz*Temp)/(6*pi*DynVisc*rad_species)
   }
