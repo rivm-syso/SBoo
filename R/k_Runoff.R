@@ -3,12 +3,13 @@
 #'@title Run-off of particles (unbound to be added)
 #'@name k_Runoff
 #'@param FRACrun Fraction run-off #[-]
+#'@param FracROWatComp the fraction of water in the considered SubCompartment compared to total water
 #'@param RAINrate Average precipitation #[m/s]
 #'@param VertDistance Mixing depth soil #[m]
 #'@return k_Run-off Run-off of particles from soil to water #[s-1]
 #'@export
 
-k_Runoff <- function(Runoff,VertDistance,
+k_Runoff <- function(Runoff, FracROWatComp, VertDistance,
                      Volume, Kscompw,
                      relevant_depth_s, penetration_depth_s,
                      ScaleName, to.SubCompartName, SpeciesName){
@@ -21,10 +22,10 @@ k_Runoff <- function(Runoff,VertDistance,
   switch(SpeciesName,
          "Molecular" = {
            (Runoff / Kscompw) * 
-             f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / Volume #[s-1]
+             f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / Volume  * FracROWatComp #[s-1]
          },
          (Runoff *
-            f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume
+            f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume * FracROWatComp
          #Runoff for particulates should maybe be made dependent on the size of particles that flows freely with water? As opposed to erosion? A function of shear, with a bariere basedon certrain high intensity rain episode?
   )
 }
