@@ -33,6 +33,6 @@ FracROWatComp <- function (all.landFRAC, all.Matrix, Matrix, SubCompartName, Sca
   if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
     return(FracROWatComp4SubCompart(SubCompartName, ScaleName)) 
   } else
-    return(NA)
+    return(1)
 }
 
