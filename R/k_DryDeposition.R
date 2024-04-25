@@ -22,7 +22,8 @@
 #' @export
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, FricVel,
                             DynViscAirStandard, rhoMatrix, to.ColRad, rad_species, rho_species,
-                            Temp,to.alpha.surf, SettlingVelocity, SpeciesName, SubCompartName){
+                            Temp,to.alpha.surf, SettlingVelocity, SpeciesName, SubCompartName,
+                            AEROSOLdeprate){
   
   if (SpeciesName %in% c("Nanoparticle","Aggregated","Attached")) {
     if (anyNA(c(AEROresist, DynViscAirStandard, rhoMatrix, rho_species, to.alpha.surf))) {
@@ -61,9 +62,9 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
              DRYDEPvelocity <- 1/(AEROresist+SurfResist)+SettlingVelocity
              
              # Currently implemented in SimpleBox for P species:
-             # if (species == "P"){
-             #   DRYDEPvelocity <- AEROSOLdeprate # AEROSOLdeprate constant given in xls version of SB4
-             # }
+             if (SpeciesName == "Attached"){
+               DRYDEPvelocity <- AEROSOLdeprate # AEROSOLdeprate constant given in xls version of SB4
+             }
              (DRYDEPvelocity*to.Area)/from.Volume
              
            },
