@@ -9,19 +9,56 @@
 #' @return f_DragCoefficient 
 #' @export
 #' 
-f_SetVelSolver <- function(d_eq, Psi, DynViscWaterStandard, rhoParticle, rhoWater, DragMethod, CSF) {
-  # Define the RSS function to be miDynViscWaterStandardmized
+f_SetVelSolver <- function(d_eq, Psi, DynViscWaterStandard, rhoParticle, rhoWater, DragMethod, CSF, Matrix, rad_species) {
+  # Define the RSS function to be minimized
   GN <- constants::syms$gn
-  RSS_function <- function(v_s) {
-    Re <- d_eq * v_s *rhoWater / DynViscWaterStandard
-    CD <- f_DragCoefficient (DragMethod, Re, Psi, CSF)
-    v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoWater) / rhoWater) * GN)
-    RSS <- (v_s - v_s_new) ^ 2
-    return(RSS)
-  }
+  switch (Matrix,
+          "water" = {
   
+            RSS_function <- function(v_s) {
+              Re <- d_eq * v_s *rhoWater / DynViscWaterStandard
+              CD <- f_DragCoefficient (DragMethod, Re, Psi, CSF)
+              v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoWater) / rhoWater) * GN)
+              RSS <- (v_s - v_s_new) ^ 2
+              return(RSS)}
+            result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
+            
+            return(result$minimum)
+            },
+          "air" = {
+            RSS_function <- function(v_s) {
+              Re <- d_eq * v_s *rhoWater / DynViscWaterStandard
+              Cunningham <- f_Cunningham(rad_species)
+              CD <- f_DragCoefficient (DragMethod, Re, Psi, CSF)
+              v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoWater) / rhoWater) * GN) * Cunningham
+              RSS <- (v_s - v_s_new) ^ 2
+              return(RSS)}
+            result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
+            
+            return(result$minimum)
+            },
+            NA
+  )       
   # Use numerical optimizer to minimize the RSS function
-  result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
-  
-  return(result$minimum)
+  # result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
+  # 
+  # return(result$minimum)
+
 }
+
+# f_SetVelSolver <- function(d_eq, Psi, DynViscWaterStandard, rhoParticle, rhoWater, DragMethod, CSF) {
+#   # Define the RSS function to be miDynViscWaterStandardmized
+#   GN <- constants::syms$gn
+#   RSS_function <- function(v_s) {
+#     Re <- d_eq * v_s *rhoWater / DynViscWaterStandard
+#     CD <- f_DragCoefficient (DragMethod, Re, Psi, CSF)
+#     v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoWater) / rhoWater) * GN)
+#     RSS <- (v_s - v_s_new) ^ 2
+#     return(RSS)
+#   }
+#   
+#   # Use numerical optimizer to minimize the RSS function
+#   result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
+#   
+#   return(result$minimum)
+# }

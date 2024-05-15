@@ -18,11 +18,9 @@ f_DragCoefficient <- function(DragMethod, Re, Psi, CSF) {
   } else if (DragMethod == "Swamee") {
     term1 = 48.5 / (((1 + 4.5 * CSF ^ 0.35) ** 0.8) * (Re ^ 0.64))
     term2 = ((Re / (Re + 100 + 100 * CSF)) ^ 0.32) * (1 / (CSF ** 18 + 1.05 * CSF ^ 0.8))
-    
-    CD = (term1 + term2) ^ 1.25
-    # Add calculations for another DragMethod here
+    CD <- (term1 + term2) ^ 1.25
   } else if (DragMethod == "Stokes"){
-    CD = 24 / Re + 4 / sqrt(Re) + 0.4
+    CD <- 24 / Re + 4 / sqrt(Re) + 0.4
   } else {
     stop("Invalid DragMethod! Please choose from available DragMethods.")
   }

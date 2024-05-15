@@ -9,16 +9,16 @@
 #' @return fVol [m3]
 #' @export
 
-f_SurfaceArea <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL) {
-  if (is.null(Shape)){
+f_SurfaceArea <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL, rad_particle) {
+  if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
-  if (is.null(Longest_side) | is.null(Intermediate_side) | is.null(Shortest_side)) {
-    # If any side is not provided, assuming all sides are equal (default)
-    Longest_side <- rad_particle*2
-    Intermediate_side <- rad_particle*2
-    Shortest_side <- rad_particle*2
+  if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
+    Longest_side <- rad_particle * 2
+    Intermediate_side <- rad_particle * 2
+    Shortest_side <- rad_particle * 2
   }
+  
   
     if (Shape == "Sphere" | Shape == "Default") {
       radius <- Longest_side / 2

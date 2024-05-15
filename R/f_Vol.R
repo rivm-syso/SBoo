@@ -10,7 +10,7 @@
 #' @export
 
 fVol <- function(rad_particle, Shape = NULL, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL){
-    if (is.null(Shape) || is.na(Shape)){
+    if (is.na(Shape) || is.null(Shape)){
       Shape <- "Default"
     }
     
@@ -29,9 +29,12 @@ fVol <- function(rad_particle, Shape = NULL, Longest_side = NULL, Intermediate_s
         volume <- (4/3) * pi * Longest_side * Intermediate_side * Shortest_side
         return(volume)
       } else if (Shape == "Cube" | Shape == "Box") {
+        #Longest_side <- sqrt(3)*Longest_side
+        #Intermediate_side <-sqrt(2)*Longest_side
         volume <- Longest_side * Intermediate_side * Shortest_side
         return(volume)
       } else if (Shape == "Cylindric - circular") {
+
         radius <- Longest_side / 2
         height <- Intermediate_side
         volume <- pi * radius^2 * height
