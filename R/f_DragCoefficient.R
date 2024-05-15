@@ -16,8 +16,8 @@ f_DragCoefficient <- function(DragMethod, Re, Psi, CSF) {
     term3 <- 0.4251 / (1 + (6880.95 / Re) * Psi ^ 5.05)
     CD <- term1 + term2 + term3
   } else if (DragMethod == "Swamee") {
-    term1 = 48.5 / (((1 + 4.5 * CSF ^ 0.35) ** 0.8) * (Re ^ 0.64))
-    term2 = ((Re / (Re + 100 + 100 * CSF)) ^ 0.32) * (1 / (CSF ** 18 + 1.05 * CSF ^ 0.8))
+    term1 = 48.5 / (((1 + 4.5 * CSF ^ 0.35) ^ 0.8) * (Re ^ 0.64))
+    term2 = ((Re / (Re + 100 + 1000 * CSF)) ^ 0.32) * (1 / (CSF ^ 18 + 1.05 * CSF ^ 0.8))
     CD <- (term1 + term2) ^ 1.25
   } else if (DragMethod == "Stokes"){
     CD <- 24 / Re + 4 / sqrt(Re) + 0.4

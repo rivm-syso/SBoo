@@ -31,6 +31,8 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   
   if(Matrix == "soil" | Matrix == "sediment") return(NA)
   if(SubCompartName == "cloudwater") return(NA)
+  if(DragMethod == "Original" & Matrix =="water") return(2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard))
+  if(DragMethod == "Original" & Matrix =="air") return(2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscAirStandard))
   volume <- fVol(rad_species, Shape, Longest_side, Intermediate_side, Shortest_side)
   d_eq <- ( 6/ pi * volume)^(1/3)
   surfaceareaparticle <- f_SurfaceArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
