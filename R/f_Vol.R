@@ -17,8 +17,8 @@ fVol <- function(rad_particle, Shape = NULL, Longest_side = NULL, Intermediate_s
     # Check if any of the sides is NA or NULL and assign default values if so
     if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
       Longest_side <- rad_particle * 2
-      Intermediate_side <- rad_particle * 2
-      Shortest_side <- rad_particle * 2
+      Intermediate_side <- rad_particle * 2 #maybe 0.75 or build in shape functions
+      Shortest_side <- rad_particle * 2 # maybe 0.5 
     }
 
       if (Shape == "Sphere" | Shape == "Default") {

@@ -37,7 +37,12 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   d_eq <- ( 6/ pi * volume)^(1/3)
   surfaceareaparticle <- f_SurfaceArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
   surfaceareaperfectsphere <- f_SurfaceArea("Sphere", d_eq, d_eq, d_eq, rad_species)
-  circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
+  #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
+  perimeterparticle <- f_PerimeterParticle(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
+  perimetercircle <- f_PerimeterParticle("Sphere", d_eq, d_eq, d_eq, rad_species)
+  areaparticle <- f_2dArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
+  #circularity <- 4* pi * (areaparticle/(perimeterparticle^2))
+  circularity <- perimeterparticle/perimetercircle
   sphericity <- surfaceareaperfectsphere/surfaceareaparticle
   Psi <- sphericity/circularity # Shape factor Dioguardi
   CSF <- Shortest_side/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
@@ -54,26 +59,3 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
         )
 }
   
-#   switch (Matrix,
-#           "water" = {
-#             if(SubCompartName == "cloudwater") return(NA)
-#             volume <- fVol(rad_species, Shape = NULL, Longest_side, Intermediate_side, Shortest_side)
-#             d_eq <- ( 6/ pi * volume)^(1/3)
-#             surfaceareaparticle <- f_SurfaceArea(Shape = NULL, Longest_side, Intermediate_side, Shortest_side)
-#             surfaceareaperfectsphere <- f_SurfaceArea("Sphere", d_eq, d_eq, d_eq)
-#             circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
-#             sphericity <- surfaceareaperfectsphere/surfaceareaparticle
-#             Psi <- sphericity/circularity # Shape factor Dioguardi
-#             CSF <- sqrt(Shortest_side/(Longest_side*Intermediate_side))
-#             v_s <- f_SetVelSolver(d_eq, Psi, DynViscWaterStandard, rho_species, rhoMatrix, DragMethod, CSF)
-#             return(v_s)
-#             # 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
-#             
-#           },
-#           "air" = {
-#             Cunningham <- f_Cunningham(rad_species)
-#             2*(rad_species^2 * (rho_species - rhoMatrix)*GN*Cunningham)/(9*DynViscAirStandard) # particle settling velocity
-#           },
-#           NA #else
-#   )
-# }

@@ -6,7 +6,7 @@
 #' @param Longest_side Longest side length as defined by user [m]
 #' @param Intermediate_side Intermediate side length as defined by user [m]
 #' @param Shortest_side Shortest side length as defined by user
-#' @return fVol [m3]
+#' @return f_SurfaceArea [m2]
 #' @export
 
 f_SurfaceArea <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL, rad_particle) {
