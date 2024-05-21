@@ -40,8 +40,6 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
   perimeterparticle <- f_PerimeterParticle(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
   perimetercircle <- f_PerimeterParticle("Sphere", d_eq, d_eq, d_eq, rad_species)
-  areaparticle <- f_2dArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
-  #circularity <- 4* pi * (areaparticle/(perimeterparticle^2))
   circularity <- perimeterparticle/perimetercircle
   sphericity <- surfaceareaperfectsphere/surfaceareaparticle
   Psi <- sphericity/circularity # Shape factor Dioguardi
