@@ -1,6 +1,6 @@
 #' @title Cunningham
 #' @name fCunningham
-#' @description Collission frequency of ENPs with other particulates due to Gravitational or Intertial impaction in s-1 for heteroagglomeration
+#' @description Collission frequency of ENPs with other particulates due to Gravitational or Intertial impaction in s-1 for heteroagglomeration. Experimental values from Alpha, Beta, Gamma from Allan and Raab 1985 (Schneider and Voigt H2)			
 #' @param rad_species radius of the species
 #' @return Cunningham 
 #' @export

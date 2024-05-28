@@ -13,23 +13,47 @@
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 
                              DynViscWaterStandard,
                              DynViscAirStandard,
-                             Matrix,SubCompartName) {
+                             Matrix,SubCompartName, Shape,
+                             Longest_side, Intermediate_side, Shortest_side, DragMethod) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
-
+  if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
+    Longest_side <- rad_species * 2
+    Intermediate_side <- rad_species * 2
+    Shortest_side <- rad_species * 2
+  }
+  if (is.na(Shape) || is.null(Shape)){
+    Shape <- "Default"
+  }
+  
   GN <- constants::syms$gn
   
+  if(Matrix == "soil" | Matrix == "sediment") return(NA)
+  if(SubCompartName == "cloudwater") return(NA)
+  if(DragMethod == "Original" & Matrix =="water") return(2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard))
+  if(DragMethod == "Original" & Matrix =="air") return(2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscAirStandard))
+  volume <- fVol(rad_species, Shape, Longest_side, Intermediate_side, Shortest_side)
+  d_eq <- ( 6/ pi * volume)^(1/3)
+  surfaceareaparticle <- f_SurfaceArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
+  surfaceareaperfectsphere <- f_SurfaceArea("Sphere", d_eq, d_eq, d_eq, rad_species)
+  #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
+  perimeterparticle <- f_PerimeterParticle(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
+  perimetercircle <- f_PerimeterParticle("Sphere", d_eq, d_eq, d_eq, rad_species)
+  circularity <- perimeterparticle/perimetercircle
+  sphericity <- surfaceareaperfectsphere/surfaceareaparticle
+  Psi <- sphericity/circularity # Shape factor Dioguardi
+  CSF <- Shortest_side/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
   switch (Matrix,
-          "water" = {
-            if(SubCompartName == "cloudwater") return(NA)
-            2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
-            
+          "water" = { 
+            v_s <- f_SetVelSolver(d_eq, Psi, DynViscWaterStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species)
+            return(v_s)
+            }, 
+          "air"= {
+            v_s <- f_SetVelSolver(d_eq, Psi, DynViscAirStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species)
+            return(v_s)
           },
-          "air" = {
-            Cunningham <- f_Cunningham(rad_species)
-            2*(rad_species^2 * (rho_species - rhoMatrix)*GN*Cunningham)/(9*DynViscAirStandard) # particle settling velocity
-          },
-          NA #else
-  )
+          NA
+        )
 }
+  
