@@ -145,7 +145,6 @@ SolverModule <-
           stop("emssions are expected in a data.frame-like class", call. = FALSE)
         if (!all(c("Abbr","Emis") %in% names(emissions)))
           stop("emissions should contain 'Abbr','Emis'. Note the capitals.", call. = FALSE)
-<<<<<<< HEAD
 
         # for conversion to mol
         Molweight <- self$myCore$fetchData("MW")
@@ -189,7 +188,6 @@ SolverModule <-
           names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
           
         }
-=======
         
         vEmis <- rep(0.0, length.out = self$solveStates$nStates)
         names(vEmis) <- self$solveStates$AsDataFrame$Abbr
@@ -198,7 +196,6 @@ SolverModule <-
         #Molweight <- self$myCore$fetchData("MW")
         #private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
         names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
->>>>>>> 41b411c (solver adaptations deSolve)
         private$Emissions
       },
       
