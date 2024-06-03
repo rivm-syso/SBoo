@@ -22,57 +22,122 @@
 #' @export
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, FricVel,
                             DynViscAirStandard, rhoMatrix, to.ColRad, rad_species, rho_species,
-                            Temp,to.alpha.surf, SettlingVelocity, SpeciesName, SubCompartName,
-                            AEROSOLdeprate){
-  
-  if (SpeciesName %in% c("Nanoparticle","Aggregated","Attached")) {
-    if (anyNA(c(AEROresist, DynViscAirStandard, rhoMatrix, rho_species, to.alpha.surf))) {
-      return(NA)
-    }
-    switch(SubCompartName,
-           "air" = {
-             
-             Cunningham <- f_Cunningham(rad_species)
-             Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
-             
-             SchmidtNumber <- DynViscAirStandard/(rhoMatrix*Diffusivity) #rhoMatrix to be converted to RhoWater or RhoAir
-             # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
-             Brown <- SchmidtNumber^(-to.gamma.surf)
-             
-             StN <- ifelse(to.ColRad==0|is.na(to.ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016
-                           (SettlingVelocity*FricVel)/DynViscAirStandard/rhoMatrix, # for smooth surfaces (water)
-                           (SettlingVelocity*FricVel)/(constants::syms$gn*to.ColRad)      # for vegetated surfaces (soil)
-             )
-             Intercept <- ifelse(to.ColRad==0|is.na(to.ColRad),
-                                 0, # for smooth surfaces
-                                 0.5 * (rad_species/to.ColRad)^2 # LOTEUR (eq 5.14) in ref guide.
-             )
-             
-             #StokesNumberVeg <- fStokesNumber_rain(rad_particle, rho_species, from.rho, from.visc,RAINrate,FRACtwet,Cunningham.cw,g) # to be update in future!
-             R1 <- exp(-StN^0.5) # R1 = correction factor representing the fraction of particles that stick to the surface
-             epsilon = 3 # epsilon  is empirical constant set to 3
-             beta.a = 2 # constant set to 2
-             
-             # in SB4N alpha.surf is 0.8!!!
-             Impaction <- (StN/(StN+to.alpha.surf))^beta.a # LOTUS EUROS ref guide (eq. 5.13)  
-             
-             SurfResist <- 1/(epsilon*FricVel*(Brown+ # Collection efficiency for Brownian diffusion
-                                                 Intercept+ # Collection efficiency for interception
-                                                 Impaction)*R1) # Collection efficiency for impaction
-             DRYDEPvelocity <- 1/(AEROresist+SurfResist)+SettlingVelocity
-             
-             # Currently implemented in SimpleBox for P species:
-             if (SpeciesName == "Attached"){
-               DRYDEPvelocity <- AEROSOLdeprate # AEROSOLdeprate constant given in xls version of SB4
+                            Temp, to.alpha.surf, SettlingVelocity, SpeciesName, SubCompartName,
+                            AEROSOLdeprate, Test, to.Matrix, RAINrate, from.Matrix, from.rhoMatrix, FRACtwet) {
+ switch(as.character(Test),
+         "TRUE" = {
+           # Existing function logic when test is FALSE
+           if (SpeciesName %in% c("Nanoparticle", "Aggregated", "Attached")) {
+             if (anyNA(c(AEROresist, DynViscAirStandard, rhoMatrix, rho_species, to.alpha.surf))) {
+               return(NA)
              }
-             (DRYDEPvelocity*to.Area)/from.Volume
+             switch(SubCompartName,
+                    "air" = {
+                      
+                      Cunningham <- f_Cunningham(rad_species)
+                      Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
+                      
+                      SchmidtNumber <- DynViscAirStandard / (rhoMatrix * Diffusivity) # rhoMatrix to be converted to RhoWater or RhoAir
+                      # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
+                      Brown <- SchmidtNumber^(-2/3)
+                      
+                      rad_RainDrop <- f_RadRain(RAINrate, FRACtwet)
+                      
+                      Cunningham.cw <- f_Cunningham(rad_RainDrop)
+                      Settvel.Particle.cw <-  2*(rad_species^2 * (rho_species - from.rhoMatrix)* #rhoMatrix to be converted to RhoWater and RhoAir
+                                                   constants::syms$gn*Cunningham)/(9*DynViscAirStandard) 
+                      
+                      Relax.Particle.a <- ((rho_species-from.rhoMatrix)*(2*rad_species)^2*f_Cunningham(rad_species))/(18*DynViscAirStandard)
+                      
+                      StN <- (2*Relax.Particle.a*(Settvel.Particle.cw-SettlingVelocity))/(2*rad_RainDrop)
+                      
+                      AREAFRACveg <- 0.1
+                      LargeVegRadius <- 5e-4
+                      VegHair <- 1e-5
+                      
+                      Intercept <- 0.3*(AREAFRACveg * (rad_species/(rad_species+VegHair))+(1-AREAFRACveg)*(rad_species/(rad_species+LargeVegRadius)))
+                      
+                      # StokesNumberVeg <- fStokesNumber_rain(rad_particle, rho_species, from.rho, from.visc, RAINrate, FRACtwet, Cunningham.cw, g) # to be update in future!
+                      R1 <- exp(-StN^0.5) # R1 = correction factor representing the fraction of particles that stick to the surface
+                      epsilon = 3 # epsilon is empirical constant set to 3
+                      beta.a = 2 # constant set to 2
+                      
+                      # in SB4N alpha.surf is 0.8!!!
+                      if (to.Matrix == "water") {
+                        Impaction <- 10^(-3/StN)
+                      } else if (to.Matrix == "soil") {
+                        Impaction <- (StN / (StN + 0.8))^beta.a
+                      }
+                    
+                      
+                      SurfResist <- 1 / (FricVel * (Brown + # Collection efficiency for Brownian diffusion
+                                                                Intercept + # Collection efficiency for interception
+                                                                Impaction)) # Collection efficiency for impaction
+                      DRYDEPvelocity <- 1 / (AEROresist + SurfResist) + SettlingVelocity
+                      
+                      # Currently implemented in SimpleBox for P species:
+                      if (SpeciesName == "Attached") {
+                        DRYDEPvelocity <- AEROSOLdeprate # AEROSOLdeprate constant given in xls version of SB4
+                      }
+                      return((DRYDEPvelocity * to.Area) / from.Volume)
+                      
+                    },
+                    NA)
              
+           } else {
+             return(NA)
+           }
            },
-           NA)
-    
-  } else {
-    return (NA)
-  }
+         "FALSE" = {
+           # Existing function logic when test is FALSE
+           if (SpeciesName %in% c("Nanoparticle", "Aggregated", "Attached")) {
+             if (anyNA(c(AEROresist, DynViscAirStandard, rhoMatrix, rho_species, to.alpha.surf))) {
+               return(NA)
+             }
+             switch(SubCompartName,
+                    "air" = {
+                      
+                      Cunningham <- f_Cunningham(rad_species)
+                      Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
+                      
+                      SchmidtNumber <- DynViscAirStandard / (rhoMatrix * Diffusivity) # rhoMatrix to be converted to RhoWater or RhoAir
+                      # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
+                      Brown <- SchmidtNumber^(-to.gamma.surf)
+                      
+                      StN <- ifelse(to.ColRad == 0 | is.na(to.ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016
+                                    (SettlingVelocity * FricVel) / DynViscAirStandard / rhoMatrix, # for smooth surfaces (water)
+                                    (SettlingVelocity * FricVel) / (constants::syms$gn * to.ColRad)      # for vegetated surfaces (soil)
+                      )
+                      Intercept <- ifelse(to.ColRad == 0 | is.na(to.ColRad),
+                                          0, # for smooth surfaces
+                                          0.5 * (rad_species / to.ColRad)^2 # LOTEUR (eq 5.14) in ref guide.
+                      )
+                      
+                      # StokesNumberVeg <- fStokesNumber_rain(rad_particle, rho_species, from.rho, from.visc, RAINrate, FRACtwet, Cunningham.cw, g) # to be update in future!
+                      R1 <- exp(-StN^0.5) # R1 = correction factor representing the fraction of particles that stick to the surface
+                      epsilon = 3 # epsilon is empirical constant set to 3
+                      beta.a = 2 # constant set to 2
+                      
+                      # in SB4N alpha.surf is 0.8!!!
+                      Impaction <- (StN / (StN + to.alpha.surf))^beta.a # LOTUS EUROS ref guide (eq. 5.13)  
+                      
+                      SurfResist <- 1 / (epsilon * FricVel * (Brown + # Collection efficiency for Brownian diffusion
+                                                              Intercept + # Collection efficiency for interception
+                                                              Impaction) * R1) # Collection efficiency for impaction
+                      DRYDEPvelocity <- 1 / (AEROresist + SurfResist) + SettlingVelocity
+                      
+                      # Currently implemented in SimpleBox for P species:
+                      if (SpeciesName == "Attached") {
+                        DRYDEPvelocity <- AEROSOLdeprate # AEROSOLdeprate constant given in xls version of SB4
+                      }
+                      return((DRYDEPvelocity * to.Area) / from.Volume)
+                      
+                    },
+                    NA)
+             
+           } else {
+             return(NA)
+           }
+         }
+  )
 }
-
-
