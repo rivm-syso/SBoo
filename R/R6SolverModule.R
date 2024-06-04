@@ -150,8 +150,8 @@ SolverModule <-
         names(vEmis) <- self$solveStates$AsDataFrame$Abbr
         vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
         # from kg/yr to Mol/s
-        #Molweight <- self$myCore$fetchData("MW")
-        #private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+        Molweight <- self$myCore$fetchData("MW")
+        private$Emissions <- vEmis #t/an -> mol/s
         names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
         private$Emissions
       },
