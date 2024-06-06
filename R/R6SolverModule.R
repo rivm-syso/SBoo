@@ -145,14 +145,49 @@ SolverModule <-
           stop("emssions are expected in a data.frame-like class", call. = FALSE)
         if (!all(c("Abbr","Emis") %in% names(emissions)))
           stop("emissions should contain 'Abbr','Emis'. Note the capitals.", call. = FALSE)
-        
-        vEmis <- rep(0.0, length.out = self$solveStates$nStates)
-        names(vEmis) <- self$solveStates$AsDataFrame$Abbr
-        vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
-        # from kg/yr to Mol/s
+
+        # for conversion to mol
         Molweight <- self$myCore$fetchData("MW")
-        private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
-        names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
+        # there can be multiple times in optional Timed column. 
+        #if so, emissions becomes a list of vectors
+        if ("Timed" %in% names(emissions)) {
+          Times <- sort(unique(emissions$Timed))
+          vEmis <- replicate(private$SolveStates$nStates, data.frame(Timed = Times[1], emis = 0.0), simplify = F)
+          names(vEmis) <- self$solveStates$asDataFrame$Abbr
+          #update the first time if present, 
+          #then append all emissions in the right state list
+          #make sure the last Times is present for all states; set to 0.0 if missing
+          timedRows <- emissions[emissions$Timed == Times[1],]
+          for (irow in 1:nrow(timedRows)){
+            vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+          }
+          for (atime in Times[2:(length(Times)-1)]) {
+            timedRows <- emissions[emissions$Timed == atime,]
+            for (irow in 1:nrow(timedRows)){
+              newRow <- data.frame(Timed = timedRows$Timed[irow], 
+                                   emis = timedRows$Emis[irow]  * 1000000 / Molweight / (3600*24*365)) #t/an -> mol/s)
+              vEmis[[timedRows$Abbr[irow]]] <- rbind(vEmis[[timedRows$Abbr[irow]]], newRow)
+            }
+          }
+          lastTime <- tail(Times,1)
+          timedRows <- emissions[emissions$Timed == lastTime,]
+          for (aState in names(vEmis)) {
+            posEmis <- timedRows$Emis[timedRows$Abbr == aState]  * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+            emisMust <- ifelse(length(posEmis) > 0, posEmis, 0.0)
+            newRow <- data.frame(Timed = lastTime, emis = emisMust)
+            vEmis[[aState]] <- rbind(vEmis[[aState]], newRow)
+          }
+          private$Emissions <- vEmis
+        } else { 
+          #steady state
+          vEmis <- rep(0.0, length.out = self$solveStates$nStates)
+          names(vEmis) <- self$solveStates$AsDataFrame$Abbr
+          vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
+          # from kg/yr to Mol/s
+          private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+          names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
+          
+        }
         private$Emissions
       },
       
