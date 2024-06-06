@@ -159,20 +159,20 @@ SolverModule <-
           #make sure the last Times is present for all states; set to 0.0 if missing
           timedRows <- emissions[emissions$Timed == Times[1],]
           for (irow in 1:nrow(timedRows)){
-            vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+            vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] # 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
           }
           for (atime in Times[2:(length(Times)-1)]) {
             timedRows <- emissions[emissions$Timed == atime,]
             for (irow in 1:nrow(timedRows)){
               newRow <- data.frame(Timed = timedRows$Timed[irow], 
-                                   emis = timedRows$Emis[irow]  * 1000000 / Molweight / (3600*24*365)) #t/an -> mol/s)
+                                   emis = timedRows$Emis[irow])  # 1000000 / Molweight / (3600*24*365)) #t/an -> mol/s)
               vEmis[[timedRows$Abbr[irow]]] <- rbind(vEmis[[timedRows$Abbr[irow]]], newRow)
             }
           }
           lastTime <- tail(Times,1)
           timedRows <- emissions[emissions$Timed == lastTime,]
           for (aState in names(vEmis)) {
-            posEmis <- timedRows$Emis[timedRows$Abbr == aState]  * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+            posEmis <- timedRows$Emis[timedRows$Abbr == aState]  # 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
             emisMust <- ifelse(length(posEmis) > 0, posEmis, 0.0)
             newRow <- data.frame(Timed = lastTime, emis = emisMust)
             vEmis[[aState]] <- rbind(vEmis[[aState]], newRow)
@@ -184,7 +184,7 @@ SolverModule <-
           names(vEmis) <- self$solveStates$AsDataFrame$Abbr
           vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
           # from kg/yr to Mol/s
-          private$Emissions <- vEmis * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+          private$Emissions <- vEmis# * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
           names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
           
         }
