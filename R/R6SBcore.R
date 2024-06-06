@@ -161,7 +161,7 @@ SBcore <- R6::R6Class("SBcore",
       if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
         stop("emissions should be a dataframe(like) with columns")
       if (!all(c("Abbr", "Emis") %in% names(emissions))) 
-        stop("emissions should contain Abbr and Emis as columns")
+        stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
       private$solver$PrepemisV(emissions)
       # the solver does the actual work
       Solution = private$solver$execute(needdebug = needdebug, ...)
@@ -291,6 +291,15 @@ SBcore <- R6::R6Class("SBcore",
       while (nrow(TestTree)>0) {
         VarsToGet <- unique(TestTree$Params)
         totVarsToGet <- c(totVarsToGet, unique(TestTree$Params))
+        #test if all totVarsToGet are known
+        knownFun <- sapply(totVarsToGet, exists)
+        knownData <- sapply(totVarsToGet, function(parName) {
+          parName %in% MetaData$AttributeNames
+        })
+        known <- knownFun | knownData
+        if (!all(known)) {
+          stop(paste("unknown function", totVarsToGet[!known], "\n"))
+        }
         sapply(VarsToGet, self$NewCalcVariable)
         TestTree <- private$nodeList[private$nodeList$Calc %in% VarsToGet,]
         TestTree$Params[TestTree$Params %in% c(MetaData$AttributeNames, "kaas")] <- "" #annoying deposition needing other kaas exception
