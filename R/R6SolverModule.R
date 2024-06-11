@@ -218,7 +218,7 @@ SolverModule <-
       
       #' @description diff between kaas in this and k's in OtherSB.K
       #' @param OtherSB.K the 'other' kaas
-      #' @param tiny (epsilon) permitted rounding error (we might be dealing with excel ! :( )
+      #' @param tiny (epsilon) permitted rounding error (we might be dealing with excel/csv files ! :( )
       DiffSB.K = function(OtherSB.K, tiny = 1e-20) {
         SB.K <- self$PrepKaasM()
         #match on row/colnames?!
