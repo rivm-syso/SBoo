@@ -8,57 +8,96 @@
 #' @param n samplesize 
 #' @return States (i) (=mass)
 #' @export
-vUncertain = function(ParentModule, vnamesDistSD, n, 
-                      TargetScale = "Regional", TargetSubCompart = "river",
-                      Targetspecies = "Molecular", tol=1e-30) { 
+vUncertain = function(ParentModule, 
+                      vnamesDistSD, n, tol=1e-30) { 
   
   TheCore <- ParentModule$myCore
-  allves <- names(TheCore$moduleList)
+  AllSBData <- TheCore$metaData()
+  AllSBVars <- AllSBData$AttributeNames[!AllSBData$AttributeNames %in% names(TheCore$moduleList)]
   
-  if (!all(vnamesDistSD$vnames %in% allves)) {
+  uniqvNames <- unique(vnamesDistSD$vnames)
+  
+  if (!all(uniqvNames %in% AllSBVars)) {
     stop(do.call(paste, c(list("Not all vnames found:"), 
-                          as.list(vnamesDistSD$vnames[!vnamesDistSD$vnames %in% allves]))))
+                          as.list(uniqvNames[!uniqvNames %in% AllSBVars]))))
   }
   
   #fetch all variables, keep them as base
-  baseVars <- lapply(vnamesDistSD$vnames, TheCore$fetchData)
-  names(baseVars) <- vnamesDistSD$vnames
+  baseVars <- lapply(uniqvNames, TheCore$fetchData)
+  names(baseVars) <- uniqvNames
   
   # other preps; basic solution:
   SB.K = ParentModule$SB.k
   if (is.null(ParentModule$emissions))
     stop("No emissions in vUncertain")
-  basicSolv <- solve(SB.K, -ParentModule$emissions, tol = tol)
+
+  #emissions can be a list data.frame per State/t or just a vector
+  if ("list" %in% class(ParentModule$emissions)) {
+    firstEmis <- sapply(ParentModule$emissions, function(x) x$emis[1])
+    basicSolv <- solve(SB.K, -firstEmis, tol = tol)
+  } else {
+    basicSolv <- solve(SB.K, -ParentModule$emissions, tol = tol)
+  }
 
   unif01LHS <- lhs::optimumLHS(n=n, k=nrow(vnamesDistSD), maxSweeps=2, eps=.1, verbose=FALSE)
   #prep to save for analyses
   vnamesDistSD <- cbind(vnamesDistSD, t(unif01LHS))
   
-  aslist <- list()
+  resultsAsList <- list()
   
-  for (i in 1:n) {
-    for (vari in 1:nrow(vnamesDistSD)){
+  for (i in 1:n) {#loop hypercube
+    
+    #empty dataframe per uniq variable in vnamesDistSD
+    Updated <- lapply(baseVars, function(x) {
+      if ("data.frame" %in% class(x)) {
+        x[F,]
+      } else {
+        x
+      }
+    }) 
+    
+    for (vari in 1:nrow(vnamesDistSD)){ #loop vnamesDistSD rows 
+
       vname <- vnamesDistSD$vnames[vari]
-      Updated <- baseVars[[vname]]
-      
+      TakeDefault <- !("mean" %in% names(vnamesDistSD) && !is.na(vnamesDistSD$mean[vari]))
       #transform unif to scaling factor 
       scalingF <- switch (vnamesDistSD$distNames[vari],
-        "normal" = qnorm(p = unif01LHS[i, vari], mean = 1, sd = vnamesDistSD$secondPar[vari]),
-        "uniform" =  1 + vnamesDistSD$secondPar[vari] * (unif01LHS[i, vari] - 0.5)
+                          "normal" = qnorm(p = unif01LHS[i, vari], mean = 1, sd = vnamesDistSD$secondPar[vari]),
+                          "uniform" =  1 + vnamesDistSD$secondPar[vari] * (unif01LHS[i, vari] - 0.5)
       )
-      vnamesDistSD[vnamesDistSD$vnames == vname, as.character(i)] <- scalingF
-      Updated[,vname] <- scalingF * Updated[,vname]
       
-      asParam <- list(Updated)
-      names(asParam) <- vname
-      do.call(TheCore$SetConst, asParam)
-      
+      if ("data.frame" %in% class(baseVars[[vname]])) {
+        #apply to new row of data to Mutate
+        Dees <- The3D[The3D %in% names(vnamesDistSD)]
+        NeedDees <- Dees[!is.na(vnamesDistSD[vari,Dees])]
+        if (TakeDefault) {
+          newRowi <- which(sapply(NeedDees, function(aD){
+            baseVars[[vname]][,aD] == vnamesDistSD[vari, aD]}))
+          newRow <- baseVars[[vname]][newRowi, c(NeedDees, vname)]
+          newRow[1,vname] <- newRow[1,vname] * scalingF
+        } else {  # take mean from input
+          newRow <- vnamesDistSD[vari, NeedDees]
+          newRow[1,vname] <- vnamesDistSD$mean * scalingF 
+        }
+        Updated[[vname]] <- rbind(Updated[[vname]], newRow)
+        
+      } else { #just a number
+        if(TakeDefault) {
+          Updated[[vname]] <- list(scalingF * Updated[[vname]][1]) #was forced to list()
+        } else {
+          Updated[[vname]] <- list(scalingF * vnamesDistSD$mean)
+        }
+        names(Updated[[vname]]) <- vname
+      }
     }
+    
+    lapply(Updated, TheCore$mutateVar)
+    
     #update core and solve
-    TheCore$UpdateDirty(vnamesDistSD$vnames)
+    TheCore$UpdateDirty(uniqvNames)
     ParentModule$PrepKaasM()
 
-    aslist[[as.character(i)]] <- solve(ParentModule$SB.k, -ParentModule$emissions, tol = tol)
+    resultsAsList[[as.character(i)]] <- solve(ParentModule$SB.k, -ParentModule$emissions, tol = tol)
   }
   
   ParentModule$vnamesDistSD <- vnamesDistSD
@@ -70,8 +109,8 @@ vUncertain = function(ParentModule, vnamesDistSD, n,
   TheCore$UpdateDirty(vnamesDistSD$vnames)
   
   #Save base as last, this reset eqMass
-  aslist[["base"]] <- basicSolv
+  resultsAsList[["base"]] <- basicSolv
   
-  do.call(rbind, aslist)
+  do.call(rbind, resultsAsList)
   
 }
