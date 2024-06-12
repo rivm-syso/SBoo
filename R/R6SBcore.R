@@ -694,12 +694,14 @@ SBcore <- R6::R6Class("SBcore",
       #clean doubles in TestTrunc, order by the last entry, reverse to set final calculation order
       ToCalculate <- rev(unique(rev(TestTrunc$Calc)))
       ToCalculate <- ToCalculate[!ToCalculate %in% private$l_postPoneList]
+      
       #remove kaas from postpones!! 
-      postkaas <- unlist(private$l_postPoneList)[
-        startsWith(unlist(private$l_postPoneList), "k_")]
-      
-      private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postkaas,]
-      
+      if (!is.null(private$l_postPoneList)) {
+        postkaas <- unlist(private$l_postPoneList)[
+          startsWith(unlist(private$l_postPoneList), "k_")]
+        
+        private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postkaas,]
+      }
       kaaslist <- list()
       for (i in 1:length(ToCalculate)){ #these are in proper order, all should succeed
         ModName <- ToCalculate[i]
