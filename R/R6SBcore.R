@@ -363,6 +363,11 @@ SBcore <- R6::R6Class("SBcore",
       private$cleanupCGAbove (VarName) 
     },
     
+    #' @description see private$MutateVar
+    mutateVar = function(UpdateRows) {
+      private$MutateVar(UpdateRows)
+    },
+    
     #' @description Replaces a complete table in the internal data system. 
     #' Use with care.
     #' @param UpdateDF the new table, replcing the previous
@@ -908,10 +913,46 @@ SBcore <- R6::R6Class("SBcore",
       }
     },
     
-    #' #description calculate and update a variable in the "datalayer" (SB4Ndata-dataframes)
-    #' #param VarFunName the name of the variable to be updated AND the name of the function
-    #' #param DIMRestrict optional list of restrictions; each element is c(DimName, Comparator, Value)
-    #' #return side-effect; vector?
+    #' @description update rows of a variable in the "datalayer" (SB4Ndata-dataframes)
+    #' @param UpdateRows the data.frame with the variable, dimensions should match and  
+    #' 1 other column containing values, named as the var name
+    #' @return side-effect; new "fetchdata()" is returned
+    MutateVar = function(UpdateRows) {
+      if ("data.frame" %in% class(UpdateRows)) {
+        dims <- The3D[The3D %in% names(UpdateRows)]
+        varName <- names(UpdateRows)[!names(UpdateRows) %in% dims]
+        if (length(varName) != 1){
+          stop(paste("illegal call to MutateVar; multiple variable names found:", varName))
+        }
+        nowVar <- private$FetchData(varName)
+        if (anyNA(nowVar)) {
+          stop(paste("non-existing variable:", varName))
+        }
+        if (varName %in% names(private$moduleList)) {
+          stop(paste("illegal call to MutateVar; variable is a calculated value:", varName))
+        }
+        #merge the "newValue" to the nowVar
+        names(UpdateRows)[names(UpdateRows) == varName] <- "newValue"
+        wannebeVar <- merge(nowVar, UpdateRows, all.x = T)
+        if (nrow(nowVar) < nrow(wannebeVar)) {
+          #browser() #start debugging?
+          stop("illegal UpdateRows in MutateVar")
+        }
+        #update wannebe, remove newValue
+        wannebeVar[!is.na(wannebeVar$newValue), varName] <- wannebeVar$newValue[!is.na(wannebeVar$newValue)]
+        wannebeVar$newValue <- NULL
+        private$UpdateDL(wannebeVar)
+        
+      } else {# just a number
+        do.call(private$UpdateDL, UpdateRows) #all the trouble to get the name in..
+      }
+    },
+
+    #' @description calculate and update a variable in the "datalayer" (SB4Ndata-dataframes)
+    #' @param VarFunName the name of the variable to be updated AND the name of the function
+    #' @param DIMRestrict optional list of restrictions; each element is c(DimName, Comparator, Value)
+    #' uh, not in use at this point in time
+    #' return side-effect; vector?
     UpdateDL = function(VarFunName = NULL, DIMRestrict = NULL, ...) {
      
       MetaData <- self$metaData()
