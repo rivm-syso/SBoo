@@ -10,13 +10,13 @@
 #' @export
 f_SetVelWater <- function(radius, rhoParticle, rhoWater, DynViscWaterStandard) {
   GN <- constants::syms$gn
-  vel <- 2*(radius^2*(rhoParticle-rhoWater)*GN) / (9*DynViscWaterStandard)
+  2*(radius^2*(rhoParticle-rhoWater)*GN) / (9*DynViscWaterStandard) #,
   
-  if(vel < 0) {
-    return(0)
-  }
-  
-  else {
-    return(vel)
-  }
+  # if(2*(radius^2*(rhoParticle-rhoWater)*GN) / (9*DynViscWaterStandard) <= 0) {
+  #   return(0)
+  # }
+  # 
+  # else {
+  #   return(2*(radius^2*(rhoParticle-rhoWater)*GN) / (9*DynViscWaterStandard))
+  # }
 }
