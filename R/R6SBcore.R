@@ -372,9 +372,52 @@ SBcore <- R6::R6Class("SBcore",
       private$cleanupCGAbove (VarName) 
     },
     
-    #' @description see private$MutateVar
-    mutateVar = function(UpdateRows) {
-      private$MutateVar(UpdateRows)
+    #' @description if UpdateRows is a list of variables (each containing a fetchdata() result): see private$MutateVar,
+    #' if UpdateRows is (a csv filename of) a single dataframe it will be converted before the call
+    mutateVars = function(UpdateRows) {
+      if ("character" %in% class(UpdateRows)) {
+        stopifnot(endsWith(UpdateRows, ".csv") && file.exists(UpdateRows))
+        UpdateRows <- read.csv(UpdateRows) #now it's a data.frame
+      }
+      if ("data.frame" %in% class(UpdateRows)) {
+        #fetch all variables, empty the dataframes and make room for new rows
+        uniqvNames <- unique(UpdateRows$varName)
+        baseVars <- lapply(uniqvNames, private$FetchData)
+        names(baseVars) <- uniqvNames
+        Updated <- lapply(baseVars, function(x) {
+          if ("data.frame" %in% class(x)) {
+            x[F,]
+          } else {
+            unlist(unname(x))
+          }
+        }) 
+        names(Updated) <- names(baseVars)
+        
+        #put rows in Updated
+        for (vari in 1:nrow(UpdateRows)){ #loop vnamesDistSD rows 
+          
+          vname <- UpdateRows$varName[vari]
+          if ("data.frame" %in% class(baseVars[[vname]])) {
+            #apply to new row of data to Mutate
+            Dees <- The3D[The3D %in% names(UpdateRows)]
+            NeedDees <- Dees[!is.na(UpdateRows[vari,Dees])]
+            newRow <- UpdateRows[vari, NeedDees, drop = F]
+            newRow[,vname] <- UpdateRows$Waarde[vari]
+            Updated[[vname]] <- rbind(Updated[[vname]], newRow)
+          } else { #just a number
+            Updated[[vname]] <- UpdateRows$Waarde[vari] 
+          }
+        }  
+        UpdateRows <- Updated
+      } # now its a list of data.frames / names list value, like fetchdata() results
+      browser()
+      for (i in 1:length(UpdateRows)) {
+        if ("data.frame" %in% class(Updated[[i]])) {
+          private$MutateVar(Updated[[i]])
+        } else {
+          private$MutateVar(Updated[i]) #mind the single []; leaving atomic values as list
+        }
+      }
     },
     
     #' @description Replaces a complete table in the internal data system. 

@@ -52,10 +52,11 @@ vUncertain = function(ParentModule,
       if ("data.frame" %in% class(x)) {
         x[F,]
       } else {
-        x
+        unlist(unname(x))
       }
     }) 
-    
+    names(Updated) <- names(baseVars)
+
     for (vari in 1:nrow(vnamesDistSD)){ #loop vnamesDistSD rows 
 
       vname <- vnamesDistSD$vnames[vari]
@@ -83,21 +84,41 @@ vUncertain = function(ParentModule,
         
       } else { #just a number
         if(TakeDefault) {
-          Updated[[vname]] <- list(scalingF * Updated[[vname]][1]) #was forced to list()
+
+          Updated[[vname]] <- scalingF * Updated[[vname]] 
         } else {
-          Updated[[vname]] <- list(scalingF * vnamesDistSD$mean)
+          Updated[[vname]] <- scalingF * vnamesDistSD$mean
         }
-        names(Updated[[vname]]) <- vname
+        #names(Updated[[vname]]) <- vname
       }
     }
-    
-    lapply(Updated, TheCore$mutateVar)
-    
+    TheCore$UpdateVars(Updated)
+
     #update core and solve
     TheCore$UpdateDirty(uniqvNames)
     ParentModule$PrepKaasM()
 
-    resultsAsList[[as.character(i)]] <- solve(ParentModule$SB.k, -ParentModule$emissions, tol = tol)
+    tryCatch(
+      tryResult <- solve(ParentModule$SB.k, -ParentModule$emissions, tol = tol),
+      error = function(e) {
+        #collecting Updated and write to file
+        #put column with varName in column "varName" and bind rows extending columns to all unique column names
+        for (varname in names(Updated)) {
+          if ("data.frame" %in% class(Updated[[varname]])) {
+            Updated[[varname]]$varName <- varname
+            names(Updated[[varname]])[names(Updated[[varname]]) == varname] <- "Waarde"
+          } else { #just a listed value
+            Updated[[varname]] <- data.frame(
+              varName = varname,
+              Waarde = unlist(Updated[[varname]])
+            )
+          }
+        }
+        write.csv(as.data.frame(do.call(bind_rows, Updated)), file = "testScripts/solvError.csv")
+        stop(paste("Error in Solving; ", e))
+    })
+    
+    resultsAsList[[as.character(i)]] <- tryResult
   }
   
   ParentModule$vnamesDistSD <- vnamesDistSD
