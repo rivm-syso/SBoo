@@ -178,6 +178,15 @@ SBcore <- R6::R6Class("SBcore",
       dframe2excel(as.data.frame(ToExport), outxlsx = excelFile)
     },
     
+    #'@description Export the matrix to World 
+    exportEngineR = function(){
+      if (is.null(private$solver)) {
+        warning("No active solver")
+        return(NULL)
+      }
+      private$solver$PrepKaasM()
+    },
+    
     #' @description Injection from SolverModule
     SolutionAsRelational = function(...){
       if (is.null(private$solver)) {

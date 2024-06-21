@@ -56,7 +56,7 @@ vUncertain = function(ParentModule,
       }
     }) 
     names(Updated) <- names(baseVars)
-    
+
     for (vari in 1:nrow(vnamesDistSD)){ #loop vnamesDistSD rows 
 
       vname <- vnamesDistSD$vnames[vari]
@@ -84,6 +84,7 @@ vUncertain = function(ParentModule,
         
       } else { #just a number
         if(TakeDefault) {
+
           Updated[[vname]] <- scalingF * Updated[[vname]] 
         } else {
           Updated[[vname]] <- scalingF * vnamesDistSD$mean

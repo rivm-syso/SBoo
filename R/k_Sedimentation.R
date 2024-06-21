@@ -19,7 +19,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   #   return(NA)
   # }
   if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
-    return(NA)
+    return(0)
   }
     # if (Matrix != "water") return (NA)
   
@@ -27,5 +27,13 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
     SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
                                       rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
     return(SetlingVelocityCP*(1-FRinw) / VertDistance)
-  } else SettlingVelocity/VertDistance
+  } 
+  
+  if (SettlingVelocity <= 0){
+      return(0)
+  } 
+  
+  else {
+      return(SettlingVelocity/VertDistance)
+  } 
 }
