@@ -380,7 +380,11 @@ SBcore <- R6::R6Class("SBcore",
         UpdateRows <- read.csv(UpdateRows) #now it's a data.frame
       }
       if ("data.frame" %in% class(UpdateRows)) {
-        #fetch all variables, empty the dataframes and make room for new rows
+        # you cannot test enough..
+        if (!all(c("varName", "Waarde") %in% names(UpdateRows))) {
+          stop("UpdateRows should contain columns varName and Waarde; dimensions when needed")
+        }
+        # fetch all variables, empty the dataframes and make room for new rows
         uniqvNames <- unique(UpdateRows$varName)
         baseVars <- lapply(uniqvNames, private$FetchData)
         names(baseVars) <- uniqvNames
@@ -410,7 +414,7 @@ SBcore <- R6::R6Class("SBcore",
         }  
         UpdateRows <- Updated
       } # now its a list of data.frames / names list value, like fetchdata() results
-      browser()
+      
       for (i in 1:length(UpdateRows)) {
         if ("data.frame" %in% class(Updated[[i]])) {
           private$MutateVar(Updated[[i]])
