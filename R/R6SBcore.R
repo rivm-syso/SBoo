@@ -416,10 +416,10 @@ SBcore <- R6::R6Class("SBcore",
       } # now its a list of data.frames / names list value, like fetchdata() results
       
       for (i in 1:length(UpdateRows)) {
-        if ("data.frame" %in% class(Updated[[i]])) {
-          private$MutateVar(Updated[[i]])
+        if ("data.frame" %in% class(UpdateRows[[i]])) {
+          private$MutateVar(UpdateRows[[i]])
         } else {
-          private$MutateVar(Updated[i]) #mind the single []; leaving atomic values as list
+          private$MutateVar(UpdateRows[i]) #mind the single []; leaving atomic values as list
         }
       }
     },
