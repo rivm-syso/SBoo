@@ -92,7 +92,7 @@ vUncertain = function(ParentModule,
         #names(Updated[[vname]]) <- vname
       }
     }
-    TheCore$UpdateVars(Updated)
+    TheCore$mutateVars(Updated)
 
     #update core and solve
     TheCore$UpdateDirty(uniqvNames)
