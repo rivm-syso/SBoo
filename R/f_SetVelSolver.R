@@ -1,6 +1,6 @@
 #' @title Settling Velocity Solver based on RSS
 #' @name f_SetVelSolver
-#' @description Calculates the settling velocity by miDynViscWaterStandardmizing the residual sum of squares (RSS)
+#' @description Calculates the settling velocity by mimizing  the residual sum of squares (RSS)
 #' @param CD Drag Coefficient of a particle [-]
 #' @param DragMethod Method of calculating the Drag Coefficient
 #' @param Psi Shape factor, circularity/sphericity [-]

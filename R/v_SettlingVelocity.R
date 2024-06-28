@@ -8,6 +8,12 @@
 #' @param DynViscWaterStandard Dynamic viscosity of the fluid matrix [unit]
 #' @param rad_species Radius of the particle [m]
 #' @param Matrix function is defined for Water and Air; slightly different algorithm [text]
+#' @param SubCompartName name of the different subcompartments, used to segregate different formulas [text] 
+#' @param Shape Shape as defined by user, different possibilities (see f_Vol for options) [text]
+#' @param Longest_side the longest side of the particle as defined by the user [m]
+#' @param Intermediate_side the intermediate side of the particle as defined by user [m]
+#' @param Shortest_side the shortst side of the particle as identified by user 
+#' @param DragMethod The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options
 #' @return Settling velocity
 #' @export
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 
