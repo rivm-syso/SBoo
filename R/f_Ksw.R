@@ -17,7 +17,7 @@ f_Ksw <- function(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, alt_form, 
          # TRUE, so the alt_form
          switch(ChemClass,
                 "acid" = 10^(0.11*log10(Kow)+1.54) * CorgStandard * RHOsolid / 1000,
-                "base" = 10^(pKa^0.65*(Kow/(1+Kow)^0.14)) * CorgStandard * RHOsolid / 1000,
+                "base" = 10^(pKa^0.65*(Kow/(1+Kow))^0.14) * CorgStandard * RHOsolid / 1000,
                 #else
                 {a * Kow^b * CorgStandard * RHOsolid / 1000}      
          ),
