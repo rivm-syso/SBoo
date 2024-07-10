@@ -48,7 +48,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   } 
   if(DragMethod == "Original" & Matrix =="air") {
     Cunningham <- f_Cunningham(rad_species)
-    sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscAirStandard)
+    sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN*Cunningham) / (9*DynViscAirStandard)
     if (sv <= 0){
       return(0)
     } 
