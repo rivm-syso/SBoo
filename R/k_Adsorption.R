@@ -15,7 +15,7 @@
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export
 k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
-                          to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, FRorig, Kacompw, 
+                          to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, to.FRorig, Kacompw, 
                           to.Kscompw, to.Matrix, VertDistance, 
                           AreaLand, AreaSea, to.Area,
                           from.SubCompartName, to.SubCompartName, ScaleName) {
@@ -25,7 +25,7 @@ k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
   switch(to.Matrix,
          
          "water" = { # air to water
-           GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*FRorig)+to.MTC_2a))
+           GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*to.FRorig)+to.MTC_2a))
            AreaFrac = to.Area/(AreaLand+AreaSea)
            return(GASABS/VertDistance*AreaFrac) },
          "soil" = { # air to soil
