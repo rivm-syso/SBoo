@@ -5,11 +5,6 @@
 #'@param MW
 #'@param MTCair
 #'@param MTCother
-#'
-#'@param MTC_2a
-#'@param MTC_2w
-#'@param MTC_2s
-
 #'@param twet
 #'@param tdry
 #'@param COLLECTeff
@@ -25,15 +20,7 @@
 #'@param OtherkAir correction term for processes other than deposition affecting the air compartment
 #'@return Transfer rate constant gaseous species air to soil or water #[s-1]
 #'@export
-k_Deposition <- function(#MTC_2a,
-                         #MTC_2s,
-                         #MTC_2W,
-                         #Kaw,
-                         # from.ScaleName, 
-                         # from.SubCompartName, 
-                         # to.ScaleName,
-                         # to.SubCompartName,
-                         FRingas, 
+k_Deposition <- function(FRingas, 
                          VertDistance,
                          RAINrate,
                          twet ,
@@ -67,16 +54,6 @@ k_Deposition <- function(#MTC_2a,
                      (1-exp(-kdry*tdry))*(1-exp(-kwet*twet))/(1-exp(-kdry*tdry-kwet*twet)))^-1
     
     MeanDep <- (MeanRemAir - OtherkAir) * (to.Area/from.Area)
-    
-    # The three lines below are work in progress. When this works, the degradation rate in R should be the same as in excel. Right now, the calculations of MeanDep and Degradation are different in R than in Excel.
-
-    #GasAbs <- FRingas * (MTCair * MTCother/(MTCair * (Kaw * FRorig) + MTCother))
-    
-    #MeanDep <- (MeanRemAir - OtherkAir) 
-    
-    #Degradation <- (MeanDep + (GasAbs / VertDistance)) * (to.Area/from.Area)
-    
-    #return( Degradation )
     
     return( MeanDep ) # the gasabs here is for the two compartments for which this function is run (air to soil/water)
     
