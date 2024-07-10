@@ -42,7 +42,7 @@ k_Deposition <- function(FRingas,
     
     DRYDEPaerosol <- AEROSOLdeprate*(FRinaerw+FRinaers)
     AerosolWashout <- FRinaers*(tdry+twet)/twet*COLLECTeff*RAINrate
-    GasWashout <- FRingas*(tdry+twet)/twet*RAINrate/(Kacompw*FRorig)
+    GasWashout <- FRingas*(tdry+twet)/twet*RAINrate/(Kacompw*FRorig) # (Kacompw * GRorig) == Aerosol collection efficiency
     
     kdry <- DRYDEPaerosol/VertDistance  + OtherkAir
     
@@ -56,7 +56,7 @@ k_Deposition <- function(FRingas,
     
     
     
-    MeanDep <- (MeanRemAir - OtherkAir) * (to.Area/from.Area)
+    MeanDep <- (MeanRemAir - OtherkAir) 
     
     return( MeanDep ) # the gasabs here is for the two compartmenbts for which this function is run (air to soil/water)
     
