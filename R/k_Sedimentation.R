@@ -18,17 +18,26 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
   #   return(NA)
   # }
-  #if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
-  if (to.SubCompartName == "deepocean"){   
-    return(0)
-  }
-    # if (Matrix != "water") return (NA)
-  
-  if (SpeciesName == "Molecular") {
-    SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
+  if (SpeciesName == "Unbound"){
+    
+    if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
+      return(0)
+      
+    }
+    
+  } else {
+    
+    if (to.SubCompartName == "deepocean") {
+      return(0)
+    } else {
+      
+      SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
                                       rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
     return(SetlingVelocityCP*(1-FRinw) / VertDistance)
-  } 
+      
+    }
+    
+  }
   
   if (SettlingVelocity <= 0){
       return(0)
