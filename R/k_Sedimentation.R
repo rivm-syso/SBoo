@@ -18,7 +18,8 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
   #   return(NA)
   # }
-  if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
+  #if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
+  if (to.SubCompartName == "deepocean"){   
     return(0)
   }
     # if (Matrix != "water") return (NA)
