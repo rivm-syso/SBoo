@@ -23,7 +23,7 @@
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, FricVel,
                             DynViscAirStandard, rhoMatrix, to.ColRad, rad_species, rho_species,
                             Temp, to.alpha.surf, SettlingVelocity, SpeciesName, SubCompartName,
-                            AEROSOLdeprate, Test, to.Matrix, RAINrate, from.Matrix, from.rhoMatrix, FRACtwet, to.SubCompartName) {
+                            AEROSOLdeprate, Test = FALSE, to.Matrix, RAINrate, from.Matrix, from.rhoMatrix, FRACtwet, to.SubCompartName) {
   switch(as.character(Test),
          "TRUE" = {
            # Existing function logic when test is FALSE
@@ -84,7 +84,7 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
                       }
                       sea_AERO <- 135
                       if (to.SubCompartName == "sea" ){
-                        DRYDEPvelocity <- 1 /( (sea_AERO + SurfResist) + SettlingVelocity)
+                        DRYDEPvelocity <- 1 /(sea_AERO + SurfResist) + SettlingVelocity
                       } else
                       {
                       
