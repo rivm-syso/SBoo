@@ -15,10 +15,27 @@ k_Resuspension <- function (VertDistance, #SettlVelocitywater
                             DynViscWaterStandard,
                             to.rhoMatrix,
                             to.NETsedrate,
-                            to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, SpeciesName, ScaleName) {
-  # ScaleName
+                            to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test) {
+
+  if (SpeciesName == "Molecular"){
+    if (as.character(Test) == "TRUE"){
+      SettlingVelocitySPM <- 2.5/(24*3600)
+      if (to.SubCompartName == "sea"){
+        if (ScaleName == "Regional") {
+          to.NETsedrate <- 2.74287972475951 * 10^-11
+        }
+      }
+    } else {
+      # ScaleName
+      SettlingVelocitySPM <-    f_SetVelWater(radius = to.RadCP,
+                                              rhoParticle = to.RhoCP, rhoWater = to.rhoMatrix, DynViscWaterStandard)
+    }
+  } else {
+    # ScaleName
   SettlingVelocitySPM <-    f_SetVelWater(radius = to.RadCP,
                                         rhoParticle = to.RhoCP, rhoWater = to.rhoMatrix, DynViscWaterStandard)
+  }
+  
   #Gross sedimentation rate from water [m/s]
   GROSSEDrate <- SettlingVelocitySPM*to.SUSP/(FRACs*from.RhoCP)    #[m.s-1] possibly < NETsedrate
   
