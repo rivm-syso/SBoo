@@ -14,7 +14,7 @@
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
                             VertDistance, from.RhoCP, from.RadCP,
-                            SpeciesName, SubCompartName, to.SubCompartName, ScaleName){
+                            SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test){
   # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
   #   return(NA)
   # }
@@ -31,8 +31,13 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
       return(0)
     } else {
       
-      SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
+      if (as.character(Test) == "TRUE"){
+        SetlingVelocityCP <- 2.5/(24*3600)
+      } else {
+         SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
                                       rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
+      }
+     
     return(SetlingVelocityCP*(1-FRinw) / VertDistance)
       
     }

@@ -19,9 +19,16 @@ Kacompw <- function(Kaw25,
                 T25, 
                 Tm, Tm_default,
                 Temp,
-                MW){
+                MW,
+                Test){
   #easy reading kBolts as R
-  R = getConst("r")
+  if (as.character(Test) == "TRUE"){
+    R <- 8.314 
+    #Pvap25 <- 0.0000278666666597 # Was only used for testing 1-HTDROXYANTHRAQUINONE (to make pvap25 val the same as excel)
+  }  else {
+    R = getConst("r")
+  }
+  
   #Not in the data
   H0vap = NA
   

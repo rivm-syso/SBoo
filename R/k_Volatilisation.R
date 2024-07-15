@@ -6,16 +6,23 @@
 #'@returns Volatilisation rate constant [s-1]
 #'@export
 
-k_Volatilisation <- function(to.MTC_2w, MTC_2a, to.MTC_2s, Kacompw, FRorig, FRinw, Kscompw,
-                             VertDistance, SpeciesName, Matrix, relevant_depth_s, penetration_depth_s){ 
+k_Volatilisation <- function(to.MTC_2w, from.MTC_2a, to.MTC_2s, Kacompw, from.FRorig, from.FRorig_spw, FRinw, Kscompw,
+                             VertDistance, SpeciesName, Matrix, relevant_depth_s, penetration_depth_s,
+                             from.SubCompartName, from.ScaleName){ 
+  
+  fromscale <- from.ScaleName
+  
+  fromcompart <- from.SubCompartName
   
   if (SpeciesName %in% c("Molecular")) {
     switch(Matrix,
            "water" = { 
-             flux = (to.MTC_2w*MTC_2a/(to.MTC_2w*(Kacompw*FRorig)+MTC_2a))*(Kacompw*FRorig)*FRinw
+             flux = (to.MTC_2w*from.MTC_2a/(to.MTC_2w*(Kacompw*from.FRorig)+from.MTC_2a))*(Kacompw*from.FRorig)*FRinw
              return(flux/VertDistance)},
            "soil" = { 
-             flux = (to.MTC_2s*MTC_2a)/(to.MTC_2s+MTC_2a/((Kacompw*FRorig)/Kscompw))*f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s)
+             
+             fcor <- f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s)
+             flux = (to.MTC_2s*from.MTC_2a)/(to.MTC_2s+from.MTC_2a/((Kacompw*from.FRorig_spw)/Kscompw))*f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s)
              return(flux/VertDistance)}
     )
     
