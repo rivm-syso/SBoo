@@ -9,8 +9,7 @@ ClassicNanoWorld <- R6::R6Class(
     #' @description init
     #' @param MlikeFile location for standard input data
     #' @param Substance The substance for which all calculation are. 
-    #' You cannot switch the substance, reinitialize a new SBcore (like "World")
-    initialize = function(MlikeFile, Substance) {
+    initialize = function(MlikeFile, Substance = "default substance") {
       #TODO private$Defs should be read from data/Defs.csv
       if (is.list(MlikeFile)) {
         if (!All(names(MlikeFile)) %in% private$Defs)
@@ -33,9 +32,6 @@ ClassicNanoWorld <- R6::R6Class(
         names(MlikeWorkBook) <- private$Defs
         
       }
-      if (missing(Substance)) 
-        stop("Substance is obliged ", call. = FALSE)
-      #so far, so good, so..
       self$substance <- Substance
 
       #sets states and SB4N data, after inheritance compart -> subcompart, etc.
@@ -141,8 +137,6 @@ ClassicNanoWorld <- R6::R6Class(
     #SubComparts
   },
   
-  
-  
   DeriveState = function (InPutDataFrames) {
     # states are all permutations of the 3 dimensions, see 
     # speciessheet, subcompartsheet and scalesheet;
@@ -212,27 +206,28 @@ ClassicNanoWorld <- R6::R6Class(
     
     #arrange data layer
     #preselect substance related attributes; add to const, ...
-    stopifnot( self$substance %in% InPutDataFrames[["Substances"]]$Substance)
+    # check when substance is set:
+    # stopifnot( self$substance %in% InPutDataFrames[["Substances"]]$Substance)
     
-    SubstanceConst <- InPutDataFrames[["Substances"]][InPutDataFrames[["Substances"]]$Substance == self$substance,]
-    #These are like Constants, just atomic numbers
-    AsConst <- data.frame(
-      VarName = names(SubstanceConst)
-    ) 
-    AsConst$Waarde <-unlist( unname(SubstanceConst[1,]))
-    AsConst$SB4N_name = ""
-    AsConst$Unit = ""
-    AsConst$Comments = ""
-    #append with CONSTANTS
-    InPutDataFrames[["Globals"]] <- rbind(InPutDataFrames[["CONSTANTS"]], AsConst)
+    #Substances <- InPutDataFrames[["Substances"]] # [InPutDataFrames[["Substances"]]$Substance == self$substance,]
+    #InPutDataFrames[["Globals"]] <- rbind(InPutDataFrames[["CONSTANTS"]], AsConst)
 
-    # add SubstanceCompartmentsdata [species] to compartmentsdata
-    ToAddCompartments <- InPutDataFrames[["SubstanceCompartments"]] %>%
-      filter(Substance == self$substance) 
-    if (nrow(ToAddCompartments) > 0) {
-      RelToAddCompartments <- pivot_wider(ToAddCompartments, names_from = VarName, values_from = Waarde) %>%
-        select(!Substance) %>% as.data.frame()
-      InPutDataFrames[["Compartments"]] <- merge(RelToAddCompartments, InPutDataFrames[["Compartments"]])
+    # inherite SubstanceCompartments to SubstanceSubCompart (new because no data entries on that key combinations)
+    
+    if (nrow(InPutDataFrames[["SubstanceCompartments"]] ) > 0) {
+      Vars <- unique(InPutDataFrames[["SubstanceCompartments"]]$VarName)
+      newDataFrame <-  merge(
+        InPutDataFrames[["SubstanceCompartments"]], 
+        InPutDataFrames[["SubCompartSheet"]][,c("Compartment", "SubCompart")])
+      InPutDataFrames[["SubstanceSubCompart"]] <- newDataFrame[newDataFrame$Substance %in% self$substance,  c("VarName", "Substance", "Waarde", "SubCompart")]
+      nowVars <- unique(InPutDataFrames[["SubstanceSubCompart"]]$VarName)
+      lostVars <- Vars[! (Vars %in% nowVars)]
+      for (v in lostVars){ #make them "known" for the calcGraph, as NA
+        InPutDataFrames[["CONSTANTS"]] <- rbind(InPutDataFrames[["CONSTANTS"]], data.frame(
+          VarName = v, Waarde = NA, SB4N_name = NA, Unit= NA, Comments = NA)
+        )
+      }
+      
     }
     
     #"inherit" Matrix to SubCompart
@@ -268,32 +263,27 @@ ClassicNanoWorld <- R6::R6Class(
     SubCompartSpeciesData <- rbind(SubCompartSpeciesData, ExpdSpeciesCompartments[,c(
       "SubCompart", "Species", "VarName", "Waarde", "SB4N_name", "Unit"
     )])
-    # postponed; only after the next rearrangement: InPutDataFrames[["SubCompartSpeciesData"]] <- SubCompartSpeciesData
-    
-    #Select substance view of SubstanceSubCompartSpeciesData and append to SubCompartSpeciesData
-    SubstanceSubCompartSpeciesData <- InPutDataFrames[["SubstanceSubCompartSpeciesData"]][InPutDataFrames[["SubstanceSubCompartSpeciesData"]]$Substance == self$substance,]
-    SubCompartSpeciesData <- rbind(SubCompartSpeciesData, 
-                                   SubstanceSubCompartSpeciesData[,c(
-                                     "SubCompart", "Species", "VarName", "Waarde", "SB4N_name", "Unit")])
-    
     InPutDataFrames[["SubCompartSpeciesData"]] <- SubCompartSpeciesData
     # convert relational tables into proper dataframe
-    for (tab in c("SubCompartSpeciesData", "ScaleSpeciesData", "ScaleSubCompartData")) {
-      InPutDataFrames[[tab]] <- pivot_wider(InPutDataFrames[[tab]] %>% select(!c(SB4N_name, Unit)), names_from = VarName, values_from = Waarde) %>%
+    #TODO improve dealing with multiple keys and long format; not by table name...
+    for (tab in c("SubCompartSpeciesData", "ScaleSpeciesData", "ScaleSubCompartData", "SubstanceSubCompart")) {
+      SelNames <- names(InPutDataFrames[[tab]])[!names(InPutDataFrames[[tab]]) %in% c("SB4N_name", "Unit")]
+      InPutDataFrames[[tab]] <- pivot_wider(InPutDataFrames[[tab]][,SelNames], 
+                                            names_from = VarName, values_from = Waarde) %>%
         as.data.frame()
     }
-    # "Globals" is too simple for pivot_wider?
-    GlobAsList <- as.list(InPutDataFrames[["Globals"]]$Waarde)
-    names(GlobAsList) <- InPutDataFrames[["Globals"]]$VarName
-    InPutDataFrames[["Globals"]] <- do.call(data.frame, GlobAsList)
+    # "CONSTANTS" is too simple for pivot_wider?
+    GlobAsList <- as.list(InPutDataFrames[["CONSTANTS"]]$Waarde)
+    names(GlobAsList) <- InPutDataFrames[["CONSTANTS"]]$VarName
+    InPutDataFrames[["CONSTANTS"]] <- do.call(data.frame, GlobAsList)
     
     #thank you and goodbye for
     InPutDataFrames[["Compartments"]] <- NULL
     InPutDataFrames[["SpeciesCompartments"]] <- NULL
-    InPutDataFrames[["Substances"]] <- NULL
-    InPutDataFrames[["SubstanceCompartments"]] <- NULL
-    InPutDataFrames[["SubstanceSubCompartSpeciesData"]] <- NULL
-    InPutDataFrames[["CONSTANTS"]] <- NULL
+    #InPutDataFrames[["Substances"]] <- NULL
+    #InPutDataFrames[["SubstanceCompartments"]] <- NULL
+    #InPutDataFrames[["SubstanceSubCompartSpeciesData"]] <- NULL
+    #InPutDataFrames[["CONSTANTS"]] <- NULL
     
     #alphanumbers 2 numbers and factors? to strings
     for (i in 1:length(InPutDataFrames)){
