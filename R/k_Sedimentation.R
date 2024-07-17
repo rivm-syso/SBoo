@@ -15,9 +15,9 @@
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
                             VertDistance, from.RhoCP, from.RadCP,
                             SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test){
-  # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea") {
-  #   return(NA)
-  # }
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
+    return(NA)
+  }
   if (SpeciesName != "Molecular"){
     
     if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
@@ -33,6 +33,10 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
       
       if (as.character(Test) == "TRUE"){
         SetlingVelocityCP <- 2.5/(24*3600)
+        if(to.SubCompartName == "lakesediment"){
+          return(NA)
+        }
+        
       } else {
          SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
                                       rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
