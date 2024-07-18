@@ -4,11 +4,15 @@
 #'@return Desorption rate constant from sediment to water [s-1]
 #'@export
 k_Desorption <- function (Ksdcompw, MTC_2w, to.MTC_2sd, VertDistance,
-                          SpeciesName, to.SubCompartName, ScaleName) {
+                          SpeciesName, to.SubCompartName, ScaleName, Test) {
   if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
     return(NA)
   }
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & to.SubCompartName != "deepocean") {
+    return(NA)
+  }
+  
+  if (SpeciesName == "Molecular" & as.character(Test) == "TRUE" & to.SubCompartName == "lake"){
     return(NA)
   }
   
