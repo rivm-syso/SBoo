@@ -1114,7 +1114,7 @@ SBcore <- R6::R6Class("SBcore",
       }
       #Special Case a "constant" or substance property
       if (Target.Table == "CONSTANTS") {
-        private$SB4Ndata[[Attrn]][names(NewData)] <- NewData
+        private$SB4Ndata[[Target.Table]][names(NewData)] <- NewData
       } else {
         #delete and merge the DL-table
         if (Target.Table == "Flows") {
