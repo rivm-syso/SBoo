@@ -15,7 +15,7 @@ k_Leaching <- function(FRACinf, RAINrate, VertDistance, SpeciesName,
     #Leaching of aggregated (A) and free (S) enp species from natural soil [s-1]
     return( (FRACinf * RAINrate * CORRleach) / VertDistance )
   } else if( SpeciesName %in% c("Molecular")) {
-    CORRleach <- f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s) 
+    CORRleach <- f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s=0.1) 
     return(FRACinf*RAINrate/Kscompw*CORRleach/VertDistance)
   } else return(NA)
   

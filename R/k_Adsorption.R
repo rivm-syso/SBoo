@@ -46,7 +46,12 @@ k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
            return(GASABS/VertDistance*AreaFrac) },
          "sediment" = { # water to sediment
            ADSORB = (from.MTC_2sd*to.MTC_2w)/(from.MTC_2sd+to.MTC_2w)*FRinw
-           return(ADSORB/VertDistance) }, 
+           if (as.character(Test) == "TRUE" && to.SubCompartName == "lakesediment"){
+             return(NA)
+           } else {
+              return(ADSORB/VertDistance) 
+           }
+          }, 
          return(NA)
   )
   

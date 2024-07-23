@@ -24,22 +24,22 @@ KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,30,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,300,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,3000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,30000,NA))))}, # ready-biodegradable
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,30000,NA))))}, # ready-biodegradable
                        "r-" = { a = 
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,90,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,900,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,9000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,90000,NA))))}, # ready-biodegradable (r-) substances failing the ten-day window
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,90000,NA))))}, # ready-biodegradable (r-) substances failing the ten-day window
                        "i" = { a = 
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,300,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,3000,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,30000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,300000,NA))))}, # inherently biodegradable
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,300000,NA))))}, # inherently biodegradable
                        "p" = { a = 
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,300,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,3000,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,30000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,300000,NA)))) }) # persistent
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,300000,NA)))) }) # persistent
                return(0.1*Q.10^(13/10)*log(2)/a/(3600*24)) } else return(kdeg)
            },
            "soil" = {
@@ -49,22 +49,22 @@ KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,30,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,300,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,3000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,30000,NA))))}, # ready-biodegradable
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,30000,NA))))}, # ready-biodegradable
                        "r-" = { a = 
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,90,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,900,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,9000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,90000,NA))))}, # ready-biodegradable (r-) substances failing the ten-day window
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,90000,NA))))}, # ready-biodegradable (r-) substances failing the ten-day window
                        "i" = { a = 
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,300,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,3000,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,30000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,300000,NA))))}, # inherently biodegradable
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,300000,NA))))}, # inherently biodegradable
                        "p" = { a = 
                          ifelse(KswDorC/CorgStandard*rhoMatrix/1000<100,300,
                                 ifelse(KswDorC/CorgStandard*rhoMatrix/1000<1000,3000,
                                        ifelse(KswDorC/CorgStandard*rhoMatrix/1000<10000,30000,
-                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>10000,300000,NA)))) }) # persistent
+                                              ifelse(KswDorC/CorgStandard*rhoMatrix/1000>100000,300000,NA)))) }) # persistent
                return(Q.10^(13/10)*log(2)/a/(3600*24)) } else return(kdeg)
            },
            "water" = {
