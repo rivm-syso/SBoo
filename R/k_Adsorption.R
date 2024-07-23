@@ -15,20 +15,32 @@
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export
 k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
-                          to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, FRorig, Kacompw, 
+                          to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, to.FRorig, Kacompw, 
                           to.Kscompw, to.Matrix, VertDistance, 
-                          AreaLand, AreaSea, to.Area,
-                          from.SubCompartName, to.SubCompartName, ScaleName) {
+                          AreaLand, AreaSea, to.Area, all.FRorig, all.FRorig_spw,
+                          from.SubCompartName, to.SubCompartName, ScaleName, Test) {
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompartName == "sea") {
     return(NA)
   }
   switch(to.Matrix,
          
          "water" = { # air to water
-           GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*FRorig)+to.MTC_2a))
+           if (ScaleName %in% c("Regional", "Continental")){
+             if (as.character(Test) == "TRUE"){
+               to.FRorig <-  all.FRorig |>
+                 filter(SubCompart == "river") 
+               to.FRorig <- to.FRorig$FRorig
+             } 
+           }
+           GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*to.FRorig)+to.MTC_2a))
            AreaFrac = to.Area/(AreaLand+AreaSea)
            return(GASABS/VertDistance*AreaFrac) },
          "soil" = { # air to soil
+           if (as.character(Test) == "TRUE"){
+             to.FRorig_spw <- all.FRorig_spw |>
+               filter(SubCompart == "naturalsoil")
+             to.FRorig_spw <- to.FRorig_spw$FRorig_spw
+           } 
            GASABS = FRingas*(from.MTC_2s*to.MTC_2a)/(from.MTC_2s*(Kacompw*to.FRorig_spw)/to.Kscompw+to.MTC_2a)
            AreaFrac = to.Area/(AreaLand+AreaSea)
            return(GASABS/VertDistance*AreaFrac) },

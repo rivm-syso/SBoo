@@ -25,7 +25,7 @@ k_HeteroAgglomeration.a <- function(rad_species,
                                     DynViscAirStandard,
                                     NumConcNuc, NumConcAcc, NumConcCP,
                                     Matrix,
-                                    to.SpeciesName){
+                                    to.SpeciesName, Test = "FALSE"){
   
   ThermVel <- function(Temp, Radius, Rho){
     kboltz <- constants::syms$k
@@ -40,8 +40,11 @@ k_HeteroAgglomeration.a <- function(rad_species,
                       Thermvel.P2){
     (1+(4*(Diff.P1+Diff.P2))/((Rad.P1+Rad.P2)*(Thermvel.P1^2+Thermvel.P2^2)^0.5))^-1
   }
-  
-  ThermVelSpecies <- ThermVel(Temp, Radius = rad_species, Rho = rho_species)
+  if (as.character(Test) == "TRUE") {
+    ThermVelSpecies <- ThermVel(Temp = 285, Radius = rad_species, Rho = rho_species)
+  } else {
+    ThermVelSpecies <- ThermVel(Temp, Radius = rad_species, Rho = rho_species)
+  }
   
   Diffusivity <- f_Diffusivity(Matrix, Temp, DynVisc = DynViscAirStandard, rad_species)
   

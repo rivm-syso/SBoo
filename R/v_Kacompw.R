@@ -19,9 +19,16 @@ Kacompw <- function(Kaw25,
                 T25, 
                 Tm, Tm_default,
                 Temp,
-                MW){
+                MW,
+                Test){
   #easy reading kBolts as R
-  R = getConst("r")
+  if (as.character(Test) == "TRUE"){
+    R <- 8.314 
+    #Pvap25 <- 0.0000278666666597 # Was only used for testing 1-HTDROXYANTHRAQUINONE (to make pvap25 val the same as excel)
+  }  else {
+    R = getConst("r")
+  }
+  
   #Not in the data
   H0vap = NA
   
@@ -38,6 +45,11 @@ Kacompw <- function(Kaw25,
     )
   }
   
+  # For some metals, pvap25 is missing. In those cases, Pvap25 is set to 4 (same value as in excel, median of all Pvaps)
+  if ((is.na(Pvap25) || Pvap25 == "NA") && ChemClass == "metal"){
+    Pvap25 <- 4
+  }
+  
   if (is.na(H0vap) || H0vap == "NA") { #only used for Kaw
     #this depends on Pvap25, Tm:
     if ((is.na(Tm) || Tm == "NA")) Tm = Tm_default
@@ -45,7 +57,9 @@ Kacompw <- function(Kaw25,
   }
   
   if (is.na(H0sol) || H0sol == "NA") stop("H0sol is missing")
+  
   if (is.na(Pvap25) || Pvap25 == "NA") stop("Pvap25 is missing")
+  
   Kaw25*exp((H0vap/R)*(1/T25-1/Temp))*exp(-(H0sol/R)*(1/T25-1/Temp))*(T25/Temp)
 }
 

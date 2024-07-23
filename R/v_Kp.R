@@ -15,8 +15,10 @@ Kp <- function(FRorig, KswDorC, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matr
     RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
     return(
       switch (ChemClass,
-        "Acid" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid) * (Corg / CorgStandard),
-        "Base" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid) * (Corg / CorgStandard),
+        #"acid" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid) * (Corg / CorgStandard), # old calculation
+        #"base" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid) * (Corg / CorgStandard), # old calculation
+        "acid" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
+        "base" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
         {(FRorig*KswDorC) * (1000 / RHOsolid) * (Corg / CorgStandard)} #Corg
       )
       
