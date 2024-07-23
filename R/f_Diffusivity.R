@@ -1,12 +1,12 @@
 #' @title Diffusivity
 #' @name f_Diffusivity
-#' @description Diffusivity
+#' @description Diffusivity, the rate of diffusion [m2/s]
 #' @param Matrix as in c("air", "water", "soil")
-#' @param Temp temperatures
-#' @param DynVisc Dynamic viscosity (air, water)
-#' @param rad_species see rad_species variable
-#' @param Cunningham, see f_Cunningham
-#' @return Diffusivity
+#' @param Temp Temperature [K]
+#' @param DynVisc Dynamic viscosity (air, water) [kg/m/s]
+#' @param rad_species radius of heteroagglomerates [m], calculated in v_rad_species
+#' @param Cunningham, Collision frequency of ENPs with other particulates [-], see f_Cunningham
+#' @return Diffusivity [m2/s]
 #' @export
 f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL) {
   if(!is.numeric(Temp)){
