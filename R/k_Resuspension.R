@@ -20,11 +20,6 @@ k_Resuspension <- function (VertDistance, #SettlVelocitywater
   if (SpeciesName == "Molecular"){
     if (as.character(Test) == "TRUE"){
       SettlingVelocitySPM <- 2.5/(24*3600)
-      if (to.SubCompartName == "sea"){
-        if (ScaleName == "Regional") {
-          to.NETsedrate <- 2.74287972475951 * 10^-11
-        }
-      }
     } else {
       # ScaleName
       SettlingVelocitySPM <-    f_SetVelWater(radius = to.RadCP,
