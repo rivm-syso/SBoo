@@ -7,6 +7,7 @@
 #' @param rad_species radius of heteroagglomerates [m], calculated in v_rad_species
 #' @param Cunningham, Collision frequency of ENPs with other particulates [-], see f_Cunningham
 #' @param kboltz Boltzmann constant, relates the average relative thermal energies of particles with the temperature of the gas
+#' @param pi Pi constant number ~3.14 [-]
 #' @return Diffusivity [m2/s]
 #' @export
 f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL) {

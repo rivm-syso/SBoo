@@ -1,14 +1,14 @@
 #'@title soil water partitioning coefficient
 #'@name f_Ksw
-#'@description assess the Ksw if it's not given
-#'@param ChemClass Class of chemical, see
-#'@param Kow octanol water partitioning coefficient
+#'@description Calculates the Ksw based on QSARS (Franco & Trapp, 2008) (https://doi.org/10.1897/07-583.1)
+#'@param ChemClass Class of chemical, see QSAR table (REACH, 2012)
+#'@param Kow octanol water partitioning coefficient [-]
 #'@param CorgStandard Standard mass FRACTION organic carbon in soil/sediment [-]
 #'@param a see QSAR table 
 #'@param b see QSAR table 
-#'@param RHOsolid density of "solids"
-#'@param alt_form for base situations
-#'@param Ksw_orig soil water partitioning coefficient as present in the data
+#'@param RHOsolid density of "solids" [kg/m3]
+#'@param alt_form the alternate form. 
+#'@param Ksw_orig soil water partitioning coefficient as present in the data [-]
 #'@return Ksw
 #'@export
 f_Ksw <- function(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, alt_form, Ksw_orig){

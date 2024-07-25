@@ -14,6 +14,8 @@
 #' @param DynViscAirStandard Dynamic viscosity of Air []
 #' @param SubCompartName Name of relevant subcompartment for which k_HeteroAgglomeration is being calculated
 #' @param ScaleName Name of relevant scale for which k_HeteroAgglomeration is being calculated
+#' @param COL 
+#' @param SUSP
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
