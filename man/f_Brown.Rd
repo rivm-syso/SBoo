@@ -7,17 +7,18 @@
 f_Brown(Temp, viscosity, radius, radius_Otherparticle)
 }
 \arguments{
-\item{Temp}{temperature [K]}
+\item{Temp}{Temperature [K]}
 
-\item{viscosity}{Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]}
+\item{viscosity}{Dynamic viscosity of liquid (fraction of) compartment [kg.m-1.s-1]}
+
+\item{radius}{Radius of nanoparticle [m]}
 
 \item{radius_Otherparticle}{Radius of Other particle [m]}
-
-\item{from.radius}{Radius of nanoparticle [m]}
 }
 \value{
 fBrown [s-1]
 }
 \description{
-Collission frequency of ENPs with other particulates due to bownian motion (kinetic energy) in s-1 for heteroagglomeration
+Collision frequency of ENPs with other particulates due to Brownian motion (kinetic energy) in s-1 for heteroagglomeration. 
+formula is based on Lyklema (2005)
 }

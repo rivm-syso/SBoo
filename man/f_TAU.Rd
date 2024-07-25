@@ -7,9 +7,9 @@
 f_TAU(Area, WINDspeed)
 }
 \arguments{
-\item{Area}{in m2}
+\item{Area}{area of the compartment [m2]}
 
-\item{WINDspeed}{in m s-1}
+\item{WINDspeed}{windspeed within the compartment [m/s]}
 }
 \value{
 TAU [s]

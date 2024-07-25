@@ -25,26 +25,51 @@ k_CWscavenging(
 )
 }
 \arguments{
-\item{rad_species}{particle radius []}
+\item{RAINrate}{Yearly rain rate [m/s]}
 
-\item{rho_species}{particle density []}
+\item{FRACtwet}{Time fraction of wet episodes [-]}
 
-\item{to.rhoMatrix}{density of cloud water []}
+\item{tdry}{duration of dry episodes [s]}
 
-\item{DynViscAirStandard}{dynamic viscosity of air []}
+\item{twet}{duration of wet episodes [s]}
 
-\item{DynViscWaterStandard}{dynamic viscosity of (cloud) water []}
+\item{COLLECTeff}{Aerosol collection efficiency for raindrops (Wang et al., 2010) [-]}
 
-\item{Temp}{tempreature [oC]}
+\item{rad_species}{particle radius [m]}
 
-\item{rhoMatrix}{density of air []}
+\item{rho_species}{particle density [kg m-3]}
+
+\item{to.rhoMatrix}{density of cloud water [kg m-3]}
+
+\item{DynViscAirStandard}{dynamic viscosity of air [kg m-3 s-1]}
+
+\item{DynViscWaterStandard}{dynamic viscosity of (cloud) water [kg m-3 s-1]}
+
+\item{SettlingVelocity}{settling velocity as computed by the SB variable f_SetVelWater [m/s]}
+
+\item{Temp}{temperature [K]}
+
+\item{Matrix}{compartment type}
+
+\item{SpeciesName}{name of the considered species}
+
+\item{VertDistance}{depth of compartment [m]}
+
+\item{SubCompartName}{considered subcompartment}
+
+\item{rad_Raindrop}{radius of the raindrop [m]}
+
+\item{rhoMatrix}{density of air [kg m-3]}
+
+\item{CritStokesNumb.cw}{Critical stokes number, based on Wang et al. (2010)}
+
+\item{ReyNumber.cw}{Reynolds number}
+
+\item{SchmidtNumber.Particle.a}{Denotes the ratio of momentum diffusivity and mass diffusivity, based on Wang et al. (2010)}
 }
 \value{
 k_CWscavenging
 }
 \description{
-a description follows .. Joris? based on Wang, X.; Zhang, L.;
-  Moran, M.D. Uncertainty assessment of current size-resolved
-  parameterizations for below-cloud particle scavenging by rain. Atmos. Chem.
-  Phys. Discuss. 2010, 10, 2503–2548
+Process describing the transport from dry air to rain, based on Wang et al. (2010) https://doi.org/10.5194/acp-10-5685-2010
 }

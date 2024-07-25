@@ -9,24 +9,36 @@ k_Erosion(
   penetration_depth_s,
   EROSIONsoil,
   VertDistance,
+  to.FracROWatComp,
   ScaleName,
-  to.SubCompartName
+  to.SubCompartName,
+  Matrix,
+  all.landFRAC,
+  all.Matrix
 )
 }
 \arguments{
-\item{EROSIONsoil}{Soil erosion #[mm/yr]}
+\item{relevant_depth_s}{relevant depth that is susceptible to erosion [m], see f_CORRsoil}
 
-\item{VertDistance}{Mixing depth soil #[m]}
+\item{EROSIONsoil}{Soil erosion #[m/s]}
+
+\item{VertDistance}{Vertical distance of compartment [m]}
 
 \item{ScaleName}{To adjust for the absence of rivers in global scales}
 
 \item{to.SubCompartName}{name of the subcompartment of the destination box of this process}
 
-\item{CORRrunoff}{correction for runoff}
+\item{Matrix}{compartment type considered}
+
+\item{penentration_depth_s}{assumed penetration depth [m], from Hollander et al. (2007), see f_CORRsoil}
+
+\item{landFRAC}{fraction of land of a certain compartment}
+
+\item{FracROWatComp}{a fraction of the water that erosion/runoff can go to [-], see v_FracROWatComp.}
 }
 \value{
-k_Erosion Erosion of attached enp species (P) from soil to water #[s-1]
+k_Erosion Erosion of attached ENP species (P) from soil to water #[s-1]
 }
 \description{
-Erosion of particles
+Erosion process for attached ENP species corrected for the compartment their flowing to.
 }

@@ -18,11 +18,7 @@ the centre object for running simple box with an R script.
 \item{\code{moduleList}}{getter for r.o. property
 description fetch the values for a dataframe with parameters/dimensions (any purpose),
 param varname name of variable to find
-return vector values (if found; else NA)
-#description calculate and update a variable in the "datalayer" (SB4Ndata-dataframes)
-#param VarFunName the name of the variable to be updated AND the name of the function
-#param DIMRestrict optional list of restrictions; each element is c(DimName, Comparator, Value)
-#return side-effect; vector?}
+return vector values (if found; else NA)}
 }
 \if{html}{\out{</div>}}
 }
@@ -38,6 +34,7 @@ return vector values (if found; else NA)
 \item \href{#method-SBcore-FindStatefrom3D}{\code{SBcore$FindStatefrom3D()}}
 \item \href{#method-SBcore-Solve}{\code{SBcore$Solve()}}
 \item \href{#method-SBcore-exportEngine}{\code{SBcore$exportEngine()}}
+\item \href{#method-SBcore-exportEngineR}{\code{SBcore$exportEngineR()}}
 \item \href{#method-SBcore-SolutionAsRelational}{\code{SBcore$SolutionAsRelational()}}
 \item \href{#method-SBcore-metaData}{\code{SBcore$metaData()}}
 \item \href{#method-SBcore-fetchData}{\code{SBcore$fetchData()}}
@@ -52,6 +49,7 @@ return vector values (if found; else NA)
 \item \href{#method-SBcore-UpdateDirty}{\code{SBcore$UpdateDirty()}}
 \item \href{#method-SBcore-whichUnresolved}{\code{SBcore$whichUnresolved()}}
 \item \href{#method-SBcore-CleanupCalcGraphAbove}{\code{SBcore$CleanupCalcGraphAbove()}}
+\item \href{#method-SBcore-mutateVars}{\code{SBcore$mutateVars()}}
 \item \href{#method-SBcore-UpdateData}{\code{SBcore$UpdateData()}}
 \item \href{#method-SBcore-FromDataAndTo}{\code{SBcore$FromDataAndTo()}}
 \item \href{#method-SBcore-clone}{\code{SBcore$clone()}}
@@ -225,6 +223,16 @@ Results are available
 Export the matrix of speed constants, aka Engine, to an excel file
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SBcore$exportEngine(excelFile)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-exportEngineR"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-exportEngineR}{}}}
+\subsection{Method \code{exportEngineR()}}{
+Export the matrix to World
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$exportEngineR()}\if{html}{\out{</div>}}
 }
 
 }
@@ -453,6 +461,17 @@ starting from Varname upwards
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-mutateVars"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-mutateVars}{}}}
+\subsection{Method \code{mutateVars()}}{
+if UpdateRows is a list of variables (each containing a fetchdata() result): see private$MutateVar,
+if UpdateRows is (a csv filename of) a single dataframe it will be converted before the call
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$mutateVars(UpdateRows)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-UpdateData"></a>}}

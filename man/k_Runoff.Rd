@@ -7,13 +7,18 @@
 k_Runoff(
   Runoff,
   VertDistance,
+  to.FracROWatComp,
   Volume,
   Kscompw,
   relevant_depth_s,
   penetration_depth_s,
   ScaleName,
   to.SubCompartName,
-  SpeciesName
+  to.ScaleName,
+  SpeciesName,
+  Matrix,
+  all.landFRAC,
+  all.Matrix
 )
 }
 \arguments{

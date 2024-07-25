@@ -19,7 +19,7 @@ f_Grav(
 
 \item{rho_Otherparticle}{Density (specific weight) of natural particle [kg/m3]}
 
-\item{viscosity}{Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]}
+\item{DynViscWaterStandard}{Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]}
 
 \item{radius}{Radius of nanoparticle [m]}
 

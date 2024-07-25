@@ -14,11 +14,13 @@ f_SetVelWater(radius, rhoParticle, rhoWater, DynViscWaterStandard)
 \item{rhoWater}{Density of fluid matrix in which particle is present [kg/m3]}
 
 \item{DynViscWaterStandard}{Dynamic viscosity of water []}
+
+\item{GN}{gravitational force constabt [m2/s]}
 }
 \value{
 f_SetVelWater
 }
 \description{
-Settling Velocity or terminal Velocity of particles in a fluid medium based on ...(REF)
+Settling Velocity or terminal Velocity of particles in a fluid medium based on Stokes' theorem (1901)
 NB SettlingVelocity is a function to be used for all types of partical species, not just nano-species. Therefor it's not a variable defining function.
 }

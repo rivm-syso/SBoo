@@ -1,6 +1,7 @@
 #'@title FRACs
 #'@name FRaction of solid in any matrix
 #'@description either subFRACs or, when the main matrix, remainder after substracting subFRACa + subFRACw
+#'@
 #'@return 
 #'@export
 FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
