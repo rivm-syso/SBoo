@@ -231,17 +231,23 @@ SBcore <- R6::R6Class("SBcore",
     
     #' @description limits the states according to the filter
     #' @param ... the name of one of the dimensions of the states (ScaleName, SubCompartName, SpeciesName)
-    filterStates = function(...){
-      theFilter <- list(...)
-      if (!names(theFilter) %in% c("ScaleName", "SubCompartName", "SpeciesName")) {
-        stop("argument name expected one of ScaleName, SubCompartName, SpeciesName")
+    filterStatesFrame = function(inDataFrame){
+      if (!"data.frame" %in% class(inDataFrame))
+        stop("expected a data.frame as parameter, to apply the filterstatus PROPERTY")
+      theFilter <- private$filterstates
+      outframe <- inDataFrame
+      for (argName in names(theFilter)) {
+        DimIdNames <- private$FetchData(argName)
+        DimName <- names(DimIdNames)[names(DimIdNames) %in% The3D]
+        if (any(endsWith(names(outframe), DimName))) {
+          FilterDim <- DimIdNames[DimIdNames[,argName] == theFilter[[argName]],DimName]
+          likeDimNames <- names(outframe)[endsWith(names(outframe), DimName)]
+          for (likeDimName in likeDimNames){
+            outframe <- outframe[(!is.na(outframe[,likeDimName])) & outframe[,likeDimName] %in% FilterDim,]
+          }
+        }
       }
-      DimIdName <- private$FetchData(names(theFilter))
-      DimName <- names(DimIdName)[1]
-      DimValue <- DimIdName[DimIdName[,2] == unlist(theFilter), 1]
-      NwFrame <- private$States$asDataFrame[private$States$asDataFrame[,DimName] == DimValue,]
-      private$States <- SBstates$new(NwFrame)
-      private$States$myCore <- self
+      return(outframe)
     },
     
     #' @description returns the table, determined by the dimensions et al.
@@ -270,6 +276,8 @@ SBcore <- R6::R6Class("SBcore",
         }
         NewKaas <- private$CalcTreeBack(aProcessModule)
       }
+      
+      NewKaas <- self$filterStatesFrame(NewKaas)
       
       if (is.null(private$SBkaas) | !mergeExisting){
           private$SBkaas <- NewKaas
@@ -651,6 +659,19 @@ SBcore <- R6::R6Class("SBcore",
           
         }
       }
+    },
+    filterStates = function(value){
+      if (missing(value)) {
+        return(private$filterstates)
+      } else {
+        if (!"list" %in% class(value)) {
+          stop("filterStates is expected a *list* of one or more values of ScaleName=, and/or SubCompartName=, and/or SpeciesName=")
+        }
+        if (!all(names(value) %in% c("ScaleName", "SubCompartName", "SpeciesName"))) {
+          stop("filterStates is expected a list of one or more values of ScaleName=, and/or SubCompartName=, and/or SpeciesName=")
+        }
+        private$filterstates <- value
+      }
     }
   ),
   
@@ -663,6 +684,7 @@ SBcore <- R6::R6Class("SBcore",
     nodeList = NULL,
     solver = NULL,
     l_postPoneList = NULL,
+    filterstates = list(),
 
     DoInherit = function(fromDataName, toDataName){
       browser() #ever called??

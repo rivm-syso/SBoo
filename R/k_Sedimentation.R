@@ -47,6 +47,9 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
     
   }
   
+  if (is.na(SettlingVelocity)){
+    return(NA)
+  } 
   if (SettlingVelocity <= 0){
       return(0)
   } 
