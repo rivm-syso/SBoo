@@ -1,14 +1,17 @@
 #' @title k_Degradation
 #' @name k_Degradation
-#' @description calculate k for degradation; 
-#' @param FRingas see
-#' @param kdeg.air  kdeg.water kdeg.water
-#' @param C.OHrad.n ?
-#' @param C.OHrad ?
-#' @param k0.OHrad ?
-#' @param Ea.OHrad ?
-#' @param Temp [K]
-#' @param T25 = 298 K
+#' @description calculate k for degradation, based on observations from Wania & Daly (2002) https://doi.org/10.1016/S1352-2310(02)00693-3
+#' @param FRingas fraction of original species in gas phase, see FRingas [-1]
+#' @param KdegDorC calculated degradation rate constant, see KdegDorc [s-1]
+#' @param C.OHrad.n OH radical concentration specific to compartment, based on Wania & Daly (2002)
+#' @param C.OHrad.n general OH radical concentration, based on Wania & Daly (2002)
+#' @param Tempfactor Temperature correction rate air, constant 
+#' @param BACTcomp concentration bacteria in considered compartment [CFU mL -1]
+#' @param BACTtest concentration bacteria in test water [CFU mL -1]
+#' @param Matrix compartment type 
+#' @param SpeciesName name of the considered species 
+#' @param SubCompartName name of the subcompartment 
+#' @param ScaleName name of the considered scale
 #' @return Degradation rate constant for molecular species
 #' @export
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 

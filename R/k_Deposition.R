@@ -1,23 +1,27 @@
 #'@title k_Deposition
-#'@name k_Deposition
-#'@param FRingas
-#'@param WINDspeed
-#'@param MW
-#'@param MTCair
-#'@param MTCother
-#'@param twet
-#'@param tdry
-#'@param COLLECTeff
-#'@param AEROSOLdeprate
-#'@param Kaw
-#'@param FRorig Fraction original species in water or porewater
-#'@param FRaerw
-#'@param FRaers 
-#'@param SpeciesName Name of the species the function is applied to (now only implemented for molecular, particulate drydep to be added) [NA]
+#'@name k_Deposition 
+#'@description Deposition process for molecular species through dry aerosol deposition,
+#' wet aerosol and gas washout. Approach is based on Jolliet and Hauschild (2006) https://doi.org/10.1021/es049913+
+#'@param FRingas fraction of species in gaseous phase, see FRingas [-]
+#'@param VertDistance Vertical distance of the compartment [m]
+#'@param RAINrate average rain rate [m/s]
+#'@param twet average duration of dry periods [s]
+#'@param tdry average duration of wet periods [s]
+#'@param COLLECTeff collection efficiency of aerosols by raindrops [-]
+#'@param AEROSOLdeprate deposition velocity of aerosol particles [m/s]
+#'@param Kacompw air water partitioning coefficient [-]
+#'@param FRorig Fraction original species in water or porewater, see FRorig [-]
+#'@param FRinaerw Fraction original species in aerosol water, see FRaerw [-]
+#'@param FRinaers Fraction original species in aerosol solids, see FRaers[s]
+#'@param SpeciesName Name of the species the function is applied to
+#'@param otherKair other k-flows within the air domain aggregated (this process is calculated less)
 #'@param AREAFRAC Fraction of area compartment relative to the whole surface area of this scale (systemarea) [-]
 #'@param RAINrate Average precipitation #[m/s]
 #'@param VertDistance Mixing depth air compartment #[m]
-#'@param OtherkAir correction term for processes other than deposition affecting the air compartment
+#'@param OtherkAir correction term for processes other than deposition affecting the air compartment, see OtherKair [s-1]
+#'@param Area area of the compartment [-]
+#'@param Kaers aerosol solid air partitioning coefficient  [-]
+#'@param Kaerw aerosol water air partitioning coefficient [-]
 #'@return Transfer rate constant gaseous species air to soil or water #[s-1]
 #'@export
 k_Deposition <- function(FRingas, 
@@ -25,8 +29,8 @@ k_Deposition <- function(FRingas,
                          RAINrate,
                          twet ,
                          tdry ,
-                         COLLECTeff, # Can in SB5 be updated to (function from scavening in cloudwater stuf of SB4N!
-                         AEROSOLdeprate , # should be transferred to data (or a function related to P species)
+                         COLLECTeff, 
+                         AEROSOLdeprate , 
                          Kacompw,
                          FRorig,
                          SpeciesName,

@@ -1,23 +1,30 @@
 #' @title Dry deposition from air to surface soil or water of particulate species
 #' @name k_DryDeposition
-#' @description 
-#' Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
-#' Diffusivity is calculated from f_Diffusivity
+#' @description Calculation of the first order rate constant for deposition from air to the soil or water surface [s-1]
+#' Adjustments for (Test - FALSE, new SB version) are made based on LOTOS-EUROS reference guide v.2.2002 https://www.rivm.nl/lotos-euros
 #' @param to.Area Surface area of receiving land or water compartment [m2]
 #' @param from.Volume Volume of air compartment [m3]
 #' @param Temp Temperature [K]
 #' @param rhoMatrix Density of air [kg.m-3]
 #' #param from.viscosity Dynamic viscosity of air compartment [kg.m-1.s-1]
 #' @param ColRad Land surface particle collector radius [m] appendix A of LOTEUR.
-#' #param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)
+#' @param FricVel Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)
 #' @param to.alpha.surf depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016
 #' @param AEROresist aerodynamic resistance (Constant set to 74) [s.m-1]
 #' @param DynViscAirStandard Dynamic viscosity of air
-#' @param rad_species rad_particle
-#' @param rho_species rho_particle
-#' @param gamma.surf
+#' @param rad_species rad_particle [m]
+#' @param rho_species rho_particle [kg m3]
+#' @param gamma.surf resistance parameter depending on average surface type as taken from the LOTOS-EUROS reference guide table A.1
+#' @param rhoMatrix density of the matrix [kg m3]
+#' @param SpeciesName name of the species considered
+#' @param SubcompartName name of the Subcompartment 
+#' @param AEROSOLdeprate deposition velocity of aerosol particles [m/s]
+#' @param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #' @param from.SettlingVelocity Settlings Velocity of particulate species in air [m.s-1]
-#' @param Matrix
+#' @param Matrix type of compartment [-]
+#' @param Cunningham collision frequency of ENPs with other particles [-] see f_Cunnningham
+#' @param Diffusivity see f_Diffusivity
+#' @param FRACtwet fraction of wet periods [-]
 #' @return k_drydeposition, the rate constant for 1rst order process: dry deposition from air to soil or water [s-1]
 #' @export
 k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, FricVel,
@@ -118,7 +125,7 @@ k_DryDeposition <- function(to.Area, from.Volume, AEROresist, to.gamma.surf, Fri
                       Diffusivity <- f_Diffusivity(Matrix = "air", Temp, DynViscAirStandard, rad_species, Cunningham)
                       
                       SchmidtNumber <- DynViscAirStandard / (rhoMatrix * Diffusivity) # rhoMatrix to be converted to RhoWater or RhoAir
-                      # alpha.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
+                      # gamma.surf = depends on vegetation type, see e.g. LOTEUR ref guide table A.1
                       Brown <- SchmidtNumber^(-to.gamma.surf)
                       
                       StN <- ifelse(to.ColRad == 0 | is.na(to.ColRad), # StokesNumber following ref guide LOTEUR v2.0 2016

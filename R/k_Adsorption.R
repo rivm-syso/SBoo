@@ -1,17 +1,24 @@
 #'@title Adsorption of chemical to across an interface
 #'@name k_Adsorption
-#'@description The adsorption rate constant (k_Adsorption) is calculated based on the ... See 2015-0161 report.
-#'@param FRingas see FRingas()
-#'@param FRinw see FRinw()
-#'@param MTC_2sd SBvariable, see MTC_2sd()
-#'@param MTC_2w SBvariable
-#'@param MTC_2a SBvariable
-#'@param MTC_2s SBvariable
-#'@param FRorig SBvariable
-#'@param Kacompw SBvariable
+#'@description The adsorption rate constant (k_Adsorption) is calculated based on the principles of gas absorption as described by Hollander
+#'et al. (2004) 10.1080/10629360412331297470 & Hollander et al. (2007) https://doi.org/10.1016/j.envpol.2006.09.018
+#'@param FRinw fraction of species in water,see FRinw()
+#'@param MTC_2sd mass transfer coefficient to sediment, see MTC_2sd()
+#'@param MTC_2w mass transfer coefficient to water, see SBvariable
+#'@param MTC_2a mass transfer coefficient to air, see SBvariable
+#'@param MTC_2s mass transfer coefficient to soil, see SBvariable
+#'@param FRorig fraction of species in original form, see SBvariable
+#'@param Kacompw partitioning coefficient for air, see SBvariable
+#'@param Kscompw partitioning coefficient for soil, see SB variable 
+#'@param Matrix Receiving compartment type 
 #'@param to.Area Area of the receiving compartent
-#'@param VertDistance data
-#'@param Matrix # can use paraminherit to use description from another function! No need to copy paste same descriptions!
+#'@param VertDistance Vertical distance of the compartment 
+#'@param AreaLand calculated land area of the scale considered, see SBvariable
+#'@param AreaSea calculated sea area of the scale considered, see SBvariable 
+#'@param FRorig_spw fraction of original species in soil pore water 
+#'@param SubCompartName name of the subcompartname that is from/to 
+#'@param ScaleName name of scale
+#'@param Test Test = TRUE or FALSE, depending on if SBExcel version should be copied
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export
 k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
