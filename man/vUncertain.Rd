@@ -4,15 +4,7 @@
 \alias{vUncertain}
 \title{vUncertain}
 \usage{
-vUncertain(
-  ParentModule,
-  vnamesDistSD,
-  n,
-  TargetScale = "Regional",
-  TargetSubCompart = "river",
-  Targetspecies = "Molecular",
-  tol = 1e-30
-)
+vUncertain(ParentModule, vnamesDistSD, n, tol = 1e-30)
 }
 \arguments{
 \item{ParentModule}{SBCore}

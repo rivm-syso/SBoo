@@ -7,12 +7,12 @@
 k_Advection(flow, Volume)
 }
 \arguments{
-\item{flow}{advection air}
+\item{flow}{advection rate [m/s]}
 
-\item{Volume}{in m3}
+\item{Volume}{volume of compartment [m3]}
 }
 \value{
-Rate constant for 1rst order process associated with fluxes
+Rate constant for 1st order process associated with fluxes
 }
 \description{
 Calculation of k, given a Flow

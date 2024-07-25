@@ -12,7 +12,12 @@ SettlingVelocity(
   DynViscWaterStandard,
   DynViscAirStandard,
   Matrix,
-  SubCompartName
+  SubCompartName,
+  Shape,
+  Longest_side,
+  Intermediate_side,
+  Shortest_side,
+  DragMethod
 )
 }
 \arguments{
@@ -27,6 +32,18 @@ SettlingVelocity(
 \item{DynViscAirStandard}{Dynamic viscosity of the fluid matrix [unit]}
 
 \item{Matrix}{function is defined for Water and Air; slightly different algorithm [text]}
+
+\item{SubCompartName}{name of the different subcompartments, used to segregate different formulas [text]}
+
+\item{Shape}{Shape as defined by user, different possibilities (see f_Vol for options) [text]}
+
+\item{Longest_side}{the longest side of the particle as defined by the user [m]}
+
+\item{Intermediate_side}{the intermediate side of the particle as defined by user [m]}
+
+\item{Shortest_side}{the shortst side of the particle as identified by user}
+
+\item{DragMethod}{The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options}
 }
 \value{
 Settling velocity
