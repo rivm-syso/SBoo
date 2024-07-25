@@ -9,17 +9,21 @@ f_Diffusivity(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL)
 \arguments{
 \item{Matrix}{as in c("air", "water", "soil")}
 
-\item{Temp}{temperatures}
+\item{Temp}{Temperature [K]}
 
-\item{DynVisc}{Dynamic viscosity (air, water)}
+\item{DynVisc}{Dynamic viscosity (air, water) [kg/m/s]}
 
-\item{rad_species}{see rad_species variable}
+\item{rad_species}{radius of heteroagglomerates [m], calculated in v_rad_species}
 
-\item{Cunningham, }{see f_Cunningham}
+\item{Cunningham, }{Collision frequency of ENPs with other particulates [-], see f_Cunningham}
+
+\item{kboltz}{Boltzmann constant, relates the average relative thermal energies of particles with the temperature of the gas}
+
+\item{pi}{Pi constant number ~3.14 [-]}
 }
 \value{
-Diffusivity
+Diffusivity [m2/s]
 }
 \description{
-Diffusivity
+Diffusivity, the rate of diffusion [m2/s]
 }

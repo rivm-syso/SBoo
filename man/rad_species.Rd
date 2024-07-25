@@ -21,7 +21,7 @@ rad_species(
 
 \item{SubCompartName}{description}
 
-\item{RadCOL}{Accumulation mode aerosol particle radius [m]}
+\item{RadCOL}{Accumulation mode aerosol particle radiusy [m]}
 
 \item{RadNuc}{Nucleation mode aerosol particle radius [m]}
 

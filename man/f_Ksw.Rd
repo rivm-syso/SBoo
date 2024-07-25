@@ -7,7 +7,7 @@
 f_Ksw(Kow, pKa, CorgStandard, a, b, ChemClass, RHOsolid, alt_form, Ksw_orig)
 }
 \arguments{
-\item{Kow}{octanol water partitioning coefficient}
+\item{Kow}{octanol water partitioning coefficient [-]}
 
 \item{CorgStandard}{Standard mass FRACTION organic carbon in soil/sediment [-]}
 
@@ -15,17 +15,17 @@ f_Ksw(Kow, pKa, CorgStandard, a, b, ChemClass, RHOsolid, alt_form, Ksw_orig)
 
 \item{b}{see QSAR table}
 
-\item{ChemClass}{Class of chemical, see}
+\item{ChemClass}{Class of chemical, see QSAR table (REACH, 2012)}
 
-\item{RHOsolid}{density of "solids"}
+\item{RHOsolid}{density of "solids" [kg/m3]}
 
-\item{alt_form}{for base situations}
+\item{alt_form}{the alternate form.}
 
-\item{Ksw_orig}{soil water partitioning coefficient as present in the data}
+\item{Ksw_orig}{soil water partitioning coefficient as present in the data [-]}
 }
 \value{
 Ksw
 }
 \description{
-assess the Ksw if it's not given
+Calculates the Ksw based on QSARS (Franco & Trapp, 2008) (https://doi.org/10.1897/07-583.1)
 }

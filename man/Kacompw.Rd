@@ -15,7 +15,8 @@ Kacompw(
   Tm,
   Tm_default,
   Temp,
-  MW
+  MW,
+  Test
 )
 }
 \arguments{

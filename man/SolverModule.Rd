@@ -41,6 +41,7 @@ the general ODE for simplebox
 \item \href{#method-SolverModule-PrepKaasM}{\code{SolverModule$PrepKaasM()}}
 \item \href{#method-SolverModule-PrepemisV}{\code{SolverModule$PrepemisV()}}
 \item \href{#method-SolverModule-SimpleBoxODE}{\code{SolverModule$SimpleBoxODE()}}
+\item \href{#method-SolverModule-EmisBoxODE}{\code{SolverModule$EmisBoxODE()}}
 \item \href{#method-SolverModule-DiffSB.K}{\code{SolverModule$DiffSB.K()}}
 \item \href{#method-SolverModule-SolutionAsRelational}{\code{SolverModule$SolutionAsRelational()}}
 \item \href{#method-SolverModule-clone}{\code{SolverModule$clone()}}
@@ -138,6 +139,15 @@ see desolve/rootsolve packages
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SolverModule-EmisBoxODE"></a>}}
+\if{latex}{\out{\hypertarget{method-SolverModule-EmisBoxODE}{}}}
+\subsection{Method \code{EmisBoxODE()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$EmisBoxODE(t, m, parms)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-DiffSB.K"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-DiffSB.K}{}}}
 \subsection{Method \code{DiffSB.K()}}{
@@ -151,7 +161,7 @@ diff between kaas in this and k's in OtherSB.K
 \describe{
 \item{\code{OtherSB.K}}{the 'other' kaas}
 
-\item{\code{tiny}}{(epsilon) permitted rounding error (we might be dealing with excel ! :( )}
+\item{\code{tiny}}{(epsilon) permitted rounding error (we might be dealing with excel/csv files ! :( )}
 }
 \if{html}{\out{</div>}}
 }

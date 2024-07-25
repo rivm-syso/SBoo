@@ -4,7 +4,7 @@
 \alias{Area}
 \title{Area}
 \usage{
-Area(AreaLand, AreaSea, landFRAC, SubCompartName, ScaleName)
+Area(AreaLand, AreaSea, landFRAC, all.landFRAC, SubCompartName, ScaleName)
 }
 \arguments{
 \item{landFRAC}{subcompartment fraction of AREAland}
