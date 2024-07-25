@@ -1,13 +1,20 @@
 #'@title Resuspension rate constant of substances in sediment
-#'@name k_Resuspenion
-#'@description
-#'Calculation of the resuspension rate constant from sediment to water
-#'For molecular substanes. More documentation to be added.
-#'@param to.SettlingVelocity SettlingVelocity, see function
+#'@name k_Resuspension
+#'@description Calculation of the resuspension rate. The top layer of sediment is assumed to be well mixed and thus continiously refreshed, 
+#'for additional details see Schoorl et al. (2015)
+#'@param DynViscWaterStandard Dynamic viscosity of water [kg m-1 s-1]
+#'@param rhoMatrix density of the Matrix [kg m-3]
+#'@param NETsedrate net sedimentation rate, data input [s] (Schoorl et al., 2015)
 #'@param VertDistance mixed depth sediment compartment #[m]
 #'@param RhoCP Mineral density of sediment and soil #[kg/m3]
 #'@param FRACs Volume fraction solids in sediment #[-]
-#'@param to.mConcSusp Concentration of suspended matter in water #[kg/m3]
+#'@param RadCP radius of coarse particulate particles [m]
+#'@param SUSP mass concentration of suspended matter [kg m-3]
+#'@param SpeciesName species considered
+#'@param ScaleName scale considered
+#'@param SubCompartName subcompartment considered 
+#'@param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
+#'@param SettlingVelocitySPM settling velocity of suspended matter particles
 #'@return k_Resuspension Resuspension flow from sediment #[s-1]
 #'@export
 
