@@ -1,10 +1,10 @@
 #'@title D
 #'@name D
-#'@description Apparent octanol/water PARTITION COEFFICIENT at neutral pH
-#'@param ChemClass
-#'@param FRorig 
-#'@param pKa
-#'@param Kow
+#'@description octanol/water PARTITION COEFFICIENT at neutral pH
+#'@param ChemClass Class of chemical; in this case Acid, Base or other
+#'@param FRorig Fraction of species in its original state
+#'@param pKa Dissociation constant of (conjugated) acid (default = 7)
+#'@param Kow octanol water partitioning coefficient [-]
 #'@export
 D <- function(FRorig, pKa, Kow, ChemClass){
   

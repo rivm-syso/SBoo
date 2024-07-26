@@ -1,8 +1,9 @@
 #' @title AirFlow
 #' @name AirFlow
-#' @param Volume in m3
-#' @param Area in m2
-#' @param WINDspeed m.s-1
+#' @description Computes the airflow within a compartment
+#' @param Volume volume in [m3]
+#' @param Area area of the compartment in [m2]
+#' @param WINDspeed within the compartment [m.s-1]
 #' @param SubCompartName for which the calculation is executed
 #' @return AirFlow, from one scale to another 
 #' @export
