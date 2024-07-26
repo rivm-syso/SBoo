@@ -5,6 +5,7 @@
 #' too much and to diverse to put them in parameters and complicate the execute method
 #' @param tmax time [s] for the simulation period
 #' @param nTIMES number of timesteps
+#' @param EmisAsPulse T is a pulse-type emission, false is not
 #' @return see: ode()
 SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
 
