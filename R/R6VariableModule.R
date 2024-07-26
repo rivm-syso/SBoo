@@ -1,3 +1,5 @@
+#' @title Variable Module 
+#' @description Module dealing with computing and initializing the variables
 #' @import R6
 #' @export
 VariableModule <-

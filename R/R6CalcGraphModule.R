@@ -1,5 +1,5 @@
 #' @title CalcGraphModule
-#' @description Mother of all Modules where a defining functions will be called
+#' @description Mother of all Modules where all defining functions will be called
 #' @import R6
 #' @export
 CalcGraphModule <-
