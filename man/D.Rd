@@ -7,8 +7,14 @@
 D(FRorig, pKa, Kow, ChemClass)
 }
 \arguments{
-\item{FRorig}{}
+\item{FRorig}{Fraction of species in its original state}
+
+\item{pKa}{Dissociation constant of (conjugated) acid (default = 7)}
+
+\item{Kow}{octanol water partitioning coefficient [-]}
+
+\item{ChemClass}{Class of chemical; in this case Acid, Base or other}
 }
 \description{
-Apparent octanol/water PARTITION COEFFICIENT at neutral pH
+octanol/water partitioning coefficient at neutral pH for colloids
 }

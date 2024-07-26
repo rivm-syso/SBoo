@@ -7,9 +7,13 @@
 FRinaerw(Kaers, Kaerw, FRACw, FRACs)
 }
 \arguments{
-\item{FRACw}{Fraction water phase of aerosols in air [-]}
+\item{Kaers}{Dimensionless aerosol solid / air Partitioning Coefficient [-]}
 
-\item{FRACs}{Fraction solid phase of aerosols in air [-]}
+\item{Kaerw}{Dimensionless aerosol water / air Partitioning Coefficient [-]}
+
+\item{FRACw}{fraction of water in the matrix [-]}
+
+\item{FRACs}{fraction of solids in the matrix [-]}
 }
 \value{
 The fraction of a chemical in the aerosol water phase. Total: FRingas + FRinaerw + FRinaers = 1.

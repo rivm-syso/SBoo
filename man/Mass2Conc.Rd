@@ -7,13 +7,19 @@
 Mass2Conc(EqMass, Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
 }
 \arguments{
-\item{Volume}{of the Box (state)}
+\item{Volume}{of the Box (state) [m3]}
 
-\item{eqMass}{mass, as returned by solvers}
+\item{Fracs}{fraction of solids in the compartment [-]}
+
+\item{Fracw}{fraction of water in compartment [-]}
+
+\item{eqMass}{mass, as returned by solvers [kg]}
+
+\item{rhoMatrix}{density of the matrix [kg m-3]}
 }
 \value{
 Concentration, kg/kg wet for soils, kg/kg wet for sediment, otherwise kg/m3
 }
 \description{
-calculates Concentrations from mass per Box
+calculates Concentrations from mass per Box [g/kg] or [kg/m3]
 }

@@ -7,8 +7,15 @@
 MTC_2sd(kwsd.water, Matrix, SubCompartName)
 }
 \arguments{
-\item{kwsd.water}{Constant water side pMTC to sediment [m/s-1]}
+\item{kwsd.water}{Constant water transfer to sediment [m s-1]}
+
+\item{Matrix}{type of compartment}
+
+\item{SubCompartName}{name of subcompartment}
+}
+\value{
+MTC_2sd
 }
 \description{
-PARTIAL MASS TRANSFER COEFFICIENT water to sediment
+partial mass transfer coefficient water to sediment
 }

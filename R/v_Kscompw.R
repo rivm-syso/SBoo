@@ -7,7 +7,7 @@
 #'@param FRorig_spw fraction of original species in soil pore water [-]
 #'@param rhoMatrix density of the matrix [-]
 #'@param Matrix type of compartment 
-#'@return 
+#'@return Kscompw
 #'@export
 Kscompw <- function(FRACw, FRACa, Kacompw, FRorig_spw, Kp, all.rhoMatrix, Matrix){
   if (Matrix == "soil") {

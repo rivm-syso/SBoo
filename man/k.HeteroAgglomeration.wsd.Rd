@@ -29,17 +29,17 @@ k_HeteroAgglomeration.wsd(
 )
 }
 \arguments{
-\item{to.alpha}{Attachment Efficiency of ENPs with other particulates, input data [-]}
+\item{to.alpha}{Attachment Efficiency of ENPs with other particulates [-]}
 
 \item{COL}{mass concentration natural colloids in water [kg m-3]}
 
 \item{SUSP}{mass concentration suspended matter in water [kg m-3]}
 
-\item{Shear}{shear rate of compartment [s-1]}
+\item{Shear}{Shear rate of the fluid matrix [s-1]}
 
 \item{RadS}{Radius of nanoparticle [m]}
 
-\item{RhoS}{of nanoparticle [kg.m-3]}
+\item{RadCOL}{radius of accumulation mode of particle [m]}
 
 \item{Temp}{Temperature of compartment [K]}
 
@@ -59,19 +59,27 @@ k_HeteroAgglomeration.wsd(
 
 \item{MasConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
 
-\item{radCOL}{radius of accumulation mode of particle [m]}
+\item{from.radius}{Radius of nanoparticle [m]}
 
-\item{radCP}{radius of coarse particulate particle [m]}
+\item{from.rho}{Density of nanoparticle [kg.m-3]}
 
-\item{rho_COL}{density of accumulation mode of particle [kg m-3]}
+\item{radius_Otherparticle}{Radius of natural particle [m]}
 
-\item{rho_CP}{density of coarse particulate particle [kg m-3]}
+\item{rho_Otherparticle}{Density (specific weight) of natural particle [kg/m3]}
+
+\item{rhoFluid}{Density of fluid matrix [kg/m3]}
 
 \item{DynViscAirStandard}{Dynamic viscosity of Air [kg m-1 s-1]}
 
-\item{SpeciesName}{Name of species considered}
+\item{Rhos}{Radius of nanoparticle [kg m-3]}
 
-\item{FRACs}{fraction of solid in matrix [s]}
+\item{rhoCOL}{density of accumulation mode of particle [kg m-3]}
+
+\item{rho_CP}{density of coarse particulate mode of particle [kg m-3]}
+
+\item{radCP}{radius of accumulation mode of particle [m]}
+
+\item{FRACs}{fraction of solids in the matrix [-]}
 }
 \value{
 k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]

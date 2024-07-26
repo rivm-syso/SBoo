@@ -8,6 +8,7 @@
 #'@param CorgStandard standard mass fraction organic carbon in soil/sediment [-]
 #'@param ChemClass Chemical class, e.g. neutral or metal
 #'@param Matrix the medium, the formula is only applicable to soil and sediment
+#'@param ksw.alt 
 #'@export
 Kp <- function(FRorig, KswDorC, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matrix, ChemClass){
   if (Matrix %in% c("soil", "sediment","water")) {

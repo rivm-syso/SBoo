@@ -8,7 +8,7 @@
 #'@param Tempfactor temperature correction rate air, constant [-]
 #'@param ScaleName scale considered
 #'@param SubCompartName name of subcompartment considered
-#'@return 
+#'@return MTC_2a
 #'@export
 MTC_2a <- function(WINDspeed, MW, Tempfactor, KdegDorC, 
                    Matrix, SpeciesName, ScaleName, SubCompartName){

@@ -4,7 +4,7 @@
 #'@param kwsd.water Constant water transfer to sediment [m s-1]
 #'@param Matrix type of compartment
 #'@param SubCompartName name of subcompartment
-#'@return 
+#'@return MTC_2sd
 #'@export
 MTC_2sd <- function(kwsd.water, Matrix, SubCompartName){
   switch(Matrix,

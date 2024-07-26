@@ -19,13 +19,42 @@ k_HeteroAgglomeration.a(
   NumConcAcc,
   NumConcCP,
   Matrix,
-  to.SpeciesName
+  to.SpeciesName,
+  Test = "FALSE"
 )
 }
 \arguments{
+\item{RadNuc}{radius of nucleation mode particle [m]}
+
+\item{RadCOL}{radius of accumulation mode aerosol particle [m]}
+
+\item{RadCP}{radius of coarse particulate mode aersol particle [m]}
+
+\item{rho_species}{density of particle [kg m-3]}
+
+\item{RhoNuc}{density of nucleation mode aerosol particle [ kg m-3]}
+
+\item{RhoCOL}{density of accumulation mode aerosol particle [kg m-3]}
+
+\item{RhoCP}{density of coarse particulate mode aerosol particle [kg m-3]}
+
 \item{Temp}{Temperature of compartment [K]}
 
-\item{to.alpha}{Attachment Efficiency of ENPs with other particulates [-]}
+\item{DynViscAirStandard}{dynamic viscosity of air [kg m-1 s-1]}
+
+\item{NumConcNuc}{number concentration nucleation mode aerosol particles [# m-3]}
+
+\item{NumConcAcc}{number concentration accumulation mode aerosol particle [# m-3]}
+
+\item{NumConcCP}{number concentration coarse particulate mode aerosol particle [# m-3]}
+
+\item{Matrix}{type of subcompartment}
+
+\item{to.SpeciesName}{type of species considered}
+
+\item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
+
+\item{to.alpha}{Attachment Efficiency of ENPs with other particulates, constants [-]}
 
 \item{NumConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
 
@@ -35,13 +64,16 @@ k_HeteroAgglomeration.a(
 
 \item{radius_Otherparticle}{Radius of natural particle [m]}
 
+\item{f_Fuchs}{function describing Fuch's correction factor [-]}
+
 \item{rho_Otherparticle}{Density (specific weight) of natural particle [kg/m3]}
 
-\item{viscosity}{Dyanic viscosity of fluid matrix []}
+\item{ThermVel}{thermal veloicty of species [m s-1]}
 }
 \value{
 k_HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 }
 \description{
-Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with large (>0.45 um) natural particles
+Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with natural particles 
+based on Kulmala et al. (2003) https://doi.org/10.1034/j.1600-0889.2001.530411.x
 }

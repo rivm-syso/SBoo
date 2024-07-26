@@ -2,7 +2,7 @@
 % Please edit documentation in R/k_Runoff.R
 \name{k_Runoff}
 \alias{k_Runoff}
-\title{Run-off of particles (unbound to be added)}
+\title{Run-off of particles}
 \usage{
 k_Runoff(
   Runoff,
@@ -17,14 +17,33 @@ k_Runoff(
   to.ScaleName,
   SpeciesName,
   Matrix,
-  all.landFRAC,
   all.Matrix
 )
 }
 \arguments{
+\item{Runoff}{Runoff, as computed by v_Runoff [s-1]}
+
 \item{VertDistance}{Mixing depth soil #[m]}
 
-\item{FRACrun}{Fraction run-off #[-]}
+\item{Volume}{volume of compartment}
+
+\item{Kscompw}{soil water partitioning coefficient [-]}
+
+\item{relevant_depth_s}{the soil depth at which a process occurs [m]}
+
+\item{penetration_depth_s}{assumed penetration depth from Hollander et al. (2007), see f_CORRsoil [m]}
+
+\item{ScaleName}{considered ScaleName}
+
+\item{SpeciesName}{considered species}
+
+\item{Matrix}{type of supcompartment}
+
+\item{FracROWatComp}{fraction of water component runoff can flow to [-]}
+
+\item{SubCompartName}{subcompartment considered}
+
+\item{FRACrun}{Fraction of precipation of run-off #[-]}
 
 \item{RAINrate}{Average precipitation #[m/s]}
 }
@@ -32,5 +51,5 @@ k_Runoff(
 k_Run-off Run-off of particles from soil to water #[s-1]
 }
 \description{
-Run-off of particles (unbound to be added)
+Runoff rate corrected for soil penetration depth for molecules and particulates
 }

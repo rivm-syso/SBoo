@@ -26,6 +26,8 @@ k_Degradation(
 
 \item{C.OHrad.n}{general OH radical concentration, based on Wania & Daly (2002)}
 
+\item{C.OHrad}{OH radical concentration specific to compartment, based on Wania & Daly (2002)}
+
 \item{Tempfactor}{Temperature correction rate air, constant}
 
 \item{BACTtest}{concentration bacteria in test water [CFU mL -1]}

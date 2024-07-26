@@ -7,6 +7,8 @@
 k_WetDeposition(to.Area, from.Volume, RAINrate)
 }
 \arguments{
+\item{RAINrate}{average rain rate [m s-1]}
+
 \item{to.AREA}{Surface area of receiving land or water compartment [m2]}
 
 \item{from.VOLUME}{Volume of cloudwater compartment [m3]}

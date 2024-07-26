@@ -7,8 +7,10 @@
 KpCOL(D, Matrix)
 }
 \arguments{
+\item{D}{octanol/water partitioning coefficient at neutral pH for colloids [-]}
+
 \item{Matrix}{the medium, the formula is only applicable to soil and sediment}
 }
 \description{
-subcompartment/water PARTITION COEFFICIENT
+partitioning coefficient for water colloids
 }

@@ -6,7 +6,7 @@
 #'@param subFRACw fraction of water in a non-water subcompartment [-]
 #'@param subFRACs fraction of solids in a non-soil, non-sediment compartment [-]
 #'@param Matrix type of compartment
-#'@return 
+#'@return FRACs 
 #'@export
 FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
   if (Matrix %in% c("soil", "sediment")) {

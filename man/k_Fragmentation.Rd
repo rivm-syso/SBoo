@@ -9,11 +9,7 @@ k_Fragmentation(kmpdeg, kfrag, SubCompartName, ScaleName)
 \arguments{
 \item{kmpdeg}{degradation rate of plastic in certain subcompartment [s-1]}
 
-\item{kfrag}{fragmentation rate of plastic in certain subcompartment [s-1]}
-
-\item{SubCompartName}{considered subcompartment}
-
-\item{ScaleName}{considered scale}
+\item{kfrag}{fragmentation rate of plastic in certain subcompartment}
 }
 \value{
 k_Fragmentation, the combined degradation and fragmentation rate of microplastics [s-1]

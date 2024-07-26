@@ -17,11 +17,13 @@ rad_species(
 )
 }
 \arguments{
-\item{SpeciesName}{description}
+\item{SpeciesName}{species considered}
 
-\item{SubCompartName}{description}
+\item{SubCompartName}{subcompartment considered}
 
-\item{RadCOL}{Accumulation mode aerosol particle radiusy [m]}
+\item{RadCOL}{Accumulation mode aerosol particle radius [m]}
+
+\item{RadCP}{coarse particulate mode aerosol particle radius [m]}
 
 \item{RadNuc}{Nucleation mode aerosol particle radius [m]}
 
@@ -34,8 +36,6 @@ rad_species(
 \item{Df}{fractal dimension of combined heteroagglomerate [-]}
 
 \item{NaturalRad}{natural particle radius all but small in air [m]}
-
-\item{...}{dimension(s, Species, Scales, SubCompart) of the}
 }
 \value{
 rad_species, Approach to calculate the radius of small heteroagglomerates in air/water [m]

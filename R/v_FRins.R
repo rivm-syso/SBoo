@@ -12,7 +12,7 @@
 #'@param Kacompw Dimensionless air/water partitioning coefficient of original species at compartment temperature [-]
 #'@param FRorig_spw Fraction original species in porewater of soil [-]
 #'@param RHOsolid Mineral DENSITY sediment and soil [kg.m-3]
-#'@return 
+#'@return FRins
 #'@export
 FRins <- function(Kp, SUSP, COL, KpCOL,
                 FRACw, FRACa, FRACs, Kacompw, 

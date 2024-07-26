@@ -7,14 +7,14 @@
 MasConc_Otherparticle(mConcSusp, mConcCol, SpeciesName)
 }
 \arguments{
-\item{mConcSusp}{concentration of ... in}
+\item{mConcSusp}{concentration of suspended matter in considered matrix}
 
-\item{mConcCol}{concentration of ... in}
+\item{mConcCol}{concentration of colloids in considered matrix}
 
-\item{SpeciesName}{yes, its name}
+\item{SpeciesName}{name of the considered species}
 }
 \value{
-MasConc_Otherparticle, mass concentration of "other" particle before
+MasConc_Otherparticle
 }
 \description{
 MasConc_Otherparticle

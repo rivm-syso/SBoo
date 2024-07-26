@@ -6,7 +6,7 @@
 #'@param Kp general sediment water partitioning coefficient [-]
 #'@param rhoMatrix density of the matrix [kg m-3]
 #'@param Matrix type of compartment considered
-#'@return 
+#'@return Ksdcompw
 #'@export
 Ksdcompw <- function(FRACw, FRACs, Kp, all.rhoMatrix, Matrix){
   if (Matrix == "sediment") {

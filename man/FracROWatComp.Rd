@@ -2,7 +2,10 @@
 % Please edit documentation in R/v_FracWatComp.R
 \name{FracROWatComp}
 \alias{FracROWatComp}
-\title{fraction of water component compared to total water in scale for correction of runoff}
+\title{FracRoWatComp}
+\usage{
+FracROWatComp(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName)
+}
 \arguments{
 \item{all.landFRAC}{Fractions of land compartments #[-]}
 

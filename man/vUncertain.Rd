@@ -17,7 +17,5 @@ vUncertain(ParentModule, vnamesDistSD, n, tol = 1e-30)
 States (i) (=mass)
 }
 \description{
-sensitivity Mass 4 kaas,
-#logged sd / intervals ??
- by changing kaas what is the change in Mass
+solver to analyze sensitivity of parameters
 }

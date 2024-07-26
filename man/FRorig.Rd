@@ -9,9 +9,14 @@ FRorig(ChemClass, Matrix, pH, pKa)
 \arguments{
 \item{ChemClass}{Class of chemical, in this case Acid, Base or other}
 
+\item{Matrix}{type of compartment considered}
+
 \item{pH}{pH of soil, sediment, water or aerosol water}
 
 \item{pKa}{Dissociation constant of (conjugated) acid (default = 7)}
+}
+\value{
+FRorig
 }
 \description{
 Fraction original species in air, soil, sediment or water
