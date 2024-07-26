@@ -1,14 +1,22 @@
 #' @title Degradation rate constant measured or calculated
 #' @name v_KdegDorC
-#' @description calculate k for degradation; 
-#' @param FRingas see
-#' @param kdeg.air  kdeg.water kdeg.water
-#' @param C.OHrad.n ?
-#' @param C.OHrad ?
-#' @param k0.OHrad ?
-#' @param Ea.OHrad ?
-#' @param Temp [K]
-#' @param T25 = 298 K
+#' @description calculate k for degradation for particulates and molecules.
+#' if no specific value for kdeg is available it is scaled into categories 
+#' as defined in Technical Guidance Document on risk assessment in support of
+#' Commission Directive 93/67/EEC (European Commission, 2003)
+#' @param kdeg degradation rate (as input) [s-1]
+#' @param C.OHrad OH radical concentration specific to compartment, based on Wania & Daly (2002) [mol m-3]
+#' @param C.OHrad.n general OH radical concentration, based on Wania & Daly (2002) [mol m-3]
+#' @param k0.OHrad frequency factor of the OH radical reaction [m3 s-1] 
+#' @param Ea.OHrad activation energy OH radical reaction [J mol-1]
+#' @param T25 298K [K]
+#' @param Q.10 rate increase factor per 10C [-]
+#' @param KswDorC calculated soil water partitioning coefficient  [-]
+#' @param BioDeg biodegradability test result [-]
+#' @param CorgStandard Standard mass fraction organic carbon in soil/sediment [-]
+#' @param rhoMatrix density of the matrix
+#' @param Matrix compartment type considered 
+#' @param SpeciesName species name considered
 #' @return Degradation rate constant for molecular species
 #' @export
 KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 

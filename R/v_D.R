@@ -1,6 +1,6 @@
 #'@title D
 #'@name D
-#'@description octanol/water PARTITION COEFFICIENT at neutral pH
+#'@description octanol/water partitioning coefficient at neutral pH for colloids
 #'@param ChemClass Class of chemical; in this case Acid, Base or other
 #'@param FRorig Fraction of species in its original state
 #'@param pKa Dissociation constant of (conjugated) acid (default = 7)

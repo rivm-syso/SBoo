@@ -1,9 +1,16 @@
 #' @title Aerosol solids - air Partition coefficient
 #' @name Kaers
-#' @description Fraction of some fraction
-#' @param Corg
-#' @param RHOsolid
-#' @param Kow
+#' @description partitioning coefficient between aerosol solids and air [-]
+#' @param Corg mass fraction organic carbon in soil/sediment [-]			
+#' @param Kaw25 Dimensionless gas/water partitioning coefficient of the original species at 25C [-]			
+#' @param RhoCOL density of accumulation mode aerosol particle [kg m-3]
+#' @param Matrix type of compartment considered
+#' @param Pvap25 vapor pressure of original species at 25 C [Pa]
+#' @param MaxPvap  maximum vapor pressure of original species at 25 C [Pa]
+#' @param Sol25 water solubility of original species at 25 C [mol.m-3]
+#' @param MW molar weight of original species [kg mol-1]
+#' @param ChemClass chemical class, see QSAR table 
+#' @param Kow octanol water partitioning coefficient [-]
 #' @return Kaers
 #' @export
 Kaers <- function (Kaw25,Kow, Corg, RhoCOL, Matrix,

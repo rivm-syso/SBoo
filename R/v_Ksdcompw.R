@@ -1,10 +1,11 @@
 #'@title Dimensionless sed/water PARTITION COEFFICIENT for molecular species specific to sediment compartment
 #'@name Ksdcompw
-#'@description Dimensionless sed/water PARTITION COEFFICIENT
-#'@param FRACw
-#'@param FRACs
-#'@param Kp (sed/water PARTITION COEFFICIENT) of sediment
-#'@param RHOsolid
+#'@description Dimensionless sediment/water partitioning coefficient dependent on the compartment
+#'@param FRACw fraction of water in compartment [-]
+#'@param FRACs fraction of soil in compartment [-]
+#'@param Kp general sediment water partitioning coefficient [-]
+#'@param rhoMatrix density of the matrix [kg m-3]
+#'@param Matrix type of compartment considered
 #'@return 
 #'@export
 Ksdcompw <- function(FRACw, FRACs, Kp, all.rhoMatrix, Matrix){

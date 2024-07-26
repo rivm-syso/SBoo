@@ -2,8 +2,8 @@
 #'@name MTC_2w
 #'@description 
 #'@param WINDspeed Windspeed in compartment/scale [m.s-1]
-#'@param MW Molecular weight of compound [g.mol-1]
-#'@param kwsd.sed Constant sediment side pMTC to water [m/s-1]
+#'@param MW Molecular weight of compound kg [g.mol-1]
+#'@param kwsd.sed Constant sediment transfer rate to water [m/s-1]
 #'@param from.Matrix Matrix/compartment from which the relevant process is taking place
 #'@return 
 #'@export
