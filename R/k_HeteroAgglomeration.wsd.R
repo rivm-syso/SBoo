@@ -19,7 +19,7 @@
 #' @export
 
 k_HeteroAgglomeration.wsd <- function(to.alpha,
-                                      COL,
+                                      colloidConc,
                                       SUSP,
                                       Shear,
                                       RadS,
@@ -65,7 +65,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 
-                                               MasConc=COL)
+                                               MasConc=colloidConc)
                       
                       return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
                     },
@@ -106,7 +106,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 
-                                               MasConc=COL)
+                                               MasConc=colloidConc)
                       
                       return(to.alpha*NumConcOther*(ColBrown+ColGrav))
                     },
@@ -157,7 +157,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 
-                                               MasConc=COL)
+                                               MasConc=colloidConc)
                       
                       return(to.alpha*NumConcOther*(ColBrown+ColGrav))
                     },

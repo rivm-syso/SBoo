@@ -3,7 +3,7 @@
 #'@description FRaction of chemical in solid phase soil (relevant to Molecular species)
 #'@param Kp 
 #'@param SUSP Concentration suspended matter in water [mg.L-1]
-#'@param COL Concentration of colloidal organic matter in water [mg.L-1]
+#'@param colloidConc Concentration of colloidal organic matter in water [mg.L-1]
 #'@param KpCOLColloidal organic matter/water partition coefficient [L.kg-1]
 #'@param Matrix Type of compartment matrix (soil, water, sediment or air)
 #'@param FRACa Fraction air in compartment
@@ -14,7 +14,7 @@
 #'@param RHOsolid Mineral DENSITY sediment and soil [kg.m-3]
 #'@return 
 #'@export
-FRins <- function(Kp, SUSP, COL, KpCOL,
+FRins <- function(Kp, SUSP, colloidConc, KpCOL,
                 FRACw, FRACa, FRACs, Kacompw, 
                 FRorig_spw, all.rhoMatrix, Matrix){
   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
