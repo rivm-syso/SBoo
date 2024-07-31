@@ -205,30 +205,18 @@ ClassicNanoWorld <- R6::R6Class(
       InPutDataFrames[["SpeciesSheet"]]$AbbrP[match(States$Species, InPutDataFrames[["SpeciesSheet"]]$Species)], sep = "")
     
     #arrange data layer
-    #preselect substance related attributes; add to const, ...
-    # check when substance is set:
-    # stopifnot( self$substance %in% InPutDataFrames[["Substances"]]$Substance)
-    
-    #Substances <- InPutDataFrames[["Substances"]] # [InPutDataFrames[["Substances"]]$Substance == self$substance,]
-    #InPutDataFrames[["Globals"]] <- rbind(InPutDataFrames[["CONSTANTS"]], AsConst)
-
     # inherite SubstanceCompartments to SubstanceSubCompart (new because no data entries on that key combinations)
-    
     if (nrow(InPutDataFrames[["SubstanceCompartments"]] ) > 0) {
       Vars <- unique(InPutDataFrames[["SubstanceCompartments"]]$VarName)
       newDataFrame <-  merge(
         InPutDataFrames[["SubstanceCompartments"]], 
         InPutDataFrames[["SubCompartSheet"]][,c("Compartment", "SubCompart")])
       InPutDataFrames[["SubstanceSubCompart"]] <- newDataFrame[newDataFrame$Substance %in% self$substance,  c("VarName", "Substance", "Waarde", "SubCompart")]
-      nowVars <- unique(InPutDataFrames[["SubstanceSubCompart"]]$VarName)
-      lostVars <- Vars[! (Vars %in% nowVars)]
-      for (v in lostVars){ #make them "known" for the calcGraph, as NA
-        InPutDataFrames[["CONSTANTS"]] <- rbind(InPutDataFrames[["CONSTANTS"]], data.frame(
-          VarName = v, Waarde = NA, SB4N_name = NA, Unit= NA, Comments = NA)
-        )
-      }
-      
-    }
+    } 
+    #  Substance properties to be pasted to CONSTANTS later
+    ThisSubstance <- InPutDataFrames[["Substances"]][InPutDataFrames[["Substances"]]$Substance == self$substance,]
+    # except:  
+    ThisSubstance$Substance <- NULL
     
     #"inherit" Matrix to SubCompart
     SubCompartSheet <- InPutDataFrames[["SubCompartSheet"]] #NB also used in compartment inheritance
@@ -246,9 +234,15 @@ ClassicNanoWorld <- R6::R6Class(
     #store the result back into InPutDataFrames
     InPutDataFrames[["SubCompartSheet"]] <- SubCompartSheet
     
+    # move SubstanceSubCompartSpeciesData[substance] to SubCompartSpecies
+    ToSubCompartSpecies <- InPutDataFrames[["SubstanceSubCompartSpeciesData"]][InPutDataFrames[["SubstanceSubCompartSpeciesData"]]$Substance == self$substance,]
+    if (nrow(ToSubCompartSpecies) > 0 ){
+      ToSubCompartSpecies$Substance <- NULL
+      SubCompartSpeciesData <- rbind(InPutDataFrames[["SubCompartSpeciesData"]], ToSubCompartSpecies)
+    } else SubCompartSpeciesData <- InPutDataFrames[["SubCompartSpeciesData"]]
     # Expand SpeciesCompartments to SubCompartSpeciesData
     #SubCompart	Species	VarName	Waarde	SB4N_name	Unit
-    SubCompartSpeciesData <- InPutDataFrames[["SubCompartSpeciesData"]]
+    
     SpeciesCompartments <- InPutDataFrames[["SpeciesCompartments"]]
     eachCompart <- split(SpeciesCompartments, SpeciesCompartments$Compartment)
     foreachCompart <- lapply(eachCompart, function (x) {
@@ -272,9 +266,9 @@ ClassicNanoWorld <- R6::R6Class(
                                             names_from = VarName, values_from = Waarde) %>%
         as.data.frame()
     }
-    # "CONSTANTS" is too simple for pivot_wider?
-    GlobAsList <- as.list(InPutDataFrames[["CONSTANTS"]]$Waarde)
-    names(GlobAsList) <- InPutDataFrames[["CONSTANTS"]]$VarName
+    # "CONSTANTS" is too simple for pivot_wider? Add Substance properties as constants
+    GlobAsList <- as.list(c(InPutDataFrames[["CONSTANTS"]]$Waarde, ThisSubstance))
+    names(GlobAsList) <- c(InPutDataFrames[["CONSTANTS"]]$VarName, names(ThisSubstance))
     InPutDataFrames[["CONSTANTS"]] <- do.call(data.frame, GlobAsList)
     
     #thank you and goodbye for
@@ -282,6 +276,7 @@ ClassicNanoWorld <- R6::R6Class(
     InPutDataFrames[["SpeciesCompartments"]] <- NULL
     #InPutDataFrames[["Substances"]] <- NULL
     #InPutDataFrames[["SubstanceCompartments"]] <- NULL
+    
     #InPutDataFrames[["SubstanceSubCompartSpeciesData"]] <- NULL
     #InPutDataFrames[["CONSTANTS"]] <- NULL
     

@@ -205,7 +205,7 @@ SBcore <- R6::R6Class("SBcore",
         Tablenames = rep(AllTables, sapply(private$SB4Ndata, ncol)),
         AttributeNames = unname(unlist(sapply(private$SB4Ndata, names))
         ))
-      res[!(res$Tablenames %in% c("Flows", "MatrixSheet", "SubstanceCompartments")),]
+      res[!(res$Tablenames %in% c("Flows", "MatrixSheet", "Substances", "SubstanceCompartments", "SubstanceSubCompartSpeciesData")),]
     },
     
     #' @description Obtain the data for a SBvariable or a flow
@@ -635,29 +635,45 @@ SBcore <- R6::R6Class("SBcore",
       if (missing(value)){
         private$Substance
       } else {
+        if (!value %in% private$SB4Ndata[["Substances"]]$Substance) {
+          stop(paste(value, "not in the database"))
+        }
         private$Substance <- value
-        #redo inheritance; make sure Substance properties are known, if not as NA
+        
+        ToSubCompartSpecies <- private$SB4Ndata[["SubstanceSubCompartSpeciesData"]][private$SB4Ndata[["SubstanceSubCompartSpeciesData"]]$Substance == self$substance,,]
+          ToSubCompartSpecies$Substance <- NULL
+          ToSubCompartSpecies$SB4N_name <- NULL
+          ToSubCompartSpecies$Unit <- NULL
+          for (SBVar in unique(ToSubCompartSpecies$VarName)) {
+            OneVarDF <- pivot_wider(ToSubCompartSpecies[ToSubCompartSpecies$VarName == SBVar,], 
+                        names_from = VarName, values_from = Waarde) %>%
+              as.data.frame()
+            private$UpdateDL(OneVarDF) #, keys = c("SubCompart", "Species") ,TableName = "SubCompartSpeciesData"
+        }
+        # Expand SpeciesCompartments to SubCompartSpeciesData
+        
+        # redo inheritance; make sure Substance properties are known, if not as NA
         if (nrow(private$SB4Ndata[["SubstanceCompartments"]] ) > 0) {
-          #make sure vars with NA value for the substance(s) are "known" NA's
           Vars <- unique(private$SB4Ndata[["SubstanceCompartments"]]$VarName)
           newDataFrame <-  merge(
             private$SB4Ndata[["SubstanceCompartments"]], 
             private$SB4Ndata[["SubCompartSheet"]][,c("Compartment", "SubCompart")])
-          nowVars <- unique(newDataFrame$VarName)
-          newDataFrame <- pivot_wider(newDataFrame[newDataFrame$Substance %in% value, c("VarName", "Substance", "Waarde", "SubCompart")],
-                                      names_from = VarName, values_from = Waarde) %>% as.data.frame()
-          private$SB4Ndata[["SubstanceSubCompart"]] <- newDataFrame
-          for (v in Vars){
-            if (v %in% names(private$SB4Ndata[["CONSTANTS"]])){
-              private$SB4Ndata[["CONSTANTS"]][,v] <- NULL 
-            }
-          }
-          lostVars <- Vars[! (Vars %in% nowVars)]
-          for (v in lostVars){
-              private$SB4Ndata[["CONSTANTS"]][,v] <- NA 
-          }
+          newDataFrame <- newDataFrame[newDataFrame$Substance %in% self$substance,  c("VarName", "Waarde", "SubCompart")]
           
+          private$SB4Ndata[["SubstanceSubCompart"]] <- pivot_wider(newDataFrame, 
+                                                                   names_from = VarName, values_from = Waarde) %>%
+            as.data.frame()
+          
+        } 
+        #  Substance properties to be pasted to CONSTANTS later
+        ThisSubstance <- private$SB4Ndata[["Substances"]][private$SB4Ndata[["Substances"]]$Substance == self$substance,]
+        # except:  
+        ThisSubstance$Substance <- NULL
+        # update 
+        for (nm in names(ThisSubstance)) {
+          private$SB4Ndata[["CONSTANTS"]][,nm] <- ThisSubstance[,nm]
         }
+        
       }
     },
     filterStates = function(value){
