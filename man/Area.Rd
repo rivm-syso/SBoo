@@ -4,18 +4,18 @@
 \alias{Area}
 \title{Area}
 \usage{
-Area(AreaLand, AreaSea, landFRAC, SubCompartName, ScaleName)
+Area(AreaLand, AreaSea, landFRAC, all.landFRAC, SubCompartName, ScaleName)
 }
 \arguments{
-\item{landFRAC}{subcompartment fraction of AREAland}
+\item{landFRAC}{fraction of land in the considered compartment [-]}
 
-\item{SubCompartName}{for which Area is calculated}
+\item{SubCompartName}{the subcompartment which is considered}
 
-\item{ScaleName}{for which Area is calculated}
+\item{ScaleName}{the scale which is considered}
 
-\item{AREAland}{AREA of land in scale}
+\item{AREAland}{the land area in the considered compartment [m2]}
 
-\item{AREAsea}{AREA of sea in scale}
+\item{AREAsea}{the sea area in the considered compartment [m2]}
 }
 \value{
 Area (but not for sediment) based on data for the SubCompartment / Scale

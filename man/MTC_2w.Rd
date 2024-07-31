@@ -9,12 +9,15 @@ MTC_2w(WINDspeed, MW, kwsd.sed, Matrix)
 \arguments{
 \item{WINDspeed}{Windspeed in compartment/scale [m.s-1]}
 
-\item{MW}{Molecular weight of compound [g.mol-1]}
+\item{MW}{Molecular weight of compound kg [g.mol-1]}
 
-\item{kwsd.sed}{Constant sediment side pMTC to water [m/s-1]}
+\item{kwsd.sed}{Constant sediment transfer rate to water [m/s-1]}
 
 \item{from.Matrix}{Matrix/compartment from which the relevant process is taking place}
 }
+\value{
+MTC_2w
+}
 \description{
-PARTIAL MASS TRANSFER COEFFICIENT air and sediment to water
+mass transfer coefficient to water
 }

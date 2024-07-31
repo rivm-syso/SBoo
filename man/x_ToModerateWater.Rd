@@ -2,7 +2,7 @@
 % Please edit documentation in R/x_ToModerateWater.R
 \name{x_ToModerateWater}
 \alias{x_ToModerateWater}
-\title{Mixing of upper and deeper sea water layers (w2 and w3)}
+\title{Mixing of upper and deeper sea water layers (w2 and w3) [s-1]}
 \usage{
 x_ToModerateWater(
   Volume,
@@ -14,15 +14,23 @@ x_ToModerateWater(
 )
 }
 \arguments{
-\item{OceanCurrent}{[m3.s-1]}
+\item{Volume}{Volume of compartment [m3]}
 
-\item{SubCompartName}{name of the subcompartment of the box at hand}
+\item{TAUsea}{Residence time of water in sea - scale variable [s]}
 
-\item{ScaleName}{name of the scale of the box at hand}
+\item{OceanCurrent}{Global ocean circulation current [m3.s-1]}
+
+\item{SubCompartName}{Name of the subcompartment of the box at hand}
+
+\item{ScaleName}{Name of the scale of the box at hand}
+
+\item{x_RegSea2Cont}{Flow from regional to continental seawater [s-1]}
 }
 \value{
-Advection sea - deepocean
+Advection sea - deepocean [s-1]
 }
 \description{
-Mixing of upper and deeper sea water layers (w2 and w3)
+Mixing of upper and deeper sea water layers (w2 and w3) [s-1]
+
+ToModerateWater [s-1]
 }

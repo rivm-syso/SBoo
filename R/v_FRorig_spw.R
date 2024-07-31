@@ -4,6 +4,7 @@
 #'@param pH pH of soil
 #'@param pKa Dissociation constant of (conjugated) acid (default = 7)
 #'@param ChemClass Class of chemical, in this case Acid, Base or other
+#'@param Matrix type of compartment considered
 #'@export
 FRorig_spw <- function(ChemClass, Matrix, 
                    pH,

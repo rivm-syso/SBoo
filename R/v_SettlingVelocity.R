@@ -1,18 +1,18 @@
 #' @title SettlingVelocity
 #' @name v_SettlingVelocity
-#' @description Settling Velocity or terminal Velocity of particles in a fluid medium based on ...(REF)
+#' @description Settling Velocity or terminal Velocity of particles in a fluid medium based on different DragMethods.
 #' NB SettlingVelocity is a function to be used for all types of partical species, not just nano-species. Therefor it's not a variable defining function.
 #' @param rho_species Density of particle [kg/m3]
 #' @param rhoMatrix Density of fluid matrix in which particle is present [kg/m3]
-#' @param DynViscAirStandard Dynamic viscosity of the fluid matrix [unit]
-#' @param DynViscWaterStandard Dynamic viscosity of the fluid matrix [unit]
+#' @param DynViscAirStandard Dynamic viscosity of the fluid matrix [kg m-1 s-1]
+#' @param DynViscWaterStandard Dynamic viscosity of the fluid matrix [kg m-1 s-1]
 #' @param rad_species Radius of the particle [m]
 #' @param Matrix function is defined for Water and Air; slightly different algorithm [text]
 #' @param SubCompartName name of the different subcompartments, used to segregate different formulas [text] 
 #' @param Shape Shape as defined by user, different possibilities (see f_Vol for options) [text]
 #' @param Longest_side the longest side of the particle as defined by the user [m]
 #' @param Intermediate_side the intermediate side of the particle as defined by user [m]
-#' @param Shortest_side the shortst side of the particle as identified by user 
+#' @param Shortest_side the shortst side of the particle as identified by user [m]
 #' @param DragMethod The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options
 #' @return Settling velocity
 #' @export

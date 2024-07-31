@@ -1,10 +1,10 @@
 #' @title Area
 #' @name Area
-#' @param AREAland   AREA of land in scale
-#' @param AREAsea    AREA of sea in scale
-#' @param landFRAC   subcompartment fraction of AREAland
-#' @param SubCompartName for which Area is calculated
-#' @param ScaleName for which Area is calculated
+#' @param AREAland the land area in the considered compartment [m2]
+#' @param AREAsea  the sea area in the considered compartment [m2]
+#' @param landFRAC fraction of land in the considered compartment [-]
+#' @param SubCompartName the subcompartment which is considered
+#' @param ScaleName the scale which is considered
 #' @return Area (but not for sediment) based on data for the SubCompartment / Scale
 #' @export
 Area <- function (AreaLand,

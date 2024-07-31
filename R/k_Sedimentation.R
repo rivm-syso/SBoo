@@ -10,6 +10,7 @@
 #' @param SubCompartName Name of relevant subcompartment for which k_Sedimentation is being calculated
 #' @param ScaleName Name of relevant scale for which k_Sedimentation is being calculated
 #' @param SpeciesName Name of relevant species (Molecular or particulate) for which k_Sedimentation is being calculated
+#' @param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #' @return k_Sedimentation, the rate constant for sedimentation as first order process
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,

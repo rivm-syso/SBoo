@@ -14,17 +14,18 @@ f_SchmidtNumber(
 )
 }
 \arguments{
-\item{visc}{}
+\item{visc}{Dynamic viscosity of air [kg.m-1.s-1]}
 
-\item{rhoMatrix}{}
+\item{rhoMatrix}{Density of the compartment the particle is in [kg m-3]}
 
-\item{Temp}{}
+\item{Temp}{Temperature of the compartment the particle is in [kg m-3]}
 
-\item{rad_particle}{}
+\item{rad_particle}{radius of the particle [m]}
 }
 \value{
 SchmidtNumber
 }
 \description{
-a description follows .. Joris?
+Calculation of the dimensionless Schmidt number, based on Wang et al. (2010) https://doi.org/10.5194/acp-10-5685-2010
+Denotes the ratio of momentum diffusivity and mass diffusivity.
 }

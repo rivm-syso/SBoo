@@ -1,9 +1,9 @@
 #' @title AreaSea
 #' @name AreaSea
-#' @param all.TotalArea  total AREA of Scale, possibly including other scales
-#' by nesting, hence the all.
-#' @param all.FRACsea    sea fraction of scale, possibly including other scales
-#' by nesting, hence the all.
+#' @param all.TotalArea  total AREA of Scale, possibly including other scales,
+#' hence the all. It uses nesting to compute the final value.
+#' @param all.FRACsea  sea fraction of scale, possibly including other scales,
+#' hence the all. It uses nesting to compute the final value.
 #' @param ScaleName  name of the scale of the box
 #' @return Area of Sea for scale with name ScaleName
 #' @export

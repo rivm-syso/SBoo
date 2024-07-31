@@ -8,10 +8,6 @@ kSense(ParentModule, knames = NULL, tol = 1e-30)
 }
 \arguments{
 \item{ParentModule}{SBCore}
-
-\item{knamesdist}{description}
-
-\item{samplesize}{description}
 }
 \value{
 States (i) (=mass)

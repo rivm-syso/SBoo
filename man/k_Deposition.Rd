@@ -25,23 +25,46 @@ k_Deposition(
 )
 }
 \arguments{
+\item{FRingas}{fraction of species in gaseous phase, see FRingas [-]}
+
 \item{VertDistance}{Mixing depth air compartment #[m]}
 
 \item{RAINrate}{Average precipitation #[m/s]}
 
-\item{FRorig}{Fraction original species in water or porewater}
+\item{twet}{average duration of dry periods [s]}
 
-\item{SpeciesName}{Name of the species the function is applied to (now only implemented for molecular, particulate drydep to be added) [NA]}
+\item{tdry}{average duration of wet periods [s]}
 
-\item{OtherkAir}{correction term for processes other than deposition affecting the air compartment}
+\item{COLLECTeff}{collection efficiency of aerosols by raindrops [-]}
 
-\item{FRaers}{}
+\item{AEROSOLdeprate}{deposition velocity of aerosol particles [m/s]}
+
+\item{Kacompw}{air water partitioning coefficient [-]}
+
+\item{FRorig}{Fraction original species in water or porewater, see FRorig [-]}
+
+\item{SpeciesName}{Name of the species the function is applied to}
+
+\item{OtherkAir}{correction term for processes other than deposition affecting the air compartment, see OtherKair [s-1]}
+
+\item{Kaers}{aerosol solid air partitioning coefficient  [-]}
+
+\item{Kaerw}{aerosol water air partitioning coefficient [-]}
+
+\item{FRinaerw}{Fraction original species in aerosol water, see FRaerw [-]}
+
+\item{FRinaers}{Fraction original species in aerosol solids, see FRaers[s]}
+
+\item{otherKair}{other k-flows within the air domain aggregated (this process is calculated less)}
 
 \item{AREAFRAC}{Fraction of area compartment relative to the whole surface area of this scale (systemarea) [-]}
+
+\item{Area}{area of the compartment [-]}
 }
 \value{
 Transfer rate constant gaseous species air to soil or water #[s-1]
 }
 \description{
-k_Deposition
+Deposition process for molecular species through dry aerosol deposition,
+wet aerosol and gas washout. Approach is based on Jolliet and Hauschild (2006) https://doi.org/10.1021/es049913+
 }

@@ -4,8 +4,6 @@
 #' #logged sd / intervals ??
 #'  by changing kaas what is the change in Mass
 #' @param ParentModule SBCore
-#' @param knamesdist description
-#' @param samplesize description
 #' @return States (i) (=mass)
 #' @export
 kSense = function(ParentModule, knames = NULL, tol=1e-30) {

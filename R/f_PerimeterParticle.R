@@ -1,11 +1,11 @@
 #' @title Calculate volume of perimeter of particle
 #' @name f_PerimeterParticle
-#' @description Calculate the perimeter of the 2d object of a 3d particle
+#' @description Calculate the perimeter of the 2d object of a 3d particle for ENPs
 #' @param rad_particle Radius of particle [m]
 #' @param Shape Particle Shape defined by user, used for nano and plastic [-]
 #' @param Longest_side Longest side length as defined by user [m]
 #' @param Intermediate_side Intermediate side length as defined by user [m]
-#' @param Shortest_side Shortest side length as defined by user
+#' @param Shortest_side Shortest side length as defined by user [m]
 #' @return fPerimeterParticle [m]
 #' @export
 

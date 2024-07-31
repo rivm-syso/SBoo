@@ -2,7 +2,7 @@
 % Please edit documentation in R/v_FRins.R
 \name{FRins}
 \alias{FRins}
-\title{FRaction of chemical in solid phase soil}
+\title{Fraction of chemical in solid phase soil}
 \usage{
 FRins(
   Kp,
@@ -19,28 +19,31 @@ FRins(
 )
 }
 \arguments{
-\item{Kp}{}
+\item{Kp}{soil/water partitioning coefficient [-]}
 
 \item{SUSP}{Concentration suspended matter in water [mg.L-1]}
 
 \item{COL}{Concentration of colloidal organic matter in water [mg.L-1]}
 
-\item{FRACw}{Fraction water in compartment}
+\item{KpCOL}{Colloidal organic matter/water partition coefficient [L.kg-1]}
 
-\item{FRACa}{Fraction air in compartment}
+\item{FRACw}{Fraction water in compartment [-]}
 
-\item{FRACs}{Fraction solids in compartment}
+\item{FRACa}{Fraction air in compartment [-]}
 
-\item{Kacompw}{Dimensionless air/water partitioning coefficient of original species at compartment temperature}
+\item{FRACs}{Fraction solids in compartment [-]}
 
-\item{FRorig_spw}{Fraction original species in porewater of soil}
+\item{Kacompw}{Dimensionless air/water partitioning coefficient of original species at compartment temperature [-]}
+
+\item{FRorig_spw}{Fraction original species in porewater of soil [-]}
 
 \item{Matrix}{Type of compartment matrix (soil, water, sediment or air)}
 
-\item{KpCOLColloidal}{organic matter/water partition coefficient [L.kg-1]}
-
 \item{RHOsolid}{Mineral DENSITY sediment and soil [kg.m-3]}
 }
+\value{
+FRins
+}
 \description{
-FRaction of chemical in solid phase soil (relevant to Molecular species)
+Fraction of chemical in solid phase soil (relevant to Molecular species)
 }

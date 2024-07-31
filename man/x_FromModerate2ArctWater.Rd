@@ -7,7 +7,7 @@
 x_FromModerate2ArctWater(OceanCurrent, SubCompartName, ScaleName)
 }
 \arguments{
-\item{OceanCurrent}{[m3.s-1]}
+\item{OceanCurrent}{current implemented in the ocean [m3.s-1]}
 
 \item{SubCompartName}{name of the subcompartment of the box at hand}
 

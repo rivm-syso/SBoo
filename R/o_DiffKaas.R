@@ -1,10 +1,3 @@
-# SaveKaas = function(IDstring) { #save or update current kaas to schuifkaas, under name IDstring
-#   if (!is.character(IDstring))
-#     stop("a set k's are stored under a unique name which you should provide as parameter")
-#   if (IDstring == "Current")
-#     stop("Current is a protected word in this context, meaning the current public$kaas")
-#   private$SchuifKaas[[IDstring]] <- private$SBkaas
-# 
 #' @name DiffKaas
 #' @description extra return a diff of two sets of k's
 #' @param ThisKaas data.frame with k values from and to boxes (3 Dim each)

@@ -2,7 +2,10 @@
 #'@name k_Leaching
 #'@param FRACinf Fraction infiltration #[-]
 #'@param RAINrate Average precipitation #[m/s]
-#'@param VertDistance Mixing depth soil #[m]
+#'@param VertDistance depth compartment #[m]
+#'@param SpeciesName considered species 
+#'@param penetration_depth_s penetration depth for correction factor, based on Hollander et al. (2007) https://doi.org/10.1016/j.envpol.2006.09.018 [m]
+#'@param Kscompw dimensionless partitioning coefficient soil-water [-]
 #'@return Leaching of aggregated (A) or free (S) enp species from natural soil #[s-1]
 #'@export
 k_Leaching <- function(FRACinf, RAINrate, VertDistance, SpeciesName, 

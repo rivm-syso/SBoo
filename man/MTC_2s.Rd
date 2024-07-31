@@ -2,15 +2,20 @@
 % Please edit documentation in R/v_MTC_2s.R
 \name{MTC_2s}
 \alias{MTC_2s}
-\title{PARTIAL MASS TRANSFER COEFFICIENT air to soil}
+\title{partial mass transfer coefficient from air to soil}
 \usage{
 MTC_2s(Mackay1, Mackay2, Matrix)
 }
 \arguments{
-\item{Mackay1}{constant described by Mackay (2001) [m/s] # data in m/d (units conversion)}
+\item{Mackay1}{constant described by Mackay (2001) [m/s] https://doi.org/10.1201/9781420032543}
 
-\item{Mackay2}{constant described by Mackay (2001) [-]}
+\item{Mackay2}{constant described by Mackay (2001) [-] https://doi.org/10.1201/9781420032543}
+
+\item{Matrix}{matrix considered}
+}
+\value{
+MTC_2w
 }
 \description{
-PARTIAL MASS TRANSFER COEFFICIENT air to soil
+partial mass transfer coefficient from air to soil
 }

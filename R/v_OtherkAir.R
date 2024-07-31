@@ -1,12 +1,13 @@
 #' @title v_OtherkAir
 #' @name v_OtherkAir
-#' @param all.kaas sneaky way to obtain other loss processes from air
+#' @description all other processes in air, used in 
+#' @param all.kaas all other transfer rates in air, used in deposition flux
+#' @param ScaleName scale name considered
+#' @param Species species type considered (molecular)
 #' @export
 OtherkAir <- function (all.kaas, ScaleName, SpeciesName){
   #is only for Molecular
   if (SpeciesName != "Molecular") return (NA)
-  #else
-  #TODO clean fromScale comparison with ScaleName; which is strictly speaking not 1:1
   return(sum(all.kaas$k[all.kaas$fromScale == ScaleName & all.kaas$fromSpecies == "Unbound" & all.kaas$fromSubCompart == "air"]))
 
 }

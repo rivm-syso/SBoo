@@ -16,16 +16,22 @@ Kp(
 )
 }
 \arguments{
-\item{FRorig, }{}
+\item{FRorig, }{fraction of species in its original form [-]}
 
-\item{KswDorC, }{}
+\item{KswDorC}{calculated soil water partitioning coefficient [-]}
+
+\item{Corg}{mass fraction organic carbon in soil/sediment [-]}
+
+\item{CorgStandard}{standard mass fraction organic carbon in soil/sediment [-]}
 
 \item{Matrix}{the medium, the formula is only applicable to soil and sediment}
 
 \item{ChemClass}{Chemical class, e.g. neutral or metal}
 
-\item{KswDorC.alt, }{}
+\item{RHOsolid}{density of the solid [kg m-3]}
+
+\item{ksw.alt}{}
 }
 \description{
-subcompartment/water PARTITION COEFFICIENT
+subcompartment/water partitioning coefficient
 }

@@ -1,17 +1,27 @@
 #' @title Cloud water scavenging coefficients as function of particle size and density
 #' @name k_CWscavenging
-#' @description a description follows .. Joris? based on Wang, X.; Zhang, L.;
-#'   Moran, M.D. Uncertainty assessment of current size-resolved
-#'   parameterizations for below-cloud particle scavenging by rain. Atmos. Chem.
-#'   Phys. Discuss. 2010, 10, 2503–2548
-#' @param rho_species particle density []
-#' @param rad_species particle radius []
-#' @param to.rhoMatrix density of cloud water []
-#' @param rhoMatrix density of air []
-#' @param DynViscAirStandard dynamic viscosity of air []
-#' @param DynViscWaterStandard dynamic viscosity of (cloud) water []
-#' @param Temp tempreature [oC]
-#' @param 
+#' @description Process describing the transport from dry air to rain, based on Wang et al. (2010) https://doi.org/10.5194/acp-10-5685-2010
+#' @param rho_species particle density [kg m-3]
+#' @param rad_species particle radius [m]
+#' @param rad_Raindrop radius of the raindrop [m]
+#' @param to.rhoMatrix density of cloud water [kg m-3]
+#' @param rhoMatrix density of air [kg m-3]
+#' @param DynViscAirStandard dynamic viscosity of air [kg m-3 s-1]
+#' @param DynViscWaterStandard dynamic viscosity of (cloud) water [kg m-3 s-1]
+#' @param Temp temperature [K]
+#' @param RAINrate Yearly rain rate [m/s]
+#' @param FRACtwet Time fraction of wet episodes [-]
+#' @param tdry duration of dry episodes [s]
+#' @param twet duration of wet episodes [s]
+#' @param COLLECTeff Aerosol collection efficiency for raindrops (Wang et al., 2010) [-]
+#' @param SettlingVelocity settling velocity as computed by the SB variable f_SetVelWater [m/s]
+#' @param Matrix compartment type 
+#' @param SpeciesName name of the considered species 
+#' @param SubCompartName considered subcompartment 
+#' @param VertDistance depth of compartment [m]
+#' @param CritStokesNumb.cw Critical stokes number, based on Wang et al. (2010)
+#' @param ReyNumber.cw Reynolds number 
+#' @param SchmidtNumber.Particle.a Denotes the ratio of momentum diffusivity and mass diffusivity, based on Wang et al. (2010)
 #' @return k_CWscavenging
 #' @export
 k_CWscavenging <- function(RAINrate, FRACtwet, tdry, twet, COLLECTeff,

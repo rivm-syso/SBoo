@@ -1,4 +1,4 @@
-#' @title Calculate volume of sphere assuming (20181102)
+#' @title Calculate volume of sphere or other shape
 #' @name fVol
 #' @description Calculate the volume of spherical particle using the radius in m3, shapes based on Gov4Nano 
 #' @param rad_particle Radius of particle [m]

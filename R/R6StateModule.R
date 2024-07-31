@@ -1,3 +1,5 @@
+#' @title State Module 
+#' @description Checks if data is consistent with states
 #' @export
 StateModule <- R6::R6Class("StateModule",
   public = list(

@@ -4,7 +4,7 @@
 \alias{CalcGraphModule}
 \title{CalcGraphModule}
 \description{
-Mother of all Modules where a defining functions will be called
+Mother of all Modules where all defining functions will be called
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}

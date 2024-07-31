@@ -1,6 +1,7 @@
 #' @title ClassicNanoProcess
 #' @import R6
 #' @description a process representing (all speed constants in) the classic nano version in excel
+#' Creates functions that can be called from the World$ environment
 ClassicNanoProcess <- R6::R6Class(
   "ClassicNanoProcess",
   inherit = ProcessModule,

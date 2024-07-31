@@ -9,15 +9,18 @@ FRingas(FRACw, FRACs, Kaerw, Kaers, ...)
 \arguments{
 \item{FRACw}{Fraction aerosol water in air}
 
-\item{FRACs}{Fraction aerosol solids in ai}
+\item{FRACs}{Fraction aerosol solids in air}
 
 \item{Kaerw}{Dimensionless aerosol water / air Partitioning Coefficient}
 
 \item{Kaers}{Dimensionless aerosol solid / air Partitioning Coefficient}
 }
 \value{
-FRgas[]
+The fraction of a chemical in the aerosol gas phase. Total: FRingas + FRinaerw + FRinaers = 1.
 }
 \description{
 FRACTION of chemical in gas phase of air at EQUILIBRIUM
+}
+\seealso{
+[Fringas(), FRinw(), FRins()]
 }

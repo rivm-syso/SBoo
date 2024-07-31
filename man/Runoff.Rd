@@ -21,6 +21,6 @@ Rain water runoff from soils [m3/s]
 }
 \description{
 The runoff is from soil to water. Normally this runs into a river, but, 
-as there are no rivers modelled in the global scales, it is directed to the sea immediately there. 
-Basically, it's a flow, but for this reason, modelled as a variable. IN order to also use it for k_runoff and x_ContRiver2Reg.
+as there are no rivers modeled in the global scales, it is directed to the sea immediately there. 
+Basically, it's a flow, but for this reason, modeled as a variable.
 }

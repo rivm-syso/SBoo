@@ -13,6 +13,8 @@ too much and to diverse to put them in parameters and complicate the execute met
 \item{tmax}{time [s] for the simulation period}
 
 \item{nTIMES}{number of timesteps}
+
+\item{EmisAsPulse}{T is a pulse-type emission, false is not}
 }
 \value{
 see: ode()

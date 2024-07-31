@@ -21,25 +21,38 @@ KdegDorC(
 )
 }
 \arguments{
-\item{C.OHrad.n}{?}
+\item{kdeg}{degradation rate (as input) [s-1]}
 
-\item{k0.OHrad}{?}
+\item{C.OHrad.n}{general OH radical concentration, based on Wania & Daly (2002) [mol m-3]}
 
-\item{Ea.OHrad}{?}
+\item{k0.OHrad}{frequency factor of the OH radical reaction [m3 s-1]}
 
-\item{T25}{= 298 K}
+\item{Ea.OHrad}{activation energy OH radical reaction [J mol-1]}
 
-\item{FRingas}{see}
+\item{T25}{298K [K]}
 
-\item{kdeg.air}{kdeg.water kdeg.water}
+\item{Q.10}{rate increase factor per 10C [-]}
 
-\item{C.OHrad}{?}
+\item{KswDorC}{calculated soil water partitioning coefficient  [-]}
 
-\item{Temp}{[K]}
+\item{CorgStandard}{Standard mass fraction organic carbon in soil/sediment [-]}
+
+\item{rhoMatrix}{density of the matrix}
+
+\item{Matrix}{compartment type considered}
+
+\item{SpeciesName}{species name considered}
+
+\item{C.OHrad}{OH radical concentration specific to compartment, based on Wania & Daly (2002) [mol m-3]}
+
+\item{BioDeg}{biodegradability test result [-]}
 }
 \value{
 Degradation rate constant for molecular species
 }
 \description{
-calculate k for degradation;
+calculate k for degradation for particulates and molecules.
+if no specific value for kdeg is available it is scaled into categories 
+as defined in Technical Guidance Document on risk assessment in support of
+Commission Directive 93/67/EEC (European Commission, 2003)
 }

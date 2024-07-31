@@ -5,9 +5,10 @@
 \title{ClassicNanoProcess}
 \description{
 a process representing (all speed constants in) the classic nano version in excel
+Creates functions that can be called from the World$ environment
 }
 \section{Super classes}{
-\code{\link[sboo:CalcGraphModule]{sboo::CalcGraphModule}} -> \code{sboo::ProcessModule} -> \code{ClassicNanoProcess}
+\code{\link[sboo:CalcGraphModule]{sboo::CalcGraphModule}} -> \code{\link[sboo:ProcessModule]{sboo::ProcessModule}} -> \code{ClassicNanoProcess}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}

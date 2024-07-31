@@ -7,9 +7,9 @@
 x_ContSea2Reg(all.x_RiverDischarge, LakeFracRiver)
 }
 \arguments{
-\item{LakeFracRiver}{see ppt}
+\item{LakeFracRiver}{part of river discharge that originates from lake [-]}
 
-\item{RiverDischarge}{see ppt}
+\item{RiverDischarge}{river discharge rate, see x_RiverDischarge [s-1]}
 }
 \value{
 additional flux from continental sea to regional

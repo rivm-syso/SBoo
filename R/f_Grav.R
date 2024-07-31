@@ -1,7 +1,7 @@
 #' @title Gravitational impaction collision frequency coefficient (20181102)
 #' @name fGrav
 #' @description Collission frequency of ENPs with other particulates due to Gravitational or Intertial impaction in s-1 for heteroagglomeration
-#' @param viscosity Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]
+#' @param DynViscWaterStandard Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]
 #' @param radius Radius of nanoparticle [m]
 #' @param rho Density of nanoparticle [kg.m-3]
 #' @param radius_Otherparticle  Radius of Other particle [m]

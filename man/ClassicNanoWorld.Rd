@@ -2,12 +2,12 @@
 % Please edit documentation in R/MSClassicNano.R
 \name{ClassicNanoWorld}
 \alias{ClassicNanoWorld}
-\title{title ClassicNanoWorld}
+\title{ClassicNanoWorld}
 \description{
 the centre object for running simple box with an R script.
 }
 \section{Super class}{
-\code{sboo::StateModule} -> \code{ClassicNanoWorld}
+\code{\link[sboo:StateModule]{sboo::StateModule}} -> \code{ClassicNanoWorld}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}

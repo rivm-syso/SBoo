@@ -2,7 +2,7 @@
 % Please edit documentation in R/x_RiverDischarge.R
 \name{x_RiverDischarge}
 \alias{x_RiverDischarge}
-\title{RiverDischarge}
+\title{RiverDischarge [s-1]}
 \usage{
 x_RiverDischarge(
   all.Runoff,
@@ -14,13 +14,21 @@ x_RiverDischarge(
 )
 }
 \arguments{
-\item{dischargeFRAC}{Fraction discharge between freshwater compartment (w1) at regional and continental scale}
+\item{RainOnFreshwater}{Water flow of rain directly on lake/river [m3.s-1]}
 
-\item{RainRunoff}{see ppt}
+\item{dischargeFRAC}{Fraction discharge regional fresh water to continental scale [-]}
+
+\item{ScaleName}{Name of the scale of the box at hand}
+
+\item{SubCompartName}{Name of the subcompartment of the box at hand}
+
+\item{Runoff}{Runoff flow from soil to river [m3.s-1]}
+
+\item{x_ContRiver2Reg}{Flow from continental to regional river water [s-1]}
 }
 \value{
-River Discharge
+River Discharge [s-1]
 }
 \description{
-RiverDischarge
+RiverDischarge [s-1]
 }

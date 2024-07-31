@@ -14,29 +14,37 @@ k_Degradation(
   BACTtest,
   BACTcomp,
   Matrix,
-  SpeciesName
+  SpeciesName,
+  SubCompartName,
+  ScaleName
 )
 }
 \arguments{
-\item{FRingas}{see}
+\item{FRingas}{fraction of original species in gas phase, see FRingas [-1]}
 
-\item{C.OHrad.n}{?}
+\item{KdegDorC}{calculated degradation rate constant, see KdegDorc [s-1]}
 
-\item{C.OHrad}{?}
+\item{C.OHrad.n}{general OH radical concentration, based on Wania & Daly (2002)}
 
-\item{kdeg.air}{kdeg.water kdeg.water}
+\item{C.OHrad}{OH radical concentration specific to compartment, based on Wania & Daly (2002)}
 
-\item{k0.OHrad}{?}
+\item{Tempfactor}{Temperature correction rate air, constant}
 
-\item{Ea.OHrad}{?}
+\item{BACTtest}{concentration bacteria in test water [CFU mL -1]}
 
-\item{Temp}{[K]}
+\item{BACTcomp}{concentration bacteria in considered compartment [CFU mL -1]}
 
-\item{T25}{= 298 K}
+\item{Matrix}{compartment type}
+
+\item{SpeciesName}{name of the considered species}
+
+\item{SubCompartName}{name of the subcompartment}
+
+\item{ScaleName}{name of the considered scale}
 }
 \value{
 Degradation rate constant for molecular species
 }
 \description{
-calculate k for degradation;
+calculate k for degradation, based on observations from Wania & Daly (2002) https://doi.org/10.1016/S1352-2310(02)00693-3
 }

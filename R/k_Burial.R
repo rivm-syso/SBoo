@@ -1,10 +1,10 @@
-#Script for determining the burial by sediment in water
-
-##### section to be moved to SBoo after testing 
 #'@title Burial by sediment
 #'@name k_Burial
+#'@description Burial based on net sedimentation rates, as described in Schoorl et al. (2015)
 #'@param VertDistance mixed depth water sediment compartment [m]
-#'@param NETsedrate Net sediment accumulation rate (from the surface water above) [m/s]
+#'@param NETsedrate Net sediment accumulation rate (from the surface water above). Values are constants as reported in Schoorl et al. (2015) [m/s]
+#'@param ScaleName Scale name of the considered process
+#'@param SubCompartName Subcompartment name for which the computation is done. 
 #'@return k_Burial Burial from sediment [s-1]
 #'@export
 
