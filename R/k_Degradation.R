@@ -14,7 +14,7 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName) {
+                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis) {
   # exclusions of process:
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                             SubCompartName == "lakesediment" |
@@ -44,6 +44,27 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
            
     )
   } else { # Particulate
+    
+    if (as.character(Test) == "TRUE"){
+      switch(Matrix,
+             "air" =   {
+               
+               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+             },
+             "soil" = {
+               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+             },
+             "sediment" = {
+               
+               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+             },
+             "water" = {
+               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+             }
+      )
+    }
+    
+    else
 
     switch(Matrix,
            "air" =   {
