@@ -232,8 +232,10 @@ SBcore <- R6::R6Class("SBcore",
     #' @description limits the states according to the filter
     #' @param ... the name of one of the dimensions of the states (ScaleName, SubCompartName, SpeciesName)
     filterStatesFrame = function(inDataFrame){
-      if (!"data.frame" %in% class(inDataFrame))
+      if (!"data.frame" %in% class(inDataFrame)){
+        browser()
         stop("expected a data.frame as parameter, to apply the filterstatus PROPERTY")
+      }
       theFilter <- private$filterstates
       outframe <- inDataFrame
       for (argName in names(theFilter)) {
@@ -869,6 +871,7 @@ SBcore <- R6::R6Class("SBcore",
                 cat(paste("calculating", CanDo[i]), "\n")
               }
               if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+                
                 private$UpdateDL(CanDo[i])
               } else { # a process; add kaas to the list
                 kaaslist[[CalcMod$myName]] <- CalcMod$execute()
@@ -1103,7 +1106,7 @@ SBcore <- R6::R6Class("SBcore",
           VarFun <- private$ModuleList[[VarFunName]]
           NewData <- VarFun$execute()
           if (exists("verbose") && verbose){
-            cat(paste(VarFunName, "\n"))
+            cat(paste(VarFunName, nrow(NewData), "rows\n"))
           }
           if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
             warning(paste(VarFunName,"; no rows calculated"))

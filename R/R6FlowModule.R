@@ -94,6 +94,9 @@ FlowModule <-
                              paste("to", TransferDim, sep = ""), 
                              paste("from", OtherDim, sep = ""))
           
+          #create the otherDim and avoid NA
+          FTable[, paste("to", OtherDim, sep = "")] <- FTable[, paste("from", OtherDim, sep = "")]
+          
           #filter those states that exists
           #which states exist?
           WorldStates <- private$MyCore$states$asDataFrame
@@ -101,6 +104,7 @@ FlowModule <-
             any(WorldStates$Scale == othrow["fromScale"] &
                   WorldStates$SubCompart == othrow["fromSubCompart"])
           })
+          
           #either one to-dimension exists, the other dimension is identical to from
           if ("toScale" %in% names(FTable)) {
             exist.to <- apply(FTable, 1, function(othrow) {
