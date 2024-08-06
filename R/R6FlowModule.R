@@ -1,5 +1,5 @@
-#' @description
-#' A short description...
+#' @title R6 Flow module
+#' @description the module computing all flows between compartments.
 #' @import R6
 #' @export
 FlowModule <-

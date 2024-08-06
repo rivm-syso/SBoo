@@ -8,10 +8,10 @@ AreaLand(all.TotalArea, all.FRACsea, ScaleName)
 }
 \arguments{
 \item{all.TotalArea}{total AREA of Scale, possibly including other scales,
-hence the all. (nesting!)}
+hence the all. It uses nesting to compute the final value.}
 
 \item{all.FRACsea}{sea fraction of scale, possibly including other scales,
-hence the all. (nesting!)}
+hence the all. It uses nesting to compute the final value.}
 
 \item{ScaleName}{indicating for which scale the function is called}
 }
@@ -19,5 +19,5 @@ hence the all. (nesting!)}
 Land in SystemArea
 }
 \description{
-very similar to AreaSea; Keep It Stupid Simple...
+computes the land area in all the scales
 }

@@ -13,43 +13,61 @@ k_Adsorption(
   from.MTC_2w,
   to.MTC_2a,
   from.MTC_2s,
-  FRorig,
+  to.FRorig,
   Kacompw,
   to.Kscompw,
   to.Matrix,
   VertDistance,
   AreaLand,
   AreaSea,
-  Area,
+  to.Area,
+  all.FRorig,
+  all.FRorig_spw,
   from.SubCompartName,
   to.SubCompartName,
-  ScaleName
+  ScaleName,
+  Test
 )
 }
 \arguments{
-\item{FRingas}{see FRingas()}
+\item{FRinw}{fraction of species in water,see FRinw()}
 
-\item{FRinw}{see FRinw()}
+\item{Kacompw}{partitioning coefficient for air, see SBvariable}
 
-\item{FRorig}{SBvariable}
+\item{VertDistance}{Vertical distance of the compartment}
 
-\item{Kacompw}{SBvariable}
+\item{AreaLand}{calculated land area of the scale considered, see SBvariable}
 
-\item{VertDistance}{data}
+\item{AreaSea}{calculated sea area of the scale considered, see SBvariable}
 
-\item{MTC_2sd}{SBvariable, see MTC_2sd()}
+\item{to.Area}{Area of the receiving compartent}
 
-\item{MTC_2w}{SBvariable}
+\item{ScaleName}{name of scale}
 
-\item{MTC_2a}{SBvariable}
+\item{Test}{Test = TRUE or FALSE, depending on if SBExcel version should be copied}
 
-\item{MTC_2s}{SBvariable}
+\item{MTC_2sd}{mass transfer coefficient to sediment, see MTC_2sd()}
 
-\item{Matrix}{# can use paraminherit to use description from another function! No need to copy paste same descriptions!}
+\item{MTC_2w}{mass transfer coefficient to water, see SBvariable}
+
+\item{MTC_2a}{mass transfer coefficient to air, see SBvariable}
+
+\item{MTC_2s}{mass transfer coefficient to soil, see SBvariable}
+
+\item{FRorig}{fraction of species in original form, see SBvariable}
+
+\item{Kscompw}{partitioning coefficient for soil, see SB variable}
+
+\item{Matrix}{Receiving compartment type}
+
+\item{FRorig_spw}{fraction of original species in soil pore water}
+
+\item{SubCompartName}{name of the subcompartname that is from/to}
 }
 \value{
 The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 }
 \description{
-The adsorption rate constant (k_Adsorption) is calculated based on the ... See 2015-0161 report.
+The adsorption rate constant (k_Adsorption) is calculated based on the principles of gas absorption as described by Hollander
+et al. (2004) 10.1080/10629360412331297470 & Hollander et al. (2007) https://doi.org/10.1016/j.envpol.2006.09.018
 }

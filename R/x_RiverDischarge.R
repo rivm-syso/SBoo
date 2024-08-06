@@ -1,10 +1,12 @@
-#' @title RiverDischarge
+#' @title RiverDischarge [s-1]
 #' @name x_RiverDischarge
-#' @param RainRunoff see ppt
-#' @param dischargeFRAC Fraction discharge between freshwater compartment (w1) at regional and continental scale
-#' @inheritParams x_ContRiver2Reg we need all.x_ContRiver2Reg to obtain a single number, but
-# this way its still (obviously) a flow, to enter tests for fluxes
-#' @return River Discharge 
+#' @param Runoff Runoff flow from soil to river [m3.s-1]
+#' @param RainOnFreshwater Water flow of rain directly on lake/river [m3.s-1] 
+#' @param dischargeFRAC Fraction discharge regional fresh water to continental scale [-]
+#' @param x_ContRiver2Reg Flow from continental to regional river water [s-1] 
+#' @param ScaleName Name of the scale of the box at hand
+#' @param SubCompartName Name of the subcompartment of the box at hand
+#' @return River Discharge [s-1]
 #' @export
 x_RiverDischarge <- function (all.Runoff, RainOnFreshwater, 
                               dischargeFRAC, all.x_ContRiver2Reg, 

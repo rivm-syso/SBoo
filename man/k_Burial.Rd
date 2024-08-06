@@ -9,11 +9,15 @@ k_Burial(VertDistance, all.NETsedrate, ScaleName, SubCompartName)
 \arguments{
 \item{VertDistance}{mixed depth water sediment compartment [m]}
 
-\item{NETsedrate}{Net sediment accumulation rate (from the surface water above) [m/s]}
+\item{ScaleName}{Scale name of the considered process}
+
+\item{SubCompartName}{Subcompartment name for which the computation is done.}
+
+\item{NETsedrate}{Net sediment accumulation rate (from the surface water above). Values are constants as reported in Schoorl et al. (2015) [m/s]}
 }
 \value{
 k_Burial Burial from sediment [s-1]
 }
 \description{
-Burial by sediment
+Burial based on net sedimentation rates, as described in Schoorl et al. (2015)
 }

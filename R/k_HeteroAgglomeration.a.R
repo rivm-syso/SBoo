@@ -1,16 +1,30 @@
 #' @title Heteroagglomeration with aerosols
 #' @name k_HeteroAgglomeration.a
-#' @description Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with large (>0.45 um) natural particles
-#' @param to.alpha Attachment Efficiency of ENPs with other particulates [-]
+#' @description Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with natural particles 
+#' based on Kulmala et al. (2003) https://doi.org/10.1034/j.1600-0889.2001.530411.x
+#' @param to.alpha Attachment Efficiency of ENPs with other particulates, constants [-]
 #' @param NumConc_Otherparticle Mass concentration of other particulates [kg.m-3]
 #' @param RadS Radius of nanoparticle [m]
 #' @param RhoS Density of nanoparticle [kg.m-3]
+#' @param RadNuc radius of nucleation mode particle [m]
+#' @param RadCOL radius of accumulation mode aerosol particle [m]
+#' @param RadCP radius of coarse particulate mode aersol particle [m]
+#' @param rho_species density of particle [kg m-3]
+#' @param RhoNuc density of nucleation mode aerosol particle [ kg m-3]
+#' @param RhoCOL density of accumulation mode aerosol particle [kg m-3]
+#' @param RhoCP density of coarse particulate mode aerosol particle [kg m-3]
 #' @param radius_Otherparticle Radius of natural particle [m]
 #' @param f_Fuchs function describing Fuch's correction factor [-]
-#' 
+#' @param DynViscAirStandard dynamic viscosity of air [kg m-1 s-1]
+#' @param NumConcNuc number concentration nucleation mode aerosol particles [# m-3]
+#' @param NumConcAcc number concentration accumulation mode aerosol particle [# m-3]
+#' @param NumConcCP number concentration coarse particulate mode aerosol particle [# m-3]
 #' @param rho_Otherparticle Density (specific weight) of natural particle [kg/m3]
+#' @param Matrix type of subcompartment
+#' @param to.SpeciesName type of species considered
+#' @param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #' @param Temp Temperature of compartment [K]
-#' @param viscosity Dynamic viscosity of fluid matrix []
+#' @param ThermVel thermal veloicty of species [m s-1]
 #' @return k_HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 #' @export
 #'

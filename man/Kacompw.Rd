@@ -2,7 +2,7 @@
 % Please edit documentation in R/v_Kacompw.R
 \name{Kacompw}
 \alias{Kacompw}
-\title{Dimensionless air/water PARTITION COEFFICIENT of molecular species specific to air compartment (scale)}
+\title{Dimensionless air/water partitioning coefficient of molecular species specific to air compartment (scale)}
 \usage{
 Kacompw(
   Kaw25,
@@ -15,21 +15,32 @@ Kacompw(
   Tm,
   Tm_default,
   Temp,
-  MW
+  MW,
+  Test
 )
 }
 \arguments{
-\item{ChemClass}{see QSAR table}
+\item{ChemClass}{chemical class, see QSAR table}
 
-\item{Pvap25}{vapour pressure of original species at 25 C [Pa]}
+\item{Pvap25}{vapor pressure of original species at 25 C [Pa]}
 
 \item{Sol25}{water solubility of original species at 25 C [mol.m-3]}
 
-\item{MaxPvap}{maximum vapour pressure of original species at 25 C [Pa]}
+\item{H0sol}{Enthalpy of dissolution [-]}
 
-\item{T25}{const (25 C ==) 298 K}
+\item{MaxPvap}{maximum vapor pressure of original species at 25 C [Pa]}
 
-\item{Tm}{melting temp}
+\item{T25}{const (25 C ==) 298 K [K]}
+
+\item{Tm}{melting temp [K]}
+
+\item{Tm_default}{default melting point if melting temperature is not given [K]}
+
+\item{Temp}{temperature of compartment [K]}
+
+\item{MW}{molar weight[kg mol-1]}
+
+\item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
 }
 \value{
 Kacompw

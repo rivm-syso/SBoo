@@ -2,7 +2,7 @@
 % Please edit documentation in R/v_MTC_2a.R
 \name{MTC_2a}
 \alias{MTC_2a}
-\title{PARTIAL MASS TRANSFER COEFFICIENT water and soil to air}
+\title{partial mass transfer coefficient  water and soil to air}
 \usage{
 MTC_2a(
   WINDspeed,
@@ -18,9 +18,20 @@ MTC_2a(
 \arguments{
 \item{WINDspeed}{Windspeed in compartment/scale [m.s-1]}
 
-\item{MW}{Molecular weight of compound [g.mol-1]}
+\item{MW}{Molecular weight of compound [kg.mol-1]}
 
-\item{from.Matrix}{Matrix/compartment from which the relevant process is taking place}
+\item{Tempfactor}{temperature correction rate air, constant [-]}
+
+\item{Matrix}{Matrix/compartment from which the relevant process is taking place}
+
+\item{ScaleName}{scale considered}
+
+\item{SubCompartName}{name of subcompartment considered}
+
+\item{kdegDorc}{calculated degradation rate [s-1]}
+}
+\value{
+MTC_2a
 }
 \description{
 Partial mass transfer coefficient from water and soil to air

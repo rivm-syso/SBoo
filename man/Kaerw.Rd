@@ -7,10 +7,14 @@
 Kaerw(Kacompw, FRorig, SubCompartName)
 }
 \arguments{
-\item{Kacompw}{}
+\item{Kacompw}{air water partitioning coefficient [-]}
+
+\item{FRorig}{fraction of original species [-]}
+
+\item{SubCompartName}{subcompartment considered}
 }
 \value{
-FRears[]
+Kaerw
 }
 \description{
 pm

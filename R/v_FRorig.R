@@ -4,7 +4,8 @@
 #'@param pH pH of soil, sediment, water or aerosol water
 #'@param pKa Dissociation constant of (conjugated) acid (default = 7)
 #'@param ChemClass Class of chemical, in this case Acid, Base or other
-#'@return 
+#'@param Matrix type of compartment considered
+#'@return FRorig
 #'@export
 FRorig <- function(ChemClass, Matrix, 
                 pH,

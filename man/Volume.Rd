@@ -7,11 +7,13 @@
 Volume(VertDistance, Area, FRACcldw, SubCompartName)
 }
 \arguments{
-\item{VertDistance}{hight or depth for subcompartments below the horizon}
+\item{VertDistance}{height or depth for subcompartments below the horizon [m]}
 
-\item{Area}{in m2}
+\item{Area}{area of the compartment [m2]}
 
-\item{FRACcldw}{fraction of cloudwater}
+\item{FRACcldw}{fraction of cloudwater [-]}
+
+\item{SubCompartName}{subcompartment considered}
 }
 \value{
 Volume

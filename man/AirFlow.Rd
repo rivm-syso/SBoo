@@ -7,11 +7,11 @@
 AirFlow(Volume, Area, WINDspeed, SubCompartName)
 }
 \arguments{
-\item{Volume}{in m3}
+\item{Volume}{volume in [m3]}
 
-\item{Area}{in m2}
+\item{Area}{area of the compartment in [m2]}
 
-\item{WINDspeed}{m.s-1}
+\item{WINDspeed}{within the compartment [m.s-1]}
 
 \item{SubCompartName}{for which the calculation is executed}
 }
@@ -19,5 +19,5 @@ AirFlow(Volume, Area, WINDspeed, SubCompartName)
 AirFlow, from one scale to another
 }
 \description{
-AirFlow
+Computes the airflow within a compartment
 }

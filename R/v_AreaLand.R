@@ -1,10 +1,10 @@
 #' @title AreaLand
 #' @name AreaLand
-#' @description very similar to AreaSea; Keep It Stupid Simple...
+#' @description computes the land area in all the scales
 #' @param all.TotalArea  total AREA of Scale, possibly including other scales,
-#' hence the all. (nesting!)
+#' hence the all. It uses nesting to compute the final value.
 #' @param all.FRACsea    sea fraction of scale, possibly including other scales,
-#' hence the all. (nesting!)
+#' hence the all. It uses nesting to compute the final value.
 #' @param ScaleName  indicating for which scale the function is called
 #' @return Land in SystemArea
 #' @export

@@ -18,7 +18,13 @@ k_Leaching(
 
 \item{RAINrate}{Average precipitation #[m/s]}
 
-\item{VertDistance}{Mixing depth soil #[m]}
+\item{VertDistance}{depth compartment #[m]}
+
+\item{SpeciesName}{considered species}
+
+\item{penetration_depth_s}{penetration depth for correction factor, based on Hollander et al. (2007) https://doi.org/10.1016/j.envpol.2006.09.018 [m]}
+
+\item{Kscompw}{dimensionless partitioning coefficient soil-water [-]}
 }
 \value{
 Leaching of aggregated (A) or free (S) enp species from natural soil #[s-1]

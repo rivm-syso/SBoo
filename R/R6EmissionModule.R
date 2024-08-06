@@ -1,6 +1,5 @@
-#' @description
-#' A short description...
-#' 
+#' @title Emission module
+#' @description Function to get emissions from excel/csv files
 #' @import R6
 #' @export
 EmissionModule <-

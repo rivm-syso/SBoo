@@ -1,7 +1,11 @@
 #'@title Temperature correction degradation rate water/sed/soil
 #'@name Tempfactor
-#'@param Q.10 Degradation rate increase factor per /U+00B0 10 C [-]
-#'@param Temp Average precipitation [K]
+#'@param Q.10 Degradation rate increase factor per  10 C [-]
+#'@param Temp Average temeperature [K]
+#'@param T25 25 degrees C [K]
+#'@param EA.OHrad activation energy OH radical reaction [J mol-1]
+#'@param Matrix compartment type considered
+#'@param SpeciesName species considered
 #'@return  Temperature correction degradation rate water/sed/soil [-]
 #'@export
 

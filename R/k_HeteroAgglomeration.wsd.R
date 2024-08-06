@@ -1,6 +1,7 @@
 #' @title Heteroagglomeration (20181102)
 #' @name k.HeteroAgglomeration.wsd
 #' @description Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with other particulates in water and soil
+#' largely based on Tufenkji & Elimelech (2003) https://doi.org/10.1021/es034049r
 #' @param to.alpha Attachment Efficiency of ENPs with other particulates [-]
 #' @param MasConc_Otherparticle Mass concentration of other particulates [kg.m-3]
 #' @param from.radius Radius of nanoparticle [m] 
@@ -10,10 +11,23 @@
 #' @param rhoFluid Density of fluid matrix [kg/m3]
 #' @param Shear Shear rate of the fluid matrix [s-1]
 #' @param Temp Temperature of compartment [K]
-#' @param DynViscWaterStandard Dynamic viscosity of Water []
-#' @param DynViscAirStandard Dynamic viscosity of Air []
+#' @param DynViscWaterStandard Dynamic viscosity of Water [kg m-1 s-1]
+#' @param DynViscAirStandard Dynamic viscosity of Air [kg m-1 s-1]
 #' @param SubCompartName Name of relevant subcompartment for which k_HeteroAgglomeration is being calculated
 #' @param ScaleName Name of relevant scale for which k_HeteroAgglomeration is being calculated
+#' @param COL mass concentration natural colloids in water [kg m-3]
+#' @param SUSP mass concentration suspended matter in water [kg m-3]
+#' @param RadS Radius of nanoparticle [m]
+#' @param Rhos Radius of nanoparticle [kg m-3]
+#' @param rhoMatrix density of the matrix [kg m-3]
+#' @param Udarcy Darcy velocity [m s-1]
+#' @param hamakerSP.w Hamaker constant for heteroagglomerates [J]
+#' @param Matrix type of subcompartment considered 
+#' @param RadCOL radius of accumulation mode of particle [m]
+#' @param rhoCOL density of accumulation mode of particle [kg m-3]
+#' @param rho_CP density of coarse particulate mode of particle [kg m-3]
+#' @param radCP radius of accumulation mode of particle [m]
+#' @param FRACs fraction of solids in the matrix [-]
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
@@ -196,14 +210,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
           return(NA)
   )
   
-  # ColInter <- f_Inter(Shear,from.radius,radius_Otherparticle )
-  # 
-  # ColBrown <- f_Brown(Temp,DynVisc,from.radius,radius_Otherparticle )
-  # ColGrav <- f_Grav(DynVisc,from.radius,from.rho,radius_Otherparticle ,rho_Otherparticle,g,rhoFluid)
-  # 
-  # NumConcOther <- f_NumConc(rad_particle=radius_Otherparticle ,rho_particle=rho_Otherparticle, MasConc_Otherparticle)
-  # 
-  # to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter)
+
 }
 
 

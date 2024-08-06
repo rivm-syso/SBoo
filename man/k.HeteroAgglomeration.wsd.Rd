@@ -24,17 +24,38 @@ k_HeteroAgglomeration.wsd(
   hamakerSP.w,
   Matrix,
   to.SpeciesName,
-  SubCompartName
+  SubCompartName,
+  ScaleName
 )
 }
 \arguments{
 \item{to.alpha}{Attachment Efficiency of ENPs with other particulates [-]}
 
+\item{COL}{mass concentration natural colloids in water [kg m-3]}
+
+\item{SUSP}{mass concentration suspended matter in water [kg m-3]}
+
 \item{Shear}{Shear rate of the fluid matrix [s-1]}
+
+\item{RadS}{Radius of nanoparticle [m]}
+
+\item{RadCOL}{radius of accumulation mode of particle [m]}
 
 \item{Temp}{Temperature of compartment [K]}
 
-\item{DynViscWaterStandard}{Dynamic viscosity of Water []}
+\item{DynViscWaterStandard}{Dynamic viscosity of Water [kg m-1 s-1]}
+
+\item{rhoMatrix}{density of the matrix [kg m-3]}
+
+\item{Udarcy}{Darcy velocity [m s-1]}
+
+\item{hamakerSP.w}{Hamaker constant for heteroagglomerates [J]}
+
+\item{Matrix}{type of subcompartment considered}
+
+\item{SubCompartName}{Name of relevant subcompartment for which k_HeteroAgglomeration is being calculated}
+
+\item{ScaleName}{Name of relevant scale for which k_HeteroAgglomeration is being calculated}
 
 \item{MasConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
 
@@ -48,11 +69,22 @@ k_HeteroAgglomeration.wsd(
 
 \item{rhoFluid}{Density of fluid matrix [kg/m3]}
 
-\item{DynViscAirStandard}{Dynamic viscosity of Air []}
+\item{DynViscAirStandard}{Dynamic viscosity of Air [kg m-1 s-1]}
+
+\item{Rhos}{Radius of nanoparticle [kg m-3]}
+
+\item{rhoCOL}{density of accumulation mode of particle [kg m-3]}
+
+\item{rho_CP}{density of coarse particulate mode of particle [kg m-3]}
+
+\item{radCP}{radius of accumulation mode of particle [m]}
+
+\item{FRACs}{fraction of solids in the matrix [-]}
 }
 \value{
 k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 }
 \description{
 Calculation of the first order rate constant (s-1) for heteroagglomeration of ENPs with other particulates in water and soil
+largely based on Tufenkji & Elimelech (2003) https://doi.org/10.1021/es034049r
 }

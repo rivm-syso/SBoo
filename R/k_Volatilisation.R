@@ -1,5 +1,6 @@
 #'@title Volatilisation rate constant
 #'@name k_Volatilisation
+#'@description volatilisation process based on the two-film resistance model (Schwarzenbach et al., 1993) ISBN: 978-1-118-76723-8
 #'@param FRACinf Fraction infiltration #[-]
 #'@param RAINrate Average precipitation #[m/s]
 #'@param VertDistance Mixing depth soil #[m]

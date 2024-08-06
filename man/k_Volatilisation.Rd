@@ -6,17 +6,20 @@
 \usage{
 k_Volatilisation(
   to.MTC_2w,
-  MTC_2a,
+  from.MTC_2a,
   to.MTC_2s,
   Kacompw,
-  FRorig,
+  from.FRorig,
+  from.FRorig_spw,
   FRinw,
   Kscompw,
   VertDistance,
   SpeciesName,
   Matrix,
   relevant_depth_s,
-  penetration_depth_s
+  penetration_depth_s,
+  from.SubCompartName,
+  from.ScaleName
 )
 }
 \arguments{
@@ -30,5 +33,5 @@ k_Volatilisation(
 Volatilisation rate constant [s-1]
 }
 \description{
-Volatilisation rate constant
+volatilisation process based on the two-film resistance model (Schwarzenbach et al., 1993) ISBN: 978-1-118-76723-8
 }

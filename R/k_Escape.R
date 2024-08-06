@@ -2,6 +2,7 @@
 #' @name k_Escape
 #' @description calculate k for escape from air compartment to stratosphere based on t_half_Escape
 #' @param t_half_Escape Half life time in air [s] 
+#' @param SubCompartName considered subcompartment
 #' @return k_Escape
 #' @export
 k_Escape <- function(t_half_Escape, to.SubCompartName, from.SubCompartName){

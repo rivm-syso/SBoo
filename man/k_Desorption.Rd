@@ -2,7 +2,7 @@
 % Please edit documentation in R/k_Desorption.R
 \name{k_Desorption}
 \alias{k_Desorption}
-\title{Desorbtion of molecular species from sediment to water}
+\title{Desorption of molecular species from sediment to water}
 \usage{
 k_Desorption(
   Ksdcompw,
@@ -11,12 +11,30 @@ k_Desorption(
   VertDistance,
   SpeciesName,
   to.SubCompartName,
-  ScaleName
+  ScaleName,
+  Test
 )
+}
+\arguments{
+\item{Ksdcompw}{sediment water partitioning coefficient, see Ksdcompw [-]}
+
+\item{MTC_2w}{partial mass transfer coefficient to water, see MTC_2w [m s-1]}
+
+\item{VertDistance}{vertical distance of compartment [m]}
+
+\item{SpeciesName}{name of the species considered}
+
+\item{ScaleName}{scale considered}
+
+\item{Test}{Test = TRUE mimics SB4 in Excel version, Test = FALSE includes SB enhancements}
+
+\item{MTC_2sd}{partial mass transfer coefficient to sediment, see MTC_2sd [m s-1]}
+
+\item{SubCompartName}{subcompartment considered}
 }
 \value{
 Desorption rate constant from sediment to water [s-1]
 }
 \description{
-Desorbtion of molecular species from sediment to water
+desorption based on the two-film resistance model based on Schwarzenbach et al. (1993) ISBN: 978-1-118-76723-8
 }

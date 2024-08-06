@@ -1,4 +1,4 @@
-#' @title title ClassicNanoWorld
+#' @title ClassicNanoWorld
 #' @description the centre object for running simple box with an R script.
 #' @import R6
 #' @export

@@ -8,8 +8,12 @@
 OtherkAir(all.kaas, ScaleName, SpeciesName)
 }
 \arguments{
-\item{all.kaas}{sneaky way to obtain other loss processes from air}
+\item{all.kaas}{all other transfer rates in air, used in deposition flux}
+
+\item{ScaleName}{scale name considered}
+
+\item{Species}{species type considered (molecular)}
 }
 \description{
-v_OtherkAir
+all other processes in air, used in
 }

@@ -1,13 +1,17 @@
-#'@title Dimensionless air/water PARTITION COEFFICIENT of molecular species specific to air compartment (scale)
+#'@title Dimensionless air/water partitioning coefficient of molecular species specific to air compartment (scale)
 #'@name Kacompw
 #'@description assess the Kaw if it's not given, if Pvap25 is NA or too large, MaxPvap is used
-#'@param Pvap25 vapour pressure of original species at 25 C [Pa]
-#'@param MaxPvap maximum vapour pressure of original species at 25 C [Pa]
-#'@param ChemClass see QSAR table
+#'@param Pvap25 vapor pressure of original species at 25 C [Pa]
+#'@param MaxPvap maximum vapor pressure of original species at 25 C [Pa]
+#'@param ChemClass chemical class, see QSAR table
 #'@param Sol25 water solubility of original species at 25 C [mol.m-3]
-#'@param H0sol
-#'@param T25 const (25 C ==) 298 K
-#'@param Tm melting temp
+#'@param H0sol Enthalpy of dissolution [-]
+#'@param T25 const (25 C ==) 298 K [K]
+#'@param Tm melting temp [K]
+#'@param Tm_default default melting point if melting temperature is not given [K]
+#'@param Temp temperature of compartment [K]
+#'@param MW molar weight[kg mol-1]
+#'@param Test  determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #'@return Kacompw
 #'@export
 Kacompw <- function(Kaw25, 

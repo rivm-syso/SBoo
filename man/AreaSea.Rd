@@ -7,11 +7,11 @@
 AreaSea(all.TotalArea, all.FRACsea, ScaleName)
 }
 \arguments{
-\item{all.TotalArea}{total AREA of Scale, possibly including other scales
-by nesting, hence the all.}
+\item{all.TotalArea}{total AREA of Scale, possibly including other scales,
+hence the all. It uses nesting to compute the final value.}
 
-\item{all.FRACsea}{sea fraction of scale, possibly including other scales
-by nesting, hence the all.}
+\item{all.FRACsea}{sea fraction of scale, possibly including other scales,
+hence the all. It uses nesting to compute the final value.}
 
 \item{ScaleName}{name of the scale of the box}
 }

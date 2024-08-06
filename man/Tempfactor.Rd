@@ -7,9 +7,17 @@
 Tempfactor(Q.10, Temp, T25, Ea.OHrad, Matrix, SpeciesName)
 }
 \arguments{
-\item{Q.10}{Degradation rate increase factor per /U+00B0 10 C [-]}
+\item{Q.10}{Degradation rate increase factor per  10 C [-]}
 
-\item{Temp}{Average precipitation [K]}
+\item{Temp}{Average temeperature [K]}
+
+\item{T25}{25 degrees C [K]}
+
+\item{Matrix}{compartment type considered}
+
+\item{SpeciesName}{species considered}
+
+\item{EA.OHrad}{activation energy OH radical reaction [J mol-1]}
 }
 \value{
 Temperature correction degradation rate water/sed/soil [-]

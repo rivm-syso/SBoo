@@ -1,8 +1,6 @@
 #' @title vUncertain
 #' @name vUncertain
-#' @description sensitivity Mass 4 kaas,
-#' #logged sd / intervals ??
-#'  by changing kaas what is the change in Mass
+#' @description solver to analyze sensitivity of parameters
 #' @param ParentModule SBCore
 #' @param vnamesDistSD  dataframe with columns vnames, distNames (see lhs package for possible distributions), secondPar
 #' @param n samplesize 

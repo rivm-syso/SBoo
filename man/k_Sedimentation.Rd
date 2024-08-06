@@ -13,7 +13,9 @@ k_Sedimentation(
   from.RadCP,
   SpeciesName,
   SubCompartName,
-  ScaleName
+  to.SubCompartName,
+  ScaleName,
+  Test
 )
 }
 \arguments{
@@ -30,6 +32,8 @@ k_Sedimentation(
 \item{SubCompartName}{Name of relevant subcompartment for which k_Sedimentation is being calculated}
 
 \item{ScaleName}{Name of relevant scale for which k_Sedimentation is being calculated}
+
+\item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
 
 \item{RadCP}{Radius of the Coarse natural particle [m]}
 

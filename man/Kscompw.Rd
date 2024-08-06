@@ -7,10 +7,21 @@
 Kscompw(FRACw, FRACa, Kacompw, FRorig_spw, Kp, all.rhoMatrix, Matrix)
 }
 \arguments{
-\item{FRACa}{NB FRACs is calculated as the remiander from FRACa and FRACw}
+\item{FRACw}{fraction of water in compartment [-]}
 
-\item{Kp}{(soil/water PARTITION COEFFICIENT)}
+\item{FRACa}{fraction of air in compartment [-]}
+
+\item{FRorig_spw}{fraction of original species in soil pore water [-]}
+
+\item{Kp}{subcompartment/water partitioning coefficient [-]}
+
+\item{Matrix}{type of compartment}
+
+\item{rhoMatrix}{density of the matrix [-]}
+}
+\value{
+Kscompw
 }
 \description{
-Dimensionless soil/water PARTITION COEFFICIENT
+Dimensionless soil/water partition coefficient specific to subcompartment
 }

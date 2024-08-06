@@ -1,3 +1,5 @@
+#' @title Process module
+#' @description Initializes processes with their from and to dimensions
 #' @export
 ProcessModule <-
   R6::R6Class(
