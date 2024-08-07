@@ -26,24 +26,24 @@ SolverModule <-
         #   private$MoreParams))
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
-        # if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
-        #   EqMass <- cbind(self$solveStates$asDataFrame, private$Solution)
-        # } else {
-        #   #it's a matrix with as many rows or columns as states?
-        #   if (! length(dim(private$Solution)) == 2 && (nrow(private$SolveStates$asDataFrame) %in% dim(private$Solution))) {
-        #     warning("solver did not return as many rows nor cols as there are states")
-        #     return(NULL)
-        #   } #pick the last entry as steady state solution
-        #   if (nrow(self$solveStates$asDataFrame) == nrow(private$Solution)) {
-        #     private$MatrixSolutionInRows <- F
-        #     EqMass <- cbind(self$solveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
-        #   } else { #same amount of colums => pick the last row
-        #     private$MatrixSolutionInRows <- T
-        #     EqMass <- cbind(self$solveStates$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
-        #   }
-        # }
-        # names(EqMass)[length(EqMass)] <- "EqMass" #last column
-        # EqMass 
+        if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
+          EqMass <- cbind(self$solveStates$asDataFrame, private$Solution)
+        } else {
+          #it's a matrix with as many rows or columns as states?
+          if (! length(dim(private$Solution)) == 2 && (nrow(private$SolveStates$asDataFrame) %in% dim(private$Solution))) {
+            warning("solver did not return as many rows nor cols as there are states")
+            return(NULL)
+          } #pick the last entry as steady state solution
+          if (nrow(self$solveStates$asDataFrame) == nrow(private$Solution)) {
+            private$MatrixSolutionInRows <- F
+            EqMass <- cbind(self$solveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
+          } else { #same amount of colums => pick the last row
+            private$MatrixSolutionInRows <- T
+            EqMass <- cbind(self$solveStates$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
+          }
+        }
+        names(EqMass)[length(EqMass)] <- "EqMass" #last column
+        EqMass
       },
       
       solvetrial = function(...) {
