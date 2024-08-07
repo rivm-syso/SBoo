@@ -164,8 +164,8 @@ SBcore <- R6::R6Class("SBcore",
         stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
       private$solver$PrepemisV(emissions)
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug = needdebug, ...)
-      private$UpdateDL(Solution)
+      Solution = private$solver$execute(...)
+      #private$UpdateDL(Solution)
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file

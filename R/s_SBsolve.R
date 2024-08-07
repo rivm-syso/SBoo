@@ -31,5 +31,5 @@ SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
   )
   #if(as.character(class(deS)[1])!="data.frame") return (list(errorstate="error", deS))
 
-  deS[,-1]
+  deS
 }
