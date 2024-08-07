@@ -164,7 +164,7 @@ SBcore <- R6::R6Class("SBcore",
         stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
       private$solver$PrepemisV(emissions)
       # the solver does the actual work
-      #Solution = private$solver$solvetrial(...)
+      Solution = private$solver$execute(needdebug = F, ...)
       Solution = private$solver$solvetrial(...)
       #private$UpdateDL(Solution)
     },
