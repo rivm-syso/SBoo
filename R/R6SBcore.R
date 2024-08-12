@@ -17,6 +17,11 @@ SBcore <- R6::R6Class("SBcore",
       private$States$myCore <- self
       private$Substance <- NewstateModule$substance
       private$ModuleList <- list()
+      #prepare the names of variables that become dirty id substance is changed
+      colnamesSubstaces <- names(NewstateModule$SB4N.data[["Substances"]])
+      SubstanceCompartmentsVarNames <- unique(NewstateModule$SB4N.data[["SubstanceCompartments"]]$VarName)
+      SubstanceCompartmentsSpeciesVarNames <- unique(NewstateModule$SB4N.data[["SubstanceSubCompartSpeciesData"]]$VarName)
+      private$substanceproperties <- c(colnamesSubstaces, SubstanceCompartmentsSpeciesVarNames, SubstanceCompartmentsSpeciesVarNames)
     },
     #' @description add a process to the calculations
     #' @param ProcessFunction The name (as character) of the process defining function 
@@ -676,6 +681,18 @@ SBcore <- R6::R6Class("SBcore",
           private$SB4Ndata[["CONSTANTS"]][,nm] <- ThisSubstance[,nm]
         }
         
+        #update all other data that depends on the substance properties
+        #this depence on the list of variables in substanceProperties
+        self$UpdateDirty(private$substanceproperties)
+        
+      }
+    },
+    # description list?vector of properties that relate to substance; if substance is set, these properties become "dirty"
+    substanceProperties = function(value){
+      if (missing(value)) {
+        return(private$substanceproperties)
+      } else {
+        warning("cannot set substanceProperties")
       }
     },
     filterStates = function(value){
@@ -703,6 +720,7 @@ SBcore <- R6::R6Class("SBcore",
     solver = NULL,
     l_postPoneList = NULL,
     filterstates = list(),
+    substanceproperties = list(),
 
     DoInherit = function(fromDataName, toDataName){
       browser() #ever called??
