@@ -239,7 +239,8 @@ CalcGraphModule <-
               #rename from the name in datalayer to argument name, potentially including to. (or from. )
               names(AllIn)[names(AllIn) == Fpars$AttrName[i]] <- Fpars$FullName[i] 
             } else {
-              #rename column to FullName, also if default from. was used
+              TheDataColumn <- private$MyCore$filterStatesFrame(TheDataColumn)
+              # rename column to FullName, also if default from. was used
               names(TheDataColumn)[names(TheDataColumn) == Fpars$AttrName[i]] <- Fpars$FullName[i]
               # merge, handling the to. and/or from. naming
               ByX <- Fpars[i, names(TheDataColumn)[names(TheDataColumn)!=Fpars$FullName[i]]]
@@ -254,8 +255,8 @@ CalcGraphModule <-
             }
           }
         }
-        
-
+        #filter?
+        AllIn <- private$MyCore$filterStatesFrame(AllIn)
         #The columns from AllIn are not used in the exefunction, will be removed; stored in DimsIn:
         ColumnsToKeep <- names(AllIn)[!names(AllIn) %in% names(DimsIn)]
         ColumnsForDims <- names(AllIn)[names(AllIn) %in% names(DimsIn)]
@@ -267,7 +268,6 @@ CalcGraphModule <-
           warning(paste("no input rows for ", private$MyName))
           return(list(DimsIn = DimsIn, AllIn = AllIn, AllOut = data.frame(NA)))
         }
-        
         #prep debugnames for use in loop; empty if only "assembly" is active
         if (!is.null(debugAt)) {
           namesdebugAt <- names(debugAt)[names(debugAt) != "assembly"]

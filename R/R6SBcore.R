@@ -15,8 +15,13 @@ SBcore <- R6::R6Class("SBcore",
       newOrder <- order(ToBeSorted$ScaleOrder, ToBeSorted$SubCompartOrder, ToBeSorted$SpeciesOrder)
       private$States <- SBstates$new(ToBeSorted[newOrder, c("Scale", "SubCompart", "Species", "Abbr")])
       private$States$myCore <- self
-      private$substance <- NewstateModule$substance
+      private$Substance <- NewstateModule$substance
       private$ModuleList <- list()
+      #prepare the names of variables that become dirty id substance is changed
+      colnamesSubstaces <- names(NewstateModule$SB4N.data[["Substances"]])
+      SubstanceCompartmentsVarNames <- unique(NewstateModule$SB4N.data[["SubstanceCompartments"]]$VarName)
+      SubstanceCompartmentsSpeciesVarNames <- unique(NewstateModule$SB4N.data[["SubstanceSubCompartSpeciesData"]]$VarName)
+      private$substanceproperties <- c(colnamesSubstaces, SubstanceCompartmentsSpeciesVarNames, SubstanceCompartmentsSpeciesVarNames)
     },
     #' @description add a process to the calculations
     #' @param ProcessFunction The name (as character) of the process defining function 
@@ -205,7 +210,7 @@ SBcore <- R6::R6Class("SBcore",
         Tablenames = rep(AllTables, sapply(private$SB4Ndata, ncol)),
         AttributeNames = unname(unlist(sapply(private$SB4Ndata, names))
         ))
-      res[!(res$Tablenames %in% c("Flows", "MatrixSheet")),]
+      res[!(res$Tablenames %in% c("Flows", "MatrixSheet", "Substances", "SubstanceCompartments", "SubstanceSubCompartSpeciesData")),]
     },
     
     #' @description Obtain the data for a SBvariable or a flow
@@ -231,17 +236,25 @@ SBcore <- R6::R6Class("SBcore",
     
     #' @description limits the states according to the filter
     #' @param ... the name of one of the dimensions of the states (ScaleName, SubCompartName, SpeciesName)
-    filterStates = function(...){
-      theFilter <- list(...)
-      if (!names(theFilter) %in% c("ScaleName", "SubCompartName", "SpeciesName")) {
-        stop("argument name expected one of ScaleName, SubCompartName, SpeciesName")
+    filterStatesFrame = function(inDataFrame){
+      if (!"data.frame" %in% class(inDataFrame)){
+        browser()
+        stop("expected a data.frame as parameter, to apply the filterstatus PROPERTY")
       }
-      DimIdName <- private$FetchData(names(theFilter))
-      DimName <- names(DimIdName)[1]
-      DimValue <- DimIdName[DimIdName[,2] == unlist(theFilter), 1]
-      NwFrame <- private$States$asDataFrame[private$States$asDataFrame[,DimName] == DimValue,]
-      private$States <- SBstates$new(NwFrame)
-      private$States$myCore <- self
+      theFilter <- private$filterstates
+      outframe <- inDataFrame
+      for (argName in names(theFilter)) {
+        DimIdNames <- private$FetchData(argName)
+        DimName <- names(DimIdNames)[names(DimIdNames) %in% The3D]
+        if (any(endsWith(names(outframe), DimName))) {
+          FilterDim <- DimIdNames[DimIdNames[,argName] == theFilter[[argName]],DimName]
+          likeDimNames <- names(outframe)[endsWith(names(outframe), DimName)]
+          for (likeDimName in likeDimNames){
+            outframe <- outframe[(!is.na(outframe[,likeDimName])) & outframe[,likeDimName] %in% FilterDim,]
+          }
+        }
+      }
+      return(outframe)
     },
     
     #' @description returns the table, determined by the dimensions et al.
@@ -270,6 +283,8 @@ SBcore <- R6::R6Class("SBcore",
         }
         NewKaas <- private$CalcTreeBack(aProcessModule)
       }
+      
+      NewKaas <- self$filterStatesFrame(NewKaas)
       
       if (is.null(private$SBkaas) | !mergeExisting){
           private$SBkaas <- NewKaas
@@ -435,7 +450,7 @@ SBcore <- R6::R6Class("SBcore",
         stopifnot(!is.null(TableName))
       } 
       nowTable <- private$SB4Ndata[[TableName]]
-      #remove current rows for keys; exception for Globals: keys = T
+      #remove current rows for keys; exception for CONSTANTS: keys = T
       if (length(keys)==1 && keys){
         private$SB4Ndata[[TableName]] <- UpdateDF
       } else {#keys of the dimensions
@@ -622,20 +637,97 @@ SBcore <- R6::R6Class("SBcore",
       } else {
         stop("use the $NewProcess(), $NewCalcVariable() and $NewFlow() methods to construct a node-list", call. = FALSE)
       }
+    },
+    substance = function(value){
+      if (missing(value)){
+        private$Substance
+      } else {
+        if (!value %in% private$SB4Ndata[["Substances"]]$Substance) {
+          stop(paste(value, "not in the database"))
+        }
+        private$Substance <- value
+        
+        ToSubCompartSpecies <- private$SB4Ndata[["SubstanceSubCompartSpeciesData"]][private$SB4Ndata[["SubstanceSubCompartSpeciesData"]]$Substance == self$substance,,]
+          ToSubCompartSpecies$Substance <- NULL
+          ToSubCompartSpecies$SB4N_name <- NULL
+          ToSubCompartSpecies$Unit <- NULL
+          for (SBVar in unique(ToSubCompartSpecies$VarName)) {
+            OneVarDF <- pivot_wider(ToSubCompartSpecies[ToSubCompartSpecies$VarName == SBVar,], 
+                        names_from = VarName, values_from = Waarde) %>%
+              as.data.frame()
+            private$UpdateDL(OneVarDF) #, keys = c("SubCompart", "Species") ,TableName = "SubCompartSpeciesData"
+        }
+        # Expand SpeciesCompartments to SubCompartSpeciesData
+        
+        # redo inheritance; make sure Substance properties are known, if not as NA
+        if (nrow(private$SB4Ndata[["SubstanceCompartments"]] ) > 0) {
+          Vars <- unique(private$SB4Ndata[["SubstanceCompartments"]]$VarName)
+          newDataFrame <-  merge(
+            private$SB4Ndata[["SubstanceCompartments"]], 
+            private$SB4Ndata[["SubCompartSheet"]][,c("Compartment", "SubCompart")])
+          newDataFrame <- newDataFrame[newDataFrame$Substance %in% self$substance,  c("VarName", "Waarde", "SubCompart")]
+          
+          private$SB4Ndata[["SubstanceSubCompart"]] <- pivot_wider(newDataFrame, 
+                                                                   names_from = VarName, values_from = Waarde) %>%
+            as.data.frame()
+          
+        } 
+        #  Substance properties to be pasted to CONSTANTS later
+        ThisSubstance <- private$SB4Ndata[["Substances"]][private$SB4Ndata[["Substances"]]$Substance == self$substance,]
+        # except:  
+        ThisSubstance$Substance <- NULL
+        # update 
+        for (nm in names(ThisSubstance)) {
+          private$SB4Ndata[["CONSTANTS"]][,nm] <- ThisSubstance[,nm]
+        }
+        
+        if (private$SB4Ndata[["CONSTANTS"]]$ChemClass == ""){
+          private$SB4Ndata[["CONSTANTS"]]$ChemClass <- "neutral"
+        }
+        
+        #update all other data that depends on the substance properties
+        #this depence on the list of variables in substanceProperties
+        self$UpdateDirty(private$substanceproperties)
+        
+      }
+    },
+    # description list?vector of properties that relate to substance; if substance is set, these properties become "dirty"
+    substanceProperties = function(value){
+      if (missing(value)) {
+        return(private$substanceproperties)
+      } else {
+        warning("cannot set substanceProperties")
+      }
+    },
+    filterStates = function(value){
+      if (missing(value)) {
+        return(private$filterstates)
+      } else {
+        if (!"list" %in% class(value)) {
+          stop("filterStates is expected a *list* of one or more values of ScaleName=, and/or SubCompartName=, and/or SpeciesName=")
+        }
+        if (!all(names(value) %in% c("ScaleName", "SubCompartName", "SpeciesName"))) {
+          stop("filterStates is expected a list of one or more values of ScaleName=, and/or SubCompartName=, and/or SpeciesName=")
+        }
+        private$filterstates <- value
+      }
     }
   ),
   
   private = list(
     SB4Ndata = NULL,
     States = NULL,
-    substance = NULL,
+    Substance = NULL,
     SBkaas = NULL,
     ModuleList =  NULL,
     nodeList = NULL,
     solver = NULL,
     l_postPoneList = NULL,
+    filterstates = list(),
+    substanceproperties = list(),
 
     DoInherit = function(fromDataName, toDataName){
+      browser() #ever called??
       #Inherits from global, Matrix, compartment, or a subset of dimensions The3D of the toData
       # parameters should be a fetch-able string
       fromData <- private$FetchData(fromDataName)
@@ -801,6 +893,7 @@ SBcore <- R6::R6Class("SBcore",
                 cat(paste("calculating", CanDo[i]), "\n")
               }
               if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
+                
                 private$UpdateDL(CanDo[i])
               } else { # a process; add kaas to the list
                 kaaslist[[CalcMod$myName]] <- CalcMod$execute()
@@ -893,7 +986,7 @@ SBcore <- R6::R6Class("SBcore",
         } else {
           QSARnames <- names(private$SB4Ndata[["QSARtable"]])
           if (varname %in% QSARnames) {
-            ChemClassNow <- private$SB4Ndata[["Globals"]]$ChemClass
+            ChemClassNow <- private$SB4Ndata[["CONSTANTS"]]$ChemClass
             res = private$SB4Ndata[["QSARtable"]][private$SB4Ndata[["QSARtable"]]$QSAR.ChemClass == ChemClassNow,varname]
             return(varname = res)
           } else {
@@ -907,14 +1000,13 @@ SBcore <- R6::R6Class("SBcore",
                   MetaData$AttributeNames[!MetaData$AttributeNames %in% c(
                     The3D, paste("to.", The3D, sep = ""),
                     "Default", "from", "to", "process", "AbbrS"
-                  ) & ! MetaData$Tablenames %in% c("SubstanceCompartments")]
+                  )]
                 ))
               )
             }
           }
           
           Attrn <- MetaData$Tablenames[which(varname == MetaData$AttributeNames)]
-          
           if (length(Attrn)==0) {
             allVars <- MetaData[!MetaData$AttributeNames %in% c(
               The3D, paste("to.", The3D, sep = ""),
@@ -926,12 +1018,12 @@ SBcore <- R6::R6Class("SBcore",
             return(NA)
           } 
           
-          #Attrn <- levels(Attrn)[Attrn] R Version 4 now 
-          if(length(Attrn) > 1) stop (paste0(varname, "in multiple tables:", Attrn))
-          
+          if(length(Attrn) > 1) {
+            stop (paste0(varname, "in multiple tables:", Attrn))
+          } 
           subvec <- MetaData[MetaData$Tablenames == Attrn, "AttributeNames"]
-          Dims <- c(The3D, paste("to.", The3D, sep = "")) %in% subvec
-          names(Dims)[Dims] <- c(The3D, paste("to.", The3D, sep = ""))[Dims]
+          Dims <- c(The3D, paste("to.", The3D, sep = ""), "Substance") %in% subvec
+          names(Dims)[Dims] <- c(The3D, paste("to.", The3D, sep = ""), "Substance")[Dims]
           DimsVarCols <- c(names(Dims)[Dims], varname)
           
           #Check if unit should be converted to SI
@@ -948,19 +1040,24 @@ SBcore <- R6::R6Class("SBcore",
             assign(varname, x)
             eval(parse(text = SIexpression))
           }
+          
           if (any(Dims)) { #it's a data.frame with varname as column
-            res <- private$SB4Ndata[[Attrn]][,DimsVarCols]
-            #remove the NA's from the pivot_wider
-            ToDel <- is.na(res[,varname])
-            
+            if ("Substance" %in% names(Dims) && Dims["Substance"]){
+              res <- private$SB4Ndata[[Attrn]][private$SB4Ndata[[Attrn]]$Substance == private$Substance,DimsVarCols]
+              ToDel <- FALSE
+            } else {
+              res <- private$SB4Ndata[[Attrn]][,DimsVarCols]
+              #remove the NA's from the pivot_wider; NB not for substance related data
+              ToDel <- is.na(res[,varname])
+            }
             if (isExpression){
               # ADJUST TO SI UNITS!!!
               
               res[,varname] <- Doexpression(varname, res[,varname], SIexpression)
             }
-            return(res[!ToDel, DimsVarCols])
+            return(res[!ToDel, DimsVarCols[DimsVarCols!="Substance"]])
           } else { #it's atomic 
-            res <- private$SB4Ndata[[Attrn]][,DimsVarCols]
+            res <- private$SB4Ndata[[Attrn]][,DimsVarCols[DimsVarCols!="Substance"]]
             if (isExpression){
               #  ADJUST TO SI UNITS!!!
               res <- Doexpression(varname, res, SIexpression)
@@ -1031,7 +1128,7 @@ SBcore <- R6::R6Class("SBcore",
           VarFun <- private$ModuleList[[VarFunName]]
           NewData <- VarFun$execute()
           if (exists("verbose") && verbose){
-            cat(paste(VarFunName, "\n"))
+            cat(paste(VarFunName, nrow(NewData), "rows\n"))
           }
           if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
             warning(paste(VarFunName,"; no rows calculated"))
@@ -1069,16 +1166,17 @@ SBcore <- R6::R6Class("SBcore",
         }
       } else {
         if (all(is.na(NewData))){}
-          #set the result, as variable?!?! in the DataLayer (Globals), to have the graph continue
-          
-        Target.Table <- private$WhichDataTable(names(NewData))
+          #set the result, as variable?!?! in the DataLayer (CONSTANTS), to have the graph continue
+        #Target.Table <- private$WhichDataTable(names(NewData))
         if (!is.na(Attrn)){ #is already in the DL
+          Target.Table <- Attrn
           diffTable <- private$FetchData(VarFunName)
           names(diffTable)[names(diffTable)==VarFunName] <- paste("old",VarFunName,sep = "_")
-        }
+        } 
+        else Target.Table <- private$WhichDataTable(names(NewData))
       }
       #Special Case a "constant" or substance property
-      if (Target.Table == "Globals") {
+      if (Target.Table == "CONSTANTS") {
         private$SB4Ndata[[Target.Table]][names(NewData)] <- NewData
       } else {
         #delete and merge the DL-table
@@ -1088,8 +1186,13 @@ SBcore <- R6::R6Class("SBcore",
           private$SB4Ndata[[Target.Table]] <- rbind(WithoutPrevious, NewData[,names(WithoutPrevious)])
         } else { #a SBvariable
           if (VarFunName %in% names(private$SB4Ndata[[Target.Table]])){
-            numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
-            private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
+            #another exceptional case 
+            if (Target.Table == "Substances") {
+              private$SB4Ndata[[Target.Table]][private$SB4Ndata[[Target.Table]]$Substance == private$Substance, VarFunName] <- unlist(NewData)
+            } else {
+              numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
+              private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
+            }
           } 
           private$SB4Ndata[[Target.Table]] <- merge(private$SB4Ndata[[Target.Table]], NewData, all = T)
         }
@@ -1106,7 +1209,7 @@ SBcore <- R6::R6Class("SBcore",
     WhichDataTable = function(KeyNames){# Which table ("1D"sheet or "2-3D"Data) in SB4N.data has identical dimensions?
       # Special case, a Flows has special keynames for easy merging when calculation processes; 
       # none of the actual keynames are in The3D
-      if (length(KeyNames) == 0){ #either Globals or a flow
+      if (length(KeyNames) == 0){ #either CONSTANTS or a flow
         if ("flow" %in% KeyNames){
           return("Flows")
         }
@@ -1118,7 +1221,7 @@ SBcore <- R6::R6Class("SBcore",
       )
       WhichD <- The3D[The3D %in% KeyNames]
       AppendString <- switch (length(WhichD)+1,
-        "Globals",
+        "CONSTANTS",
         "Sheet",
         "Data",
         "Data")

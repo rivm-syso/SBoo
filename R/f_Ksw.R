@@ -26,7 +26,8 @@ f_Ksw <- function(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, alt_form, 
           "acid" = 10^(0.54*log10(Kow)+1.11) * CorgStandard * RHOsolid / 1000,
           "base" = 10^(0.37*log10(Kow)+1.7) * CorgStandard * RHOsolid / 1000,
           "metal" = stop("Ksw Should be in the data"),
-          "particle" = stop("Ksw Should be in the data"),
+          #"particle" = stop("Ksw Should be in the data"),
+          "particle" = NA,
           #else
           {a * Kow^b * CorgStandard * RHOsolid / 1000}
       )
