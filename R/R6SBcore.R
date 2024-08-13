@@ -681,6 +681,10 @@ SBcore <- R6::R6Class("SBcore",
           private$SB4Ndata[["CONSTANTS"]][,nm] <- ThisSubstance[,nm]
         }
         
+        if (private$SB4Ndata[["CONSTANTS"]]$ChemClass == ""){
+          private$SB4Ndata[["CONSTANTS"]]$ChemClass <- "neutral"
+        }
+        
         #update all other data that depends on the substance properties
         #this depence on the list of variables in substanceProperties
         self$UpdateDirty(private$substanceproperties)
