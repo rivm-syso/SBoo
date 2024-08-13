@@ -10,7 +10,6 @@ SolverModule <-
     "SolverModule",
     inherit = CalcGraphModule,
     public = list( #
-      
       #' @description prepare kaas for matrix calculations
       #' @param needdebug if T, the solver defining function execute in debugmode 
       execute = function(needdebug = F, ...){ 
@@ -140,7 +139,7 @@ SolverModule <-
       #' @description sync emissions as relational table with states into vector 
       #' @param emissions 
       #' @return vector of functions(t) with emissions; ready to solve
-      PrepemisV = function (emissions, ...) { #for backward compatibly
+      PrepemisV = function (emissions = NULL, ...) { #for backward compatibly
         private$Emission <- EmissionModule$new(self, emissions, ...)
 
         # for conversion to mol
@@ -369,6 +368,7 @@ SolverModule <-
       SB.K = NULL,
       MatrixSolutionInRows = NULL,
       lSBtime.tvars = NULL,
-      lvnamesDistSD = NULL
+      lvnamesDistSD = NULL,
+      Emission = NULL
     )
   )

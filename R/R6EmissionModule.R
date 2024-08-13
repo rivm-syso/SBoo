@@ -11,24 +11,25 @@ EmissionModule <-
         MoreParams <- list(...)
         #switch between option 1) read from csv 2) read from excel 
                 # 3) list of functions or 4) a data.frame 
-        # if (length(MoreParams) < 1){
-        #   stop("expected filename or list of functions for emissions")
-        # }
+        
         if ("data.frame" %in% class(input)){
-          private$SetEmissionDataFrame(input)
-        } else if ("character" %in% class(input)) {
+          private$setEmissionDataFrame(input)
+        } 
+        
+        # else if ("list" %in% class(input && "function" %in% input[[1]])) {
+        #   private$setEmissionFunctions(input)
+        # }
           
+        else if ("character" %in% class(input)) {
           switch (tools::file_ext(input,
             "csv" = private$readfromcsv(input, ...),
             "xlsx" = private$readFromExcel(input, ...)
           )) 
-        } else if ("list" %in% class(input && "function" %in% input[[1]])) {
-            private$setEmissionFunctions(input)
         }
-          
-        if ("unitFactor" %in% names(MoreParams)){
-          private$UnitFactor <- MoreParams[["unitFactor"]]
-        }
+
+        # else if ("unitFactor" %in% names(MoreParams)){
+        #   private$UnitFactor <- MoreParams[["unitFactor"]]
+        # }
       },
       
       emissions = function(scenario = NULL){
