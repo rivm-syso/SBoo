@@ -16,7 +16,7 @@ EmissionModule <-
           private$setEmissionDataFrame(input)
         } 
         
-        # else if ("list" %in% class(input && "function" %in% input[[1]])) {
+        # if ("list" %in% class(input) && "function" %in% class(input[[1]])) {
         #   private$setEmissionFunctions(input)
         # }
           
@@ -93,28 +93,33 @@ EmissionModule <-
           # there can be multiple times in optional Timed column. 
           #if so, emis_df becomes a list of vectors
           if ("Timed" %in% names(emis_df)) {
+            
+            # Sort the unique times
             Times <- sort(unique(emis_df$Timed))
+            
+            # Create a df for each state at the first time, where all emissions are 0.0
             vEmis <- replicate(states$nStates, data.frame(Timed = Times[1], emis = 0.0), simplify = F)
             names(vEmis) <- states$asDataFrame$Abbr
+            
             #update the first time if present, 
             #then append all emis_df in the right state list
             #make sure the last Times is present for all states; set to 0.0 if missing
             timedRows <- emis_df[emis_df$Timed == Times[1],]
             for (irow in 1:nrow(timedRows)){
-              vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] # 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+              vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] 
             }
             for (atime in Times[2:(length(Times)-1)]) {
               timedRows <- emis_df[emis_df$Timed == atime,]
               for (irow in 1:nrow(timedRows)){
                 newRow <- data.frame(Timed = timedRows$Timed[irow], 
-                                     emis = timedRows$Emis[irow])  # 1000000 / Molweight / (3600*24*365)) #t/an -> mol/s)
+                                     emis = timedRows$Emis[irow])  
                 vEmis[[timedRows$Abbr[irow]]] <- rbind(vEmis[[timedRows$Abbr[irow]]], newRow)
               }
             }
             lastTime <- tail(Times,1)
             timedRows <- emis_df[emis_df$Timed == lastTime,]
             for (aState in names(vEmis)) {
-              posEmis <- timedRows$Emis[timedRows$Abbr == aState]  # 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+              posEmis <- timedRows$Emis[timedRows$Abbr == aState]
               emisMust <- ifelse(length(posEmis) > 0, posEmis, 0.0)
               newRow <- data.frame(Timed = lastTime, emis = emisMust)
               vEmis[[aState]] <- rbind(vEmis[[aState]], newRow)
@@ -126,7 +131,7 @@ EmissionModule <-
             names(vEmis) <- states$AsDataFrame$Abbr
             vEmis[match(emissions$Abbr, states$asDataFrame$Abbr)] <- emissions$Emis
             # from kg/yr to Mol/s
-            private$EmissionSource <- vEmis# * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
+            private$EmissionSource <- vEmis
             names(private$EmissionSource) <- states$asDataFrame$Abbr
             
           }

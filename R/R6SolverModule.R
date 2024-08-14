@@ -45,11 +45,17 @@ SolverModule <-
         EqMass 
       },
       
+      solvetrial = function(...) {
+        private$Solution <- do.call(private$Function, args = c(
+          list(ParentModule = self),
+          list(...)))
+      },
+      
       #' @description prepare kaas for matrix calculations
       #' 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
       #' including aggregation of kaas with identical (i,j)
       #' 2 The kaas are only describing removal, the where-to needs to be
-      #' added to the from-masses by putting it to into the diagonal
+      #' added to the from-masses by putting it to into the diagonal 
       #' NB emission depend on order of states; if available: resort!
       #' @param kaas k's
       #' @return matrix with kaas; ready to go
@@ -143,13 +149,13 @@ SolverModule <-
         private$Emission <- EmissionModule$new(self, emissions, ...)
 
         # for conversion to mol
-        Molweight <- self$myCore$fetchData("MW")
+        #Molweight <- self$myCore$fetchData("MW")
         
         vEmis <- rep(0.0, length.out = self$solveStates$nStates)
         names(vEmis) <- self$solveStates$AsDataFrame$Abbr
         vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
         # from kg/yr to Mol/s
-        Molweight <- self$myCore$fetchData("MW")
+        #Molweight <- self$myCore$fetchData("MW")
         private$Emissions <- vEmis #t/an -> mol/s
         names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
         private$Emissions
@@ -163,13 +169,26 @@ SolverModule <-
       #' @returns dm (i) = change in mass as list
       SimpleBoxODE = function(t, m, parms) {
         dm <- with(parms, K %*% m + e)
-        return(list(dm))
+        return(list(dm, signal = parms$e)) 
       },
       
       EmisBoxODE = function(t, m, parms){
         e_t <- parms$e(t)
         dm <- with(parms, K %*% m + e_t)
         return(list(dm))
+      },
+      
+      ODEapprox = function(t, m, parms) {
+        
+        with(as.list(c(parms, m)), {
+          e <- c(rep(0, length(SBNames)))
+          for (name in names(emislist)) {
+            e[grep(name, SBNames)] <- emislist[[name]](t) 
+          }
+          dm <- K%*% m + e
+          res <- c(dm)
+          list(res, signal = parms$e)
+        })
       },
       
       #' @description diff between kaas in this and k's in OtherSB.K

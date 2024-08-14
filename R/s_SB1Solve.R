@@ -11,5 +11,7 @@ SB1Solve = function(ParentModule, tol=1e-30) {
   SB.K = ParentModule$SB.k
   vEmis = ParentModule$emissions
   
-  solve(SB.K, -vEmis, tol = tol)
+  sol <- solve(SB.K, -vEmis, tol = tol)
+  
+  sol <- data.frame(sol, vEmis)
 }

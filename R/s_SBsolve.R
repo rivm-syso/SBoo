@@ -29,7 +29,12 @@ SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
     func = ParentModule$SimpleBoxODE,
     parms = list(K = SB.K, e = vEmis)
   )
-  #if(as.character(class(deS)[1])!="data.frame") return (list(errorstate="error", deS))
-
-  deS[,-1]
+  
+  # Name the columns of the solution dataframe
+  names_solved <- colnames(SB.K)
+  names_emis <- paste(names_solved, "_emis", "")
+  names <- c("Timed", names_solved, names_emis)
+  colnames(deS) <- names
+  
+  deS
 }
