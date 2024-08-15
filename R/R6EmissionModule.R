@@ -7,20 +7,27 @@ EmissionModule <-
     "EmissionModule",
     public = list(
       initialize = function(input, ...) {#Solver is reference to States
-        #private$MySolver <- TheSolver
+        #browser()
         MoreParams <- list(...)
         #switch between option 1) read from csv 2) read from excel 
                 # 3) list of functions or 4) a data.frame 
         
-        if ("data.frame" %in% class(input)){
-          private$setEmissionDataFrame(input)
+        emis <- MoreParams[[1]] # Get the emissions
+        SF <- MoreParams[[2]] # Get the solver function 
+        SB.K <- MoreParams[[3]] # Get the kaas 
+        
+        # First check if approxfuns are used in solver
+        if("ApproxFun" %in% names(formals(SF))){
+          private$setEmissionFunction(emis, SB.K)
         } 
         
-        # if ("list" %in% class(input) && "function" %in% class(input[[1]])) {
-        #   private$setEmissionFunctions(input)
-        # }
-          
-        else if ("character" %in% class(input)) {
+        # else, check if the input is a data frame
+        if (class(emis) == "data.frame"){
+          #ip <- Filter(is.data.frame, MoreParams)[[1]]
+          private$setEmissionDataFrame(emis, SB.K)
+        } 
+        
+        else if (class(emis) == "character") {
           switch (tools::file_ext(input,
             "csv" = private$readfromcsv(input, ...),
             "xlsx" = private$readFromExcel(input, ...)
@@ -86,10 +93,34 @@ EmissionModule <-
         setEmissionDataFrame(df)
       },
       
-      setEmissionDataFrame = function(emis_df) {
+      setEmissionFunction = function(app_input, kaas){
+        #browser()
+        states <- colnames(kaas)
+        
+        if ("list" %in% class(app_input)) {
+          # Check if the list was provided in the correct format
+          if(!all(as.character(names(app_input)) %in% as.character(states))){
+            stop("Abbreviations are incorrect")
+          }
+          for(i in app_input){
+            if(!is.function(i)){
+              stop("Not all elements in the list are functions")
+            }
+          }
+          
+          private$EmissionSource <- app_input
+          
+          
+        } else {
+          stop("Expected a list of functions")
+        }
+      },
+      
+      setEmissionDataFrame = function(emis_df, kaas) {
+        #browser()
         if ("data.frame" %in% class(emis_df) && all(c("Abbr","Emis") %in% names(emis_df))) {
           #we need states - via solver from the core
-          states <- private$MySolver$solveStates
+          states <- colnames(kaas)
           # there can be multiple times in optional Timed column. 
           #if so, emis_df becomes a list of vectors
           if ("Timed" %in% names(emis_df)) {
@@ -98,8 +129,8 @@ EmissionModule <-
             Times <- sort(unique(emis_df$Timed))
             
             # Create a df for each state at the first time, where all emissions are 0.0
-            vEmis <- replicate(states$nStates, data.frame(Timed = Times[1], emis = 0.0), simplify = F)
-            names(vEmis) <- states$asDataFrame$Abbr
+            vEmis <- replicate(length(states), data.frame(Timed = Times[1], emis = 0.0), simplify = F)
+            names(vEmis) <- states
             
             #update the first time if present, 
             #then append all emis_df in the right state list
@@ -127,12 +158,11 @@ EmissionModule <-
             private$EmissionSource <- vEmis
           } else { 
             #steady state
-            vEmis <- rep(0.0, length.out = states$nStates)
-            names(vEmis) <- states$AsDataFrame$Abbr
-            vEmis[match(emissions$Abbr, states$asDataFrame$Abbr)] <- emissions$Emis
-            # from kg/yr to Mol/s
+            vEmis <- rep(0.0, length.out = length(states))
+            names(vEmis) <- states
+            vEmis[match(emissions$Abbr, states)] <- emissions$Emis
             private$EmissionSource <- vEmis
-            names(private$EmissionSource) <- states$asDataFrame$Abbr
+            names(private$EmissionSource) <- states
             
           }
         }

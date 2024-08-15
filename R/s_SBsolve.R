@@ -8,7 +8,7 @@
 #' @param EmisAsPulse T is a pulse-type emission, false is not
 #' @return see: ode()
 SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
-
+  
   SB.K = ParentModule$SB.k
   
   SBtime <- seq(0,tmax,length.out = nTIMES)
@@ -35,6 +35,11 @@ SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
   names_emis <- paste(names_solved, "_emis", "")
   names <- c("Timed", names_solved, names_emis)
   colnames(deS) <- names
+
+  # Set the SolverType attribute
+  attr(deS, "SolverType") <- "SimpleDynamic"
   
-  deS
+  # Return the solution with the attribute set
+  return(deS)
+  
 }
