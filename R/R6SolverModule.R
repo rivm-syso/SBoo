@@ -27,7 +27,7 @@ SolverModule <-
         if(is.null(ST)){
           ST <- "SteadyState"}
       
-        if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver") {
+        if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver" | ST == "UncertainSteady") {
           Sol <- private$Solution
           data.frame(Sol)
         } else {

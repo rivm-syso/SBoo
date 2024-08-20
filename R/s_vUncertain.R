@@ -132,4 +132,7 @@ vUncertain = function(ParentModule,
   
   do.call(rbind, resultsAsList)
   
+  attr(resultsAsList, "SolverType") <- "UncertainSteady"
+  
+  return(resultsAsList)
 }

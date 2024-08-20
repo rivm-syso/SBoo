@@ -131,7 +131,7 @@ EmissionModule <-
                         approxfun(
                           data.frame(Timed = c(0,Timed), 
                                      Emis=c(0,Emis)),
-                          rule = 2)
+                          rule = 1:1)
                       )
             )
           
