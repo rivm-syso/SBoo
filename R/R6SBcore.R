@@ -163,14 +163,15 @@ SBcore <- R6::R6Class("SBcore",
         return(NULL)
       }
       private$solver$PrepKaasM()
-      if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
-        stop("emissions should be a dataframe(like) with columns")
-      if (!all(c("Abbr", "Emis") %in% names(emissions))) 
-        stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
+      # if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
+      #   stop("emissions should be a dataframe(like) with columns")
+      # if (!all(c("Abbr", "Emis") %in% names(emissions))) 
+      #   stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
       private$solver$PrepemisV(emissions)
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug = needdebug, ...)
-      private$UpdateDL(Solution)
+      Solution = private$solver$execute(needdebug = needdebug, emissions, ...)
+      #private$UpdateDL(Solution)
+      #Solution = private$solver$solvetrial(...)
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
@@ -238,7 +239,7 @@ SBcore <- R6::R6Class("SBcore",
     #' @param ... the name of one of the dimensions of the states (ScaleName, SubCompartName, SpeciesName)
     filterStatesFrame = function(inDataFrame){
       if (!"data.frame" %in% class(inDataFrame)){
-        browser()
+        #browser()
         stop("expected a data.frame as parameter, to apply the filterstatus PROPERTY")
       }
       theFilter <- private$filterstates
@@ -727,7 +728,7 @@ SBcore <- R6::R6Class("SBcore",
     substanceproperties = list(),
 
     DoInherit = function(fromDataName, toDataName){
-      browser() #ever called??
+      #browser() #ever called??
       #Inherits from global, Matrix, compartment, or a subset of dimensions The3D of the toData
       # parameters should be a fetch-able string
       fromData <- private$FetchData(fromDataName)
@@ -786,7 +787,7 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     cleanupCGAbove = function(VarName) {
-      browser()
+      #browser()
       VarNameVector <- VarName
       MoreVarNames <- VarName
       repeat {
