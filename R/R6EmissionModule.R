@@ -101,7 +101,7 @@ EmissionModule <-
       },
       
       setEmissionFunction = function(app_input, kaas){
-        browser()
+        #browser()
         states <- colnames(kaas)
         
         if ("list" %in% class(app_input)) {
@@ -131,7 +131,7 @@ EmissionModule <-
                         approxfun(
                           data.frame(Timed = c(0,Timed), 
                                      Emis=c(0,Emis)),
-                          rule = 1:1)
+                          rule = 1:2)
                       )
             )
           
