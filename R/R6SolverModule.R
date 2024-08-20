@@ -27,7 +27,7 @@ SolverModule <-
         if(is.null(ST)){
           ST <- "SteadyState"}
       
-        if (ST == "SimpleDynamic") {
+        if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver") {
           Sol <- private$Solution
           data.frame(Sol)
         } else {
@@ -153,15 +153,10 @@ SolverModule <-
         SolverFunction <- private$Function
         kaas <- private$SB.K
         private$Emission <- EmissionModule$new(self, emissions, SolverFunction, kaas, ...)
-        
-        vEmis <- rep(0.0, length.out = self$solveStates$nStates)
-        names(vEmis) <- self$solveStates$AsDataFrame$Abbr
-        vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
 
-        private$Emissions <- vEmis #t/an -> mol/s
-        names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
-        private$Emissions
-        
+        emis <- private$Emission$CleanEmissions()
+        private$Emissions <- private$Emission$CleanEmissions()
+
       },
       
       #' @description basic ODE function for simplebox; the function for the ode-call; 
@@ -181,8 +176,15 @@ SolverModule <-
         return(list(dm))
       },
       
+      EventODE = function(t, m, parms){
+        with(as.list(c(parms, m)), {
+          dm <- K %*% m
+          list(c(dm))
+        })
+      },
+      
       ODEapprox = function(t, m, parms) {
-        
+        #browser()
         with(as.list(c(parms, m)), {
           e <- c(rep(0, length(SBNames)))
           for (name in names(parms$emislist)) {

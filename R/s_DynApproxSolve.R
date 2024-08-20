@@ -1,6 +1,10 @@
 #' @title DynApproxSolve
 #' @name DynApproxSolve
-#' @description solve system of States for 1rst order k(i,j) and emissions
+#' @description This soolver solves system of States for 1rst order k(i,j) and 
+#' emissions dynamically. 
+#' Input is a data frame with three columns (Abbr, Emis and Timed) or a list of 
+#' approx functions describing the emissions over time for each state. If a data frame is 
+#' given as input, the approx functions are made for you in the solver. 
 #' @param ParentModule SBcore object; to access SimpleBoxODE, states etc. 
 #' too much and to diverse to put them in parameters and complicate the execute method
 #' @param tmax time [s] for the simulation period
@@ -9,7 +13,7 @@
 #' @return see: ode()
 DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100, ApproxFun = T) {
   
-  SB.K = ParentModule$SB.K
+  SB.K = ParentModule$SB.k
   SBNames = colnames(SB.K)
   SB.m0 <- rep(0, length(SBNames))
   SBtime <- seq(0,tmax,length.out = nTIMES)
@@ -20,10 +24,14 @@ DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100, ApproxFun = T
     times = SBtime ,
     func = ParentModule$ODEapprox,
     parms = list(K = SB.K, SBNames=SBNames, emislist= vEmis),
-    rtol = 1e-10, atol = 1e-2)
+    rtol = 1e-11, atol = 1e-3)
 
   colnames(out)[1:length(SBNames)+1] <- SBNames
   colnames(out)[grep("signal",colnames(out))] <- paste("emis",SBNames,sep = "2")
   as.data.frame(out) 
+  
+  attr(out, "SolverType") <- "ApproxDynamic"
+  
+  return(out)
 
 }

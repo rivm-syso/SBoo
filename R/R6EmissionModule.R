@@ -22,7 +22,7 @@ EmissionModule <-
         } 
         
         # else, check if the input is a data frame
-        if (class(emis) == "data.frame"){
+        else if (class(emis) == "data.frame"){
           #ip <- Filter(is.data.frame, MoreParams)[[1]]
           private$setEmissionDataFrame(emis, SB.K)
         } 
@@ -44,8 +44,15 @@ EmissionModule <-
         if (is.null(scenario)) 
           return (names(private$emissions))[!names(private$emissions) %in% c(
                                            "Scenario","VarName","Unit")]
-      }
+      },
       
+      CleanEmissions = function(value) { 
+        if (missing(value)) {
+          private$EmissionSource
+        } else {
+          
+        }
+      }
     ),
 
     private = list(
@@ -94,7 +101,7 @@ EmissionModule <-
       },
       
       setEmissionFunction = function(app_input, kaas){
-        #browser()
+        browser()
         states <- colnames(kaas)
         
         if ("list" %in% class(app_input)) {
@@ -107,12 +114,34 @@ EmissionModule <-
               stop("Not all elements in the list are functions")
             }
           }
+          Emis <- app_input
+          private$EmissionSource <- Emis
+        } else if ("data.frame" %in% class(app_input)) {
+          if(!(all(c("Abbr","Emis") %in% names(app_input)))){
+            stop("Expected 'Abbr', 'Emis' and 'Timed' columns in dataframe")
+          }
+          if(!all(as.character(app_input$Abbr) %in% as.character(states))){
+            stop("Abbreviations are incorrect")
+          }
+          Emis <- 
+            app_input |> 
+            group_by(Abbr) |> 
+            summarise(n=n(),
+                      EmisFun = list(
+                        approxfun(
+                          data.frame(Timed = c(0,Timed), 
+                                     Emis=c(0,Emis)),
+                          rule = 2)
+                      )
+            )
           
-          private$EmissionSource <- app_input
+          funlist <- Emis$EmisFun
+          names(funlist) <- Emis$Abbr
           
+          private$EmissionSource <- funlist
           
         } else {
-          stop("Expected a list of functions")
+          stop("Expected a list of functions or dataframe with column 'Timed'")
         }
       },
       
@@ -124,37 +153,12 @@ EmissionModule <-
           # there can be multiple times in optional Timed column. 
           #if so, emis_df becomes a list of vectors
           if ("Timed" %in% names(emis_df)) {
+            vEmis <- emis_df |>
+              rename(var = Abbr) |>
+              rename(time = Timed) |>
+              rename(value = Emis) |>
+              mutate(method = "add")
             
-            # Sort the unique times
-            Times <- sort(unique(emis_df$Timed))
-            
-            # Create a df for each state at the first time, where all emissions are 0.0
-            vEmis <- replicate(length(states), data.frame(Timed = Times[1], emis = 0.0), simplify = F)
-            names(vEmis) <- states
-            
-            #update the first time if present, 
-            #then append all emis_df in the right state list
-            #make sure the last Times is present for all states; set to 0.0 if missing
-            timedRows <- emis_df[emis_df$Timed == Times[1],]
-            for (irow in 1:nrow(timedRows)){
-              vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] 
-            }
-            for (atime in Times[2:(length(Times)-1)]) {
-              timedRows <- emis_df[emis_df$Timed == atime,]
-              for (irow in 1:nrow(timedRows)){
-                newRow <- data.frame(Timed = timedRows$Timed[irow], 
-                                     emis = timedRows$Emis[irow])  
-                vEmis[[timedRows$Abbr[irow]]] <- rbind(vEmis[[timedRows$Abbr[irow]]], newRow)
-              }
-            }
-            lastTime <- tail(Times,1)
-            timedRows <- emis_df[emis_df$Timed == lastTime,]
-            for (aState in names(vEmis)) {
-              posEmis <- timedRows$Emis[timedRows$Abbr == aState]
-              emisMust <- ifelse(length(posEmis) > 0, posEmis, 0.0)
-              newRow <- data.frame(Timed = lastTime, emis = emisMust)
-              vEmis[[aState]] <- rbind(vEmis[[aState]], newRow)
-            }
             private$EmissionSource <- vEmis
           } else { 
             #steady state
