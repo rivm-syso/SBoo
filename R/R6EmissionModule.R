@@ -6,27 +6,37 @@ EmissionModule <-
   R6::R6Class(
     "EmissionModule",
     public = list(
-      initialize = function(TheCore, ...) {      
-        private$MyCore <- TheCore
-        private$MoreParams <- list(...)
-        public$execute()
-      },
-      
-      execute = function() {
-        if (length(private$MoreParams) == 1 && class(private$MoreParams[[1]]) == "character") {
-          #if it's a csv or xlsx file, we try reading it
-          fn <- private$MoreParams[[1]]
-          if (file.exists(fn)) {
-            ext <- private$getFileNameExtension(fn)
-            if (ext == "csv") {
-              df <- read.csv(fn)
-            } else if (ext == "xlsx") {
-              df <- private$readFromExcel(fn)
-            } else stop(paste("Cannot read", fn))
-            
-          } else stop(paste("file not found", fn))
+      initialize = function(input, ...) {#Solver is reference to States
+        #browser()
+        MoreParams <- list(...)
+        #switch between option 1) read from csv 2) read from excel 
+                # 3) list of functions or 4) a data.frame 
+        
+        emis <- MoreParams[[1]] # Get the emissions
+        SF <- MoreParams[[2]] # Get the solver function 
+        SB.K <- MoreParams[[3]] # Get the kaas 
+        
+        # First check if approxfuns are used in solver
+        if("ApproxFun" %in% names(formals(SF))){
+          private$setEmissionFunction(emis, SB.K)
+        } 
+        
+        # else, check if the input is a data frame
+        else if (class(emis) == "data.frame"){
+          #ip <- Filter(is.data.frame, MoreParams)[[1]]
+          private$setEmissionDataFrame(emis, SB.K)
+        } 
+        
+        else if (class(emis) == "character") {
+          switch (tools::file_ext(input,
+            "csv" = private$readfromcsv(input, ...),
+            "xlsx" = private$readFromExcel(input, ...)
+          )) 
         }
-        return(private$Emissions)
+
+        # else if ("unitFactor" %in% names(MoreParams)){
+        #   private$UnitFactor <- MoreParams[["unitFactor"]]
+        # }
       },
       
       emissions = function(scenario = NULL){
@@ -34,28 +44,25 @@ EmissionModule <-
         if (is.null(scenario)) 
           return (names(private$emissions))[!names(private$emissions) %in% c(
                                            "Scenario","VarName","Unit")]
-      }
+      },
       
+      CleanEmissions = function(value) { 
+        if (missing(value)) {
+          private$EmissionSource
+        } else {
+          
+        }
+      }
     ),
 
     private = list(
-      MyCore = NULL,
-      MoreParams = NULL,
+      MySolver = NULL,
       Emissions = NULL,
-      BaseEmissions = NULL, # for statistical assessment
-      getFileNameExtension = function (fn) { #grabfromtheweb thx pisca46
-        # remove a path
-        splitted    <- strsplit(x=fn, split='/')[[1]]   
-        # or use .Platform$file.sep in stead of '/'
-        fn          <- splitted [length(splitted)]
-        ext         <- ''
-        splitted    <- strsplit(x=fn, split='\\.')[[1]]
-        l           <-length (splitted)
-        if (l > 1 && sum(splitted[1:(l-1)] != ''))  ext <-splitted [l] 
-        # the extention must be the suffix of a non-empty name    
-        ext
-      },
-      readFromExcel = function(fn) {
+      EmissionSource = NULL,
+      UnitFactor = 1,
+      Scenarios = NULL,
+      Times = NULL,
+      readFromClassicExcel = function(fn) {
         tryCatch(df <- openxlsx::read.xlsx(fn, sheet = "scenarios", startRow = 3),
                  error = function(e) NULL)
         if (is.null(df)) stop ("Not a proper scenarios sheet in the xlsx")
@@ -68,6 +75,101 @@ EmissionModule <-
         StateAbbr <- substr(df$VarName, start = 3, stop = 9)
         df$i <- private$MyCore$findState(StateAbbr)
         df
+      },
+      
+      readfromexcel = function(fn, ...){
+        sheetNames <- openxlsx::getSheetNames(fn)
+        #ignore the Sheetx names others are assumes to be scenario name
+        sheetNames <- sheetNames[!grepl("Sheet[23]", sheetNames)]
+        if (length(sheetNames) == 1){
+          private$EmissionSource <- openxlsx::read.xlsx(fn, sheet = sheetNames)
+        } else {
+          dfs <- lapply(sheetNames, function(sheet){
+            openxlsx::read.xlsx(fn, sheet = sheet)
+          })
+          for (i in 1:length(sheetNames)){
+            df <- dfs[[i]]
+            df$scenario <- sheetNames
+          }
+          private$EmissionSource <- do.call(rbind, dfs)
+        }
+      },
+      
+      readfromcsv = function(fn, ...) {
+        df <- read.csv(fn)
+        setEmissionDataFrame(df)
+      },
+      
+      setEmissionFunction = function(app_input, kaas){
+        #browser()
+        states <- colnames(kaas)
+        
+        if ("list" %in% class(app_input)) {
+          # Check if the list was provided in the correct format
+          if(!all(as.character(names(app_input)) %in% as.character(states))){
+            stop("Abbreviations are incorrect")
+          }
+          for(i in app_input){
+            if(!is.function(i)){
+              stop("Not all elements in the list are functions")
+            }
+          }
+          Emis <- app_input
+          private$EmissionSource <- Emis
+        } else if ("data.frame" %in% class(app_input)) {
+          if(!(all(c("Abbr","Emis") %in% names(app_input)))){
+            stop("Expected 'Abbr', 'Emis' and 'Timed' columns in dataframe")
+          }
+          if(!all(as.character(app_input$Abbr) %in% as.character(states))){
+            stop("Abbreviations are incorrect")
+          }
+          Emis <- 
+            app_input |> 
+            group_by(Abbr) |> 
+            summarise(n=n(),
+                      EmisFun = list(
+                        approxfun(
+                          data.frame(Timed = c(0,Timed), 
+                                     Emis=c(0,Emis)),
+                          rule = 1:2)
+                      )
+            )
+          
+          funlist <- Emis$EmisFun
+          names(funlist) <- Emis$Abbr
+          
+          private$EmissionSource <- funlist
+          
+        } else {
+          stop("Expected a list of functions or dataframe with column 'Timed'")
+        }
+      },
+      
+      setEmissionDataFrame = function(emis_df, kaas) {
+        #browser()
+        if ("data.frame" %in% class(emis_df) && all(c("Abbr","Emis") %in% names(emis_df))) {
+          #we need states - via solver from the core
+          states <- colnames(kaas)
+          # there can be multiple times in optional Timed column. 
+          #if so, emis_df becomes a list of vectors
+          if ("Timed" %in% names(emis_df)) {
+            vEmis <- emis_df |>
+              rename(var = Abbr) |>
+              rename(time = Timed) |>
+              rename(value = Emis) |>
+              mutate(method = "add")
+            
+            private$EmissionSource <- vEmis
+          } else { 
+            #steady state
+            vEmis <- rep(0.0, length.out = length(states))
+            names(vEmis) <- states
+            vEmis[match(emissions$Abbr, states)] <- emissions$Emis
+            private$EmissionSource <- vEmis
+            names(private$EmissionSource) <- states
+            
+          }
+        }
       }
     )
   )

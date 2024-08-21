@@ -10,33 +10,40 @@ SolverModule <-
     "SolverModule",
     inherit = CalcGraphModule,
     public = list( #
-      
       #' @description prepare kaas for matrix calculations
       #' @param needdebug if T, the solver defining function execute in debugmode 
-      execute = function(needdebug = F, ...){ 
+      execute = function(needdebug = F, emissions=NULL, ...){ 
+        #browser()
+
         if (needdebug){
           debugonce(private$Function)
         }
         private$Solution <- do.call(private$Function, args = c(
-          list(ParentModule = self),
-          list(...)))
-        # old ?
-        # private$Solution <- do.call(private$Function, args = c(
-        #   list(ParentModule = self),
-        #   private$MoreParams))
+            list(ParentModule = self),
+            list(...)))
+        
+        ST <- attr(private$Solution, "SolverType")
+        
+        if(is.null(ST)){
+          ST <- "SteadyState"}
+      
+        if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver" | ST == "UncertainSteady") {
+          Sol <- private$Solution
+          data.frame(Sol)
+        } else {
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
-        if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
-          EqMass <- cbind(self$solveStates$asDataFrame, private$Solution)
-        } else {
-          #it's a matrix with as many rows or columns as states?
-          if (! length(dim(private$Solution)) == 2 && (nrow(private$SolveStates$asDataFrame) %in% dim(private$Solution))) {
-            warning("solver did not return as many rows nor cols as there are states")
-            return(NULL)
-          } #pick the last entry as steady state solution
-          if (nrow(self$solveStates$asDataFrame) == nrow(private$Solution)) {
-            private$MatrixSolutionInRows <- F
-            EqMass <- cbind(self$solveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
+          if (is.null(dim(private$Solution))) { #probably a vector; why is dim not 1?
+            EqMass <- cbind(self$solveStates$asDataFrame, private$Solution)
+          } else {
+            #it's a matrix with as many rows or columns as states?
+            if (! length(dim(private$Solution)) == 2 && (nrow(private$SolveStates$asDataFrame) %in% dim(private$Solution))) {
+              warning("solver did not return as many rows nor cols as there are states")
+              return(NULL)
+            } #pick the last entry as steady state solution
+            if (nrow(self$solveStates$asDataFrame) == nrow(private$Solution)) {
+              private$MatrixSolutionInRows <- F
+              EqMass <- cbind(self$solveStates$asDataFrame, t(as.matrix(private$Solution))[,ncol(private$Solution)])
           } else { #same amount of colums => pick the last row
             private$MatrixSolutionInRows <- T
             EqMass <- cbind(self$solveStates$asDataFrame, as.matrix(private$Solution)[nrow(private$Solution),])
@@ -44,13 +51,14 @@ SolverModule <-
         }
         names(EqMass)[length(EqMass)] <- "EqMass" #last column
         EqMass 
+        }
       },
       
       #' @description prepare kaas for matrix calculations
       #' 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
       #' including aggregation of kaas with identical (i,j)
       #' 2 The kaas are only describing removal, the where-to needs to be
-      #' added to the from-masses by putting it to into the diagonal
+      #' added to the from-masses by putting it to into the diagonal 
       #' NB emission depend on order of states; if available: resort!
       #' @param kaas k's
       #' @return matrix with kaas; ready to go
@@ -139,64 +147,16 @@ SolverModule <-
 
       #' @description sync emissions as relational table with states into vector 
       #' @param emissions 
-      #' @return matrix with kaas; ready to go
-      PrepemisV = function (emissions) {
-        if (!("data.frame" %in% class(emissions)))
-          stop("emssions are expected in a data.frame-like class", call. = FALSE)
-        if (!all(c("Abbr","Emis") %in% names(emissions)))
-          stop("emissions should contain 'Abbr','Emis'. Note the capitals.", call. = FALSE)
+      #' @return vector of functions(t) with emissions; ready to solve
+      PrepemisV = function (emissions = NULL, ...) { #for backward compatibly
+        #browser()
+        SolverFunction <- private$Function
+        kaas <- private$SB.K
+        private$Emission <- EmissionModule$new(self, emissions, SolverFunction, kaas, ...)
 
-        # for conversion to mol
-        Molweight <- self$myCore$fetchData("MW")
-        # there can be multiple times in optional Timed column. 
-        #if so, emissions becomes a list of vectors
-        if ("Timed" %in% names(emissions)) {
-          Times <- sort(unique(emissions$Timed))
-          vEmis <- replicate(private$SolveStates$nStates, data.frame(Timed = Times[1], emis = 0.0), simplify = F)
-          names(vEmis) <- self$solveStates$asDataFrame$Abbr
-          #update the first time if present, 
-          #then append all emissions in the right state list
-          #make sure the last Times is present for all states; set to 0.0 if missing
-          timedRows <- emissions[emissions$Timed == Times[1],]
-          for (irow in 1:nrow(timedRows)){
-            vEmis[[timedRows$Abbr[irow]]]$emis <- timedRows$Emis[irow] # 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
-          }
-          for (atime in Times[2:(length(Times)-1)]) {
-            timedRows <- emissions[emissions$Timed == atime,]
-            for (irow in 1:nrow(timedRows)){
-              newRow <- data.frame(Timed = timedRows$Timed[irow], 
-                                   emis = timedRows$Emis[irow])  # 1000000 / Molweight / (3600*24*365)) #t/an -> mol/s)
-              vEmis[[timedRows$Abbr[irow]]] <- rbind(vEmis[[timedRows$Abbr[irow]]], newRow)
-            }
-          }
-          lastTime <- tail(Times,1)
-          timedRows <- emissions[emissions$Timed == lastTime,]
-          for (aState in names(vEmis)) {
-            posEmis <- timedRows$Emis[timedRows$Abbr == aState]  # 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
-            emisMust <- ifelse(length(posEmis) > 0, posEmis, 0.0)
-            newRow <- data.frame(Timed = lastTime, emis = emisMust)
-            vEmis[[aState]] <- rbind(vEmis[[aState]], newRow)
-          }
-          private$Emissions <- vEmis
-        } else { 
-          #steady state
-          vEmis <- rep(0.0, length.out = self$solveStates$nStates)
-          names(vEmis) <- self$solveStates$AsDataFrame$Abbr
-          vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
-          # from kg/yr to Mol/s
-          private$Emissions <- vEmis# * 1000000 / Molweight / (3600*24*365) #t/an -> mol/s
-          names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
-          
-        }
-        
-        vEmis <- rep(0.0, length.out = self$solveStates$nStates)
-        names(vEmis) <- self$solveStates$AsDataFrame$Abbr
-        vEmis[match(emissions$Abbr, self$solveStates$asDataFrame$Abbr)] <- emissions$Emis
-        # from kg/yr to Mol/s
-        Molweight <- self$myCore$fetchData("MW")
-        private$Emissions <- vEmis #t/an -> mol/s
-        names(private$Emissions) <- self$solveStates$asDataFrame$Abbr
-        private$Emissions
+        emis <- private$Emission$CleanEmissions()
+        private$Emissions <- private$Emission$CleanEmissions()
+
       },
       
       #' @description basic ODE function for simplebox; the function for the ode-call; 
@@ -207,13 +167,32 @@ SolverModule <-
       #' @returns dm (i) = change in mass as list
       SimpleBoxODE = function(t, m, parms) {
         dm <- with(parms, K %*% m + e)
-        return(list(dm))
+        return(list(dm, signal = parms$e)) 
       },
       
       EmisBoxODE = function(t, m, parms){
         e_t <- parms$e(t)
         dm <- with(parms, K %*% m + e_t)
         return(list(dm))
+      },
+      
+      EventODE = function(t, m, parms){
+        with(as.list(c(parms, m)), {
+          dm <- K %*% m
+          list(c(dm))
+        })
+      },
+      
+      ODEapprox = function(t, m, parms) {
+        #browser()
+        with(as.list(c(parms, m)), {
+          e <- c(rep(0, length(SBNames)))
+          for (name in names(parms$emislist)) {
+            e[grep(name, SBNames)] <- parms$emislist[[name]](t) 
+          }
+          dm <- with(parms, K %*% m + e) 
+          return(list(dm, signal = e))
+        })
       },
       
       #' @description diff between kaas in this and k's in OtherSB.K
@@ -225,7 +204,7 @@ SolverModule <-
         rowMatch <- self$solveStates$findState(rownames(OtherSB.K))
         colMatch <- self$solveStates$findState(colnames(OtherSB.K))
         if (anyNA(c(rowMatch, colMatch))) {
-          browser()
+          #browser()
           #unique(is.NA(rowMeans))
           stop("unmatched row/col name(s) in OtherSB.K")
         }
@@ -344,12 +323,12 @@ SolverModule <-
         }
       },
       
-      #' @field emissions guess what?
+      #' @field emissions vector of emissions
       emissions = function(value) { 
         if (missing(value)) {
           private$Emissions
         } else {
-          stop("`$emissions` are set by PrepemisV", call. = FALSE)
+          
         }
       },
       
@@ -409,9 +388,12 @@ SolverModule <-
       Solution = NULL,
       SolveStates = NULL,
       Emissions = NULL,
+      emis = NULL, 
       SB.K = NULL,
       MatrixSolutionInRows = NULL,
       lSBtime.tvars = NULL,
-      lvnamesDistSD = NULL
+      lvnamesDistSD = NULL,
+      Emission = NULL,
+      SolverType = NULL
     )
   )
