@@ -12,3 +12,5 @@ Config/testthat/edition: 3
 Imports: 
     constants,
     R6
+Suggests: 
+    testthat (>= 3.0.0)
