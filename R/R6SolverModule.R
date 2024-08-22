@@ -54,6 +54,10 @@ SolverModule <-
         }
       },
       
+      GetSolution = function() {
+        as.data.frame(private$Solution)
+      },
+      
       #' @description prepare kaas for matrix calculations
       #' 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
       #' including aggregation of kaas with identical (i,j)
@@ -268,11 +272,11 @@ SolverModule <-
                 FUN <- Params$FUN
                 if (is.null(FUN)) {
                   warning("no FUN found, no aggregation")
-                  browser()
+                  #browser()
                   leftRightHS <- private$interprFormula(Params$terms)
                   #Add Name to attribute name, if needed
                   fNasName <- sapply(fAsList, function(x) {
-                    browser()
+                    #browser()
                     ifelse (any(x %in% The3D), paste(x, "Name", sep = ""), x)
                   })
                   

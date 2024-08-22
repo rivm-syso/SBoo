@@ -193,6 +193,14 @@ SBcore <- R6::R6Class("SBcore",
       private$solver$PrepKaasM()
     },
     
+    #'@description Save the last calculated masses in the core
+    Solution = function(){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetSolution()
+    },
+    
     #' @description Injection from SolverModule
     SolutionAsRelational = function(...){
       if (is.null(private$solver)) {
@@ -271,6 +279,7 @@ SBcore <- R6::R6Class("SBcore",
     #' not mergeExisting, all process results (kaas) are cleared first
     UpdateKaas = function(aProcessModule = NULL, #(Default) NULL means calculate CalcTreeBack
                           mergeExisting = T){ 
+      #browser()
 
       if (is.null(aProcessModule)) {
         NewKaas <- private$CalcTreeBack(aProcessModule = NULL)
