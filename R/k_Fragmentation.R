@@ -15,6 +15,8 @@ k_Fragmentation <- function(kmpdeg, kfrag, SubCompartName, ScaleName){
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) ){
     return(NA)
+  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean")){
+    return(NA)
   } else {
     return(kmpdeg + kfrag)
   }
