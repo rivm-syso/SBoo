@@ -200,6 +200,17 @@ SBcore <- R6::R6Class("SBcore",
       }
       private$solver$GetSolution()
     },
+
+    GetConcentration = function(solution_df){
+      if (is.null(solution_df)) {
+        stop("No solution given")
+      } else {
+        browser()
+        private$concentration <- ConcentrationModule$new(self, solution_df)
+        private$concentration$ConcentrationInit()
+      }
+
+    },
     
     #' @description Injection from SolverModule
     SolutionAsRelational = function(...){
@@ -733,6 +744,7 @@ SBcore <- R6::R6Class("SBcore",
     nodeList = NULL,
     solver = NULL,
     l_postPoneList = NULL,
+    concentration = NULL,
     filterstates = list(),
     substanceproperties = list(),
 
