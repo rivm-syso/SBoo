@@ -17,7 +17,7 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis) {
+                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA) {
   # exclusions of process:
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                             SubCompartName == "lakesediment" |
