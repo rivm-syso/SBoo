@@ -200,15 +200,11 @@ SBcore <- R6::R6Class("SBcore",
       }
       private$solver$GetSolution()
     },
-
-    GetConcentration = function(solution_df){
-      if (is.null(solution_df)) {
-        stop("No solution given")
-      } else {
-        browser()
-        private$concentration <- ConcentrationModule$new(self, solution_df)
-        private$concentration$ConcentrationInit()
-      }
+    
+    #'@description Function to obtain steady state concentrations, using the solution saved in world.
+    GetConcentration = function(){
+      private$concentration <- ConcentrationModule$new(self)
+      private$concentration$GetConc()
 
     },
     

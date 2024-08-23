@@ -55,7 +55,11 @@ SolverModule <-
       },
       
       GetSolution = function() {
-        as.data.frame(private$Solution)
+        df <- as.data.frame(private$Solution)
+        df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
+        colnames(df) <- c("Abbr", "EqMass")   # Rename columns
+        return(df)
+        
       },
       
       #' @description prepare kaas for matrix calculations
