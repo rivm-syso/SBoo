@@ -26,7 +26,7 @@ SolverModule <-
         
         if(is.null(ST)){
           ST <- "SteadyState"}
-      
+        private$ST <- ST
         if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver" | ST == "UncertainSteady") {
           Sol <- private$Solution
           data.frame(Sol)
@@ -52,6 +52,18 @@ SolverModule <-
         names(EqMass)[length(EqMass)] <- "EqMass" #last column
         EqMass 
         }
+      },
+      
+      GetSolution = function() {
+        df <- as.data.frame(private$Solution)
+        
+        if (private$ST == "SteadyState") {
+          df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
+          colnames(df) <- c("Abbr", "EqMass") 
+          return(df) # Rename columns
+        }
+        return(df)
+        
       },
       
       #' @description prepare kaas for matrix calculations
@@ -268,11 +280,11 @@ SolverModule <-
                 FUN <- Params$FUN
                 if (is.null(FUN)) {
                   warning("no FUN found, no aggregation")
-                  browser()
+                  #browser()
                   leftRightHS <- private$interprFormula(Params$terms)
                   #Add Name to attribute name, if needed
                   fNasName <- sapply(fAsList, function(x) {
-                    browser()
+                    #browser()
                     ifelse (any(x %in% The3D), paste(x, "Name", sep = ""), x)
                   })
                   
@@ -386,6 +398,7 @@ SolverModule <-
         NULL
       },
       Solution = NULL,
+      ST = NULL,
       SolveStates = NULL,
       Emissions = NULL,
       emis = NULL, 

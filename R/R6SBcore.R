@@ -132,6 +132,7 @@ SBcore <- R6::R6Class("SBcore",
     NewSolver = function(SolverFunction, ...){
       #existing function?
       stopifnot("function" %in% class(match.fun(SolverFunction)))
+      private$solvername <- SolverFunction
       private$solver <- SolverModule$new(self, SolverFunction, ...)
     },
     
@@ -191,6 +192,21 @@ SBcore <- R6::R6Class("SBcore",
         return(NULL)
       }
       private$solver$PrepKaasM()
+    },
+    
+    #'@description Save the last calculated masses in the core
+    Solution = function(){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetSolution()
+    },
+    
+    #'@description Function to obtain steady state concentrations, using the solution saved in world.
+    GetConcentration = function(){
+      private$concentration <- ConcentrationModule$new(self, private$solvername)
+      private$concentration$GetConc()
+
     },
     
     #' @description Injection from SolverModule
@@ -271,6 +287,7 @@ SBcore <- R6::R6Class("SBcore",
     #' not mergeExisting, all process results (kaas) are cleared first
     UpdateKaas = function(aProcessModule = NULL, #(Default) NULL means calculate CalcTreeBack
                           mergeExisting = T){ 
+      #browser()
 
       if (is.null(aProcessModule)) {
         NewKaas <- private$CalcTreeBack(aProcessModule = NULL)
@@ -719,11 +736,13 @@ SBcore <- R6::R6Class("SBcore",
     SB4Ndata = NULL,
     States = NULL,
     Substance = NULL,
+    solvername = NULL, 
     SBkaas = NULL,
     ModuleList =  NULL,
     nodeList = NULL,
     solver = NULL,
     l_postPoneList = NULL,
+    concentration = NULL,
     filterstates = list(),
     substanceproperties = list(),
 
