@@ -26,7 +26,7 @@ SolverModule <-
         
         if(is.null(ST)){
           ST <- "SteadyState"}
-      
+        private$ST <- ST
         if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver" | ST == "UncertainSteady") {
           Sol <- private$Solution
           data.frame(Sol)
@@ -56,8 +56,12 @@ SolverModule <-
       
       GetSolution = function() {
         df <- as.data.frame(private$Solution)
-        df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
-        colnames(df) <- c("Abbr", "EqMass")   # Rename columns
+        
+        if (private$ST == "SteadyState") {
+          df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
+          colnames(df) <- c("Abbr", "EqMass") 
+          return(df) # Rename columns
+        }
         return(df)
         
       },
@@ -394,6 +398,7 @@ SolverModule <-
         NULL
       },
       Solution = NULL,
+      ST = NULL,
       SolveStates = NULL,
       Emissions = NULL,
       emis = NULL, 

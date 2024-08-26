@@ -132,6 +132,7 @@ SBcore <- R6::R6Class("SBcore",
     NewSolver = function(SolverFunction, ...){
       #existing function?
       stopifnot("function" %in% class(match.fun(SolverFunction)))
+      private$solvername <- SolverFunction
       private$solver <- SolverModule$new(self, SolverFunction, ...)
     },
     
@@ -203,7 +204,7 @@ SBcore <- R6::R6Class("SBcore",
     
     #'@description Function to obtain steady state concentrations, using the solution saved in world.
     GetConcentration = function(){
-      private$concentration <- ConcentrationModule$new(self)
+      private$concentration <- ConcentrationModule$new(self, private$solvername)
       private$concentration$GetConc()
 
     },
@@ -735,6 +736,7 @@ SBcore <- R6::R6Class("SBcore",
     SB4Ndata = NULL,
     States = NULL,
     Substance = NULL,
+    solvername = NULL, 
     SBkaas = NULL,
     ModuleList =  NULL,
     nodeList = NULL,

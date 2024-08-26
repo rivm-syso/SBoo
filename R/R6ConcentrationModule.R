@@ -7,60 +7,136 @@
 ConcentrationModule <- 
   R6::R6Class("ConcentrationModule",
       public = list(
-        initialize = function(TheCore, input){
+        initialize = function(TheCore, SolverFunction){
           #browser()
           private$MyCore <- TheCore
+          private$SolverName <- SolverFunction
+        
           
         },
         #'@description Leading function to obtain concentration from other world parameters
         #'@input all input is taken from the core
         GetConc = function(input){
           #browser()
-          solution <- private$MyCore$Solution()
-          states <- private$MyCore$states$asDataFrame
-          volume <- private$MyCore$fetchData("Volume")
-          fracw <- private$MyCore$fetchData("FRACw")
-          fraca <- private$MyCore$fetchData("FRACa")
-          rho <- private$MyCore$fetchData("rhoMatrix")
+          if (private$SolverName == "SB1Solve" | private$SolverName == "SBsteady") {
+            
+           
+            solution <- private$MyCore$Solution()
+            states <- private$MyCore$states$asDataFrame
+            volume <- private$MyCore$fetchData("Volume")
+            fracw <- private$MyCore$fetchData("FRACw")
+            fraca <- private$MyCore$fetchData("FRACa")
+            rho <- private$MyCore$fetchData("rhoMatrix")
+            
+            longsolution <- solution |>
+              left_join(states, by = "Abbr") |>
+              left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) |>
+              mutate(Concentration = EqMass / Volume)
+            conctobecor <- longsolution  |>
+              filter(SubCompart %in% c("marinesediment", "freshwatersediment", "lakesediment", 
+                                       "agriculturalsoil", "naturalsoil", "othersoil"))
+            conctobecor <- conctobecor |>
+              left_join(fracw, by = c("SubCompart", "Scale")) |>
+              left_join(fraca, by = c("SubCompart", "Scale")) |> 
+              left_join(rho, by = c("SubCompart")) |> 
+              mutate(rhowat = 998)
+            
+            conctobecor <- conctobecor |> 
+              mutate(
+                AdjustedConc = private$adjustconc(Concentration, FRACw, FRACa, rhoMatrix, rhowat)
+              )
+            
+            longsolution <- longsolution |>
+              left_join(
+                conctobecor |> select(Scale, SubCompart, Species, AdjustedConc), 
+                by = c("Scale", "SubCompart", "Species")
+              ) |>
+              mutate(
+                Concentration = coalesce(AdjustedConc, Concentration)
+              ) |>
+              select(-AdjustedConc)
+            
+            FinalConcentration <- longsolution |>
+              select(Abbr, Concentration)
           
-          longsolution <- solution |>
-            left_join(states, by = "Abbr") |>
-            left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) |>
-            mutate(Concentration = EqMass / Volume)
-          conctobecor <- longsolution  |>
-            filter(SubCompart %in% c("marinesediment", "freshwatersediment", "lakesediment", 
-                                     "agriculturalsoil", "naturalsoil", "othersoil"))
-          conctobecor <- conctobecor |>
-            left_join(fracw, by = c("SubCompart", "Scale")) |>
-            left_join(fraca, by = c("SubCompart", "Scale")) |> 
-            left_join(rho, by = c("SubCompart")) |> 
-            mutate(rhowat = 998)
-          
-          conctobecor <- conctobecor |> 
-            mutate(
-              AdjustedConc = private$adjustconc(Concentration, FRACw, FRACa, rhoMatrix, rhowat)
-            )
-          
-          longsolution <- longsolution |>
-            left_join(
-              conctobecor |> select(Scale, SubCompart, Species, AdjustedConc), 
-              by = c("Scale", "SubCompart", "Species")
-            ) |>
-            mutate(
-              Concentration = coalesce(AdjustedConc, Concentration)
-            ) |>
-            select(-AdjustedConc)
-          
-          FinalConcentration <- longsolution |>
-            select(Abbr, Concentration)
-        
-          return(FinalConcentration)
-        
+            return(FinalConcentration)
+          }
+          else if (private$SolverName == "SBsolve" | private$SolverName == "DynApproxSolve" | private$SolverName == "EventSolver") {
+            #browser()
+            solution <- private$MyCore$Solution()
+            solution <- solution |>
+              select(!starts_with("Emis"))
+            rownames(solution) <- solution$time
+            solution$time <- NULL 
+            #transpose the data
+            solution_t <- t(solution)
+            
+            #  Convert the transposed data back to a data frame
+            solution_t <- as.data.frame(solution_t)
+            
+            #  Set the column names to be the transposed 'time' values
+            colnames(solution_t) <- rownames(solution)
+            solution_t$Abbr <- rownames(solution_t)
+            #reorder
+            solution_t <- solution_t[, c(ncol(solution_t), 1:(ncol(solution_t)-1))]
+            
+            
+            states <- private$MyCore$states$asDataFrame
+            volume <- private$MyCore$fetchData("Volume")
+            
+            longsolution <- solution_t |>
+              left_join(states, by = "Abbr") |>
+              left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) 
+            
+            #divide only the numeric (time) columns by Volume
+            longsolution <- longsolution |> 
+              mutate(across(
+                .cols =matches(" ^\\d+$"),
+                .fns = ~ . / Volume
+              ))
+            fracw <- private$MyCore$fetchData("FRACw")
+            fraca <- private$MyCore$fetchData("FRACa")
+            rho <- private$MyCore$fetchData("rhoMatrix")
+            
+            conctobecor <- longsolution  |>
+              filter(SubCompart %in% c("marinesediment", "freshwatersediment", "lakesediment", 
+                                       "agriculturalsoil", "naturalsoil", "othersoil"))
+            conctobecor <- conctobecor |>
+              left_join(fracw, by = c("SubCompart", "Scale")) |>
+              left_join(fraca, by = c("SubCompart", "Scale")) |> 
+              left_join(rho, by = c("SubCompart")) |> 
+              mutate(rhowat = 998)
+            
+            conctobecor <- conctobecor |> 
+              mutate(across(
+                .cols = matches("^\\d+$"),  # Selects columns with numeric names
+                .fns = ~ private$adjustconc(., FRACw, FRACa, rhoMatrix, rhowat)
+              )) |>
+              select(!c("Scale", "SubCompart", "Species", "Volume", "FRACw", "FRACa", "rhoMatrix", "rhowat"))
+            common_cols <-setdiff(intersect(names(conctobecor), names(longsolution)), "Abbr")
+            
+            longsolution <- longsolution |>
+              left_join(conctobecor, by = "Abbr", suffix = c("", ".new")) 
+            
+            longsolution <- longsolution |>
+              mutate(across(all_of(common_cols), ~ coalesce(get(paste0(cur_column(), ".new")), .))) |>
+              select(-ends_with(".new"))
+              
+      
+            FinalConcentration <- longsolution |>
+              select(-Volume)
+            
+            return(FinalConcentration)
+          }
+          else { 
+            stop("Can not calculate concentration for this solver")
+          }
         }
       ),
         # concentrationcalc = function() 
       private = list(
         MyCore = NULL, 
+        SolverName = NULL,
         #'@description helper function to adjust concentration for soil and sediment 
         #'@param CompConc Concentration in each compartment [mass/volume]
         #'@param FRACw the fraction of water in the matrix
