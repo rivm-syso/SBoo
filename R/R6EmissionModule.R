@@ -6,18 +6,22 @@ EmissionModule <-
   R6::R6Class(
     "EmissionModule",
     public = list(
-      initialize = function(input, ...) {#Solver is reference to States
+      initialize = function(TheCore, emis, solvername, SB.K, ...) {#Solver is reference to States
         #browser()
-        MoreParams <- list(...)
-        #switch between option 1) read from csv 2) read from excel 
-                # 3) list of functions or 4) a data.frame 
         
-        emis <- MoreParams[[1]] # Get the emissions
-        SF <- MoreParams[[2]] # Get the solver function 
-        SB.K <- MoreParams[[3]] # Get the kaas 
+        private$SolverName <- solvername
+        
+        sn <- private$SolverName 
+        # MoreParams <- list(...)
+        # #switch between option 1) read from csv 2) read from excel 
+        #         # 3) list of functions or 4) a data.frame 
+        # 
+        # emis <- MoreParams[[1]] # Get the emissions
+        # SF <- MoreParams[[2]] # Get the solver function 
+        # SB.K <- MoreParams[[3]] # Get the kaas 
         
         # First check if approxfuns are used in solver
-        if("ApproxFun" %in% names(formals(SF))){
+        if(private$SolverName == "DynApproxSolve"){
           private$setEmissionFunction(emis, SB.K)
         } 
         
@@ -28,9 +32,9 @@ EmissionModule <-
         } 
         
         else if (class(emis) == "character") {
-          switch (tools::file_ext(input,
-            "csv" = private$readfromcsv(input, ...),
-            "xlsx" = private$readFromExcel(input, ...)
+          switch (tools::file_ext(TheCore,
+            "csv" = private$readfromcsv(TheCore, ...),
+            "xlsx" = private$readFromExcel(TheCore, ...)
           )) 
         }
 
@@ -62,6 +66,7 @@ EmissionModule <-
       UnitFactor = 1,
       Scenarios = NULL,
       Times = NULL,
+      SolverName = NULL,
       readFromClassicExcel = function(fn) {
         tryCatch(df <- openxlsx::read.xlsx(fn, sheet = "scenarios", startRow = 3),
                  error = function(e) NULL)

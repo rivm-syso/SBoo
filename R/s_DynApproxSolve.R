@@ -11,7 +11,7 @@
 #' @param nTIMES number of timesteps
 #' @param EmisAsPulse T is a pulse-type emission, false is not
 #' @return see: ode()
-DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100, ApproxFun = T) {
+DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100) {
   
   SB.K = ParentModule$SB.k
   SBNames = colnames(SB.K)
@@ -29,8 +29,6 @@ DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100, ApproxFun = T
   colnames(out)[1:length(SBNames)+1] <- SBNames
   colnames(out)[grep("signal",colnames(out))] <- paste("emis",SBNames,sep = "2")
   as.data.frame(out) 
-  
-  attr(out, "SolverType") <- "ApproxDynamic"
   
   return(out)
 
