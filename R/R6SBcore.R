@@ -163,16 +163,31 @@ SBcore <- R6::R6Class("SBcore",
         warning("No active solver")
         return(NULL)
       }
+      #browser()
+      # prepare the kaas
       private$solver$PrepKaasM()
-      # if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
-      #   stop("emissions should be a dataframe(like) with columns")
-      # if (!all(c("Abbr", "Emis") %in% names(emissions))) 
-      #   stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
-      private$solver$PrepemisV(emissions)
+      
+      SN <- private$solvername
+      
+      # prepare the emissions     
+      private$solver$PrepemisV(emissions, private$solvername)
+      
+      MoreParams <- list(...)
+      
+      if(!is.null(MoreParams)){
+        if(is.tibble(MoreParams[[1]])){
+          uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
+        }
+      }
+      
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug = needdebug, emissions, ...)
-      #private$UpdateDL(Solution)
-      #Solution = private$solver$solvetrial(...)
+      if(!is.null(MoreParams)){
+        if(exists("uncertaininput")){
+          Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
+        } else {
+          Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+        }
+      }
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
@@ -963,6 +978,9 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     DoPostponed = function() {
+      #browser()
+      #ppl <- private$l_postPoneList
+      
       if (!is.null(private$l_postPoneList)){
         for (postNames in do.call(c,private$l_postPoneList)){ #force order??
           CalcMod <- private$ModuleList[[postNames]]
