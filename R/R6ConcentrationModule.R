@@ -7,10 +7,10 @@
 ConcentrationModule <- 
   R6::R6Class("ConcentrationModule",
       public = list(
-        initialize = function(TheCore, SolverFunction){
+        initialize = function(TheCore, solvername){
           #browser()
           private$MyCore <- TheCore
-          private$SolverName <- SolverFunction
+          private$SolverName <- solvername
         
           
         },

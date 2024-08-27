@@ -167,14 +167,12 @@ SBcore <- R6::R6Class("SBcore",
       # prepare the kaas
       private$solver$PrepKaasM()
       
-      SN <- private$solvername
-      
       # prepare the emissions     
       private$solver$PrepemisV(emissions, private$solvername)
       
       MoreParams <- list(...)
       
-      if(!is.null(MoreParams)){
+      if(length(MoreParams > 0)){
         if(is.tibble(MoreParams[[1]])){
           uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
         }
@@ -211,10 +209,11 @@ SBcore <- R6::R6Class("SBcore",
     
     #'@description Save the last calculated masses in the core
     Solution = function(){
+      #browser()
       if (is.null(private$solver)) {
         stop("No active solver")
       }
-      private$solver$GetSolution()
+      private$solver$GetSolution(private$solvername)
     },
     
     #'@description Function to obtain steady state concentrations, using the solution saved in world.

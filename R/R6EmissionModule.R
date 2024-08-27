@@ -11,15 +11,6 @@ EmissionModule <-
         
         private$SolverName <- solvername
         
-        sn <- private$SolverName 
-        # MoreParams <- list(...)
-        # #switch between option 1) read from csv 2) read from excel 
-        #         # 3) list of functions or 4) a data.frame 
-        # 
-        # emis <- MoreParams[[1]] # Get the emissions
-        # SF <- MoreParams[[2]] # Get the solver function 
-        # SB.K <- MoreParams[[3]] # Get the kaas 
-        
         # First check if approxfuns are used in solver
         if(private$SolverName == "DynApproxSolve"){
           private$setEmissionFunction(emis, SB.K)

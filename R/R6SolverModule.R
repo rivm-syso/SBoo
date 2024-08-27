@@ -52,10 +52,11 @@ SolverModule <-
         }
       },
       
-      GetSolution = function() {
+      GetSolution = function(solvername) {
+        #browser()
         df <- as.data.frame(private$Solution)
         
-        if (private$ST == "SteadyState") {
+        if (solvername == "SB1Solve" | solvername == "SBsteady") {
           df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
           colnames(df) <- c("Abbr", "EqMass") 
           return(df) # Rename columns
