@@ -32,6 +32,7 @@ ConcentrationModule <-
               left_join(states, by = "Abbr") |>
               left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) |>
               mutate(Concentration = EqMass / Volume)
+            
             conctobecor <- longsolution  |>
               filter(SubCompart %in% c("marinesediment", "freshwatersediment", "lakesediment", 
                                        "agriculturalsoil", "naturalsoil", "othersoil"))
@@ -39,7 +40,7 @@ ConcentrationModule <-
               left_join(fracw, by = c("SubCompart", "Scale")) |>
               left_join(fraca, by = c("SubCompart", "Scale")) |> 
               left_join(rho, by = c("SubCompart")) |> 
-              mutate(rhowat = 998)
+              mutate(rhowat = 998) #TODO: use rho from rhoMatrix
             
             conctobecor <- conctobecor |> 
               mutate(
@@ -137,7 +138,8 @@ ConcentrationModule <-
       private = list(
         MyCore = NULL, 
         SolverName = NULL,
-        #'@description helper function to adjust concentration for soil and sediment 
+        #'@name Adjustconc
+        #'@description helper function to adjust concentration for soil and sediment. Returns kg/kg wet weight.
         #'@param CompConc Concentration in each compartment [mass/volume]
         #'@param FRACw the fraction of water in the matrix
         #'@param FRACa the fraction of air in the matrix 
