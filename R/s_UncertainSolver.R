@@ -7,15 +7,16 @@
 #' @return States (i) (=mass)
 #' @export
 UncertainSolver = function(ParentModule, tol=1e-30) { 
-  
+  browser()
   TheCore <- ParentModule$myCore
   sample_df <- ParentModule$UncertainInput 
+  uniqvNames <- unique(sample_df$varName)
   
   
   
   for (i in length(sample_df$data[1])){
     df <- sample_df |>
-      select(VarName, Scale, SubCompart)
+      select(varName, Scale, SubCompart)
     
     values <- first_values <- map(sample_df$data, ~ .x$value[i])
     

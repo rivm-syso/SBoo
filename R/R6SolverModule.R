@@ -172,7 +172,7 @@ SolverModule <-
       PrepUncertain = function(input) {
         #browser()
                 # Colnames that should be in the df
-        cn <- c("VarName", "Scale", "SubCompart", "data")
+        cn <- c("varName", "Scale", "SubCompart", "data")
         
         if(!all(cn %in% names(input))) {
           stop("Column name(s) incorrect. The tibble should contain columns with the following names: 'varname', 'scale', 'subcompart' and 'data'.")
