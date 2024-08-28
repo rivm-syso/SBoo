@@ -9,25 +9,34 @@
 UncertainSolver = function(ParentModule, tol=1e-30) { 
   
   TheCore <- ParentModule$myCore
+  sample_df <- ParentModule$UncertainInput 
+  
+  
+  
+  for (i in length(sample_df$data[1])){
+    df <- sample_df |>
+      select(VarName, Scale, SubCompart)
+    
+    values <- first_values <- map(sample_df$data, ~ .x$value[i])
+    
+    df <- df |>
+      mutate(Waarde = values)
+    
+    TheCore$mutateVars(df)
+    
+    #update core and solve
+    TheCore$UpdateDirty(uniqvNames)
+    ParentModule$PrepKaasM()
+    ParentModule$PrepemisV()
+  
+    SB.K = ParentModule$SB.k
+    vEmis = ParentModule$emissions
+  
+    solve(SB.K, -vEmis, tol = tol)
+  }
   
   
   
   
-  
-  TheCore$mutateVars(Updated)
-  
-  #update core and solve
-  TheCore$UpdateDirty(uniqvNames)
-  ParentModule$PrepKaasM()
-  ParentModule$PrepemisV()
-  
-  
-  
-  
-  
-  SB.K = ParentModule$SB.k
-  vEmis = ParentModule$emissions
-  
-  solve(SB.K, -vEmis, tol = tol)
   
 }

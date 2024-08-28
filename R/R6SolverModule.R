@@ -20,9 +20,10 @@ SolverModule <-
         if (needdebug){
           debugonce(private$Function)
         }
+        
         private$Solution <- do.call(private$Function, args = c(
-            list(ParentModule = self),
-            list(...)))
+          list(ParentModule = self),
+          list(...)))
         
         solvernames <- c("EventSolver", "DynApproxSolve", "SBsolve", "UncertainSolver", "vUncertain")
         if (private$SolverName %in% solvernames) {
@@ -171,7 +172,7 @@ SolverModule <-
       PrepUncertain = function(input) {
         #browser()
                 # Colnames that should be in the df
-        cn <- c("varname", "scale", "subcompart", "data")
+        cn <- c("VarName", "Scale", "SubCompart", "data")
         
         if(!all(cn %in% names(input))) {
           stop("Column name(s) incorrect. The tibble should contain columns with the following names: 'varname', 'scale', 'subcompart' and 'data'.")
@@ -186,6 +187,8 @@ SolverModule <-
         if(unique_rc != 1) {
           stop("Not all variables have the same number of samples.")
         }
+        
+        private$lUncertainInput <- input
       },
       
       #' @description basic ODE function for simplebox; the function for the ode-call; 
@@ -369,6 +372,11 @@ SolverModule <-
           stop("`$SB.k` is set by PrepKaasM", call. = FALSE)
         }
       },
+      
+      UncertainInput = function(value){
+        private$lUncertainInput
+      },
+      
       SBtime.tvars = function(value) { 
         if (missing(value)) {
           private$lSBtime.tvars
@@ -424,6 +432,7 @@ SolverModule <-
       lSBtime.tvars = NULL,
       lvnamesDistSD = NULL,
       Emission = NULL,
-      SolverName = NULL
+      SolverName = NULL,
+      lUncertainInput = NULL
     )
   )

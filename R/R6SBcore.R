@@ -159,6 +159,7 @@ SBcore <- R6::R6Class("SBcore",
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
     Solve = function(emissions, needdebug = F, ...){
+      #browser()
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
@@ -172,20 +173,23 @@ SBcore <- R6::R6Class("SBcore",
       
       MoreParams <- list(...)
       
-      if(length(MoreParams > 0)){
+      if(length(MoreParams) > 0){
         if(is.tibble(MoreParams[[1]])){
           uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
+          uncertaininput <- MoreParams[[1]]
         }
       }
       
+      Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+      
       # the solver does the actual work
-      if(!is.null(MoreParams)){
-        if(exists("uncertaininput")){
-          Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
-        } else {
-          Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
-        }
-      }
+      # if(!is.null(MoreParams)){
+      #   if(exists("uncertaininput")){
+      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
+      #   } else {
+      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+      #   }
+      # }
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
