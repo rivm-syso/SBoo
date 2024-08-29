@@ -49,6 +49,7 @@ SBcore <- R6::R6Class("SBcore",
     #' because it will be needed in sensitivity analyses etc.)
     PostponeVarProcess = function(VarFunctions = NULL, FlowFunctions = NULL, ProcesFunctions) {
       #test if all exist
+      #browser()
       for (modname in c(VarFunctions, FlowFunctions, ProcesFunctions)){
         TheModule <- self$moduleList[[modname]]
         if (is.null(TheModule)) {
@@ -159,20 +160,37 @@ SBcore <- R6::R6Class("SBcore",
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
     Solve = function(emissions, needdebug = F, ...){
+      #browser()
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
       }
+      #browser()
+      # prepare the kaas
       private$solver$PrepKaasM()
-      # if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
-      #   stop("emissions should be a dataframe(like) with columns")
-      # if (!all(c("Abbr", "Emis") %in% names(emissions))) 
-      #   stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
-      private$solver$PrepemisV(emissions)
+      
+      # prepare the emissions     
+      private$solver$PrepemisV(emissions, private$solvername)
+      
+      MoreParams <- list(...)
+      
+      if(length(MoreParams) > 0){
+        if(is.tibble(MoreParams[[1]])){
+          uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
+          uncertaininput <- MoreParams[[1]]
+        }
+      }
+      
+      Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+      
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug = needdebug, emissions, ...)
-      #private$UpdateDL(Solution)
-      #Solution = private$solver$solvetrial(...)
+      # if(!is.null(MoreParams)){
+      #   if(exists("uncertaininput")){
+      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
+      #   } else {
+      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+      #   }
+      # }
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
@@ -196,10 +214,11 @@ SBcore <- R6::R6Class("SBcore",
     
     #'@description Save the last calculated masses in the core
     Solution = function(){
+      #browser()
       if (is.null(private$solver)) {
         stop("No active solver")
       }
-      private$solver$GetSolution()
+      private$solver$GetSolution(private$solvername)
     },
     
     #'@description Function to obtain steady state concentrations, using the solution saved in world.
@@ -963,8 +982,13 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     DoPostponed = function() {
-      if (!is.null(private$l_postPoneList)){
-        for (postNames in do.call(c,private$l_postPoneList)){ #force order??
+      #browser()
+      ppl <- private$l_postPoneList
+      
+      validPostPoneList <- Filter(Negate(is.null), private$l_postPoneList)
+      
+      if (!is.null(validPostPoneList)){
+        for (postNames in validPostPoneList){ #force order??
           CalcMod <- private$ModuleList[[postNames]]
           if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             succes <- private$UpdateDL(postNames)

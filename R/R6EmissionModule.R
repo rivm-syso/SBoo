@@ -9,17 +9,23 @@ EmissionModule <-
       initialize = function(input, ...) {#Solver is reference to States
         #browser()
         MoreParams <- list(...)
+          
         #switch between option 1) read from csv 2) read from excel 
-                # 3) list of functions or 4) a data.frame 
-        
+        # 3) list of functions or 4) a data.frame 
+          
         emis <- MoreParams[[1]] # Get the emissions
-        SF <- MoreParams[[2]] # Get the solver function 
         SB.K <- MoreParams[[3]] # Get the kaas 
         
+        private$SolverName <- MoreParams[[2]]
+        
         # First check if approxfuns are used in solver
-        if("ApproxFun" %in% names(formals(SF))){
+        if(private$SolverName == "DynApproxSolve"){
           private$setEmissionFunction(emis, SB.K)
         } 
+        
+        else if(private$SolverName == "UncertainSolver"){
+            private$setUncertainSteadyDF(emis, SB.K)
+        }
         
         # else, check if the input is a data frame
         else if (class(emis) == "data.frame"){
@@ -62,6 +68,7 @@ EmissionModule <-
       UnitFactor = 1,
       Scenarios = NULL,
       Times = NULL,
+      SolverName = NULL,
       readFromClassicExcel = function(fn) {
         tryCatch(df <- openxlsx::read.xlsx(fn, sheet = "scenarios", startRow = 3),
                  error = function(e) NULL)
@@ -143,6 +150,22 @@ EmissionModule <-
         } else {
           stop("Expected a list of functions or dataframe with column 'Timed'")
         }
+      },
+      
+      setUncertainSteadyDF = function(emis_df, kaas) {
+        states <- colnames(kaas)
+        
+        if (!any(c("tbl_df", "data.frame") %in% class(emis_df))) {
+          stop("emission input type is not 'tibble'")  
+        } 
+        if(!all(c("Abbr", "Emis") %in% colnames(emis_df))){
+          stop("Column names are incorrect. Should contain 'Abbr' and 'Emis'.")
+        }
+        
+        if(!all(emis_df$Abbr %in% as.character(states))){
+          stop("Abbreviations are incorrect")
+        }
+        private$EmissionSource <- emis_df
       },
       
       setEmissionDataFrame = function(emis_df, kaas) {

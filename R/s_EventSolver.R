@@ -25,9 +25,7 @@ EventSolver = function(ParentModule, tmax = 1e10, nTIMES = 100) {
   
   colnames(out)[1:length(SBNames)+1] <- SBNames
   as.data.frame(out) 
-  
-  attr(out, "SolverType") <- "EventSolver"
-  
+
   return(out)
   
 }
