@@ -15,6 +15,8 @@ SolverModule <-
       execute = function(needdebug = F, emissions=NULL, solvername=NULL, ...){ 
         #browser()
         
+        MoreParams <- list(...)
+        
         private$SolverName <- solvername
 
         if (needdebug){
@@ -75,6 +77,7 @@ SolverModule <-
       #' @param kaas k's
       #' @return matrix with kaas; ready to go
       PrepKaasM = function (kaas = NULL) {
+        #browser()
         if (!is.null(private$Emissions)){
           SavedEmissions <- private$Emissions
           private$Emissions <- NULL
@@ -160,7 +163,7 @@ SolverModule <-
       #' @description sync emissions as relational table with states into vector 
       #' @param emissions 
       #' @return vector of functions(t) with emissions; ready to solve
-      PrepemisV = function (emissions = NULL, solvername, ...) { #for backward compatibly
+      PrepemisV = function (emissions = NULL, solvername = private$SolverName, ...) { #for backward compatibly
 
         private$Emission <- EmissionModule$new(self, emissions, solvername, private$SB.K, ...)
 
@@ -408,7 +411,7 @@ SolverModule <-
             return(structure(listree)) #remove formule attributes
           } 
         }
-        browser()
+        #browser()
         if (is.call(TheCall[1]) && TheCall[[1]] == "~") {
           hasTilde <- T
           lhs <- plusflat(TheCall[2])

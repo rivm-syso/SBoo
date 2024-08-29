@@ -49,6 +49,7 @@ SBcore <- R6::R6Class("SBcore",
     #' because it will be needed in sensitivity analyses etc.)
     PostponeVarProcess = function(VarFunctions = NULL, FlowFunctions = NULL, ProcesFunctions) {
       #test if all exist
+      #browser()
       for (modname in c(VarFunctions, FlowFunctions, ProcesFunctions)){
         TheModule <- self$moduleList[[modname]]
         if (is.null(TheModule)) {
@@ -982,10 +983,12 @@ SBcore <- R6::R6Class("SBcore",
     
     DoPostponed = function() {
       #browser()
-      #ppl <- private$l_postPoneList
+      ppl <- private$l_postPoneList
       
-      if (!is.null(private$l_postPoneList)){
-        for (postNames in do.call(c,private$l_postPoneList)){ #force order??
+      validPostPoneList <- Filter(Negate(is.null), private$l_postPoneList)
+      
+      if (!is.null(validPostPoneList)){
+        for (postNames in validPostPoneList){ #force order??
           CalcMod <- private$ModuleList[[postNames]]
           if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             succes <- private$UpdateDL(postNames)

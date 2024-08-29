@@ -6,15 +6,26 @@ EmissionModule <-
   R6::R6Class(
     "EmissionModule",
     public = list(
-      initialize = function(TheCore, emis, solvername, SB.K, ...) {#Solver is reference to States
+      initialize = function(input, ...) {#Solver is reference to States
         #browser()
+        MoreParams <- list(...)
+          
+        #switch between option 1) read from csv 2) read from excel 
+        # 3) list of functions or 4) a data.frame 
+          
+        emis <- MoreParams[[1]] # Get the emissions
+        SB.K <- MoreParams[[3]] # Get the kaas 
         
-        private$SolverName <- solvername
+        private$SolverName <- MoreParams[[2]]
         
         # First check if approxfuns are used in solver
         if(private$SolverName == "DynApproxSolve"){
           private$setEmissionFunction(emis, SB.K)
         } 
+        
+        else if(private$SolverName == "UncertainSolver"){
+            private$setUncertainSteadyDF(emis, SB.K)
+        }
         
         # else, check if the input is a data frame
         else if (class(emis) == "data.frame"){
@@ -23,9 +34,9 @@ EmissionModule <-
         } 
         
         else if (class(emis) == "character") {
-          switch (tools::file_ext(TheCore,
-            "csv" = private$readfromcsv(TheCore, ...),
-            "xlsx" = private$readFromExcel(TheCore, ...)
+          switch (tools::file_ext(input,
+            "csv" = private$readfromcsv(input, ...),
+            "xlsx" = private$readFromExcel(input, ...)
           )) 
         }
 
@@ -139,6 +150,24 @@ EmissionModule <-
         } else {
           stop("Expected a list of functions or dataframe with column 'Timed'")
         }
+      },
+      
+      setUncertainSteadyDF = function(emis_df, kaas) {
+        states <- colnames(kaas)
+        
+        if (!"tbl_df" %in% class(emis_df)){
+          stop("emission input type is not 'tibble'")  
+        } 
+        if(!all(c("Abbr", "Emis") %in% colnames(emis_df))){
+          stop("Column names are incorrect. Should contain 'Abbr' and 'Emis'.")
+        }
+        
+        
+          
+        if(!all(emis_df$Abbr %in% as.character(states))){
+          stop("Abbreviations are incorrect")
+        }
+        private$EmissionSource <- emis_df
       },
       
       setEmissionDataFrame = function(emis_df, kaas) {
