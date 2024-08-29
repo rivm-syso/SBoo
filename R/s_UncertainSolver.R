@@ -28,15 +28,33 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
   
   solution <- solution[-1,]
   
-  l <- length(sample_df$data[1])
+  vEmissions = ParentModule$emissions
   
-  vEmis = ParentModule$emissions
+  states = ParentModule$myCore$states$asDataFrame
   
-  for (i in 1:nrow(sample_df$data[[1]])){
+  SB.K = ParentModule$SB.k
+  RowNames <- rownames(SB.K)
+  states = states |>
+    filter(Abbr %in% RowNames)
+  
+  for (i in 1:nrow(sample_df$data[[1]])){ 
+    if(is.numeric(vEmissions$Emis)){
+      Emis_df <- vEmissions
+    } else if (inherits(vEmissions$Emis, "list")){
+      Abbr <- vEmissions$Abbr
+      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$value[i]))
+      Emis_df <- cbind(Abbr, Emis)
+    }
+    
+    vEmis <- rep(0.0, length.out = length(RowNames))
+    names(vEmis) <- states
+    vEmis[match(Emis_df$Abbr, RowNames)] <- Emis_df$Emis
+    names(vEmis) <- states
+    
     df <- sample_df |>
       select(varName, Scale, SubCompart)
     
-    values <- first_values <- map(sample_df$data, ~ .x$value[i])
+    values <- map(sample_df$data, ~ .x$value[i])
     
     df <- df |>
       mutate(Waarde = values)
@@ -45,15 +63,10 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
     
     #update core and solve
     TheCore$UpdateDirty(uniqvNames)
-    #ParentModule$PrepKaasM()
-    #preppedemis <- ParentModule$PrepemisV(emissions = ParentModule$emissions, solvername = "SBsteady") # Because we're solving for steady state, the emissions should be prepped accordingly
     
+    ParentModule$PrepKaasM()
+
     SB.K = ParentModule$SB.k
-    states = ParentModule$myCore$states$asDataFrame
-    
-    RowNames <- rownames(SB.K)
-    states = states |>
-      filter(Abbr %in% RowNames)
     
     sol <- solve(SB.K, -vEmis, tol=tol)
     

@@ -78,12 +78,12 @@ SolverModule <-
       #' @return matrix with kaas; ready to go
       PrepKaasM = function (kaas = NULL) {
         #browser()
-        if (!is.null(private$Emissions)){
-          SavedEmissions <- private$Emissions
-          private$Emissions <- NULL
-        } else { #know they should update
-          SavedEmissions <- NULL
-        }
+        # if (!is.null(private$Emissions)){
+        #   SavedEmissions <- private$Emissions
+        #   private$Emissions <- NULL
+        # } else { #know they should update
+        #   SavedEmissions <- NULL
+        # }
         
         if (is.null(kaas)) { #copy latest from core
           kaas <- self$myCore$kaas}
@@ -131,13 +131,13 @@ SolverModule <-
         }  
         
         #Reinstate(s) emissions
-        if (!is.null(SavedEmissions)){
-          OldEmissions <- data.frame(
-            Abbr = names(SavedEmissions)[!is.na(names(SavedEmissions))],
-            Emis = SavedEmissions[!is.na(names(SavedEmissions))]
-          ) 
-          self$PrepemisV(OldEmissions)
-        }
+        # if (!is.null(SavedEmissions)){
+        #   OldEmissions <- data.frame(
+        #     Abbr = names(SavedEmissions)[!is.na(names(SavedEmissions))],
+        #     Emis = SavedEmissions[!is.na(names(SavedEmissions))]
+        #   ) 
+        #   self$PrepemisV(OldEmissions)
+        # }
         
         nrowStates <- self$solveStates$nStates
         k2times <- as.integer(nrowStates*nrowStates)

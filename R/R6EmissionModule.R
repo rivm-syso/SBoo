@@ -155,15 +155,13 @@ EmissionModule <-
       setUncertainSteadyDF = function(emis_df, kaas) {
         states <- colnames(kaas)
         
-        if (!"tbl_df" %in% class(emis_df)){
+        if (!any(c("tbl_df", "data.frame") %in% class(emis_df))) {
           stop("emission input type is not 'tibble'")  
         } 
         if(!all(c("Abbr", "Emis") %in% colnames(emis_df))){
           stop("Column names are incorrect. Should contain 'Abbr' and 'Emis'.")
         }
         
-        
-          
         if(!all(emis_df$Abbr %in% as.character(states))){
           stop("Abbreviations are incorrect")
         }
