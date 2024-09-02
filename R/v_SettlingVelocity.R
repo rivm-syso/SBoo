@@ -28,7 +28,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
     Longest_side <- rad_species * 2
     Intermediate_side <- rad_species * 2
     Shortest_side <- rad_species * 2
-  }
+  } #TODO check application of this default assumption
   if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
@@ -37,6 +37,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   
   if(Matrix == "soil" | Matrix == "sediment") return(NA)
   if(SubCompartName == "cloudwater") return(NA)
+  
   if(DragMethod == "Original" & Matrix =="water"){
     sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
     if (sv <= 0){
