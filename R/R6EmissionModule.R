@@ -23,9 +23,13 @@ EmissionModule <-
           private$setEmissionFunction(emis, SB.K)
         } 
         
-        else if(private$SolverName == "UncertainSolver"){
+        else if(private$SolverName == "UncertainSolver" | private$SolverName == "UncertainDynamicSolver"){
             private$setUncertainSteadyDF(emis, SB.K)
         }
+        
+        # else if(private$SolverName == "UncertainDynamicSolver"){
+        #   private$setUncertainDynamicDF(emis, SB.K)
+        # }
         
         # else, check if the input is a data frame
         else if (class(emis) == "data.frame"){
