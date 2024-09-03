@@ -7,11 +7,14 @@
 #' @return States (i) (=mass)
 #' @export
 UncertainSolver = function(ParentModule, tol=1e-30) { 
-
-  TheCore <- ParentModule$myCore
+  
+  # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
+  
+  # Get unique variable names
   uniqvNames <- unique(sample_df$varName)
   
+  # Create an empty df to store the final solution in after the for loop
   solution <- sample_df |>
     select(varName, Scale, SubCompart) |>
     mutate(Waarde = 0) |>
@@ -25,11 +28,10 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
     pivot_wider(names_from = new_col_name, values_from = Waarde) |>
     mutate(RUN = 0) |>
     mutate(Mass = 0)
-  
   solution <- solution[-1,]
   
+  # Get the emissions and states
   vEmissions = ParentModule$emissions
-  
   states = ParentModule$myCore$states$asDataFrame
   
   SB.K = ParentModule$SB.k
@@ -59,10 +61,10 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
     df <- df |>
       mutate(Waarde = values)
     
-    TheCore$mutateVars(df)
+    ParentModule$myCore$mutateVars(df)
     
     #update core and solve
-    TheCore$UpdateDirty(uniqvNames)
+    ParentModule$myCore$UpdateDirty(uniqvNames)
     
     ParentModule$PrepKaasM()
 
