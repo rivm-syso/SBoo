@@ -27,10 +27,10 @@ SolverModule <-
           list(ParentModule = self),
           list(...)))
         
-        solvernames <- c("EventSolver", "DynApproxSolve", "SBsolve", "UncertainSolver", "vUncertain")
+        solvernames <- c("EventSolver", "DynApproxSolve", "SBsolve", "UncertainSolver", "vUncertain", "UncertainDynamicSolver")
         if (private$SolverName %in% solvernames) {
           Sol <- private$Solution
-          data.frame(Sol)
+          Sol
         } else {
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
@@ -164,6 +164,7 @@ SolverModule <-
       #' @param emissions 
       #' @return vector of functions(t) with emissions; ready to solve
       PrepemisV = function (emissions = NULL, solvername = private$SolverName, ...) { #for backward compatibly
+        #browser()
 
         private$Emission <- EmissionModule$new(self, emissions, solvername, private$SB.K, ...)
 
