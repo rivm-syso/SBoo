@@ -10,34 +10,51 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
   
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
-  
-  # Get unique variable names
-  uniqvNames <- unique(sample_df$varName)
+  if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
+    warning("adding RUN number to variable data")
+    sample_df <- sample_df |> 
+      mutate(nRUNs = map_int(data, nrow)) |> 
+      mutate(
+        data = map(data, ~ .x |> 
+                     mutate(RUN = 1:unique(nRUNs)))
+      ) |> select(-nRUNs)
+    
+  }
   
   # Create an empty df to store the final solution in after the for loop
-  solution <- sample_df |>
-    select(varName, Scale, SubCompart) |>
-    mutate(Waarde = 0) |>
-    mutate(
-      varName = ifelse(is.na(varName), "", varName),
-      Scale = ifelse(is.na(Scale), "", Scale),
-      SubCompart = ifelse(is.na(SubCompart), " ", SubCompart)
-    ) %>%
-    mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
-    select(new_col_name, Waarde) |>
-    pivot_wider(names_from = new_col_name, values_from = Waarde) |>
-    mutate(RUN = 0) |>
-    mutate(Mass = 0)
-  solution <- solution[-1,]
+  # solution <- sample_df |>
+  #   select(varName, Scale, SubCompart) |>
+  #   mutate(Waarde = 0) |>
+  #   mutate(
+  #     varName = ifelse(is.na(varName), "", varName),
+  #     Scale = ifelse(is.na(Scale), "", Scale),
+  #     SubCompart = ifelse(is.na(SubCompart), " ", SubCompart)
+  #   ) %>%
+  #   mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
+  #   select(new_col_name, Waarde) |>
+  #   pivot_wider(names_from = new_col_name, values_from = Waarde) |>
+  #   mutate(RUN = 0) |>
+  #   mutate(Mass = 0)
+  # solution <- solution[-1,]
   
   # Get the emissions and states
   vEmissions = ParentModule$emissions
-  states = ParentModule$myCore$states$asDataFrame
+  if(all(map_lgl(vEmissions$Emis, ~ "RUN" %in% names(.x))) == FALSE){
+    warning("adding RUN number to emission data")
+    vEmissions <- vEmissions |> 
+      mutate(nRUNs = map_int(Emis, nrow)) |> 
+      mutate(
+        Emis = map(Emis, ~ .x |> 
+                     mutate(RUN = 1:unique(nRUNs)))
+      ) |> select(-nRUNs)
+    
+  }
   
-  SB.K = ParentModule$SB.k
-  RowNames <- rownames(SB.K)
-  states = states |>
-    filter(Abbr %in% RowNames)
+  StateAbbr <- rownames(ParentModule$SB.k)
+  states <- ParentModule$myCore$states$asDataFrame |> 
+    filter(Abbr %in% StateAbbr)
+  
+  #TODO make a for-each loop with ncores as variable.
   
   for (i in 1:nrow(sample_df$data[[1]])){ 
     if(is.numeric(vEmissions$Emis)){
@@ -46,55 +63,59 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
       Abbr <- vEmissions$Abbr
       Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$value[i]))
       Emis_df <- cbind(Abbr, Emis)
-    }
+    } else stop("no vEmissions found")
     
-    vEmis <- rep(0.0, length.out = length(RowNames))
-    names(vEmis) <- states
-    vEmis[match(Emis_df$Abbr, RowNames)] <- Emis_df$Emis
-    names(vEmis) <- states
+    vEmis <- rep(0.0, length.out = length(StateAbbr))
+    names(vEmis) <- states$Abbr
+    vEmis[match(Emis_df$Abbr, StateAbbr)] <- Emis_df$Emis
+    # names(vEmis) <- states
     
-    df <- sample_df |>
-      select(varName, Scale, SubCompart)
+    VariableInputRun <- sample_df |> 
+      mutate(Waarde =  map_vec(sample_df$data, ~ .x$value[i])) |> 
+      select(-data)
+    #   select(varName, Scale, SubCompart)
+    # 
+    # values <- map_vec(sample_df$data, ~ .x$value[i])
+    # VariableInputRun <- VariableInputRun |>
+    #   mutate(Waarde = values)
     
-    values <- map(sample_df$data, ~ .x$value[i])
-    
-    df <- df |>
-      mutate(Waarde = values)
-    
-    ParentModule$myCore$mutateVars(df)
+    ParentModule$myCore$mutateVars(VariableInputRun)
     
     #update core and solve
-    ParentModule$myCore$UpdateDirty(uniqvNames)
-    
+    ParentModule$myCore$UpdateDirty(unique(VariableInputRun$varName))
     ParentModule$PrepKaasM()
-
-    SB.K = ParentModule$SB.k
     
-    sol <- solve(SB.K, -vEmis, tol=tol)
+    sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
+                 -vEmis, # Emission vector
+                 tol=tol) # solve tolerance
     
-    sol <- tibble(sol) |>
-      rename(EqMass = sol)
+    sol <- tibble(EqMass = sol, 
+                  Abbr = names(sol),
+                  RUN = i) |> 
+      full_join(states)
     
-    sol <- cbind(states, sol)
-    
-    df <- df |> 
-          mutate( 
-            varName = ifelse(is.na(varName), "", varName),
-            Scale = ifelse(is.na(Scale), "", Scale),
-            SubCompart = ifelse(is.na(SubCompart), "", SubCompart)
-          ) |>
-          mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
-          select(new_col_name, Waarde) |>
-          pivot_wider(names_from = new_col_name, values_from = Waarde) |>
-          mutate(RUN = i) 
-    
-    sol_tibble <- tibble(Mass = list(sol))
-    
-    # Combine result_df and sol_tibble
-    final_df <- bind_cols(df, sol_tibble)
-      
-    solution <- rbind(solution, final_df)
+    # df <- 
+    #   df |> 
+    #   mutate( 
+    #     varName = ifelse(is.na(varName), "", varName),
+    #     Scale = ifelse(is.na(Scale), "", Scale),
+    #     SubCompart = ifelse(is.na(SubCompart), "", SubCompart)
+    #   ) |>
+    #   mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
+    #   select(new_col_name, Waarde) |>
+    #   pivot_wider(names_from = new_col_name, values_from = Waarde) |>
+    #   mutate(RUN = i) 
+    # 
+    # sol_tibble <- tibble(Mass = list(sol))
+    # 
+    # # Combine result_df and sol_tibble
+    # final_df <- bind_cols(df, sol_tibble)
+    if(!exists("solution")) solution <- data.frame(NULL) # create on first loop
+    solution <- rbind(solution, sol)
   }
   
-  return(solution)
+  return(list(
+    Input_Variables = sample_df,
+    Input_Emission = vEmissions,
+    SteadyStateMass = solution))
 }
