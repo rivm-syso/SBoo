@@ -742,6 +742,28 @@ SBcore <- R6::R6Class("SBcore",
         warning("cannot set substanceProperties")
       }
     },
+    
+    #' @description Export everything in fetchdata
+    exportMetadata = function() {
+      #browser()
+      fetchdatanames <- self$fetchData()
+      
+      metadata_list <- list()
+      all_metadata <- for(i in fetchdatanames){
+        fd <- self$fetchData(i)
+        metadata_list <- append(metadata_list, fd)
+      }
+      
+      result_tibble <- tibble(
+        id = string_vector,   # Assign the strings as identifiers
+        data = my_list        # Nested tibbles
+      )
+      
+      kaas <- self$kaas
+      
+      metadata_list <- append(metadata_list, kaas)
+    },
+    
     filterStates = function(value){
       if (missing(value)) {
         return(private$filterstates)
@@ -1067,12 +1089,12 @@ SBcore <- R6::R6Class("SBcore",
             ) & ! MetaData$Tablenames %in% c("SubstanceCompartments"),]
             grepVars <- do.call(paste,
                                 as.list(allVars$AttributeNames[grep(varname, allVars$AttributeNames, ignore.case=TRUE)]))
-            warning (paste("Cannot find property", varname, "; but found", grepVars))
+            warning (paste("Cannot find property ", varname, "; but found", grepVars))
             return(NA)
           } 
           
           if(length(Attrn) > 1) {
-            stop (paste0(varname, "in multiple tables:", Attrn))
+            stop (paste0(varname, " in multiple tables: ", Attrn))
           } 
           subvec <- MetaData[MetaData$Tablenames == Attrn, "AttributeNames"]
           Dims <- c(The3D, paste("to.", The3D, sep = ""), "Substance") %in% subvec
