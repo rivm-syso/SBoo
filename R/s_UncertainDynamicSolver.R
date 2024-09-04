@@ -37,37 +37,54 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
   states = states |>
     filter(Abbr %in% RowNames)
   
+  # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
+  makeApprox <- function(vEmis){
+    vEmis <- 
+    vEmissions |> 
+    group_by(Abbr) |> 
+    summarise(n=n(),
+              EmisFun = list(
+                approxfun(
+                  data.frame(Timed = c(0,Timed), 
+                             Emis=c(0,Emis)),
+                  rule = 1:2)
+              )
+    )
+  funlist <- vEmis$EmisFun
+  names(funlist) <- vEmis$Abbr
+  } 
+  
   for (i in 1:nrow(sample_df$data[[1]])){ 
     # First check: if vEmissions is a single emission data frame
-    if(is.numeric(vEmissions$Emis)){                
-      vEmis <- 
-        vEmissions |> 
-        group_by(Abbr) |> 
-        summarise(n=n(),
-                  EmisFun = list(
-                    approxfun(
-                      data.frame(Timed = c(0,Timed), 
-                                 Emis=c(0,Emis)),
-                      rule = 1:2)
-                  )
-        )
-      funlist <- vEmis$EmisFun
-      names(funlist) <- vEmis$Abbr
+    if(is.numeric(vEmissions$Emis)){ 
+      
+      funlist <- makeApprox(vEmissions)
       
     # Second check: if vEmissions is a single set of functions  
     } else if (class(vEmissions) == "list") {
-      vEmis <- vEmissions
+      funlist <- vEmissions
       
     # Third check: if vEmissions is a nested tibble with emission data points  
     } else if (inherits(vEmissions$Emis, "list")){
-      Abbr <- vEmissions$Abbr
+      Abbr_Timed <- vEmissions |>
+        select(Abbr, Timed)
+      
+      #Abbr <- vEmissions$Abbr
       Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$value[i]))
-      Emis_df <- cbind(Abbr, Emis)
+      Emis_df <- cbind(Abbr_Timed, Emis)
+      
+      funlist <- makeApprox(Emis_df)
       
     # Fourth check: if vEmissions is a nested tibble with sets of functions
-    } #else if {
+    } else if ("Funlist" %in% colnames(vEmissions) && class(vEmissions$Funlist == "list")){
       
-    #}
+      subset_fun_tibble <- final_fun_tibble |>
+        mutate(EmisFun = map(Funlist, ~ .x[[1]])) |>
+        select(-Funlist)
+      
+      funlist <- subset_fun_tibble$EmisFun
+      names(funlist) <- subset_fun_tibble$Abbr
+    }
     
     # Prepare the data to use mutateVar
     df <- sample_df |>
@@ -131,7 +148,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     final_df <- bind_cols(df, sol_tibble)
     
     # Bind the new solution to the previous solutions in the solution matrix
-    solution <- bind_rows(solution, final_df)
+    solution <- rbind(solution, final_df)
   }
   
   return(solution)
