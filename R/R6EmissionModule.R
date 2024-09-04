@@ -175,7 +175,12 @@ EmissionModule <-
       setUncertainDynamicDF = function(emis_df, kaas) {
         #browser()
         states <- colnames(kaas)
-        if ("list" %in% class(emis_df)) {
+        if ("tbl_df" %in% class(emis_df) && "Funlist" %in% colnames(emis_df)) {
+          if(!all(as.character(emis_df$Abbr) %in% as.character(states))){
+            stop("Abbreviations are incorrect")
+          }
+          # Add check to test if Funlist column contains a list of functions
+        } else if ("list" %in% class(emis_df)) {
           # Check if the list was provided in the correct format
           if(!all(as.character(names(emis_df)) %in% as.character(states))){
             stop("Abbreviations are incorrect")
