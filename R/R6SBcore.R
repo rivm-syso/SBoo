@@ -746,22 +746,43 @@ SBcore <- R6::R6Class("SBcore",
     #' @description Export everything in fetchdata
     exportMetadata = function() {
       #browser()
-      fetchdatanames <- self$fetchData()
+      fetchdatanames <- unique(self$fetchData())
+
+      exclusions <- c("Dimension", "FlowName", "forWhich", "Unit", "VarName", "X", "DefaultFRACarea", "DefaultPH", "Kow_default", "MOLMASSAIR", "outdated", "outdated.1", "outdated.2", "Pvap25_default")
       
-      metadata_list <- list()
-      all_metadata <- for(i in fetchdatanames){
-        fd <- self$fetchData(i)
-        metadata_list <- append(metadata_list, fd)
-      }
-      
+      # Initialize an empty tibble to store the results
       result_tibble <- tibble(
-        id = string_vector,   # Assign the strings as identifiers
-        data = my_list        # Nested tibbles
+        varname = character(),  # Column for the variable name
+        data = list()           # Column for nested tibbles
       )
       
-      kaas <- self$kaas
+      # Iterate through the fetched data names
+      for(i in fetchdatanames) {
+        if (!i %in% exclusions) {
+          fd <- data.frame(self$fetchData(i))
+          
+          # Convert fd to a tibble if it's not already one
+          fd_tibble <- as_tibble(fd)
+          
+          # Add a new row to the result_tibble
+          result_tibble <- bind_rows(result_tibble, tibble(
+            varname = i,       # Column for the variable name
+            data = list(fd_tibble)  # Nest the tibble 
+          ))
+        }
+      }
       
-      metadata_list <- append(metadata_list, kaas)
+      result_tibble <- result_tibble |>
+        distinct()
+      
+      # Get the kaas and format it the same as the fetchdata items
+      kaas <- self$kaas
+      kaas_tibble <- as_tibble(kaas)
+      kaas_tibble <- tibble(varname = "kaas",
+                            data = list(kaas))
+      
+      # Bind the fetchdata tibble and the kaas tibble together
+      result_tibble <- rbind(result_tibble, kaas_tibble)
     },
     
     filterStates = function(value){
