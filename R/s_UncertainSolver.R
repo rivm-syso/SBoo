@@ -21,35 +21,21 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
     
   }
   
-  # Create an empty df to store the final solution in after the for loop
-  # solution <- sample_df |>
-  #   select(varName, Scale, SubCompart) |>
-  #   mutate(Waarde = 0) |>
-  #   mutate(
-  #     varName = ifelse(is.na(varName), "", varName),
-  #     Scale = ifelse(is.na(Scale), "", Scale),
-  #     SubCompart = ifelse(is.na(SubCompart), " ", SubCompart)
-  #   ) %>%
-  #   mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
-  #   select(new_col_name, Waarde) |>
-  #   pivot_wider(names_from = new_col_name, values_from = Waarde) |>
-  #   mutate(RUN = 0) |>
-  #   mutate(Mass = 0)
-  # solution <- solution[-1,]
-  
   # Get the emissions and states
   vEmissions = ParentModule$emissions
-  if(all(map_lgl(vEmissions$Emis, ~ "RUN" %in% names(.x))) == FALSE){
-    warning("adding RUN number to emission data")
-    vEmissions <- vEmissions |> 
-      mutate(nRUNs = map_int(Emis, nrow)) |> 
-      mutate(
-        Emis = map(Emis, ~ .x |> 
-                     mutate(RUN = 1:unique(nRUNs)))
-      ) |> select(-nRUNs)
-    
-  }
   
+  if(!is.numeric(vEmissions$Emis)){
+    if(all(map_lgl(vEmissions$Emis, ~ "RUN" %in% names(.x))) == FALSE){
+      warning("adding RUN number to emission data")
+      vEmissions <- vEmissions |> 
+        mutate(nRUNs = map_int(Emis, nrow)) |> 
+        mutate(
+          Emis = map(Emis, ~ .x |> 
+                       mutate(RUN = 1:unique(nRUNs)))
+        ) |> select(-nRUNs)
+    }
+  }
+    
   StateAbbr <- rownames(ParentModule$SB.k)
   states <- ParentModule$myCore$states$asDataFrame |> 
     filter(Abbr %in% StateAbbr)
@@ -68,17 +54,11 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
     vEmis <- rep(0.0, length.out = length(StateAbbr))
     names(vEmis) <- states$Abbr
     vEmis[match(Emis_df$Abbr, StateAbbr)] <- Emis_df$Emis
-    # names(vEmis) <- states
-    
+
     VariableInputRun <- sample_df |> 
       mutate(Waarde =  map_vec(sample_df$data, ~ .x$value[i])) |> 
       select(-data)
-    #   select(varName, Scale, SubCompart)
-    # 
-    # values <- map_vec(sample_df$data, ~ .x$value[i])
-    # VariableInputRun <- VariableInputRun |>
-    #   mutate(Waarde = values)
-    
+
     ParentModule$myCore$mutateVars(VariableInputRun)
     
     #update core and solve
@@ -94,22 +74,6 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
                   RUN = i) |> 
       full_join(states)
     
-    # df <- 
-    #   df |> 
-    #   mutate( 
-    #     varName = ifelse(is.na(varName), "", varName),
-    #     Scale = ifelse(is.na(Scale), "", Scale),
-    #     SubCompart = ifelse(is.na(SubCompart), "", SubCompart)
-    #   ) |>
-    #   mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
-    #   select(new_col_name, Waarde) |>
-    #   pivot_wider(names_from = new_col_name, values_from = Waarde) |>
-    #   mutate(RUN = i) 
-    # 
-    # sol_tibble <- tibble(Mass = list(sol))
-    # 
-    # # Combine result_df and sol_tibble
-    # final_df <- bind_cols(df, sol_tibble)
     if(!exists("solution")) solution <- data.frame(NULL) # create on first loop
     solution <- rbind(solution, sol)
   }
