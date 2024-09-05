@@ -255,6 +255,35 @@ SBcore <- R6::R6Class("SBcore",
       private$FetchData(varname)
     },
     
+    #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv
+    #' @param varname name of the variable
+    fetchDataUnits = function(varname="all"){
+      #browser()
+      fd <- private$FetchData(varname)
+      
+      if(varname != "all"){
+        unitTable <- private$SB4Ndata[["Units"]]
+        if(varname %in% unitTable$VarName){
+          
+          # Check if 'fd' is a data.frame or an atomic vector
+          if (is.data.frame(fd)) {
+            unit <- unitTable |> filter(VarName == varname)
+            unit <- unit$Unit
+            fd <- fd |> mutate(Unit = unit)
+            
+          } else if (is.atomic(fd) && length(fd) == 1) {
+            # If fd is an atomic vector (e.g., a named number), attach unit as attribute
+            unit <- unitTable |> filter(VarName == varname)
+            unit <- unit$Unit
+            
+            # Add the unit attribute to the vector
+            attr(fd, "unit") <- unit
+          }
+        }
+      }
+      return(fd)
+    },
+    
     #' @description Pseudo-inherit data; for instance from compartment to subcompartments.
     #' Not needed in normal use.
     #' @param fromData the name of the variable before copying
@@ -759,7 +788,8 @@ SBcore <- R6::R6Class("SBcore",
       # Iterate through the fetched data names
       for(i in fetchdatanames) {
         if (!i %in% exclusions) {
-          fd <- data.frame(self$fetchData(i))
+          
+          fd <- data.frame(self$fetchDataUnits(i))
           
           # Convert fd to a tibble if it's not already one
           fd_tibble <- as_tibble(fd)
@@ -1121,6 +1151,8 @@ SBcore <- R6::R6Class("SBcore",
           Dims <- c(The3D, paste("to.", The3D, sep = ""), "Substance") %in% subvec
           names(Dims)[Dims] <- c(The3D, paste("to.", The3D, sep = ""), "Substance")[Dims]
           DimsVarCols <- c(names(Dims)[Dims], varname)
+          
+          #browser()
           
           #Check if unit should be converted to SI
           unitTable <- private$SB4Ndata[["Units"]]
