@@ -78,6 +78,17 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
     solution <- rbind(solution, sol)
   }
   
+  units <- World$fetchData("Units") |>
+    select(VarName, Unit)
+  
+  sample_df <- left_join(sample_df, units, by = c("varName" = "VarName"))
+  
+  vEmissions <- vEmissions |>
+    mutate(Unit = "kg.s-1")
+  
+  solution <- solution |>
+    mutate(Unit = "kg")
+  
   return(list(
     Input_Variables = sample_df,
     Input_Emission = vEmissions,
