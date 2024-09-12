@@ -175,7 +175,7 @@ SBcore <- R6::R6Class("SBcore",
       MoreParams <- list(...)
       
       if(length(MoreParams) > 0){
-        if(is.tibble(MoreParams[[1]])){
+        if(is_tibble(MoreParams[[1]])){
           uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
           uncertaininput <- MoreParams[[1]]
         }
