@@ -16,7 +16,7 @@ ConcentrationModule <-
         #'@description Leading function to obtain concentration from other world parameters
         #'@input all input is taken from the core
         GetConc = function(input){
-          browser()
+          #browser()
           if (private$SolverName == "SB1Solve" | private$SolverName == "SBsteady") {
            
             solution <- private$MyCore$Solution()
@@ -204,22 +204,6 @@ ConcentrationModule <-
             
             solution <- private$MyCore$Solution()$DynamicMass |>
               select(!starts_with("emis"))
-            rownames(solution) <- solution$time
-            solution$time <- NULL 
-            
-            #transpose the data
-            solution_t <- t(solution)
-            
-            #  Convert the transposed data back to a data frame
-            solution_t <- as.data.frame(solution_t)
-            
-            #  Set the column names to be the transposed 'time' values
-            colnames(solution_t) <- rownames(solution)
-            solution_t$Abbr <- rownames(solution_t)
-            #reorder
-            solution_t <- solution_t[, c(ncol(solution_t), 1:(ncol(solution_t)-1))]
-            
-            inputvars <- private$MyCore$Solution()$Input_Variables
             
             # TO DO: What if one of the variables below is uncertain?? 
             states <- private$MyCore$states$asDataFrame
@@ -227,56 +211,107 @@ ConcentrationModule <-
             fracw <- private$MyCore$fetchData("FRACw")
             fraca <- private$MyCore$fetchData("FRACa")
             rho <- private$MyCore$fetchData("rhoMatrix")
-  
-            states <- private$MyCore$states$asDataFrame
 
-            longsolution <- solution_t |>
-              left_join(states, by = "Abbr") |>
-              left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) 
+            compnames <- colnames(solution)
+            compnames <- compnames[compnames %in% states$Abbr]
             
-            #divide only the numeric (time) columns by Volume
-            longsolution <- longsolution |> 
-              mutate(across(
-                .cols =matches(" ^\\d+$"),
-                .fns = ~ . / Volume
-              ))
+            varvalues <- states |>
+              left_join(volume, by = c("Scale", "SubCompart")) |>
+              left_join(fracw, by = c("Scale", "SubCompart")) |>
+              left_join(fraca, by = c("Scale", "SubCompart")) |>
+              left_join(rho, by = "SubCompart") |>
+              select(!c(Scale, SubCompart, Species)) |>
+              filter(Abbr %in% compnames) |>
+              mutate(rhowat  = 998)           # Add the density of water, needed later
+              
+            varvalues_t <- t(varvalues)
+            varvalues_t <- data.frame(varvalues_t)
+            
+            colnames(varvalues_t) <- varvalues$Abbr
+            
+            varvalues_t <- varvalues_t[-1, ]
+            varvalues_t[] <- lapply(varvalues_t, as.numeric)
+            
+            nruns_sol <- nrow(solution)
+            nrow_var <- nrow(varvalues_t)
+            
+            solution <- full_join(solution, varvalues_t, by = colnames(varvalues_t))
+            
+            rownames(solution)[(nruns_sol+1):(nruns_sol+nrow_var)] <- rownames(varvalues_t)
+            
+            inputvars <- private$MyCore$Solution()$Input_Variables
+            
+            # Make a list of compnames that should be corrected later (all sediment and soil compartments)
+            comptobecor <- grep("^s", compnames, value = TRUE)
+            
+            comptokeep <- grep("^s", compnames, value = TRUE, invert = TRUE)
+            
+            concentration_df <- solution |>
+              mutate(time = as.character(time)) |>
+              mutate(RUN = as.character(RUN))
 
-            conctobecor <- longsolution  |>
-              filter(SubCompart %in% c("marinesediment", "freshwatersediment", "lakesediment", 
-                                       "agriculturalsoil", "naturalsoil", "othersoil"))
-            conctobecor <- conctobecor |>
-              left_join(fracw, by = c("SubCompart", "Scale")) |>
-              left_join(fraca, by = c("SubCompart", "Scale")) |> 
-              left_join(rho, by = c("SubCompart")) |> 
-              mutate(rhowat = 998)
+            numeric_cols <- concentration_df |>
+              select(all_of(compnames))
             
-            conctobecor <- conctobecor |> 
-              mutate(across(
-                .cols = matches("^\\d+$"),  # Selects columns with numeric names
-                .fns = ~ private$adjustconc(., FRACw, FRACa, rhoMatrix, rhowat)
+            other_cols <- concentration_df |>
+              select(-all_of(compnames))
+            
+            volume_values <- as.numeric(numeric_cols["Volume", ])
+            
+            concentrations <- apply(numeric_cols[1:nruns_sol, ], 2, function(column) {
+              (column / volume_values) *1000
+            }) 
+            
+            #concentration_df[1:nruns_sol, ] <- concentrations
+            concentrations <- data.frame(concentrations) 
+            
+            concentrations <- full_join(concentrations, varvalues_t, by = colnames(varvalues_t))
+            concentrations <- cbind(concentrations, other_cols)
+            
+            conctobecor <- concentrations |>
+              select(all_of(comptobecor))
+            
+            # Save the compartments that have the right concentrations already
+            conctokeep <- concentrations |>
+              select(time, RUN, all_of(comptokeep)) 
+            
+            # Calculate the concentrations for the compartments that need correcting
+            FRACw <- conctobecor["FRACw", ]
+            FRACa <- conctobecor["FRACa", ]
+            rhoMatrix <- conctobecor["rhoMatrix", ]
+            rhowat <- conctobecor["rhowat", ]
+            
+            # Apply the adjustment using mapply to pass multiple arguments to the function
+            conctobecor_adj <- as.data.frame(mapply(function(column, FRACw, FRACa, rhoMatrix, rhowat) {
+              private$adjustconc(column, FRACw, FRACa, rhoMatrix, rhowat)
+            }, conctobecor[1:nruns_sol, ], FRACw, FRACa, rhoMatrix, rhowat))
+            
+            Units <- states |>
+              mutate(Unit = case_when(
+                startsWith(Abbr, "s") ~ "g/kg dw",
+                startsWith(Abbr, "w") ~ "g/L",
+                startsWith(Abbr, "a") ~ "g/m^3",
+                TRUE ~ NA
               )) |>
-              select(!c("Scale", "SubCompart", "Species", "Volume", "FRACw", "FRACa", "rhoMatrix", "rhowat"))
-            common_cols <-setdiff(intersect(names(conctobecor), names(longsolution)), "Abbr")
+              select(Abbr, Unit) |>
+              filter(Abbr %in% compnames)
+              
+            Units <- t(Units)
+            Units <- data.frame(Units, stringsAsFactors = FALSE)
             
-            longsolution <- longsolution |>
-              left_join(conctobecor, by = "Abbr", suffix = c("", ".new")) 
+            colnames(Units) <- Units[1, ]
+            Units <- Units[-1, ]
+            colnames(Units) <- make.names(colnames(Units), unique = TRUE)
+
+            conctokeep <- conctokeep |>
+              slice(1:(n()-nrow_var))
             
-            longsolution <- longsolution |>
-              mutate(across(all_of(common_cols), ~ coalesce(get(paste0(cur_column(), ".new")), .))) |>
-              select(-ends_with(".new"))
+            final_concentrations <- cbind(conctokeep, conctobecor_adj)
             
-            subcompart <- c("agriculturalsoil", "naturalsoil", "othersoil", "freshwatersediment", "marinesediment",  "lakesediment", "air", "deepocean", "lake" , "river", "sea", "cloudwater")
-            units <- c("g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw",
-                       "g/m^3", "g/L", "g/L", "g/L", "g/L", "g/L", "g/L")
-            
-            # Combine into a named list
-            subcompart_units <- setNames(units, subcompart)
-            
-            FinalConcentration <- longsolution |>
-              select(-Volume) |>
-              mutate(across(where(is.numeric), ~ .x * 1000)) |>
-              mutate(Unit = subcompart_units[SubCompart])
-            
+            return(list(
+              Concentrations = final_concentrations,
+              Units = Units))
+              
           } else { 
             stop("Can not calculate concentration for this solver")
           }
