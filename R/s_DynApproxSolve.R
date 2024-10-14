@@ -1,6 +1,6 @@
 #' @title DynApproxSolve
 #' @name DynApproxSolve
-#' @description This soolver solves system of States for 1rst order k(i,j) and 
+#' @description This solver solves system of States for 1rst order k(i,j) and 
 #' emissions dynamically. 
 #' Input is a data frame with three columns (Abbr, Emis and Timed) or a list of 
 #' approx functions describing the emissions over time for each state. If a data frame is 

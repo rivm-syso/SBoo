@@ -2,9 +2,10 @@
 #' @name UncertainDynamicSolver
 #' @description solver to analyze sensitivity of parameters
 #' @param ParentModule SBCore
-#' @param vnamesDistSD  dataframe with columns vnames, distNames (see lhs package for possible distributions), secondPar
-#' @param n samplesize 
-#' @return States (i) (=mass)
+#' @param tmax time [s] for the simulation period
+#' @param sample_df nested tibble containing the sample values for every run and variable
+#' @param nTIMES number of timesteps
+#' @return Nested list containing the input variables, input emissions, output masses and states
 #' @export
 UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100) { 
   

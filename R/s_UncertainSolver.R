@@ -2,11 +2,11 @@
 #' @name UncertainSolver
 #' @description solver to analyze sensitivity of parameters
 #' @param ParentModule SBCore
-#' @param vnamesDistSD  dataframe with columns vnames, distNames (see lhs package for possible distributions), secondPar
+#' @param sample_df nested tibble containing the sample values for every run and variable
 #' @param n samplesize 
 #' @return States (i) (=mass)
 #' @export
-UncertainSolver = function(ParentModule, tol=1e-30) { 
+UncertainSolver = function(ParentModule, tol=1e-30, sample_df) { 
   
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
@@ -18,7 +18,6 @@ UncertainSolver = function(ParentModule, tol=1e-30) {
         data = map(data, ~ .x |> 
                      mutate(RUN = 1:unique(nRUNs)))
       ) |> select(-nRUNs)
-    
   }
   
   # Get the emissions and states
