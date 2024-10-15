@@ -21,13 +21,25 @@ ConcentrationModule <-
            
             solution <- private$MyCore$Solution()
             states <- private$MyCore$states$asDataFrame
-            volume <- private$MyCore$fetchData("Volume")
+            
+            # Add air and cloudwater volume together
+            volume <- private$MyCore$fetchData("Volume") |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              group_by(Scale, SubCompart) |>
+              summarise(Volume = sum(Volume)) |>
+              ungroup()
             fracw <- private$MyCore$fetchData("FRACw")
             fraca <- private$MyCore$fetchData("FRACa")
             rho <- private$MyCore$fetchData("rhoMatrix")
             
+            # sum mass in air and cloudwater compartments and calculate the concentration
             longsolution <- solution |>
               left_join(states, by = "Abbr") |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              mutate(Abbr = str_replace_all(Abbr, "cw", "a")) |>
+              group_by(Scale, SubCompart, Species, Abbr) |>
+              summarise(EqMass = sum(EqMass)) |>
+              ungroup() |>
               left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) |>
               mutate(Concentration = EqMass / Volume)
             
@@ -55,9 +67,9 @@ ConcentrationModule <-
               ) |>
               select(-AdjustedConc)
             
-            subcompart <- c("agriculturalsoil", "naturalsoil", "othersoil", "freshwatersediment", "marinesediment",  "lakesediment", "air", "deepocean", "lake" , "river", "sea", "cloudwater")
+            subcompart <- c("agriculturalsoil", "naturalsoil", "othersoil", "freshwatersediment", "marinesediment",  "lakesediment", "air", "deepocean", "lake" , "river", "sea")
             units <- c("g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw",
-                       "g/m^3", "g/L", "g/L", "g/L", "g/L", "g/L", "g/L")
+                       "g/m^3", "g/L", "g/L", "g/L", "g/L", "g/L")
             
             # Combine into a named list
             subcompart_units <- setNames(units, subcompart)
@@ -88,13 +100,23 @@ ConcentrationModule <-
             #reorder
             solution_t <- solution_t[, c(ncol(solution_t), 1:(ncol(solution_t)-1))]
             
-            
             states <- private$MyCore$states$asDataFrame
-            volume <- private$MyCore$fetchData("Volume")
+            volume <- private$MyCore$fetchData("Volume") |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              group_by(Scale, SubCompart) |>
+              summarise(Volume = sum(Volume)) |>
+              ungroup()
             
             longsolution <- solution_t |>
-              left_join(states, by = "Abbr") |>
-              left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) 
+              left_join(states, by = "Abbr") 
+            
+            longsolution <- longsolution |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              mutate(Abbr = str_replace_all(Abbr, "cw", "a")) |>
+              group_by(Scale, SubCompart, Species, Abbr) |>
+              summarise(across(where(~ is.numeric(.x)), sum, na.rm = TRUE)) |>
+              ungroup() |>
+              left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale"))
             
             #divide only the numeric (time) columns by Volume
             longsolution <- longsolution |> 
@@ -130,9 +152,9 @@ ConcentrationModule <-
               mutate(across(all_of(common_cols), ~ coalesce(get(paste0(cur_column(), ".new")), .))) |>
               select(-ends_with(".new"))
             
-            subcompart <- c("agriculturalsoil", "naturalsoil", "othersoil", "freshwatersediment", "marinesediment",  "lakesediment", "air", "deepocean", "lake" , "river", "sea", "cloudwater")
+            subcompart <- c("agriculturalsoil", "naturalsoil", "othersoil", "freshwatersediment", "marinesediment",  "lakesediment", "air", "deepocean", "lake" , "river", "sea")
             units <- c("g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw", "g/kg dw",
-                       "g/m^3", "g/L", "g/L", "g/L", "g/L", "g/L", "g/L")
+                       "g/m^3", "g/L", "g/L", "g/L", "g/L", "g/L")
             
             # Combine into a named list
             subcompart_units <- setNames(units, subcompart)
@@ -152,12 +174,21 @@ ConcentrationModule <-
             inputvars <- private$MyCore$Solution()$Input_Variables
             
             states <- private$MyCore$states$asDataFrame
-            volume <- private$MyCore$fetchData("Volume")
+            volume <- private$MyCore$fetchData("Volume") |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              group_by(Scale, SubCompart) |>
+              summarise(Volume = sum(Volume)) |>
+              ungroup()
             fracw <- private$MyCore$fetchData("FRACw")
             fraca <- private$MyCore$fetchData("FRACa")
             rho <- private$MyCore$fetchData("rhoMatrix")
             
             longsolution <- solution |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              mutate(Abbr = str_replace_all(Abbr, "cw", "a")) |>
+              group_by(RUN, Scale, SubCompart, Species, Unit, Abbr) |>
+              summarise(EqMass = sum(EqMass)) |>
+              ungroup() |>
               left_join(private$MyCore$fetchData("Volume"), by = c("SubCompart", "Scale")) |>
               mutate(Concentration = EqMass / Volume)
             
@@ -200,14 +231,35 @@ ConcentrationModule <-
             return(FinalConcentration)
           } else if (private$SolverName == "UncertainDynamicSolver") {
             
-            # TO DO: Adjust this code for the df that includes RUN, most is copied from normal dynamic solver concentrations above. 
-            
             solution <- private$MyCore$Solution()$DynamicMass |>
               select(!starts_with("emis"))
             
+            # sum the cw values with the a values in the same scale/species
+            cw_cols <- grep("^cw", colnames(solution), value = TRUE)
+            
+            # Loop through each "cw" column
+            for (cw_col in cw_cols) {
+              
+              # Extract the suffix after "cw"
+              suffix <- sub("^cw", "", cw_col)
+              
+              # Construct the corresponding "a" column name
+              a_col <- paste0("a", suffix)
+              
+              # Check if the "a" column exists
+              if (a_col %in% colnames(solution)) {
+                # Add the "cw" column values to the "a" column
+                solution[[a_col]] <- solution[[a_col]] + solution[[cw_col]]
+              }
+            }
+            
             # TO DO: What if one of the variables below is uncertain?? 
             states <- private$MyCore$states$asDataFrame
-            volume <- private$MyCore$fetchData("Volume")
+            volume <- private$MyCore$fetchData("Volume") |>
+              mutate(SubCompart = ifelse(SubCompart == "cloudwater", "air", SubCompart)) |>
+              group_by(Scale, SubCompart) |>
+              summarise(Volume = sum(Volume)) |>
+              ungroup()
             fracw <- private$MyCore$fetchData("FRACw")
             fraca <- private$MyCore$fetchData("FRACa")
             rho <- private$MyCore$fetchData("rhoMatrix")
