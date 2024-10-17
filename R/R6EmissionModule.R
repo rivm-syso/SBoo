@@ -226,7 +226,7 @@ EmissionModule <-
             #steady state
             vEmis <- rep(0.0, length.out = length(states))
             names(vEmis) <- states
-            vEmis[match(emissions$Abbr, states)] <- emissions$Emis
+            vEmis[match(emis_df$Abbr, states)] <- emis_df$Emis
             private$EmissionSource <- vEmis
             names(private$EmissionSource) <- states
             
