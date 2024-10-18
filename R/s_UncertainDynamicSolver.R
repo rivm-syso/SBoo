@@ -2,43 +2,48 @@
 #' @name UncertainDynamicSolver
 #' @description solver to analyze sensitivity of parameters
 #' @param ParentModule SBCore
-#' @param vnamesDistSD  dataframe with columns vnames, distNames (see lhs package for possible distributions), secondPar
-#' @param n samplesize 
-#' @return States (i) (=mass)
+#' @param tmax time [s] for the simulation period
+#' @param sample_df nested tibble containing the sample values for every run and variable
+#' @param nTIMES number of timesteps
+#' @return Nested list containing the input variables, input emissions, output masses and states
 #' @export
 UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100) { 
   
+  # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
+  if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
+    warning("adding RUN number to variable data")
+    sample_df <- sample_df |> 
+      mutate(nRUNs = map_int(data, nrow)) |> 
+      mutate(
+        data = map(data, ~ .x |> 
+                     mutate(RUN = 1:unique(nRUNs)))
+      ) |> select(-nRUNs)
+  }
+  
   uniqvNames <- unique(sample_df$varName)
- 
-  # Create an empty tibble to bind the solutions to in the for loop
-  solution <- sample_df |>
-    select(varName, Scale, SubCompart) |>
-    mutate(Waarde = 0) |>
-    mutate(
-      varName = ifelse(is.na(varName), "", varName),
-      Scale = ifelse(is.na(Scale), "", Scale),
-      SubCompart = ifelse(is.na(SubCompart), " ", SubCompart)
-    ) %>%
-    mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
-    select(new_col_name, Waarde) |>
-    pivot_wider(names_from = new_col_name, values_from = Waarde) |>
-    mutate(RUN = 0) |>
-    mutate(Mass = 0)
   
-  solution <- solution[-1,]
-  
+  # Get the emissions
   vEmissions = ParentModule$emissions
-  states = ParentModule$myCore$states$asDataFrame
+  if(!is.numeric(vEmissions$Emis)){
+    if(all(map_lgl(vEmissions$Emis, ~ "RUN" %in% names(.x))) == FALSE){
+      warning("adding RUN number to emission data")
+      vEmissions <- vEmissions |> 
+        mutate(nRUNs = map_int(Emis, nrow)) |> 
+        mutate(
+          Emis = map(Emis, ~ .x |> 
+                       mutate(RUN = 1:unique(nRUNs)))
+        ) |> select(-nRUNs)
+    }
+  }
   
-  # Filter the states to only contain the ones that are in the colnames of SB.K
-  SB.K = ParentModule$SB.k
-  RowNames <- rownames(SB.K)
-  states = states |>
-    filter(Abbr %in% RowNames)
+  # Get the states
+  StateAbbr <- rownames(ParentModule$SB.k)
+  states <- ParentModule$myCore$states$asDataFrame |> 
+    filter(Abbr %in% StateAbbr)
   
   # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
-  makeApprox <- function(vEmis){
+  makeApprox <- function(vEmissions){
     vEmis <- 
     vEmissions |> 
     group_by(Abbr) |> 
@@ -52,6 +57,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     )
   funlist <- vEmis$EmisFun
   names(funlist) <- vEmis$Abbr
+  return(funlist)
   } 
   
   for (i in 1:nrow(sample_df$data[[1]])){ 
@@ -128,28 +134,29 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     colnames(sol)[1:length(SBNames)+1] <- SBNames
     colnames(sol)[grep("signal",colnames(sol))] <- paste("emis",SBNames,sep = "2")
     
-    # Make a tibble in the same format as the 'Solution' tibble
-    df <- df |> 
-      mutate( 
-        varName = ifelse(is.na(varName), "", varName),
-        Scale = ifelse(is.na(Scale), "", Scale),
-        SubCompart = ifelse(is.na(SubCompart), "", SubCompart)
-      ) |>
-      mutate(new_col_name = str_c(varName, Scale, SubCompart, sep = "_")) |> 
-      select(new_col_name, Waarde) |>
-      pivot_wider(names_from = new_col_name, values_from = Waarde) |>
-      mutate(RUN = i) 
+    sol <- data.frame(sol)
+    sol$RUN <- i
     
-    # Make a tibble from the solved matrix and nest it in a column names Mass
-    sol <- tibble(sol) 
-    sol_tibble <- tibble(Mass = list(sol))
-    
-    # Combine result_df and sol_tibble
-    final_df <- bind_cols(df, sol_tibble)
-    
-    # Bind the new solution to the previous solutions in the solution matrix
-    solution <- rbind(solution, final_df)
+    if(!exists("solution")) solution <- data.frame(NULL) # create on first loop
+    solution <- rbind(solution, sol)
   }
   
-  return(solution)
+  units <- World$fetchData("Units") |>
+    select(VarName, Unit)
+  
+  sample_df <- left_join(sample_df, units, by = c("varName" = "VarName"))
+  
+  if (class(vEmissions) == "data.frame") {
+    vEmissions <- vEmissions |>
+    mutate(Unit = "kg.s-1")
+  }
+  
+  solution <- solution |>
+    mutate(Unit = "kg")
+  
+  return(list(
+    Input_Variables = sample_df,
+    Input_Emission = vEmissions,
+    DynamicMass = solution,
+    States = states))
 }

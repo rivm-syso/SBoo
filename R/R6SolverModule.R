@@ -57,12 +57,16 @@ SolverModule <-
       
       GetSolution = function(solvername) {
         #browser()
-        df <- as.data.frame(private$Solution)
-        
         if (solvername == "SB1Solve" | solvername == "SBsteady") {
+          df <- as.data.frame(private$Solution)
           df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
           colnames(df) <- c("Abbr", "EqMass") 
-          return(df) # Rename columns
+        } else if(solvername == "UncertainSolver") {
+          df <- private$Solution
+        } else if(solvername == "UncertainDynamicSolver") {
+          df <- private$Solution
+        } else if(solvername == "DynApproxSolve") {
+          df <- as.data.frame(private$Solution)
         }
         return(df)
         
