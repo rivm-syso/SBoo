@@ -6,7 +6,7 @@
 #' @param n samplesize 
 #' @return States (i) (=mass)
 #' @export
-UncertainSolver = function(ParentModule, tol=1e-30, sample_df) { 
+UncertainSolver = function(ParentModule, tol=1e-10, sample_df) { 
   
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
@@ -64,9 +64,14 @@ UncertainSolver = function(ParentModule, tol=1e-30, sample_df) {
     ParentModule$myCore$UpdateDirty(unique(VariableInputRun$varName))
     ParentModule$PrepKaasM()
     
-    sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
+    if(det(ParentModule$SB.k == 0)){
+      sol <- ginv(ParentModule$SB.k) %*% (-vEmis)
+      print("K matrix is singular, generalized inverse was used to solve the matrix")
+    } else {
+      sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
                  -vEmis, # Emission vector
                  tol=tol) # solve tolerance
+    }
     
     sol <- tibble(EqMass = sol, 
                   Abbr = names(sol),

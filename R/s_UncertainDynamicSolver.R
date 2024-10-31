@@ -67,7 +67,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
       funlist <- makeApprox(vEmissions)
       
     # Second check: if vEmissions is a single set of functions  
-    } else if (class(vEmissions) == "list") {
+    } else if (inherits(vEmissions, "list")) {
       funlist <- vEmissions
       
     # Third check: if vEmissions is a nested tibble with emission data points  
@@ -94,7 +94,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     
     # Prepare the data to use mutateVar
     df <- sample_df |>
-      select(varName, Scale, SubCompart)
+      select(varName, Scale, SubCompart, Species)
     values <- map(sample_df$data, ~ .x$value[i])
     df <- df |>
       mutate(Waarde = values)
@@ -108,7 +108,9 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     
     SBNames = colnames(SB.K)
     SB.m0 <- rep(0, length(SBNames))
-    SBtime <- seq(0,tmax,length.out = nTIMES)
+    #SBtime <- seq(0,tmax,length.out = nTIMES)
+    #SBtime <- seq(min(Emis_df$Timed), tmax, length.out = nTIMES)
+    SBtime <- unique(Emis_df$Timed)
     
     # Define the solver function
     ODEapprox = function(t, m, parms) {
@@ -137,8 +139,11 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     sol <- data.frame(sol)
     sol$RUN <- i
     
-    if(!exists("solution")) solution <- data.frame(NULL) # create on first loop
-    solution <- rbind(solution, sol)
+    if (!exists("solution")){
+      solution <- sol
+    } else {
+      solution <- rbind(solution, sol)
+    }
   }
   
   units <- World$fetchData("Units") |>
@@ -146,13 +151,13 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
   
   sample_df <- left_join(sample_df, units, by = c("varName" = "VarName"))
   
-  if (class(vEmissions) == "data.frame") {
-    vEmissions <- vEmissions |>
-    mutate(Unit = "kg.s-1")
-  }
-  
-  solution <- solution |>
-    mutate(Unit = "kg")
+  # if (inherits(vEmissions) == "data.frame") {
+  #   vEmissions <- vEmissions |>
+  #   mutate(Unit = "kg.s-1")
+  # }
+  # 
+  # solution <- solution |>
+  #   mutate(Unit = "kg")
   
   return(list(
     Input_Variables = sample_df,

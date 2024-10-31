@@ -1217,9 +1217,10 @@ SBcore <- R6::R6Class("SBcore",
         }
         #merge the "newValue" to the nowVar
         names(UpdateRows)[names(UpdateRows) == varName] <- "newValue"
-        wannebeVar <- merge(nowVar, UpdateRows, all.x = T)
+        wannebeVar <- merge(nowVar, UpdateRows, all.x = T) |>
+          distinct()
         if (nrow(nowVar) < nrow(wannebeVar)) {
-          #browser() #start debugging?
+          browser() #start debugging?
           stop("illegal UpdateRows in MutateVar")
         }
         #update wannebe, remove newValue

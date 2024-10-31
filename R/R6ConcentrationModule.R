@@ -230,9 +230,12 @@ ConcentrationModule <-
             
             return(FinalConcentration)
           } else if (private$SolverName == "UncertainDynamicSolver") {
+            browser()
             
-            solution <- private$MyCore$Solution()$DynamicMass |>
+            solution1 <- private$MyCore$Solution()$DynamicMass |>
               select(!starts_with("emis"))
+            
+            solution <- solution1
             
             # sum the cw values with the a values in the same scale/species
             cw_cols <- grep("^cw", colnames(solution), value = TRUE)
@@ -252,6 +255,9 @@ ConcentrationModule <-
                 solution[[a_col]] <- solution[[a_col]] + solution[[cw_col]]
               }
             }
+            
+            solution <- solution |>
+              select(!starts_with("cw"))
             
             # TO DO: What if one of the variables below is uncertain?? 
             states <- private$MyCore$states$asDataFrame
@@ -303,22 +309,36 @@ ConcentrationModule <-
               mutate(RUN = as.character(RUN))
 
             numeric_cols <- concentration_df |>
-              select(all_of(compnames))
+              select(all_of(compnames)) |>
+              slice(1:nruns_sol)
+            
+            var_rows <- concentration_df |>
+              select(all_of(compnames)) |>
+              slice(nruns_sol+1:n())
             
             other_cols <- concentration_df |>
-              select(-all_of(compnames))
+              select(-all_of(compnames)) |>
+              slice(1:nruns_sol)
             
-            volume_values <- as.numeric(numeric_cols["Volume", ])
+            volume_values <- as.numeric(var_rows["Volume", ])
             
-            concentrations <- apply(numeric_cols[1:nruns_sol, ], 2, function(column) {
-              (column / volume_values) *1000
-            }) 
+            concentrations <- numeric_cols / volume_values * 1000
+            
+            # concentrations <- apply(numeric_cols, 2, function(column) {
+            #   (column / volume_values) *1000
+            # })
+            
+            # # Divide by volume
+            # concentrations <- sweep(numeric_cols, 2, volume_values, 
+            #                         FUN = function(x, v) ifelse(v == 0, NA, (x / v) * 1000))
             
             #concentration_df[1:nruns_sol, ] <- concentrations
-            concentrations <- data.frame(concentrations) 
+            #concentrations <- data.frame(concentrations) 
+            concentrations <- sweep(numeric_cols, 2, volume_values, )
             
             concentrations <- full_join(concentrations, varvalues_t, by = colnames(varvalues_t))
             concentrations <- cbind(concentrations, other_cols)
+            concentrations <- rbind(concentrations, var_rows)
             
             conctobecor <- concentrations |>
               select(all_of(comptobecor))
