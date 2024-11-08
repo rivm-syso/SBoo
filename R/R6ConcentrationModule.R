@@ -230,12 +230,10 @@ ConcentrationModule <-
             
             return(FinalConcentration)
           } else if (private$SolverName == "UncertainDynamicSolver") {
-            browser()
+            #browser()
             
-            solution1 <- private$MyCore$Solution()$DynamicMass |>
+            solution <- private$MyCore$Solution()$DynamicMass |>
               select(!starts_with("emis"))
-            
-            solution <- solution1
             
             # sum the cw values with the a values in the same scale/species
             cw_cols <- grep("^cw", colnames(solution), value = TRUE)
@@ -317,8 +315,7 @@ ConcentrationModule <-
               slice(nruns_sol+1:n())
             
             other_cols <- concentration_df |>
-              select(-all_of(compnames)) |>
-              slice(1:nruns_sol)
+              select(-all_of(compnames)) 
             
             volume_values <- as.numeric(var_rows["Volume", ])
             
@@ -334,11 +331,11 @@ ConcentrationModule <-
             
             #concentration_df[1:nruns_sol, ] <- concentrations
             #concentrations <- data.frame(concentrations) 
-            concentrations <- sweep(numeric_cols, 2, volume_values, )
+            #concentrations <- sweep(numeric_cols, 2, volume_values, )
             
             concentrations <- full_join(concentrations, varvalues_t, by = colnames(varvalues_t))
+            #concentrations <- rbind(concentrations, var_rows)
             concentrations <- cbind(concentrations, other_cols)
-            concentrations <- rbind(concentrations, var_rows)
             
             conctobecor <- concentrations |>
               select(all_of(comptobecor))

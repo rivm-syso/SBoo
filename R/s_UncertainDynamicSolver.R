@@ -127,7 +127,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     # Solve the matrix
     sol <- deSolve::ode(
       y = as.numeric(SB.m0),
-      times = SBtime ,
+      times = SBtime,
       func = ODEapprox,
       parms = list(K = SB.K, SBNames=SBNames, emislist= funlist),
       rtol = 1e-11, atol = 1e-3)
