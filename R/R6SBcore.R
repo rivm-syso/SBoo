@@ -397,7 +397,7 @@ SBcore <- R6::R6Class("SBcore",
       }
     },
     
-    #' @description runs (or tries to) the calculation for aVariable and stores the results.
+    #' @description runs (or tries to) the calculation for a Variable and stores the results.
     #' After this, the SBvariable can be viewed with fetchData and this data will be used 
     #' when calculating processes, or other variables.
     #' @param aVariable the name of the Variable
@@ -1217,7 +1217,8 @@ SBcore <- R6::R6Class("SBcore",
         }
         #merge the "newValue" to the nowVar
         names(UpdateRows)[names(UpdateRows) == varName] <- "newValue"
-        wannebeVar <- merge(nowVar, UpdateRows, all.x = T)
+        wannebeVar <- merge(nowVar, UpdateRows, all.x = T) |>
+          distinct()
         if (nrow(nowVar) < nrow(wannebeVar)) {
           #browser() #start debugging?
           stop("illegal UpdateRows in MutateVar")
