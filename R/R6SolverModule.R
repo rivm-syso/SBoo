@@ -183,7 +183,7 @@ SolverModule <-
         cn <- c("varName", "Scale", "SubCompart", "data")
         
         if(!all(cn %in% names(input))) {
-          stop("Column name(s) incorrect. The tibble should contain columns with the following names: 'varname', 'scale', 'subcompart' and 'data'.")
+          stop("Column name(s) incorrect. The tibble should contain columns with the following names: 'varName', 'Scale', 'SubCompart' and 'data'.")
         }
         
         row_counts <- input %>%
