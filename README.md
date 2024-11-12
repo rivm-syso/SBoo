@@ -19,7 +19,7 @@ SBoo works with the data supplied in SBooScripts. Both sets of files
 need to be available in the same parent directory. The preferred
 approach is creating two R projects in R-Studio. Take care that
 sometimes there are breaking changes between SBooScripts and SBoo,
-meaning you need to correct branch (e.g. main with main or development
+meaning you need the correct branch (e.g. main with main or development
 with development in both repositories).
 
 # Usage
