@@ -1,6 +1,6 @@
 #' @title UncertainSolver
 #' @name UncertainSolver
-#' @description solver to analyze sensitivity of parameters
+#' @description solver to include uncertainty and variability of input variables
 #' @param ParentModule SBCore
 #' @param sample_df nested tibble containing the sample values for every run and variable
 #' @param n samplesize 
