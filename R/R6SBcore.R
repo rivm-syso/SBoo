@@ -1220,7 +1220,7 @@ SBcore <- R6::R6Class("SBcore",
         wannebeVar <- merge(nowVar, UpdateRows, all.x = T) |>
           distinct()
         if (nrow(nowVar) < nrow(wannebeVar)) {
-          browser() #start debugging?
+          #browser() #start debugging?
           stop("illegal UpdateRows in MutateVar")
         }
         #update wannebe, remove newValue
