@@ -6,7 +6,7 @@
 #' @param tmax 
 #' @return see: runsteady()
 #' export
-SBsteady = function(ParentModule, tmax=1e10) {
+SBsteady = function(ParentModule, tmax=1e20) {
   
   SB.K = ParentModule$SB.k
   vEmis = ParentModule$emissions
