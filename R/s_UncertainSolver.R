@@ -7,7 +7,7 @@
 #' @return States (i) (=mass)
 #' @export
 UncertainSolver = function(ParentModule, tol=1e-30, sample_df) { 
-  
+
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
   if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
@@ -64,12 +64,19 @@ UncertainSolver = function(ParentModule, tol=1e-30, sample_df) {
     ParentModule$myCore$UpdateDirty(unique(VariableInputRun$varName))
     ParentModule$PrepKaasM()
     
-    sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
-                 -vEmis, # Emission vector
-                 tol=tol) # solve tolerance
+    # sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
+    #              -vEmis, # Emission vector
+    #              tol=tol) # solve tolerance
+    tmax=1e20 # solution for >1e12 year horizon
+    sol <- rootSolve::runsteady(
+      y = rep(0,nrow(ParentModule$SB.k)),
+      times = c(0,tmax),
+      func = ParentModule$SimpleBoxODE,
+      parms = list(K = ParentModule$SB.k, e = vEmis)
+    )
     
-    sol <- tibble(EqMass = sol, 
-                  Abbr = names(sol),
+    sol <- tibble(EqMass = sol$y, 
+                  Abbr = names(sol$signal),
                   RUN = i) |> 
       full_join(states)
     
