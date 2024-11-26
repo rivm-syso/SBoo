@@ -59,15 +59,15 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
   names(funlist) <- vEmis$Abbr
   return(funlist)
   } 
-  
+  # TODO: clarify the options for giving Emis data. Too many options to check for here.
   for (i in 1:nrow(sample_df$data[[1]])){ 
-    # First check: if vEmissions is a single emission data frame
+    browser()
+        # First check: if vEmissions is a single emission data frame
     if(is.numeric(vEmissions$Emis)){ 
       
       funlist <- makeApprox(vEmissions)
-      
     # Second check: if vEmissions is a single set of functions  
-    } else if (class(vEmissions) == "list") {
+    } else if (any(class(vEmissions) == "list")) {
       funlist <- vEmissions
       
     # Third check: if vEmissions is a nested tibble with emission data points  
@@ -76,13 +76,13 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
         select(Abbr, Timed)
       
       #Abbr <- vEmissions$Abbr
-      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$value[i]))
+      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$Mass_kg_s[i]))
       Emis_df <- cbind(Abbr_Timed, Emis)
       
       funlist <- makeApprox(Emis_df)
       
     # Fourth check: if vEmissions is a nested tibble with sets of functions
-    } else if ("Funlist" %in% colnames(vEmissions) && class(vEmissions$Funlist == "list")){
+    } else if ("Funlist" %in% colnames(vEmissions) && class(vEmissions$Funlist) == "list"){
       
       subset_fun_tibble <- final_fun_tibble |>
         mutate(EmisFun = map(Funlist, ~ .x[[1]])) |>
@@ -95,7 +95,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     # Prepare the data to use mutateVar
     df <- sample_df |>
       select(varName, Scale, SubCompart)
-    values <- map(sample_df$data, ~ .x$value[i])
+    values <- map(sample_df$data, ~ .x$Mass_kg_s[i])
     df <- df |>
       mutate(Waarde = values)
     ParentModule$myCore$mutateVars(df)
