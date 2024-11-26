@@ -46,7 +46,7 @@ UncertainSolver = function(ParentModule, tol=1e-30, sample_df) {
       Emis_df <- vEmissions
     } else if (inherits(vEmissions$Emis, "list")){
       Abbr <- vEmissions$Abbr
-      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$value[i]))
+      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$Mass_kg_s[i]))
       Emis_df <- cbind(Abbr, Emis)
     } else stop("no vEmissions found")
     
@@ -55,7 +55,7 @@ UncertainSolver = function(ParentModule, tol=1e-30, sample_df) {
     vEmis[match(Emis_df$Abbr, StateAbbr)] <- Emis_df$Emis
 
     VariableInputRun <- sample_df |> 
-      mutate(Waarde =  map_vec(sample_df$data, ~ .x$value[i])) |> 
+      mutate(Waarde =  map_vec(sample_df$data, ~ .x$Mass_kg_s[i])) |> 
       select(-data)
 
     ParentModule$myCore$mutateVars(VariableInputRun)
