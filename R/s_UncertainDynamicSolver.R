@@ -8,7 +8,7 @@
 #' @return Nested list containing the input variables, input emissions, output masses and states
 #' @export
 UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100) { 
-  
+  #browser()
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
   if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
@@ -76,7 +76,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
         select(Abbr, Timed)
       
       #Abbr <- vEmissions$Abbr
-      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$value[i]))
+      Emis <- map_dfr(vEmissions$Emis, ~ tibble(Emis = .x$Mass_kg_s[i]))
       Emis_df <- cbind(Abbr_Timed, Emis)
       
       funlist <- makeApprox(Emis_df)
