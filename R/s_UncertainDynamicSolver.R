@@ -7,7 +7,8 @@
 #' @param nTIMES number of timesteps
 #' @return Nested list containing the input variables, input emissions, output masses and states
 #' @export
-UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100) { 
+UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100,
+                                  rtol_ode=1e-11, atol_ode = 1e-6) { 
   #browser()
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
@@ -130,7 +131,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
       times = SBtime,
       func = ODEapprox,
       parms = list(K = SB.K, SBNames=SBNames, emislist= funlist),
-      rtol = 1e-11, atol = 1e-11)
+      rtol = rtol_ode, atol = atol_ode)
     
     # Change the colnames of the solved matrix
     colnames(sol)[1:length(SBNames)+1] <- SBNames
