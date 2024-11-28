@@ -130,7 +130,7 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
       times = SBtime,
       func = ODEapprox,
       parms = list(K = SB.K, SBNames=SBNames, emislist= funlist),
-      rtol = 1e-11, atol = 1e-3)
+      rtol = 1e-11, atol = 1e-11)
     
     # Change the colnames of the solved matrix
     colnames(sol)[1:length(SBNames)+1] <- SBNames
