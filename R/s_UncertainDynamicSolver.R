@@ -7,9 +7,9 @@
 #' @param nTIMES number of timesteps
 #' @return Nested list containing the input variables, input emissions, output masses and states
 #' @export
-UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100,
-                                  rtol_ode=1e-11, atol_ode = 1e-6) { 
-  #browser()
+UncertainDynamicSolver = function(ParentModule, sample_df, nTIMES = 100,
+                                  rtol_ode=1e-30, atol_ode = 1e-3) { 
+
   # Get the uncertain input for the variables
   sample_df <- ParentModule$UncertainInput 
   if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
@@ -92,15 +92,17 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
       funlist <- subset_fun_tibble$EmisFun
       names(funlist) <- subset_fun_tibble$Abbr
     }
-    
+    # browser()
     # Prepare the data to use mutateVar
     df <- sample_df |>
-      select(varName, Scale, SubCompart, Species)
-    values <- map(sample_df$data, ~ .x$value[i])
-    df <- df |>
-      mutate(Waarde = values)
+      unnest(data) |> filter(RUN == i) |> 
+      select(varName, Scale, SubCompart, Species,value) |> 
+      rename(Waarde = value)
+    # values <- map(sample_df$data, ~ .x$value[i])
+    # df <- df |>
+    #   mutate(Waarde = values)
     ParentModule$myCore$mutateVars(df)
-    
+
     # Update core
     ParentModule$myCore$UpdateDirty(uniqvNames)
     ParentModule$PrepKaasM()
@@ -108,10 +110,10 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     SB.K = ParentModule$SB.k
     
     SBNames = colnames(SB.K)
-    SB.m0 <- rep(0, length(SBNames))
+    SB.m0 <- rep(0, length(SBNames)) #TODO add this to input of solver.
     #SBtime <- seq(0,tmax,length.out = nTIMES)
     #SBtime <- seq(min(Emis_df$Timed), tmax, length.out = nTIMES)
-    SBtime <- unique(Emis_df$Timed)
+    SBtime <- unique(Emis_df$Timed) # TODO this can be done differently
     
     # Define the solver function
     ODEapprox = function(t, m, parms) {
