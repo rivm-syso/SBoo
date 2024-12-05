@@ -7,58 +7,15 @@
 #' @param nTIMES number of timesteps
 #' @return Nested list containing the input variables, input emissions, output masses and states
 #' @export
-UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES = 100) { 
+UncertainDynamicSolver = function(ParentModule, tmax = 1e10, nTIMES = 100) { 
   
   # Get the uncertain input for the variables
-  sample_df <- ParentModule$UncertainInput 
-  if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
-    warning("adding RUN number to variable data")
-    sample_df <- sample_df |> 
-      mutate(nRUNs = map_int(data, nrow)) |> 
-      mutate(
-        data = map(data, ~ .x |> 
-                     mutate(RUN = 1:unique(nRUNs)))
-      ) |> select(-nRUNs)
-  }
-  
-  uniqvNames <- unique(sample_df$varName)
+  Input_Variables <- ParentModule$Input_Variables #including RUN + list
+
+  uniqvNames <- unique(Input_Variables$varName)
   
   # Get the emissions
-  vEmissions = ParentModule$emissions
-  if(!is.numeric(vEmissions$Emis)){
-    if(all(map_lgl(vEmissions$Emis, ~ "RUN" %in% names(.x))) == FALSE){
-      warning("adding RUN number to emission data")
-      vEmissions <- vEmissions |> 
-        mutate(nRUNs = map_int(Emis, nrow)) |> 
-        mutate(
-          Emis = map(Emis, ~ .x |> 
-                       mutate(RUN = 1:unique(nRUNs)))
-        ) |> select(-nRUNs)
-    }
-  }
-  
-  # Get the states
-  StateAbbr <- rownames(ParentModule$SB.k)
-  states <- ParentModule$myCore$states$asDataFrame |> 
-    filter(Abbr %in% StateAbbr)
-  
-  # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
-  makeApprox <- function(vEmissions){
-    vEmis <- 
-    vEmissions |> 
-    group_by(Abbr) |> 
-    summarise(n=n(),
-              EmisFun = list(
-                approxfun(
-                  data.frame(Timed = c(0,Timed), 
-                             Emis=c(0,Emis)),
-                  rule = 1:2)
-              )
-    )
-  funlist <- vEmis$EmisFun
-  names(funlist) <- vEmis$Abbr
-  return(funlist)
-  } 
+  vEmissions <- ParentModule$Emission$CleanEmissions
   
   for (i in 1:nrow(sample_df$data[[1]])){ 
     # First check: if vEmissions is a single emission data frame
@@ -112,23 +69,11 @@ UncertainDynamicSolver = function(ParentModule, tmax = 1e10, sample_df, nTIMES =
     #SBtime <- seq(min(Emis_df$Timed), tmax, length.out = nTIMES)
     SBtime <- unique(Emis_df$Timed)
     
-    # Define the solver function
-    ODEapprox = function(t, m, parms) {
-      with(as.list(c(parms, m)), {
-        e <- c(rep(0, length(SBNames)))
-        for (name in names(parms$emislist)) {
-          e[grep(name, SBNames)] <- parms$emislist[[name]](t) 
-        }
-        dm <- with(parms, K %*% m + e) 
-        return(list(dm, signal = e))
-      })
-    }
-    
     # Solve the matrix
     sol <- deSolve::ode(
       y = as.numeric(SB.m0),
       times = SBtime,
-      func = ODEapprox,
+      func = ParentModule$ODEapprox,
       parms = list(K = SB.K, SBNames=SBNames, emislist= funlist),
       rtol = 1e-11, atol = 1e-3)
     

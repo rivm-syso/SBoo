@@ -17,7 +17,7 @@ DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100) {
   SBNames = colnames(SB.K)
   SB.m0 <- rep(0, length(SBNames))
   SBtime <- seq(0,tmax,length.out = nTIMES)
-  vEmis <- ParentModule$emissions
+  vEmis <- ParentModule$emissionFunctions()
   
   out <- deSolve::ode(
     y = as.numeric(SB.m0),
@@ -25,10 +25,9 @@ DynApproxSolve = function(ParentModule, tmax = 1e10, nTIMES = 100) {
     func = ParentModule$ODEapprox,
     parms = list(K = SB.K, SBNames=SBNames, emislist= vEmis),
     rtol = 1e-11, atol = 1e-3)
-
+  
   colnames(out)[1:length(SBNames)+1] <- SBNames
   colnames(out)[grep("signal",colnames(out))] <- paste("emis",SBNames,sep = "2")
-  as.data.frame(out) 
   
   return(out)
 

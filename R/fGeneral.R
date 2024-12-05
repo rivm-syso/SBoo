@@ -19,6 +19,31 @@ ConstGrep <- function(grepSearch, ...){
   constants::codata[grep(grepSearch, constants::codata$quantity, ...), ]
 }
 
+
+#' Title
+#' @param df input object df, or df-alike
+#' @param callingName name of the calling function, or? user informative string
+#' @param mustHavecols column names that the df should have
+#' @return side effect (stop) only
+#' @export
+is.df.with <- function(df, callingName, mustHavecols, reallystop = T){
+  if (! "data.frame" %in% class(df)) {
+    rep_text <- paste("Not a data.frame-ish parameter in", callingName)
+    if (reallystop){
+      stop(rep_text)
+    } else warning(rep_text)
+  }
+  missingCol <- mustHavecols[!mustHavecols %in% names(df)]
+  if (length(missingCol) > 0) {
+    rep_text <- do.call(paste, as.list(c("Missing column", missingCol, 
+                                         "in", callingName)))
+    if (reallystop){
+      stop(rep_text)
+    } else warning(rep_text)
+  }
+  
+}
+
 #' @name  expand.grid.df
 #' @description grab from the web: expand ... data.frames
 #' @param ... {n} data.frame

@@ -170,27 +170,25 @@ SBcore <- R6::R6Class("SBcore",
       private$solver$PrepKaasM()
       
       # prepare the emissions     
-      private$solver$PrepemisV(emissions, private$solvername)
+      private$solver$PrepemisV(emissions)
       
-      MoreParams <- list(...)
+      private$solver$execute(needdebug = needdebug, emissions, ...)
       
-      if(length(MoreParams) > 0){
-        if(is_tibble(MoreParams[[1]])){
-          uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
-          uncertaininput <- MoreParams[[1]]
-        }
+    },
+    
+    #' @description injected from solverModule; create function to transform 0-1 unif 
+    #' to the desired function shape
+    #' @param fun_type ("triangular", "norm" "unif") 
+    #' @param pars (named?) parameters for the function type
+    #' triangular: a Minimum, b Maximum, c Peak value
+    #' norm: mu mean, sigma sd
+    #' unif: min , max
+    Make_inv_unif01 = function(fun_type, pars){
+      if (is.null(private$solver)) {
+        warning("No active solver")
+        return(NULL)
       }
-      
-      Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
-      
-      # the solver does the actual work
-      # if(!is.null(MoreParams)){
-      #   if(exists("uncertaininput")){
-      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
-      #   } else {
-      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
-      #   }
-      # }
+      return(private$solver$Make_inv_unif01(fun_type, pars))
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
@@ -253,6 +251,16 @@ SBcore <- R6::R6Class("SBcore",
     #' @param varname the name of the variable. Returns a list of variables if varname == "all"
     fetchData = function(varname="all"){
       private$FetchData(varname)
+    },
+    
+    #' @description Obtain the selected data for 
+    #' @param withoutValues data.frame-ish with columns `varname` and needed D's 
+    fetch_current = function(withoutValues){
+      if (is.null(private$solver)) {
+        warning("No active solver")
+        return(NULL)
+      }
+      private$solver$fetch_current(withoutValues)
     },
     
     #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv
@@ -670,8 +678,26 @@ SBcore <- R6::R6Class("SBcore",
       })
       return(AllKaasCalc[exist.from & exist.to, ]) 
       
-    }
+    },
     
+    #' @description states and all data-layer to an rds-file
+    save_world = function(filename){
+      whole_world <- list(
+        substance = private$Substance,
+        states = private$States$asDataFrame,
+        SB4Ndata = private$SB4Ndata,
+        filterstates = private$filterstates)
+      saveRDS(whole_world, file = filename)
+    },
+    
+    load_world = function(filename){
+      whole_world <- readRDS(filename)
+      private$Substance <- whole_world$substance
+      private$States <- SBstates$new(whole_world$states)
+      private$States$myCore <- self
+      private$SB4Ndata <- whole_world$SB4Ndata
+      private$filterstates <- whole_world$filterstates
+    }
   ), 
   
   active = list(
