@@ -1,7 +1,7 @@
 SimpleBox Object Oriented
 ================
 RIVM
-2024-11-12
+2024-12-06
 
 # About
 
@@ -26,7 +26,7 @@ with development in both repositories).
 
 SBoo is used from within the SBooScripts R project by initializing for a
 specific substance type. See for further getting started in SBooScripts:
-[SBooScripts/vignettes/Getting-started.md](https://github.com/rivm-syso/SBooScripts/vignettes/Getting-started.md "getting started").
+[SBooScripts/vignettes/Getting-started.md](https://github.com/rivm-syso/SBooScripts/blob/development/vignettes/Getting-started.md "getting started").
 
 # Contributing
 
