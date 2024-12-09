@@ -64,17 +64,20 @@ UncertainSolver = function(ParentModule, tol=1e-10, sample_df) {
     ParentModule$myCore$UpdateDirty(unique(VariableInputRun$varName))
     ParentModule$PrepKaasM()
     
-    if(det(ParentModule$SB.k == 0)){
-      sol <- ginv(ParentModule$SB.k) %*% (-vEmis)
-      print("K matrix is singular, generalized inverse was used to solve the matrix")
-    } else {
-      sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
-                 -vEmis, # Emission vector
-                 tol=tol) # solve tolerance
-    }
+    # sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
+    #              -vEmis, # Emission vector
+    #              tol=tol) # solve tolerance
     
-    sol <- tibble(EqMass = sol, 
-                  Abbr = names(sol),
+    tmax=1e20 # solution for >1e12 year horizon
+    sol <- rootSolve::runsteady(
+      y = rep(0,nrow(ParentModule$SB.k)),
+      times = c(0,tmax),
+      func = ParentModule$SimpleBoxODE,
+      parms = list(K = ParentModule$SB.k, e = vEmis)
+    )
+    
+    sol <- tibble(EqMass = sol$y, 
+                  Abbr = names(sol$signal),
                   RUN = i) |> 
       full_join(states)
     
