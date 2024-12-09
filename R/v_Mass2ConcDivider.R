@@ -8,7 +8,7 @@
 #' @param Fracw fraction of water in compartment [-]
 #' @return Concentration, kg/kg wet for soils, kg/kg wet for sediment, otherwise kg/m3 
 #' @export
-Mass2Conc <- function (EqMass, Volume, Matrix, all.rhoMatrix, Fracs, Fracw) {
+Mass2ConcDivider <- function (Volume, Matrix, all.rhoMatrix, Fracs, Fracw) {
   
   f_Soil.wetweight <- function(Conc.soil, # in kg/m3 soil or sediment
                                Fracw, Fracs,
@@ -17,11 +17,11 @@ Mass2Conc <- function (EqMass, Volume, Matrix, all.rhoMatrix, Fracs, Fracw) {
   }
 
   if (Matrix %in% c("air", "water")) {
-    return(EqMass / Volume)
+    return(1/Volume)
   } else {
     RHOsolid <- all.rhoMatrix$rhoMatrix[SubCompart == "othersoil"]
     RHOw <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "lake"]
-    return(f_Soil.wetweight(EqMass / Volume, Fracw, Fracs, RHOsolid))
+    return(f_Soil.wetweight(1 / Volume, Fracw, Fracs, RHOsolid))
   }
 }
 
