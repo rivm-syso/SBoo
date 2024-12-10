@@ -255,6 +255,21 @@ SBcore <- R6::R6Class("SBcore",
       private$FetchData(varname)
     },
     
+    #' @description fetch specific values from core
+    #' @param withoutValues data.frame-ish with columns `varname` and needed D 
+    fetch_current = function(withoutValues) {
+      
+      pervar <- split(withoutValues, f = withoutValues$varName)
+      toJoin <- lapply(names(pervar), private$MyCore$fetchData)
+      stillsplit <- lapply(1:length(pervar), function(i){
+        specvar <- left_join(pervar[[i]], toJoin[[i]]) 
+        names(specvar)[names(specvar) == names(pervar)[i]] <- "waarde"
+        specvar
+      })
+      bind_rows(stillsplit)
+    },
+    
+    
     #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv
     #' @param varname name of the variable
     fetchDataUnits = function(varname="all"){
