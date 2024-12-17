@@ -6,12 +6,11 @@
 #' @param n samplesize 
 #' @return States (i) (=mass)
 #' @export
-UncertainSolver = function(ParentModule, tol=1e-10) { 
+UncertainSolver = function(ParentModule, tol=1e-10, sample_df) { 
   
   # Get the uncertain input for the variables
-  sample_df <- ParentModule$UncertainInput
-  
-  if( ! "RUN" %in% names(sample_df)){
+  sample_df <- ParentModule$UncertainInput 
+  if(all(map_lgl(sample_df$data, ~ "RUN" %in% names(.x))) == FALSE){
     warning("adding RUN number to variable data")
     sample_df <- sample_df |> 
       mutate(nRUNs = map_int(data, nrow)) |> 
@@ -25,7 +24,7 @@ UncertainSolver = function(ParentModule, tol=1e-10) {
   vEmissions = ParentModule$emissions
   
   if(!is.numeric(vEmissions$Emis)){
-    if( ! "RUN" %in% names(vEmissions)){
+    if(all(map_lgl(vEmissions$Emis, ~ "RUN" %in% names(.x))) == FALSE){
       warning("adding RUN number to emission data")
       vEmissions <- vEmissions |> 
         mutate(nRUNs = map_int(Emis, nrow)) |> 
@@ -35,8 +34,10 @@ UncertainSolver = function(ParentModule, tol=1e-10) {
         ) |> select(-nRUNs)
     }
   }
-    
-  states <- ParentModule$solveStates$asDataFrame
+  
+  StateAbbr <- rownames(ParentModule$SB.k)
+  states <- ParentModule$myCore$states$asDataFrame |> 
+    filter(Abbr %in% StateAbbr)
   
   #TODO make a for-each loop with ncores as variable.
   
@@ -49,39 +50,41 @@ UncertainSolver = function(ParentModule, tol=1e-10) {
       Emis_df <- cbind(Abbr, Emis)
     } else stop("no vEmissions found")
     
-    vEmis <- rep(0.0, length.out = nrow(states))
+    vEmis <- rep(0.0, length.out = length(StateAbbr))
     names(vEmis) <- states$Abbr
-    vEmis[match(Emis_df$Abbr, states$Abbr)] <- Emis_df$Emis
-
+    vEmis[match(Emis_df$Abbr, StateAbbr)] <- Emis_df$Emis
+    
     VariableInputRun <- sample_df |> 
       mutate(Waarde =  map_vec(sample_df$data, ~ .x$value[i])) |> 
       select(-data)
-
+    
     ParentModule$myCore$mutateVars(VariableInputRun)
     
     #update core and solve
     ParentModule$myCore$UpdateDirty(unique(VariableInputRun$varName))
     ParentModule$PrepKaasM()
     
-    if(det(ParentModule$SB.k == 0)){
-      sol <- MASS::ginv(ParentModule$SB.k) %*% (-vEmis)
-      names(sol) <- states$Abbr
-      print("K matrix is singular, generalized inverse was used to solve the matrix")
-    } else {
-      sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
-                 -vEmis, # Emission vector
-                 tol=tol) # solve tolerance
-    }
+    # sol <- solve(ParentModule$SB.k, # K matrix of first order rate constants
+    #              -vEmis, # Emission vector
+    #              tol=tol) # solve tolerance
     
-    sol <- tibble(EqMass = sol, 
-                  Abbr = names(sol),
+    tmax=1e20 # solution for >1e12 year horizon
+    sol <- rootSolve::runsteady(
+      y = rep(0,nrow(ParentModule$SB.k)),
+      times = c(0,tmax),
+      func = ParentModule$SimpleBoxODE,
+      parms = list(K = ParentModule$SB.k, e = vEmis)
+    )
+    
+    sol <- tibble(EqMass = sol$y, 
+                  Abbr = names(sol$signal),
                   RUN = i) |> 
       full_join(states)
     
     if(!exists("solution")) solution <- data.frame(NULL) # create on first loop
     solution <- rbind(solution, sol)
   }
-
+  
   units <- World$fetchData("Units") |>
     select(VarName, Unit)
   
