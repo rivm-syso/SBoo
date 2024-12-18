@@ -113,7 +113,7 @@ UncertainDynamicSolver = function(ParentModule, sample_df, nTIMES = 100,
     SB.m0 <- rep(0, length(SBNames)) #TODO add this to input of solver.
     #SBtime <- seq(0,tmax,length.out = nTIMES)
     #SBtime <- seq(min(Emis_df$Timed), tmax, length.out = nTIMES)
-    SBtime <- unique(Emis_df$Timed) # TODO this can be done differently
+    SBtime <- unique(vEmissions$Timed) # TODO this can be done differently
     
     # Define the solver function
     ODEapprox = function(t, m, parms) {
