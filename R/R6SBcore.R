@@ -247,20 +247,36 @@ SBcore <- R6::R6Class("SBcore",
       res[!(res$Tablenames %in% c("Flows", "MatrixSheet", "Substances", "SubstanceCompartments", "SubstanceSubCompartSpeciesData")),]
     },
     
+    fetchDims = function(vars){
+      MetaData <- self$metaData()
+      Attrn <- MetaData[MetaData$AttributeNames %in% vars,]
+      unique(unlist(
+        lapply(unique(Attrn$Tablenames), function(tname){
+          allNames <- names(private$SB4Ndata[[tname]])
+          allNames[allNames %in% The3D]
+        })
+      ))
+      
+    },
+    
     #' @description Obtain the data for a SBvariable or a flow
     #' @param varname the name of the variable. Returns a list of variables if varname == "all"
     fetchData = function(varname="all"){
       private$FetchData(varname)
     },
     
-    #' @description Obtain the selected data for 
-    #' @param withoutValues data.frame-ish with columns `varname` and needed D's 
-    fetch_current = function(withoutValues){
-      if (is.null(private$solver)) {
-        warning("No active solver")
-        return(NULL)
-      }
-      private$solver$fetch_current(withoutValues)
+    #' @description fetch specific values from core
+    #' @param withoutValues data.frame-ish with columns `varname` and needed D 
+    fetch_current = function(withoutValues) {
+      
+      pervar <- split(withoutValues, f = withoutValues$varName)
+      toJoin <- lapply(names(pervar), private$MyCore$fetchData)
+      stillsplit <- lapply(1:length(pervar), function(i){
+        specvar <- left_join(pervar[[i]], toJoin[[i]]) 
+        names(specvar)[names(specvar) == names(pervar)[i]] <- "waarde"
+        specvar
+      })
+      bind_rows(stillsplit)
     },
     
     #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv

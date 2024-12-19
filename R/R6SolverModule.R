@@ -12,7 +12,7 @@ SolverModule <-
     
     private = list(
       NeedVars = function() {
-        #overrule
+        #overrule CalcGraphModule
         NULL
       },
       Solution = NULL,
@@ -22,9 +22,10 @@ SolverModule <-
       MatrixSolutionInRows = NULL,
       lSBtime.tvars = NULL,
       lvnamesDistSD = NULL,
-      SolverOutputTp = NULL,
+      #SolverOutputTp = NULL,
       input_variables = NULL,
       Mass2ConcFun = NULL,
+      LHSruns = NULL,
       
       #' @description helper function for Make_inv_unif01
       triangular_cdf_inv = function(u, # LH scaling factor
@@ -97,45 +98,45 @@ SolverModule <-
         private$Solution <- do.call(private$Function, args = c(list(ParentModule = self),
                                                                list(...)))
         
-        if ("SteadyStateMass" %in% names(private$Solution)){
-          private$Input_Variables = private$Solution$Input_Variables
-          private$Input_Emission = private$Solution$Input_Emission
-          private$Solution = private$Solution$SteadyStateMass
-          private$SolverOutputTp <- "SteadyStateMass"
-          return(list(Input_Variables = private$Input_Variables, 
-                      Input_Emission = private$Input_Emission, 
-                      SteadyStateMass = private$Solution))
-        }
-        
-        # check and derive SolverOutputTp from solveroutput
-        if (is.null(dim(private$Solution))) {
-          private$SolverOutputTp <- "eqVector"
-          private$Solution <-
-            cbind(private$SolveStates$asDataFrame, private$Solution)
-          return(private$Solution)
-        }
-        
-        # it's a matrix with as many rows or columns as states?
-        if (!tibble::is_tibble(private$SolverOutputTp) & length(dim(private$Solution)) == 2) {
-          private$SolverOutputTp <- "massMatrix"
-          # attach states
-          attributes(private$SolverOutputTp) <-
-            private$SolveStates$asDataFrame
-          return(private$Solution)
-        }
-        
-        browser()
-        # a nested tibble ?
-        if (tibble::is_tibble(private$SolverOutputTp) &&
-            any(sapply(x, is.list))) {
-          private$SolverOutputTp <- "nestedTibble"
-          # attach states
-          attributes(private$SolverOutputTp) <-
-            private$SolveStates$asDataFrame
-          return(private$Solution)
-        }
-        
-        #TODO 4e type
+        # if ("SteadyStateMass" %in% names(private$Solution)){
+        #   private$Input_Variables = private$Solution$Input_Variables
+        #   private$Input_Emission = private$Solution$Input_Emission
+        #   private$Solution = private$Solution$SteadyStateMass
+        #   private$SolverOutputTp <- "SteadyStateMass"
+        #   return(list(Input_Variables = private$Input_Variables, 
+        #               Input_Emission = private$Input_Emission, 
+        #               SteadyStateMass = private$Solution))
+        # }
+        # 
+        # # check and derive SolverOutputTp from solveroutput
+        # if (is.null(dim(private$Solution))) {
+        #   private$SolverOutputTp <- "eqVector"
+        #   private$Solution <-
+        #     cbind(private$SolveStates$asDataFrame, private$Solution)
+        #   return(private$Solution)
+        # }
+        # 
+        # # it's a matrix with as many rows or columns as states?
+        # if (!tibble::is_tibble(private$SolverOutputTp) & length(dim(private$Solution)) == 2) {
+        #   private$SolverOutputTp <- "massMatrix"
+        #   # attach states
+        #   attributes(private$SolverOutputTp) <-
+        #     private$SolveStates$asDataFrame
+        #   return(private$Solution)
+        # }
+        # 
+        # browser()
+        # # a nested tibble ?
+        # if (tibble::is_tibble(private$SolverOutputTp) &&
+        #     any(sapply(x, is.list))) {
+        #   private$SolverOutputTp <- "nestedTibble"
+        #   # attach states
+        #   attributes(private$SolverOutputTp) <-
+        #     private$SolveStates$asDataFrame
+        #   return(private$Solution)
+        # }
+        # 
+        # #TODO 4e type
         
         
       },
@@ -149,24 +150,24 @@ SolverModule <-
         if (is.null(private$Solution)) {
           stop("first solve, then ask again")
         }
-        switch (
-          private$SolverOutputTp,
-          "eqVector" = {
-            debugonce(private$Mass2ConcFun)
-            prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
-            browser()
-          },
-          "massMatrix" = {
-            browser()
-            debugonce(private$Mass2ConcFun)
-            prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
-          },
-          "nestedTibble" = {
-            browser()
-            debugonce(private$Mass2ConcFun)
-            prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
-          }
-        )
+        # switch (
+        #   private$SolverOutputTp,
+        #   "eqVector" = {
+        #     debugonce(private$Mass2ConcFun)
+        #     prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
+        #     browser()
+        #   },
+        #   "massMatrix" = {
+        #     browser()
+        #     debugonce(private$Mass2ConcFun)
+        #     prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
+        #   },
+        #   "nestedTibble" = {
+        #     browser()
+        #     debugonce(private$Mass2ConcFun)
+        #     prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
+        #   }
+        # )
         
       },
       
@@ -325,15 +326,14 @@ SolverModule <-
       },
         
       PrepUncertain = function(varname_states, emis_states, var_invFun, emis_invFun) {
+
         #browser()
-        # Colnames that should be in the df
-        cn <- c("varName", "Scale", "SubCompart", "data")
+        # varName & Dims of all vars present
+        is.df.with(varname_states, callingName = "SolverModule$PrepUncertain", 
+                   mustHavecols = c('varName'))
+        allVarDims <- unique(varname_states$varName)
         
-        if (!all(cn %in% names(input))) {
-          stop(
-            "Column name(s) incorrect. The tibble should contain columns with the following names: 'varName', 'Scale', 'SubCompart' and 'data'."
-          )
-        }
+        PrepemisV(emis_states)
         
         row_counts <- input %>%
           pull(data) %>%
@@ -356,16 +356,28 @@ SolverModule <-
 
       },
       
-      PrepLHS = function(emis_scen = NULL, var_uncertain = NULL){
+      PrepLHS = function(emis_scen = NULL, var_uncertain = NULL, nRUNs = 100){
         #checks
-        if (!is.null(emis_scen)){
-          test(is.df.with(emis_scen, "SolverModule.PrepLHS", c("timed", "emis", "SubCompart")))
-          has_scenario <- "scenario" %in% names(emis_scen)
-        }
+        if (!is.null(emis_scen)){ 
+          # Either Abbr or all The3D should be in 
+          if ("Abbr" %in% names(emis_scen)){
+            test(is.df.with(emis_scen, "SolverModule.PrepLHS", c("timed", "emis", "Abbr")))
+          } else {
+            test(is.df.with(emis_scen, "SolverModule.PrepLHS", c("timed", "emis", The3D)))
+            #has_scenario <- "scenario" %in% names(emis_scen)
+          }
+        } 
         if (!is.null(var_uncertain)){
-          test(is.df.with(emis_uncertain, "SolverModule.PrepLHS", c("timed", "emis", "SubCompart")))
+          # Either Abbr or variable-needed The3D should be in 
+          if ("Abbr" %in% names(var_uncertain)){
+            test(is.df.with(var_uncertain, "SolverModule.PrepLHS", c("varName", "waarde", "Abbr")))
+          } else {
+            test(is.df.with(var_uncertain, "SolverModule.PrepLHS", c("varName", "waarde", The3D)))
+            #has_scenario <- "scenario" %in% names(var_uncertain)
+          }
         }
-        
+        # states should also be in # should be in private$SolveStates?
+        private$LHSruns <- lhs::optimumLHS()
 
       },
       
@@ -548,6 +560,13 @@ SolverModule <-
         }
       },
       
+      #' @field RUNs LHS samples; TODO more generally named scenarios?
+      RUNs = function(value){
+        if (missing(value)){
+          private$LHSruns
+        } else stop("not yet possible to set RUNs, use PrepUncertain()")
+      },
+      
       Input_Variables = function(value){
         private$input_variables
       },
@@ -560,6 +579,7 @@ SolverModule <-
           private$lvnamesDistSD <- NULL
         }
       },
+      
       vnamesDistSD = function(value){
         if (missing(value)) {
           private$lvnamesDistSD

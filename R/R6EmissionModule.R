@@ -6,9 +6,11 @@ EmissionModule <-
   R6::R6Class(
     "EmissionModule",
     public = list(
-      initialize = function(emis) {
+      initialize = function(mySolver, emis, uncertainFun = list()) {
         #browser()
 
+        private$mySolver = mySolver
+        private$uncertainFun <- uncertainFun
         # determine type (vector / dataframe, with timed, dynamic(as dataframe to convert or list of function))
         if ("data.frame" %in% class(emis)) {
           private$setEmissionDataFrame(emis)
@@ -34,7 +36,8 @@ EmissionModule <-
         
       },
       
-      emissions = function(states, scenario = NULL){
+      
+      emissions = function(scenario = NULL){ #scenario also used for "RUN"
         if (is.null(private$Emissions)) return (NULL)
         if (!is.null(scenario)) 
           return (names(private$Emissions))[!names(private$Emissions) %in% c(
@@ -43,11 +46,15 @@ EmissionModule <-
         if (private$emission_tp != "Vector") {
           stop("emissions cannot be casted to a named vector")
         }
-        #normal use? expand to all state and return as named vector
-        emis <- rep(0, states$nStates)
-        names(emis) <- states$asDataFrame$Abbr
-        emis[private$Emissions$Abbr] <- private$Emissions$Emis
-        return(emis)
+        #normal use? expand to all state in mySolver and return as named vector
+        if (is.na(RUNs)) {
+          emis <- dplyr::left_join(private$mySolver$solveStates, private$Emissions)
+          emis$Emis[is.na(emis$Emis)] <- 0
+          return(emis)
+        } else { #apply uncertainty RUNs
+          # RUNs should contain lhs (like) 0-1 numbers per relevant state
+          
+        }
       },
       
       # return approx function 
@@ -59,6 +66,9 @@ EmissionModule <-
                 !names(private$Emissions) %in% states$asDataFrame$Abbr])
               stop(do.call(paste,c(list("not all states in SB engine (the matrix)"), notfound)))
             }
+            if (! is.na(private$uncertainFun)){
+              stop("not possible to combine uncertain emissions with dynamic emissions, yet")
+            }
             return(private$Emissions)
           }
         
@@ -67,8 +77,12 @@ EmissionModule <-
             if(!(all(c("Abbr","Emis", "Timed") %in% names(private$Emissions)))){
               stop("Expected 'Abbr', 'Emis' and 'Timed' columns in dataframe")
             }
+            if (! is.na(private$uncertainFun)){
+              stop("not possible to combine uncertain emissions with dynamic emissions, yet")
+            }
+            
             if(!all(as.character(states$asDataFrame$Abbr) %in% as.character(states$asDataFrame$Abbr))){
-              stop("Abbreviations are not compatible with kaas")
+              stop("Abbreviations are not compatible with states")
             }
             #make 'm
             return(private$makeApprox(private$Emissions))
@@ -80,8 +94,10 @@ EmissionModule <-
     ),
 
     private = list(
+      mySolver = NULL,
       emission_tp = NULL,
-      Emissions = NULL, #vector or list of functions
+      Emissions = NULL, #vector / dataframe or list of functions, attributes as input at init
+      uncertainFun = NA,
       UnitFactor = 1,
       Scenarios = NULL,
       Times = NULL,
@@ -138,7 +154,7 @@ EmissionModule <-
       
       # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
       makeApprox = function(vEmissions, states){
-        is.df.with(vEmissions, "EmissionModule.makeApprox", c("Timed", "Emis", "Abbr"))
+        is.df.with(vEmissions, "EmissionModule$makeApprox", c("Timed", "Emis", "Abbr"))
         
         vEmis <- 
           vEmissions |> 
