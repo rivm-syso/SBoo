@@ -25,7 +25,7 @@ SolverModule <-
       #SolverOutputTp = NULL,
       input_variables = NULL,
       Mass2ConcFun = NULL,
-      LHSruns = NULL,
+      LHSruns = list(),
       
       #' @description helper function for Make_inv_unif01
       triangular_cdf_inv = function(u, # LH scaling factor
@@ -35,30 +35,7 @@ SolverModule <-
         ifelse(u < (c-a)/(b-a),
                a + sqrt(u * (b-a) * (c-a)),
                b - sqrt((1-u) * (b-a) * (b-c)))
-      },
-      
-      
-      #' @description return list with vectors of
-      #' subcompartments, variables and filters from subcompartments ~ variables | filters
-      interprFormula = function(TheCall) {
-        plusflat <- function(lisTree) {
-          if (is.call(lisTree)) {
-            return(c(plusflat[2], plusflat[3]))
-          } else {
-            return(structure(listree)) #remove formule attributes
-          }
-        }
-        #browser()
-        if (is.call(TheCall[1]) && TheCall[[1]] == "~") {
-          hasTilde <- T
-          lhs <- plusflat(TheCall[2])
-        } else {
-          hasTilde <- F
-          rhs <- plusflat(TheCall[3])
-        }
-        list(lhs = lhs, rhs = rhs)
       }
-      
       
     ),
     
@@ -78,71 +55,45 @@ SolverModule <-
                          ...) {
 
         MoreParams <- list(...)
+        if (!is.null(emissions)) {
+          self.PrepemisV(emissions)
+        }
         
         if (is.null(private$SB.K)) {
           stop("run PrepKaasM() first")
-        }
-        
-        if (!is.null(emissions)) {
-          self$PrepemisV(emissions)
-        } else {
-          if (is.null(private$EmissionModule)){
-            stop ("emissions are missing")
-          }
         }
         
         if (needdebug) {
           debugonce(private$Function)
         }
         
-        private$Solution <- do.call(private$Function, args = c(list(ParentModule = self),
-                                                               list(...)))
+        # prep dimensions of resulting concentrations, allocate memory in one
+        if (length(private$LHSruns) > 0) {
+          runs = private$LHSruns
+        } else {
+          runs = 1 # also for the loop
+        }
+        #times? 
+        if ("nTIMES" %in% self$needVars){ #it should be in ... from init
+          if (!"nTIMES" %in% private$MoreParams) {
+            stop("nTIMES missing in parameters")
+          }
+        } else nTIMES = 0
+
+        # the resulting array is (allocated once)
+        private$Solution <- array(dim = c(length(runs), nTIMES, self$solveStates),
+                                  dimnames = list(
+                                    RUNs = names(runs),
+                                    TIMES = seq(0,tmax,length.out = nTIMES),
+                                    self$solveStates
+                                  ))
+        #loop over scenarios / lhs RUNs, if any
+        for (i in seq_along(runs)){
+          solvedFormat <- do.call(private$Function, args = c(list(ParentModule = self), 
+                                                             list(...)))
+          private$Solution[i,,] <- TODOformat
+        }
         
-        # if ("SteadyStateMass" %in% names(private$Solution)){
-        #   private$Input_Variables = private$Solution$Input_Variables
-        #   private$Input_Emission = private$Solution$Input_Emission
-        #   private$Solution = private$Solution$SteadyStateMass
-        #   private$SolverOutputTp <- "SteadyStateMass"
-        #   return(list(Input_Variables = private$Input_Variables, 
-        #               Input_Emission = private$Input_Emission, 
-        #               SteadyStateMass = private$Solution))
-        # }
-        # 
-        # # check and derive SolverOutputTp from solveroutput
-        # if (is.null(dim(private$Solution))) {
-        #   private$SolverOutputTp <- "eqVector"
-        #   private$Solution <-
-        #     cbind(private$SolveStates$asDataFrame, private$Solution)
-        #   return(private$Solution)
-        # }
-        # 
-        # # it's a matrix with as many rows or columns as states?
-        # if (!tibble::is_tibble(private$SolverOutputTp) & length(dim(private$Solution)) == 2) {
-        #   private$SolverOutputTp <- "massMatrix"
-        #   # attach states
-        #   attributes(private$SolverOutputTp) <-
-        #     private$SolveStates$asDataFrame
-        #   return(private$Solution)
-        # }
-        # 
-        # browser()
-        # # a nested tibble ?
-        # if (tibble::is_tibble(private$SolverOutputTp) &&
-        #     any(sapply(x, is.list))) {
-        #   private$SolverOutputTp <- "nestedTibble"
-        #   # attach states
-        #   attributes(private$SolverOutputTp) <-
-        #     private$SolveStates$asDataFrame
-        #   return(private$Solution)
-        # }
-        # 
-        # #TODO 4e type
-        
-        
-      },
-      
-      GetSolution = function(solvername) {
-        return(private$Solution)
       },
       
       GetConcentrations = function() {
@@ -325,59 +276,31 @@ SolverModule <-
         
       },
         
-      PrepUncertain = function(varname_states, emis_states, var_invFun, emis_invFun) {
-
-        #browser()
-        # varName & Dims of all vars present
-        is.df.with(varname_states, callingName = "SolverModule$PrepUncertain", 
-                   mustHavecols = c('varName'))
-        allVarDims <- unique(varname_states$varName)
-        
-        PrepemisV(emis_states)
-        
-        row_counts <- input %>%
-          pull(data) %>%
-          map_int(nrow)
-        
-        unique_rc <- length(unique(row_counts))
-        
-        if (unique_rc != 1) {
-          stop("Not all variables have the same number of samples.")
-        }
-        
-        sample_df <- input |> 
-            mutate(nRUNs = map_int(data, nrow)) |> 
-            mutate(
-              data = map(data, ~ .x |> 
-                           mutate(RUN = 1:unique(nRUNs)))
-            ) |> select(-nRUNs)
-        
-        private$input_variables <- sample_df
-
-      },
-      
-      PrepLHS = function(emis_scen = NULL, var_uncertain = NULL, nRUNs = 100){
+      PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100){
         #checks
-        if (!is.null(emis_scen)){ 
-          # Either Abbr or all The3D should be in 
-          if ("Abbr" %in% names(emis_scen)){
-            test(is.df.with(emis_scen, "SolverModule.PrepLHS", c("timed", "emis", "Abbr")))
-          } else {
-            test(is.df.with(emis_scen, "SolverModule.PrepLHS", c("timed", "emis", The3D)))
-            #has_scenario <- "scenario" %in% names(emis_scen)
-          }
-        } 
-        if (!is.null(var_uncertain)){
-          # Either Abbr or variable-needed The3D should be in 
-          if ("Abbr" %in% names(var_uncertain)){
-            test(is.df.with(var_uncertain, "SolverModule.PrepLHS", c("varName", "waarde", "Abbr")))
-          } else {
-            test(is.df.with(var_uncertain, "SolverModule.PrepLHS", c("varName", "waarde", The3D)))
-            #has_scenario <- "scenario" %in% names(var_uncertain)
-          }
-        }
         # states should also be in # should be in private$SolveStates?
-        private$LHSruns <- lhs::optimumLHS()
+        solveStateAbbr <- private$SolveStates$asDataFrame
+        if (!all(sapply(emis_invFun, is.function))){
+          stop ("emis_invFun should be a list of functions with a single parameter")
+        }
+        if (!all(names(emis_invFun) %in% solveStateAbbr$Abbr)){
+            stop("not all names of the emis_invFun are in states (that have k''s)")
+        } 
+        if (!all(sapply(var_invFun, is.function))){
+          stop ("var_invFun should be a list of functions with a single parameter")
+        }
+        # var_box_df should contain varName and have the same length as var_invFun
+        is.df.with(var_box_df, "SolverModule$PrepLHS", c("varName"))
+        neededDims <- private$MyCore$fetchDims(unique(var_box_df))
+        if (!all(neededDims %in% names(var_box_df))) {
+          #expand from Abbr?
+          var_box_df <- dplyr::left_join(var_box_df, solveStateAbbr)
+        }
+        #only now:
+        stopifnot(length(var_invFun) == nrow(var_box_df))
+        
+        private$input_variables <- var_box_df
+        private$LHSruns <- lhs::optimumLHS(length(var_invFun) + length(emis_invFun))
 
       },
       
@@ -450,90 +373,19 @@ SolverModule <-
       #' state in three columns,
       #' time input in one or t[est]vars in separate columns,
       #' and the Mass in the Mass column
-      SolutionAsRelational = function(...) {
-        if (is.null(self$SBtime.tvars) && is.null(self$vnamesDistSD)) {
+      SolutionAsRelational = function(fullStates = FALSE) {
+        if (is.null(self$Solution)) {
           warning("no calculation available")
           return(NULL)
-        }
-        if (!is.null(self$SBtime.tvars)) {
-          if (private$MatrixSolutionInRows) {
-            ret2Blong <- cbind(private$SolveStates$asDataFrame[, The3D],
-                               t(as.matrix(private$Solution)))
-          }
-          ret = tidyr::pivot_longer(ret2Blong,
-                                    names(ret2Blong)[!names(ret2Blong) %in% The3D],
-                                    names_to = "SBtime",
-                                    values_to = "Mass")
-          #replace the generated columnnames from SBtime into actual times
-          TheTimes <- unlist(self$SBtime.tvars)
-          ret$SBtime <- TheTimes[as.numeric(ret$SBtime)]
-          return(ret)
         } else {
-          if (!is.null(self$vnamesDistSD)) {
-            Params <- list(...)
-            if (length(Params) == 0) {
-              #default uncertainty; return mean and sd.
-              #now we know the structure / names
-              #exclude base calculation from the stats
-              exclNr <- which(rownames(private$Solution) == "base")
-              clMeans <- colMeans(private$Solution[-exclNr, ])
-              clSD <- apply(private$Solution[-exclNr, ], 2, sd)
-              pval <- list()
-              for (px in c(0.05, 0.25, 0.75, 0.95)) {
-                percname <- paste("p", round(100 * px), sep = "")
-                pval[[percname]] <-
-                  apply(private$Solution[-exclNr, ], 2, quantile, probs = px)
-              }
-              ret <- do.call(rbind, pval)
-              ret <- as.data.frame(t(rbind(clMeans, clSD, ret)))
-              return(cbind(private$SolveStates$asDataFrame[, The3D], ret))
-              
-            } else {
-              #is there a formula "terms"
-              if ("terms" %in% names(Params)) {
-                FUN <- Params$FUN
-                if (is.null(FUN)) {
-                  warning("no FUN found, no aggregation")
-                  #browser()
-                  leftRightHS <-
-                    private$interprFormula(Params$terms)
-                  #Add Name to attribute name, if needed
-                  fNasName <- sapply(fAsList, function(x) {
-                    #browser()
-                    ifelse (any(x %in% The3D), paste(x, "Name", sep = ""), x)
-                  })
-                  
-                  ParsAndDims <- sapply(fAsList, function(x)
-                    private$SolveStates$findDim(x))
-                  
-                } else {
-                  #call and return aggregate
-                  aggregate(
-                    x = Params$terms,
-                    data = private$Solution,
-                    FUN = FUN
-                  )
-                }
-              }
-              if (length(Params) == 1 &&
-                  is.character(Params[[1]])) {
-                VarName <- Params[[1]]
-                if (!VarName %in% self$vnamesDistSD$vnames) {
-                  warning(paste(VarName, "not in analyses"))
-                  return(data.frame(NA))
-                }
-                #Yes, we can
-                
-              } else {
-                warning("expected a variable name")
-              }
-              
-            }
-            
+          if (fullStates){
+            array2DF(private$Solution)
+          } else { #append states
+            arrayAsDF <- array2DF(private$Solution)
+            dplyr::left_join(arrayAsDF, private$solveStates$asDataFrame)
           }
-        } # TODO else t[est]vars : uncertainty / sensitivity solvers etc.
+        }
       }
-      
     ),
     active = list(
       
@@ -564,30 +416,30 @@ SolverModule <-
       RUNs = function(value){
         if (missing(value)){
           private$LHSruns
-        } else stop("not yet possible to set RUNs, use PrepUncertain()")
+        } else stop("not yet possible to set RUNs, use PrepUncertain()") #or accept scenarios?
       },
       
       Input_Variables = function(value){
         private$input_variables
-      },
-      
-      SBtime.tvars = function(value) {
-        if (missing(value)) {
-          private$lSBtime.tvars
-        } else {
-          private$lSBtime.tvars <- value
-          private$lvnamesDistSD <- NULL
-        }
-      },
-      
-      vnamesDistSD = function(value){
-        if (missing(value)) {
-          private$lvnamesDistSD
-        } else {
-          private$lvnamesDistSD <- value
-          private$lSBtime.tvars <- NULL
-        }
       }
+      
+      # SBtime.tvars = function(value) {
+      #   if (missing(value)) {
+      #     private$lSBtime.tvars
+      #   } else {
+      #     private$lSBtime.tvars <- value
+      #     private$lvnamesDistSD <- NULL
+      #   }
+      # },
+      
+      # vnamesDistSD = function(value){
+      #   if (missing(value)) {
+      #     private$lvnamesDistSD
+      #   } else {
+      #     private$lvnamesDistSD <- value
+      #     private$lSBtime.tvars <- NULL
+      #   }
+      # }
     )
     
   )
