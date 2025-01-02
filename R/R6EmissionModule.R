@@ -6,55 +6,70 @@ EmissionModule <-
   R6::R6Class(
     "EmissionModule",
     public = list(
-      initialize = function(mySolver, emis, uncertainFun = list()) {
-        #browser()
+      initialize = function(emis, solvedAbbr) {
 
-        private$mySolver = mySolver
-        private$uncertainFun <- uncertainFun
-        # determine type (vector / dataframe, with timed, dynamic(as dataframe to convert or list of function))
-        if ("data.frame" %in% class(emis)) {
-          private$setEmissionDataFrame(emis)
-                    
-          #character ? -> read from file as vector
-        } else if (is.character(emis)){
-          switch (tools::file_ext(emis,
-               "csv" = private$readfromcsv(emis),
-               "xlsx" = private$readFromExcel(emis)
+        private$solvedAbbr <- solvedAbbr # if NULL it should be given with emis
+        
+        if (is.character(emis)){ # read from file as data frame
+          emis <- switch (tools::file_ext(emis,
+                                  "csv" = private$readfromcsv(emis),
+                                  "xlsx" = private$readFromExcel(emis)
           )) 
-          private$emission_tp <- "Vector"
-          
-          # list of functions?
-        } else if ("list" %in% class(emis)) {
-          for(i in emis){
-            if(!is.function(i)){
-              stop("Not all elements in the list are functions")
-            }
-          }
-          private$emission_tp <- "DynamicFun"
-          private$Emissions <- emis          
         }
         
-      },
-      
-      
-      emissions = function(scenario = NULL){ #scenario also used for "RUN"
-        if (is.null(private$Emissions)) return (NULL)
-        if (!is.null(scenario)) 
-          return (names(private$Emissions))[!names(private$Emissions) %in% c(
-            "Scenario","VarName","Unit")]
-
-        if (private$emission_tp != "Vector") {
-          stop("emissions cannot be casted to a named vector")
-        }
-        #normal use? expand to all state in mySolver and return as named vector
-        if (is.na(RUNs)) {
-          emis <- dplyr::left_join(private$mySolver$solveStates, private$Emissions)
-          emis$Emis[is.na(emis$Emis)] <- 0
-          return(emis)
-        } else { #apply uncertainty RUNs
-          # RUNs should contain lhs (like) 0-1 numbers per relevant state
+        if ("matrix" %in% class(emis)) {
+          stopifnot(all(colnames(emis) %in% private$solvedAbbr))
+          private$emission_tp <- "runs_row"
+        } else {
+          if ("list" %in% class(emis) & all(is.function(emis))) {
+            private$emission_tp <- "DynamicFun"
+          } else {
+            if ("data.frame" %in% class(emis)){
+              private$emission_tp <- private$setEmissionDataFrame(emis)
+            } else stop ("unknown format of emissions")
+          }
           
         }
+        private$Emissions <- emis          
+      },
+      
+      emissions = function(scenario = NULL){ #scenario also used for "RUN"
+        
+        if (is.null(private$Emissions)) return (NULL)
+
+        if (!private$emission_tp %in% c("Vector", "runs_long", "runs_row")) {
+          stop("emissions cannot be casted to a named vector")
+        } 
+        
+        #normal use or scenarios / uncertainty runs
+        emis <- rep(0, length(private$solvedAbbr))
+        names(emis) <- private$solvedAbbr
+          
+        if (is.null(scenario)) {
+          if (private$emission_tp != "Vector")
+            stop("scenario/run is missing in emission data")
+          else {
+            emis[private$Emissions$Abbr] <- private$Emissions$Emis
+            return(emis)
+          }
+        } 
+
+        # RUNs should contain lhs (like) samples per relevant state rowwise or in long format
+        if (private$emission_tp == "runs_row"){
+          if (is.numeric(scenario)) {
+            rowNum <- scenario
+          } else {
+            rowNum <- match(scenario, rownames(private$Emissions))
+            stopifnot(is.na(rowNum))
+          }
+          lhssamples <- private$Emissions[rowNum,]
+          emis[names(lhssamples)] <- lhssamples
+        } else {
+          lhssamples <- private$Emissions$Emis[private$emis$run == scenario,]
+          emis[lhssamples$Abbr] <- lhssamples$Emis
+        }
+        
+        return(emis)
       },
       
       # return approx function 
@@ -94,10 +109,9 @@ EmissionModule <-
     ),
 
     private = list(
-      mySolver = NULL,
       emission_tp = NULL,
       Emissions = NULL, #vector / dataframe or list of functions, attributes as input at init
-      uncertainFun = NA,
+      solvedAbbr = NULL, #vector Abbr of solveStates
       UnitFactor = 1,
       Scenarios = NULL,
       Times = NULL,
@@ -122,7 +136,7 @@ EmissionModule <-
         #ignore the Sheetx names others are assumes to be scenario name
         sheetNames <- sheetNames[!grepl("Sheet[23]", sheetNames)]
         if (length(sheetNames) == 1){
-          private$setEmissionDataFrame(openxlsx::read.xlsx(fn, sheet = sheetNames))
+          return(openxlsx::read.xlsx(fn, sheet = sheetNames))
         } else {
           dfs <- lapply(sheetNames, function(sheet){
             openxlsx::read.xlsx(fn, sheet = sheet)
@@ -131,25 +145,35 @@ EmissionModule <-
             df <- dfs[[i]]
             df$scenario <- sheetNames
           }
-          private$setEmissionDataFrame(do.call(rbind, dfs))
+          return(do.call(rbind, dfs))
         }
       },
       
       readfromcsv = function(fn) {
-        df <- read.csv(fn)
-        setEmissionDataFrame(df)
+        return (read.csv(fn))
       },
 
+      # detemine format, return emission_tp
       setEmissionDataFrame = function(emis) {
-        if (all(c("Abbr","Emis") %in% names(emis))) {
-          if ("Timed" %in% names(emis)){
-            private$emission_tp <- "Dynamic_df"
+        browser()
+        if (all(c("Abbr", "Emis") %in% names(emis))) {
+          if ("Timed" %in% names(emis)) {
+            return("Dynamic_df")
+          } else {
+            stopifnot(all(emis$Abbr %in% private$solvedAbbr))
+            if (any(c("run", "scenario") %in% names(emis))) {
+              return ("runs_long")
+            } else {
+              return("Vector")
+            }
           }
-          else {
-            private$emission_tp <- "Vector"
-          }
-        } else stop ("at least columns with names Abbr,Emis")
-        private$Emissions <- emis
+        } else {
+          # it can be a data.frame with a run/scenario per row
+          if (all(names(emis) %in% private$solvedAbbr)) {
+            return("runs_row")
+            
+          } else stop ("at least columns with names Abbr,Emis or names equal to Abbr of states")
+        }
       },
       
       # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)

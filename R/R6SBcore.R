@@ -160,7 +160,7 @@ SBcore <- R6::R6Class("SBcore",
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
     Solve = function(emissions, needdebug = F, ...){
-      #browser()
+      
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
@@ -168,9 +168,6 @@ SBcore <- R6::R6Class("SBcore",
       #browser()
       # prepare the kaas
       private$solver$PrepKaasM()
-      
-      # prepare the emissions     
-      private$solver$PrepemisV(emissions)
       
       private$solver$execute(needdebug = needdebug, emissions, ...)
       
@@ -221,9 +218,11 @@ SBcore <- R6::R6Class("SBcore",
     
     #'@description Function to obtain steady state concentrations, using the solution saved in world.
     GetConcentration = function(){
-      private$concentration <- ConcentrationModule$new(self, private$solvername)
-      private$concentration$GetConc()
-
+      if (is.null(private$solver)) {
+        stop("No active solver, (then Solve ..., then ask again)")
+        return(NULL)
+      }
+      private$solver$GetConcentrations()
     },
     
     #' @description Injection from SolverModule
@@ -270,7 +269,7 @@ SBcore <- R6::R6Class("SBcore",
     fetch_current = function(withoutValues) {
       
       pervar <- split(withoutValues, f = withoutValues$varName)
-      toJoin <- lapply(names(pervar), private$MyCore$fetchData)
+      toJoin <- lapply(names(pervar), private$FetchData)
       stillsplit <- lapply(1:length(pervar), function(i){
         specvar <- left_join(pervar[[i]], toJoin[[i]]) 
         names(specvar)[names(specvar) == names(pervar)[i]] <- "waarde"
@@ -463,6 +462,19 @@ SBcore <- R6::R6Class("SBcore",
       private$SBkaas <- rbind(NewKaas[,names(private$SBkaas)], private$SBkaas)
       
       private$DoPostponed()
+    },
+    
+    #' @description  Which Graph elements SBVars depend on?
+    DependOn = function(SBVars){
+      AllDependVar <- NULL
+      DependVar <- SBVars
+      numDepend <- 1 #anything > 0
+      while (numDepend > 0) {
+        DependVar <- unique(private$nodeList$Params[private$nodeList$Calc %in% DependVar])
+        AllDependVar <- unique(c(AllDependVar, DependVar))
+        numDepend <- length(DependVar)
+      }
+      return(AllDependVar)
     },
     
     #' @description Verifies the presence of needed variables for the calculation of 

@@ -10,6 +10,7 @@ VariableModule <-
       execute = function(debugAt = NULL) {
         CalcTable <- self$prepdata()
         ret <- private$Execute(CalcTable, debugAt)
+        if (private$isVectorised) return(ret)
         if (any(is.na(ret))) {
           return(data.frame(NA))
         } else {
@@ -180,9 +181,8 @@ VariableModule <-
           
           # fastest when vectorised
           if (private$isVectorised) {
-            browser()
-            NewData <- do.call(self$exeFunction, as.list(CalcTable))
-            
+            NewData <- do.call(self$exeFunction, as.list(c(CalcTable, AllConstants, all.type)))
+            return(cbind(DimTable, NewData))
           } else {
             
             #prep debugnames for use in loop

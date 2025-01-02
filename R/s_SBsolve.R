@@ -7,7 +7,7 @@
 #' @param nTIMES number of timesteps
 #' @param EmisAsPulse T is a pulse-type emission, false is not
 #' @return see: ode()
-SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
+SBsolve = function(SB.K, emissions, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
   
   SB.K = ParentModule$SB.k
   
@@ -15,18 +15,18 @@ SBsolve = function(ParentModule, tmax = 1e10, nTIMES = 100, EmisAsPulse = F) {
   ParentModule$SBtime.tvars <- list(SBtime = SBtime)
   
   if (EmisAsPulse) {
-    m0 = ParentModule$emissions
+    m0 = emissions
     vEmis =  rep(0,nrow(SB.K))
   } else { 
     #The default behaviour
     m0 <- rep(0,nrow(SB.K))
-    vEmis= ParentModule$emissions
+    vEmis= emissions
   }
   
   deS <- deSolve::ode(
     y = m0,
     times = SBtime,
-    func = ParentModule$SimpleBoxODE,
+    func = SimpleBoxODE,
     parms = list(K = SB.K, e = vEmis)
   )
   

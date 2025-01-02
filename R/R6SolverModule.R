@@ -17,15 +17,15 @@ SolverModule <-
       },
       Solution = NULL,
       SolveStates = NULL,
-      EmissionModule = NULL,
+      emissionModule = NULL,
       SB.K = NULL,
       MatrixSolutionInRows = NULL,
       lSBtime.tvars = NULL,
       lvnamesDistSD = NULL,
-      #SolverOutputTp = NULL,
       input_variables = NULL,
+      ConcParams = NULL,
       Mass2ConcFun = NULL,
-      LHSruns = list(),
+      LHSruns = matrix(), # LFS matrix for the uncertainty variables
       
       #' @description helper function for Make_inv_unif01
       triangular_cdf_inv = function(u, # LH scaling factor
@@ -46,80 +46,139 @@ SolverModule <-
         
         # a SB variable outside of the ModuleList and nodelist of the core
         private$Mass2ConcFun <-
-          VariableModule$new(TheCore, "Mass2Conc", IsVectorised = T, AggrBy = NULL, AggrFun = NULL)
+          VariableModule$new(TheCore, "Mass2ConcDivider", IsVectorised = T, AggrBy = NULL, AggrFun = NULL)
+
       },
       #' @description Solve matrix / emsissions
       #' @param needdebug if T, the solver defining function execute in debugmode
+      #' @param emissions
+      #' @param var_box_df = data.frame(), 
+      #' @param var_invFun = list(), 
+      #' @param emis_invFun = list(), 
+      #' @param nRUNs = NULL
       execute = function(needdebug = F,
                          emissions = NULL,
+                         var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL,
                          ...) {
 
-        MoreParams <- list(...)
-        if (!is.null(emissions)) {
-          self.PrepemisV(emissions)
+        if (is.null(private$SB.K)) {
+          stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
         }
         
-        if (is.null(private$SB.K)) {
-          stop("run PrepKaasM() first")
+        MoreParams <- list(...)
+
+        # need to do lfs for emissions?
+        emisFuns <- ifelse (all(sapply(emissions, is.function)),
+                            length(emissions),   # inv. functions for lfs
+                            0 # just the run for emission vector
+                            )
+        # are the functions inv.lfs or in time? # or use nTIMES as criterion?
+        argName <- ifelse(emisFuns == 0, "",
+                          unique(sapply(emissions, formalArgs)))
+        stopifnot(length(argName) == 1)
+        
+        if (argName %in% c("", "t")) {
+          self$PrepemisV(emissions)
+          emisRuns <- 0 # prevent emissions to be overwritten
+        } else {
+          
+          # we need to prep lfs; possibly combines with uncertainty in variables
+          emisRuns <- length(emissions)
         }
+        
+        lhsRUNS <- 0 #unless overwritten:
+        
+        varRuns <- length(varFuns)
+        if (varRuns + emisRuns > 0){
+          # create the RUNs for variables and possibly emissions
+          # NB PrepLHS sets private$input_variables to var_box_df
+          if (emisRuns > 0) {
+            lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = emissions, nRUNs)
+          } else {
+            lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
+          }
+        }
+
+        # split the lhs results over vars and emissions, apply to emissions
+        if (emisRuns > 1) {
+          emissRuns <- lhsRUNS[,1:emisRuns]
+          colnames(emissRuns) <- names(emissions)
+          self$PrepemisV(emissRuns)
+        }
+        if (varRuns > 0) { # MIND YOU: the private lhsruns are for variables only!
+          private$LHSruns <- t(lhsRUNS[,(emisRuns+1):ncol(lhsRUNS)])
+          # Mind the transpose, for easy substituting the samples
+          idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
+          rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
+        }
+        
+        #times? dimension for the mass matrix[,,]
+        if ("nTIMES" %in% self$needVars){ #it should be in ... from init
+          if (!"nTIMES" %in% private$MoreParams) {
+            stop("nTIMES missing in parameters")
+          }
+        } else nTIMES = 1
+        
+        if ("tmax" %in% names(MoreParams)){
+          tmax = MoreParams[["tmax"]]
+        } else {
+          tmax = 0
+        }
+        
+        # the resulting array is (allocated once)
+        
+        private$Solution <- array(dim = c(self$solveStates$nStates, nTIMES, nRUNs),
+                                  dimnames = list(
+                                    self$solveStates$asDataFrame$Abbr,
+                                    TIMES = seq(0, tmax, length.out = nTIMES),
+                                    RUNs = as.character(1:nRUNs)
+                                  ))
         
         if (needdebug) {
           debugonce(private$Function)
         }
         
-        # prep dimensions of resulting concentrations, allocate memory in one
-        if (length(private$LHSruns) > 0) {
-          runs = private$LHSruns
-        } else {
-          runs = 1 # also for the loop
-        }
-        #times? 
-        if ("nTIMES" %in% self$needVars){ #it should be in ... from init
-          if (!"nTIMES" %in% private$MoreParams) {
-            stop("nTIMES missing in parameters")
-          }
-        } else nTIMES = 0
-
-        # the resulting array is (allocated once)
-        private$Solution <- array(dim = c(length(runs), nTIMES, self$solveStates),
-                                  dimnames = list(
-                                    RUNs = names(runs),
-                                    TIMES = seq(0,tmax,length.out = nTIMES),
-                                    self$solveStates
-                                  ))
         #loop over scenarios / lhs RUNs, if any
-        for (i in seq_along(runs)){
-          solvedFormat <- do.call(private$Function, args = c(list(ParentModule = self), 
+        for (i in 1:nRUNs){
+          
+          # each run, if more then the 1
+          emis <- self$emissions(i)
+          # possibly update dirty to create a new SB.k for uncertanty variables
+          if (varRuns > 0) {
+            # to do in getRUNvars:
+            private$input_variables$Waarde <- private$LHSruns[,i]
+            private$MyCore$mutateVars(private$input_variables)
+            
+            #update core and solve
+            private$MyCore$UpdateDirty(unique(private$input_variables$varName))
+            self$PrepKaasM()
+            
+          }
+          solvedFormat <- do.call(private$Function, args = c(list(SB.K = self$SB.k, 
+                                                                  emissions = emis), 
                                                              list(...)))
-          private$Solution[i,,] <- TODOformat
+          private$Solution[,,i] <- solvedFormat
         }
         
       },
       
       GetConcentrations = function() {
-        #prep and call Mass2ConcFun (EqMass (as squeeze), Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
+        #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
         if (is.null(private$Solution)) {
           stop("first solve, then ask again")
         }
-        # switch (
-        #   private$SolverOutputTp,
-        #   "eqVector" = {
-        #     debugonce(private$Mass2ConcFun)
-        #     prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
-        #     browser()
-        #   },
-        #   "massMatrix" = {
-        #     browser()
-        #     debugonce(private$Mass2ConcFun)
-        #     prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
-        #   },
-        #   "nestedTibble" = {
-        #     browser()
-        #     debugonce(private$Mass2ConcFun)
-        #     prepped <- private$Mass2ConcFun(squeezeVar = private$Solution)
-        #   }
-        # )
+        if (!is.null(private$input_variables)) {
+          # make sure params of private$Mass2ConcFun are not affected by dirty params
+          ConcParams <- private$Mass2ConcFun$needVars
+          DependVar <- private$MyCore$DependOn(ConcParams)
+          if (any(unique(private$input_variables$varName) %in% c(ConcParams, DependVar))){
+            stop ("concentration calculation depends on at least of the uncertainty params, not implemented yet")
+          }
+        }
         
+        divide <- private$Mass2ConcFun$execute()
+        divide <- dplyr::left_join(private$SolveStates$asDataFrame, divide)
+        array2DF(private$Solution / divide$NewData)
       },
       
       #' @description prepare kaas for matrix calculations
@@ -217,16 +276,17 @@ SolverModule <-
       #' @description sync emissions as relational table with states into vector
       #' @param emissions named vector / 
       #' @return emissions; ready to solve for the appropriate solver
-      PrepemisV = function (emissions) {
-        private$EmissionModule <-
-          EmissionModule$new(emissions)
+      PrepemisV = function (emis) {
+        
+        private$emissionModule <-
+          EmissionModule$new(emis, private$SolveStates$asDataFrame$Abbr)
       },
       
-      emissions = function(){
-        if (is.null(private$EmissionModule)) {
+      emissions = function(scenario = NULL){
+        if (is.null(private$emissionModule)) {
           stop("set emission data first, using PrepemisV()")
         }
-        private$EmissionModule$emissions(private$SolveStates)
+        private$emissionModule$emissions(scenario)
       },
       
       emissionFunctions = function(){
@@ -289,56 +349,23 @@ SolverModule <-
         if (!all(sapply(var_invFun, is.function))){
           stop ("var_invFun should be a list of functions with a single parameter")
         }
-        # var_box_df should contain varName and have the same length as var_invFun
-        is.df.with(var_box_df, "SolverModule$PrepLHS", c("varName"))
-        neededDims <- private$MyCore$fetchDims(unique(var_box_df))
-        if (!all(neededDims %in% names(var_box_df))) {
-          #expand from Abbr?
-          var_box_df <- dplyr::left_join(var_box_df, solveStateAbbr)
+        if (length(var_box_df) > 0){
+          # var_box_df should contain varName and have the same length as var_invFun
+          is.df.with(var_box_df, "SolverModule$PrepLHS", c("varName"))
+          neededDims <- private$MyCore$fetchDims(unique(var_box_df))
+          if (!all(neededDims %in% names(var_box_df))) {
+            #expand from Abbr?
+            var_box_df <- dplyr::left_join(var_box_df, solveStateAbbr)
+          }
         }
         #only now:
         stopifnot(length(var_invFun) == nrow(var_box_df))
         
         private$input_variables <- var_box_df
-        private$LHSruns <- lhs::optimumLHS(length(var_invFun) + length(emis_invFun))
+        return (lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun)))
 
       },
       
-      #' @description basic ODE function for simplebox; the function for the ode-call;
-      #' see desolve/rootsolve packages
-      #' @param t time (vector ?)
-      #' @param m  (i) = initial mass
-      #' @param parms = kaas, emissions
-      #' @returns dm (i) = change in mass as list
-      SimpleBoxODE = function(t, m, parms) {
-        dm <- with(parms, K %*% m + e)
-        return(list(dm, signal = parms$e))
-      },
-      
-      EmisBoxODE = function(t, m, parms) {
-        e_t <- parms$e(t)
-        dm <- with(parms, K %*% m + e_t)
-        return(list(dm))
-      },
-      
-      EventODE = function(t, m, parms) {
-        with(as.list(c(parms, m)), {
-          dm <- K %*% m
-          list(c(dm))
-        })
-      },
-      
-      ODEapprox = function(t, m, parms) {
-        #browser()
-        with(as.list(c(parms, m)), {
-          e <- c(rep(0, length(SBNames)))
-          for (name in names(parms$emislist)) {
-            e[grep(name, SBNames)] <- parms$emislist[[name]](t)
-          }
-          dm <- with(parms, K %*% m + e)
-          return(list(dm, signal = e))
-        })
-      },
       
       #' @description diff between kaas in this and k's in OtherSB.K
       #' @param OtherSB.K the 'other' kaas
@@ -374,7 +401,7 @@ SolverModule <-
       #' time input in one or t[est]vars in separate columns,
       #' and the Mass in the Mass column
       SolutionAsRelational = function(fullStates = FALSE) {
-        if (is.null(self$Solution)) {
+        if (is.null(private$Solution)) {
           warning("no calculation available")
           return(NULL)
         } else {

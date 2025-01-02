@@ -6,18 +6,15 @@
 #' @param tmax 
 #' @return see: runsteady()
 #' export
-SBsteady = function(ParentModule, tmax=1e10) {
-  
-  SB.K = ParentModule$SB.k
-  vEmis = ParentModule$emissions()
+SBsteady = function(SB.K, emissions, tmax=1e10) {
   
   m0 <- rep(0,nrow(SB.K))
   
   solved = rootSolve::runsteady(
     y = m0,
     times = c(0,tmax),
-    func = ParentModule$SimpleBoxODE,
-    parms = list(K = SB.K, e = vEmis)
+    func = SimpleBoxODE,
+    parms = list(K = SB.K, e = emissions)
   )
   
   if(!attr(solved, "steady")) {

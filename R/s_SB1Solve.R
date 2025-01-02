@@ -6,10 +6,7 @@
 #' @param tol tolerance for accepting as steady state
 #' @return States (i) (=mass)
 #' export
-SB1Solve = function(ParentModule, tol=1e-30) {
+SB1Solve = function(SB.K, emissions, tol=1e-30) {
   
-  SB.K = ParentModule$SB.k
-  vEmis = ParentModule$emissions
-  
-  solve(SB.K, -vEmis, tol = tol)
+  solve(SB.K, -emissions, tol = tol)
 }

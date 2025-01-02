@@ -1,5 +1,43 @@
 # fGeneral
 
+#' @description 4 basic ODE functions for simplebox; the function for the ode-call;
+#' see desolve/rootsolve packages
+#' @param t time (vector ?)
+#' @param m  (i) = initial mass
+#' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
+#' @returns dm (i) = change in mass as list
+SimpleBoxODE <- function(t, m, parms) {
+  dm <- with(parms, K %*% m + e)
+  return(list(dm, signal = parms$e))
+}
+
+EmisBoxODE <- function(t, m, parms) {
+  e_t <- parms$e(t)
+  dm <- with(parms, K %*% m + e_t)
+  return(list(dm))
+}
+
+EventODE <- function(t, m, parms) {
+  with(as.list(c(parms, m)), {
+    dm <- K %*% m
+    list(c(dm))
+  })
+}
+
+ODEapprox <- function(t, m, parms) {
+  browser()
+  with(as.list(c(parms, m)), {
+    SBNames <- colnames(parms$K)
+    e <- c(rep(0, length(SBNames)))
+    for (name in names(parms$emislist)) {
+      e[grep(name, SBNames)] <- parms$emislist[[name]](t)
+    }
+    dm <- with(parms, K %*% m + e)
+    return(list(dm, signal = e))
+  })
+}
+
+
 #' @name  getConst
 #' @description grab from the web: expand ... data.frames
 #' global, not to disrupt a logical object structure
