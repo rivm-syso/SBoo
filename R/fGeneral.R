@@ -36,6 +36,7 @@ ODEapprox <- function(t, m, parms) {
 }
 
 ApproxODE <- function(k, m, parms) {
+  SBNames <- colnames(k)  # Assuming k is a matrix
   SB.m0 <- rep(0, length(SBNames))
   SBtime <- seq(0, parms$tmax, length.out = parms$nTIMES)
   
