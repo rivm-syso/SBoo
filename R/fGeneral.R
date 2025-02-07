@@ -6,37 +6,63 @@
 #' @param m  (i) = initial mass
 #' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
 #' @returns dm (i) = change in mass as list
-SimpleBoxODE <- function(t, m, parms) {
-  dm <- with(parms, K %*% m + e)
-  return(list(dm, signal = parms$e))
+SteadyODE <- function(k, m, tol=1e-30) {
+  dm <- solve(k, -m, tol = tol)
+  return(list(dm))
 }
 
 EmisBoxODE <- function(t, m, parms) {
   e_t <- parms$e(t)
   dm <- with(parms, K %*% m + e_t)
+  return(dm)
+}
+
+EventODE <- function(k, m, parms) {
+  with(as.list(c(parms, m)), {
+    dm <- k %*% m
+  })
   return(list(dm))
 }
 
-EventODE <- function(t, m, parms) {
-  with(as.list(c(parms, m)), {
-    dm <- K %*% m
-    list(c(dm))
-  })
-}
-
 ODEapprox <- function(t, m, parms) {
-  browser()
-  with(as.list(c(parms, m)), {
-    SBNames <- colnames(parms$K)
+  with(as.list(parms), {
     e <- c(rep(0, length(SBNames)))
-    for (name in names(parms$emislist)) {
-      e[grep(name, SBNames)] <- parms$emislist[[name]](t)
+    for (name in names(emislist)) {
+      e[grep(name, SBNames)] <- emislist[[name]](t)
     }
-    dm <- with(parms, K %*% m + e)
+    dm <- K %*% m + e
     return(list(dm, signal = e))
   })
 }
 
+ApproxODE <- function(k, m, parms) {
+  SB.m0 <- rep(0, length(SBNames))
+  SBtime <- seq(0, parms$tmax, length.out = parms$nTIMES)
+  
+  out <- deSolve::ode(
+    y = as.numeric(SB.m0),
+    times = SBtime,
+    func = ODEapprox,
+    parms = list(K = k, SBNames = SBNames, emislist = m),
+    rtol = 1e-30, atol = 1e-3
+  )
+  
+  colnames(out)[1:length(SBNames) + 1] <- SBNames
+  colnames(out)[grep("signal", colnames(out))] <- paste("signal", SBNames, sep = "2")
+  
+  signal_cols <- grep("^signal", colnames(out))
+  
+  # Extract the "signal" columns into a new matrix
+  signal_matrix <- out[, signal_cols, drop = FALSE]
+  
+  # Remove the "signal" columns from the original matrix
+  out <- out[, -signal_cols, drop = FALSE]
+  
+  # Remove "signal" from the column names in the signal_matrix
+  colnames(signal_matrix) <- sub("^signal", "", colnames(signal_matrix))
+  
+  return(list(main = out, signals = signal_matrix))
+}
 
 #' @name  getConst
 #' @description grab from the web: expand ... data.frames
@@ -123,6 +149,3 @@ dframe2excel <- function(dframe, outxlsx = "sb2excel.xlsx") {
   openxlsx::writeData(wb, sheet = sheetName, dframe)
   openxlsx::saveWorkbook(wb, outxlsx, overwrite = TRUE)
 }
-
-
-

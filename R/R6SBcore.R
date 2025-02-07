@@ -213,16 +213,25 @@ SBcore <- R6::R6Class("SBcore",
       if (is.null(private$solver)) {
         stop("No active solver")
       }
-      private$solver$GetSolution(private$solvername)
+      private$solver$GetSolution()
     },
     
     #'@description Function to obtain steady state concentrations, using the solution saved in world.
-    GetConcentration = function(){
+    Concentration = function(){
       if (is.null(private$solver)) {
         stop("No active solver, (then Solve ..., then ask again)")
         return(NULL)
       }
       private$solver$GetConcentrations()
+    },
+    
+    #'@description Save the last used emissions in the core
+    Emissions = function(){
+      #browser()
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetEmissions()
     },
     
     #' @description Injection from SolverModule

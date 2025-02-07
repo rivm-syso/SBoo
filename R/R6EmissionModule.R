@@ -155,7 +155,7 @@ EmissionModule <-
 
       # detemine format, return emission_tp
       setEmissionDataFrame = function(emis) {
-        browser()
+        #browser()
         if (all(c("Abbr", "Emis") %in% names(emis))) {
           if ("Timed" %in% names(emis)) {
             return("Dynamic_df")

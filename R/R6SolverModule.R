@@ -9,13 +9,14 @@ SolverModule <-
   R6::R6Class(
     "SolverModule",
     inherit = CalcGraphModule,
-    
+
     private = list(
       NeedVars = function() {
         #overrule CalcGraphModule
         NULL
       },
       Solution = NULL,
+      UsedEmissions = NULL,
       SolveStates = NULL,
       emissionModule = NULL,
       SB.K = NULL,
@@ -49,7 +50,7 @@ SolverModule <-
           VariableModule$new(TheCore, "Mass2ConcDivider", IsVectorised = T, AggrBy = NULL, AggrFun = NULL)
 
       },
-      #' @description Solve matrix / emsissions
+      #' @description Solve matrix / emissions
       #' @param needdebug if T, the solver defining function execute in debugmode
       #' @param emissions
       #' @param var_box_df = data.frame(), 
@@ -58,8 +59,9 @@ SolverModule <-
       #' @param nRUNs = NULL
       execute = function(needdebug = F,
                          emissions = NULL,
-                         var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL,
+                         var_box_df = data.frame(), var_invFun = list(), uncertain_emis = F, nRUNs = NULL, 
                          ...) {
+        browser()
 
         if (is.null(private$SB.K)) {
           stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
@@ -67,32 +69,42 @@ SolverModule <-
         
         MoreParams <- list(...)
 
-        # need to do lfs for emissions?
-        emisFuns <- ifelse (all(sapply(emissions, is.function)),
-                            length(emissions),   # inv. functions for lfs
-                            0 # just the run for emission vector
-                            )
-        # are the functions inv.lfs or in time? # or use nTIMES as criterion?
-        argName <- ifelse(emisFuns == 0, "",
-                          unique(sapply(emissions, formalArgs)))
+        # Check if all elements in 'emissions' are functions
+        if (all(sapply(emissions, is.function))) {
+          emisFuns <- length(emissions)  # Number of functions in 'emissions'
+        } else {
+          emisFuns <- 0  # Not all elements are functions
+        }
+        
+        # are the functions inv.lhs or in time? # or use nTIMES as criterion?
+        # Determine the value of 'argName' based on 'emisFuns'
+        if (emisFuns == 0) {
+          argName <- ""
+        } else {
+          argName <- unique(sapply(emissions, formalArgs))
+        }
+        
+        # Ensure that 'argName' has exactly one element
         stopifnot(length(argName) == 1)
         
-        if (argName %in% c("", "t")) {
-          self$PrepemisV(emissions)
-          emisRuns <- 0 # prevent emissions to be overwritten
-        } else {
+        if (argName %in% c("", "t", "v")) { # This means the functions for emissions are approxfuns: for dynamic solver
           
-          # we need to prep lfs; possibly combines with uncertainty in variables
-          emisRuns <- length(emissions)
+          # Use PrepemisV (check what this does? Maybe the resulting functions need to be repeated in a list for every run)
+          self$PrepemisV(emissions)
+          
+          nEmisComps <- 0 # prevent emissions from being overwritten - no LHS samples will be taken for emissions
+        } else { # This means the functions for emissions are distribution functions: for steady solver only? 
+          # we need to prep lhs; possibly combined with uncertainty in variables. If so, we need to know how many compartments have a distribution function
+          nEmisComps <- length(emissions)
         }
         
         lhsRUNS <- 0 #unless overwritten:
         
-        varRuns <- length(varFuns)
-        if (varRuns + emisRuns > 0){
+        nVars <- length(varFuns)
+        if (nVars + nEmisComps > 0){
           # create the RUNs for variables and possibly emissions
           # NB PrepLHS sets private$input_variables to var_box_df
-          if (emisRuns > 0) {
+          if (nEmisComps > 0) {
             lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = emissions, nRUNs)
           } else {
             lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
@@ -100,30 +112,34 @@ SolverModule <-
         }
 
         # split the lhs results over vars and emissions, apply to emissions
-        if (emisRuns > 1) {
-          emissRuns <- lhsRUNS[,1:emisRuns]
+        if (nEmisComps > 1) {
+          emissRuns <- lhsRUNS[,1:nEmisComps]
           colnames(emissRuns) <- names(emissions)
           self$PrepemisV(emissRuns)
         }
-        if (varRuns > 0) { # MIND YOU: the private lhsruns are for variables only!
-          private$LHSruns <- t(lhsRUNS[,(emisRuns+1):ncol(lhsRUNS)])
+        if (nVars > 0) { # MIND YOU: the private lhsruns are for variables only!
+          varLHS <- lhsRUNS[,(nEmisComps+1):ncol(lhsRUNS)]
+          
+          scaled_samples <- self$ScaleLHS(varLHS, var_invFun)
+          
+          private$LHSruns <- t(scaled_samples)
           # Mind the transpose, for easy substituting the samples
           idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
           rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
         }
         
         #times? dimension for the mass matrix[,,]
-        if ("nTIMES" %in% self$needVars){ #it should be in ... from init
-          if (!"nTIMES" %in% private$MoreParams) {
-            stop("nTIMES missing in parameters")
-          }
-        } else nTIMES = 1
-        
-        if ("tmax" %in% names(MoreParams)){
-          tmax = MoreParams[["tmax"]]
-        } else {
-          tmax = 0
-        }
+        # if ("nTIMES" %in% self$needVars){ #it should be in ... from init
+        #   if (!"nTIMES" %in% private$MoreParams) {
+        #     stop("nTIMES missing in parameters")
+        #   }
+        # } else nTIMES = 1
+        # 
+        # if ("tmax" %in% names(MoreParams)){
+        #   tmax = MoreParams$tmax
+        # } else {
+        #   tmax = 0
+        # }
         
         # the resulting array is (allocated once)
         
@@ -134,34 +150,71 @@ SolverModule <-
                                     RUNs = as.character(1:nRUNs)
                                   ))
         
+        private$UsedEmissions <- array(dim = c(self$solveStates$nStates, nTIMES, nRUNs),
+                                  dimnames = list(
+                                    self$solveStates$asDataFrame$Abbr,
+                                    TIMES = seq(0, tmax, length.out = nTIMES),
+                                    RUNs = as.character(1:nRUNs)
+                                  ))
+        
         if (needdebug) {
           debugonce(private$Function)
         }
+        
+        #browser()
         
         #loop over scenarios / lhs RUNs, if any
         for (i in 1:nRUNs){
           
           # each run, if more then the 1
           emis <- self$emissions(i)
-          # possibly update dirty to create a new SB.k for uncertanty variables
-          if (varRuns > 0) {
+          all_emis <- self$emissions
+          # possibly update dirty to create a new SB.k for uncertainty variables
+          if (nVars > 0) {
             # to do in getRUNvars:
             private$input_variables$Waarde <- private$LHSruns[,i]
             private$MyCore$mutateVars(private$input_variables)
+            
+            inputvars <- private$input_variables
             
             #update core and solve
             private$MyCore$UpdateDirty(unique(private$input_variables$varName))
             self$PrepKaasM()
             
           }
-          solvedFormat <- do.call(private$Function, args = c(list(SB.K = self$SB.k, 
-                                                                  emissions = emis), 
-                                                             list(...)))
-          private$Solution[,,i] <- solvedFormat
+          solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
+                                                                  m = emis), 
+                                                                  parms = list(MoreParams)))
+          private$Solution[,,i] <- solvedFormat[[1]]
+          if(length(solvedFormat) == 2){
+            private$UsedEmissions[,,i] <- solvedFormat[[2]]
+          } else {
+            private$UsedEmissions[,,i] = emis
+          }
         }
         
       },
       
+      #` Function that returns the solution
+      GetSolution = function() {
+        # Prep and return the solution
+        if (is.null(private$Solution)) {
+          stop("first solve, then ask again")
+        }
+        
+        return(array2DF(private$Solution))
+      },
+      
+      GetEmissions = function() {
+        if (is.null(private$UsedEmissions)) {
+          stop("first solve, then ask again")
+        }
+        
+        return(array2DF(private$Solution))
+        
+      },
+      
+      #' @description Function that returns the concentration calculated from masses 
       GetConcentrations = function() {
         #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
         if (is.null(private$Solution)) {
@@ -277,7 +330,7 @@ SolverModule <-
       #' @param emissions named vector / 
       #' @return emissions; ready to solve for the appropriate solver
       PrepemisV = function (emis) {
-        
+
         private$emissionModule <-
           EmissionModule$new(emis, private$SolveStates$asDataFrame$Abbr)
       },
@@ -298,8 +351,8 @@ SolverModule <-
 
       #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
       Make_inv_unif01 = function(fun_type = "triangular", pars) {
-        if (!fun_type %in% c("triangular", "norm", "unif")) {
-          stop("! fun_type %in% c('triangular', 'norm', 'unif')")
+        if (!fun_type %in% c("triangular", "normal", "uniform")) {
+          stop("! fun_type %in% c('triangular', 'normal', 'uniform')")
         }
         if (fun_type == "triangular") {
           if (!(inherits(pars, "list") && length(pars) == 3)) {
@@ -313,9 +366,9 @@ SolverModule <-
             private$triangular_cdf_inv(x, a, b, c)
           })
         }
-        if (fun_type == "norm") {
+        if (fun_type == "normal") {
           if (!(inherits(pars, "list")) && length(pars) == 2) {
-            stop("the norm is created using a list of two parameters, mean = mean, sd = maximum, c = peak")
+            stop("the normal is created using a list of two parameters, mean = mean, sd = maximum, c = peak")
           }
           mu <- pars[["mean"]]
           sig <- pars[["sigma"]]
@@ -323,9 +376,9 @@ SolverModule <-
             qnorm(p = x, mean = mu, sd = sig)
           })
         }
-        if (fun_type == "unif") {
+        if (fun_type == "uniform") {
           if (!(inherits(pars, "list")) && length(pars) == 2) {
-            stop("the unif is created using a list of two parameters, min = minimum, max = maximum")
+            stop("the uniform is created using a list of two parameters, min = minimum, max = maximum")
           }
           minx <- pars[["min"]]
           maxx <- pars[["max"]]
@@ -366,6 +419,15 @@ SolverModule <-
 
       },
       
+      ScaleLHS = function(lhsRUNs, var_invfun) {
+
+        # Apply the inverse functions to each column of the LHS runs
+        transformed_samples <- apply(lhsRUNs, 2, function(column) {
+          sapply(seq_along(column), function(i) var_invfun[[i]](column[i]))
+        })
+        
+        return(transformed_samples)
+      },
       
       #' @description diff between kaas in this and k's in OtherSB.K
       #' @param OtherSB.K the 'other' kaas
