@@ -6,9 +6,25 @@
 #' @param m  (i) = initial mass
 #' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
 #' @returns dm (i) = change in mass as list
-SteadyODE <- function(k, m, tol=1e-30) {
-  dm <- solve(k, -m, tol = tol)
-  return(list(dm))
+#' 
+# SteadyODE <- function(k, m, tol=1e-30, parms) {
+#   dm <- solve(k, -m, tol = tol)
+#   return(list(dm))
+# }
+
+SimpleBoxODE = function(t, m, parms) {
+  dm <- with(parms, K %*% m + e)
+  return(list(dm, signal = parms$e)) 
+}
+
+SteadyODE <- function(k, m, parms){
+  tmax=1e20 # solution for >1e12 year horizon
+  sol <- rootSolve::runsteady(
+    y = rep(0,nrow(k)),
+    times = c(0,tmax),
+    func = SimpleBoxODE,
+    parms = list(K = k, e = m)
+  )
 }
 
 EmisBoxODE <- function(t, m, parms) {
@@ -24,13 +40,34 @@ EventODE <- function(k, m, parms) {
   return(list(dm))
 }
 
-ODEapprox <- function(t, m, parms) {
-  with(as.list(parms), {
-    e <- c(rep(0, length(SBNames)))
-    for (name in names(emislist)) {
-      e[grep(name, SBNames)] <- emislist[[name]](t)
+# ODEapprox <- function(times, y, parms) {
+#   
+#   t <- times
+#   with(as.list(c(parms, y)), {
+#     e <- c(rep(0, length(SBNames)))
+#     for (name in names(parms$emislist)) {
+#       e[grep(name, SBNames)] <- parms$emislist[[name]](t)
+#     }
+#     dm <- with(parms, K %*% y + e) 
+# 
+#     return(list(dm, signal = e))
+#   })
+# }
+
+ODEapprox = function(t, m, parms) {
+  with(as.list(c(parms, m)), {
+    e <- numeric(length(SBNames))  # Initialize emissions vector with zeros
+    #print(e)
+    for (name in names(parms$emislist)) {
+      idx <- match(name, SBNames)  # Find the exact index of the compartment
+      if (!is.na(idx)) {
+        e[idx] <- parms$emislist[[name]](t)  # Assign emission to the correct compartment
+      }
     }
-    dm <- K %*% m + e
+    # Debugging: Print emissions vector
+    #print(paste("Time:", t, "Emissions:", paste(e, collapse = ", ")))
+    
+    dm <- with(parms, K %*% m + e) 
     return(list(dm, signal = e))
   })
 }
@@ -57,10 +94,11 @@ ApproxODE <- function(k, m, parms) {
   signal_matrix <- out[, signal_cols, drop = FALSE]
   
   # Remove the "signal" columns from the original matrix
-  out <- out[, -signal_cols, drop = FALSE]
+  cols_to_exclude <- c(1, signal_cols)
+  out <- out[, -cols_to_exclude, drop = FALSE]
   
   # Remove "signal" from the column names in the signal_matrix
-  colnames(signal_matrix) <- sub("^signal", "", colnames(signal_matrix))
+  colnames(signal_matrix) <- sub("^signal2", "", colnames(signal_matrix))
   
   return(list(main = out, signals = signal_matrix))
 }

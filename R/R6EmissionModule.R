@@ -7,6 +7,7 @@ EmissionModule <-
     "EmissionModule",
     public = list(
       initialize = function(emis, solvedAbbr) {
+        #browser()
 
         private$solvedAbbr <- solvedAbbr # if NULL it should be given with emis
         
@@ -26,6 +27,7 @@ EmissionModule <-
           } else {
             if ("data.frame" %in% class(emis)){
               private$emission_tp <- private$setEmissionDataFrame(emis)
+              
             } else stop ("unknown format of emissions")
           }
           
@@ -72,9 +74,13 @@ EmissionModule <-
         return(emis)
       },
       
+      # return vector for SS emissions
+      emissionVector = function(){
+        return(private$df2Vector(private$Emissions, private$solvedAbbr))
+      },
+      
       # return approx function 
       emissionFunctions = function(states) {
-        
           if (private$emission_tp == "DynamicFun"){
             if (!all(names(private$Emissions) %in% states$asDataFrame$Abbr)) {
               notfound <- as.list(names(private$Emissions)[
@@ -92,7 +98,7 @@ EmissionModule <-
             if(!(all(c("Abbr","Emis", "Timed") %in% names(private$Emissions)))){
               stop("Expected 'Abbr', 'Emis' and 'Timed' columns in dataframe")
             }
-            if (! is.na(private$uncertainFun)){
+            if (!is.null(private$uncertainFun) && !is.na(private$uncertainFun)) {
               stop("not possible to combine uncertain emissions with dynamic emissions, yet")
             }
             
@@ -115,6 +121,8 @@ EmissionModule <-
       UnitFactor = 1,
       Scenarios = NULL,
       Times = NULL,
+      uncertainFun = NULL,
+      EmissionSource = NULL,
       
       readFromClassicExcel = function(fn) {
         tryCatch(df <- openxlsx::read.xlsx(fn, sheet = "scenarios", startRow = 3),
@@ -172,12 +180,13 @@ EmissionModule <-
           if (all(names(emis) %in% private$solvedAbbr)) {
             return("runs_row")
             
-          } else stop ("at least columns with names Abbr,Emis or names equal to Abbr of states")
+          } else stop ("at least columns with names Abbr, Emis or names equal to Abbr of states")
         }
       },
       
       # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
-      makeApprox = function(vEmissions, states){
+      makeApprox = function(vEmissions){
+        #browser()
         is.df.with(vEmissions, "EmissionModule$makeApprox", c("Timed", "Emis", "Abbr"))
         
         vEmis <- 
@@ -194,7 +203,20 @@ EmissionModule <-
         funlist <- vEmis$EmisFun
         names(funlist) <- vEmis$Abbr
         return(funlist)
-      } 
+      },
+      
+      df2Vector = function(emis, solvedAbbr){
+        if ("data.frame" %in% class(emis) && all(c("Abbr","Emis") %in% names(emis))) {
+          vEmis <- rep(0.0, length.out = length(solvedAbbr))
+          names(vEmis) <- solvedAbbr
+          vEmis[match(emis$Abbr, solvedAbbr)] <- emis$Emis
+          private$EmissionSource <- vEmis
+          names(private$EmissionSource) <- solvedAbbr
+          return(private$EmissionSource)
+        } else {
+          stop("Dataframe does not contain columns Abbr and Emis")
+        }
+      }
       
     )
   )
