@@ -7,8 +7,7 @@ EmissionModule <-
     "EmissionModule",
     public = list(
       initialize = function(emis, solvedAbbr) {
-        #browser()
-
+        
         private$solvedAbbr <- solvedAbbr # if NULL it should be given with emis
         
         if (is.character(emis)){ # read from file as data frame
@@ -18,6 +17,7 @@ EmissionModule <-
           )) 
         }
         
+        # Specify the type of emissions given to the emission module
         if ("matrix" %in% class(emis)) {
           stopifnot(all(colnames(emis) %in% private$solvedAbbr))
           private$emission_tp <- "runs_row"
@@ -27,7 +27,6 @@ EmissionModule <-
           } else {
             if ("data.frame" %in% class(emis)){
               private$emission_tp <- private$setEmissionDataFrame(emis)
-              
             } else stop ("unknown format of emissions")
           }
           
@@ -36,77 +35,100 @@ EmissionModule <-
       },
       
       emissions = function(scenario = NULL){ #scenario also used for "RUN"
-        
+        #browser()
+        type <- private$emission_tp
         if (is.null(private$Emissions)) return (NULL)
 
-        if (!private$emission_tp %in% c("Vector", "runs_long", "runs_row")) {
+        if (!private$emission_tp %in% c("Steady_det_df", "Steady_prob_df", "Dynamic_prob_df", "Dynamic_det_df", "runs_row")) {
           stop("emissions cannot be casted to a named vector")
         } 
-        
-        #normal use or scenarios / uncertainty runs
-        emis <- rep(0, length(private$solvedAbbr))
-        names(emis) <- private$solvedAbbr
           
+        # When there are no runs: 
         if (is.null(scenario)) {
-          if (private$emission_tp != "Vector")
-            stop("scenario/run is missing in emission data")
-          else {
+          if(private$emission_tp == "Steady_det_df") {
+            emis <- rep(0, length(private$solvedAbbr))
+            names(emis) <- private$solvedAbbr
             emis[private$Emissions$Abbr] <- private$Emissions$Emis
-            return(emis)
-          }
-        } 
-
-        # RUNs should contain lhs (like) samples per relevant state rowwise or in long format
-        if (private$emission_tp == "runs_row"){
-          if (is.numeric(scenario)) {
-            rowNum <- scenario
+          } else if(private$emission_tp == "Dynamic_det_df"){
+          emis <- self$emissionFunctions(private$Emissions, private$solvedAbbr)
           } else {
-            rowNum <- match(scenario, rownames(private$Emissions))
-            stopifnot(is.na(rowNum))
+          stop("scenario/run is missing in emission data")
           }
-          lhssamples <- private$Emissions[rowNum,]
-          emis[names(lhssamples)] <- lhssamples
-        } else {
-          lhssamples <- private$Emissions$Emis[private$emis$run == scenario,]
-          emis[lhssamples$Abbr] <- lhssamples$Emis
+        # When there are runs:          
+        } else if (is.numeric(scenario)) {
+          if(private$emission_tp == "Steady_prob_df"){
+            filtered <- private$Emissions[private$Emissions$RUN == scenario, ]
+            emis <- private$df2Vector(filtered, private$solvedAbbr)
+          } else if (private$emission_tp == "Dynamic_prob_df"){
+            filtered <- private$Emissions[private$Emissions$RUN == scenario, ]
+            emis <- self$emissionFunctions(filtered, private$solvedAbbr)
+          } else if (private$emission_tp == "runs_row"){
+            rowNum <- scenario
+            lhssamples <- private$Emissions[rowNum,]
+            emis <- rep(0, length(private$solvedAbbr))
+            names(emis) <- private$solvedAbbr
+            emis[names(lhssamples)] <- lhssamples
+          }
         }
         
+
+
+        #     
+        # else if (is.numeric(scenario)) {
+        #   
+        #   # } else {
+        #   #   rowNum <- match(scenario, rownames(private$Emissions))
+        #   #   stopifnot(is.na(rowNum))
+        #   # }
+        #   
+        # } else {
+        #   lhssamples <- private$Emissions$Emis[private$emis$RUN == scenario,]
+        #   emis[lhssamples$Abbr] <- lhssamples$Emis
+        # }
+         
         return(emis)
       },
       
       # return vector for SS emissions
-      emissionVector = function(){
-        return(private$df2Vector(private$Emissions, private$solvedAbbr))
+      emissionDF = function(){
+   
+        type <- private$emission_tp
+        if(private$emission_tp == "Steady_det_df"){ # A df for solving deterministically steady state
+          return(private$df2Vector(private$Emissions, private$solvedAbbr))
+        } else if (private$emission_tp == "Steady_prob_df"){ # A df for solving probabilistically steady state
+          return(private$df2RunVector(private$Emissions, private$solvedAbbr))
+        }
       },
       
       # return approx function 
-      emissionFunctions = function(states) {
+      emissionFunctions = function(emissions, states) {
+        
           if (private$emission_tp == "DynamicFun"){
-            if (!all(names(private$Emissions) %in% states$asDataFrame$Abbr)) {
-              notfound <- as.list(names(private$Emissions)[
-                !names(private$Emissions) %in% states$asDataFrame$Abbr])
+            if (!all(names(emissions) %in% states)) {
+              notfound <- as.list(names(emissions)[
+                !names(emissions) %in% states])
               stop(do.call(paste,c(list("not all states in SB engine (the matrix)"), notfound)))
             }
             if (! is.na(private$uncertainFun)){
               stop("not possible to combine uncertain emissions with dynamic emissions, yet")
             }
-            return(private$Emissions)
+            return(emissions)
           }
         
-          if (private$emission_tp == "Dynamic_df") {
+          if (private$emission_tp %in% c("Dynamic_det_df", "Dynamic_prob_df")) {
             #return the df as list of functions
-            if(!(all(c("Abbr","Emis", "Timed") %in% names(private$Emissions)))){
+            if(!(all(c("Abbr","Emis", "Timed") %in% names(emissions)))){
               stop("Expected 'Abbr', 'Emis' and 'Timed' columns in dataframe")
             }
             if (!is.null(private$uncertainFun) && !is.na(private$uncertainFun)) {
               stop("not possible to combine uncertain emissions with dynamic emissions, yet")
             }
             
-            if(!all(as.character(states$asDataFrame$Abbr) %in% as.character(states$asDataFrame$Abbr))){
+            if(!all(as.character(states) %in% as.character(states))){
               stop("Abbreviations are not compatible with states")
             }
             #make 'm
-            return(private$makeApprox(private$Emissions))
+            return(private$makeApprox(emissions))
           }
           # else
           stop("no dynamic emissions") #or make them a level line ???
@@ -164,15 +186,26 @@ EmissionModule <-
       # detemine format, return emission_tp
       setEmissionDataFrame = function(emis) {
         #browser()
+        if (all(c("Abbr", "Emis", "Timed", "RUN") %in% names(emis))) {
+          return("Dynamic_prob_df")
+        } else if(all(c("Abbr", "Emis", "Timed") %in% names(emis))) {
+          return("Dynamic_det_df")
+        } else if(all(c("Abbr", "Emis", "RUN") %in% names(emis))) {
+          return("Steady_prob_df")
+        } else if(all(c("Abbr", "Emis") %in% names(emis))) {
+          return("Steady_det_df")
+        }
+        
+        
         if (all(c("Abbr", "Emis") %in% names(emis))) {
           if ("Timed" %in% names(emis)) {
-            return("Dynamic_df")
+            return("Dynamic_det_df")
           } else {
             stopifnot(all(emis$Abbr %in% private$solvedAbbr))
-            if (any(c("run", "scenario") %in% names(emis))) {
-              return ("runs_long")
+            if (any(c("RUN", "scenario") %in% names(emis))) {
+              return ("Steady_prob_df")
             } else {
-              return("Vector")
+              return("Steady_det_df")
             }
           }
         } else {
@@ -216,6 +249,23 @@ EmissionModule <-
         } else {
           stop("Dataframe does not contain columns Abbr and Emis")
         }
+      },
+      
+      df2RunVector = function(emis,solvedAbbr){
+        browser()
+        if ("data.frame" %in% class(emis) && all(c("Abbr", "Emis", "RUN") %in% names(emis))) {
+          # Create an array with the correct dimensions to save the emissions in inside the loop
+          nruns <- length(unique(emis$RUN))
+          emis_array <- array(NA, dim = c(nruns, length(solvedAbbr)), dimnames = list(RUNs = 1:nruns, Abbr = solvedAbbr))
+          if ((!1 %in% emis$RUN) || (max(emis$RUN) != nruns)) {
+            stop("RUN should start at 1 and finish at nRUNs")
+          }  else {
+            for (i in unique(emis$RUN)){
+            
+            }
+          }
+          
+        } 
       }
       
     )

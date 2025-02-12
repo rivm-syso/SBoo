@@ -17,6 +17,7 @@ SolverModule <-
       },
       Solution = NULL,
       UsedEmissions = NULL,
+      AllVars = NULL,
       SolveStates = NULL,
       emissionModule = NULL,
       SB.K = NULL,
@@ -59,7 +60,7 @@ SolverModule <-
       #' @param nRUNs = NULL
       execute = function(needdebug = F,
                          emissions = NULL,
-                         var_box_df = data.frame(), var_invFun = list(), uncertain_emis = F, nRUNs = NULL, 
+                         var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL, 
                          ...) {
         #browser()
 
@@ -126,29 +127,33 @@ SolverModule <-
               lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
             }
           }
-        } else { # Deterministic calculation
-          # # Check if emissions is a df (SS/Dyn), or a set of functions with  "v" as an argument (approxfun for dynamic calculation)
-          if(class(emissions) == "data.frame"){
-            if ("Timed" %in% colnames(emissions)){ # Dynamic df
-              if(!all(c("Abbr", "Emis", "Timed") %in% colnames(emissions))){
-                stop("Abbr, Emis and Timed are not all colnames in the provided 'emissions' dataframe")
-              } else { # Needed cols (Timed, Emis, Abbr) are present, proceed with prepping emissions
-                # Function from EmissionModule for dynamic deterministic df --> convert df to approxfuns and overwrite emissions with it
-                self$PrepemisV(emissions)
-                emis <- self$emissionFunctions()
-              }
-            } else { # SS emis df
-              if(!all(c("Abbr", "Emis") %in% colnames(emissions))){
-                stop("Abbr and Emis are not colnames in the provided 'emissions' dataframe")
-              } else { # Needed cols (Emis, Abbr) are present, proceed with prepping emissions
-                self$PrepemisV(emissions)
-                emis <- self$emissionVector()
-
-              }
-            }
-          } else { # Should be a list of ApproxFuns
-            print(class(emissions))
-          }
+        } else { 
+          
+          # Deterministic calculation
+          # # # Check if emissions is a df (SS/Dyn), or a set of functions with  "v" as an argument (approxfun for dynamic calculation)
+          # if(class(emissions) == "data.frame"){
+          #   if ("Timed" %in% colnames(emissions)){ # Dynamic df
+          #     if(!all(c("Abbr", "Emis", "Timed") %in% colnames(emissions))){
+          #       stop("Abbr, Emis and Timed are not all colnames in the provided 'emissions' dataframe")
+          #     } else { # Needed cols (Timed, Emis, Abbr) are present, proceed with prepping emissions
+          #       # Function from EmissionModule for dynamic deterministic df --> convert df to approxfuns and overwrite emissions with it
+          #       self$PrepemisV(emissions)
+          #       emis <- self$emissionFunctions()
+          #     }
+          #   } else { # SS emis df
+          #     if(!all(c("Abbr", "Emis") %in% colnames(emissions))){
+          #       stop("Abbr and Emis are not colnames in the provided 'emissions' dataframe")
+          #     } else { # Needed cols (Emis, Abbr) are present, proceed with prepping emissions
+          #       self$PrepemisV(emissions)
+          #       emis <- self$emissionDF()
+          # 
+          #     }
+          #   }
+          # } else { # Should be a list of ApproxFuns
+          #   print(class(emissions))
+          # }
+          
+          self$PrepemisV(emissions)
             
           
         }
@@ -195,42 +200,53 @@ SolverModule <-
 
         # the resulting array is (allocated once)
         #browser()
-        private$Solution <- array(dim = c(self$solveStates$nStates, nTIMES, nRUNs),
+        private$Solution <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
                                   dimnames = list(
+                                    time = seq(0, tmax, length.out = nTIMES),
                                     self$solveStates$asDataFrame$Abbr,
-                                    TIMES = seq(0, tmax, length.out = nTIMES),
                                     RUNs = as.character(1:nRUNs)
                                   ))
         
-        private$UsedEmissions <- array(dim = c(self$solveStates$nStates, nTIMES, nRUNs),
-                                  dimnames = list(
-                                    self$solveStates$asDataFrame$Abbr,
-                                    TIMES = seq(0, tmax, length.out = nTIMES),
-                                    RUNs = as.character(1:nRUNs)
-                                  ))
+        private$UsedEmissions <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
+                                       dimnames = list(
+                                         time = seq(0, tmax, length.out = nTIMES),
+                                         self$solveStates$asDataFrame$Abbr,
+                                         RUNs = as.character(1:nRUNs)
+                                       ))
         
         if (needdebug) {
           debugonce(private$Function)
         }
         
-        #browser()
+        browser()
         
         if(nRUNs > 1){
           #loop over scenarios / lhs RUNs, if any
           for (i in 1:nRUNs){
             
-            # each run, if more then the 1
-            emis <- self$emissions(i)
-            all_emis <- self$emissions
+            # If there is one set of emissions: 
+            if(!"RUN" %in% colnames(emissions) && emisFuns == 0){
+              emis <- self$emissions()
+            # If there are nRUNs sets of emissions or distribution functions for emissions:
+            } else if(length(unique(emissions$RUN)) == nRUNs || (emisFuns != 0)){
+              emis <- self$emissions(i)
+            # Emissions are not of length 1 or nRUNs
+            } else {
+              stop("There should be 1 or nRUNs sets of emissions")
+            }
+            
             # possibly update dirty to create a new SB.k for uncertainty variables
             if (nVars > 0) {
               # to do in getRUNvars:
+              
+              lhsruns <- private$LHSruns
               private$input_variables$Waarde <- private$LHSruns[,i]
               private$MyCore$mutateVars(private$input_variables)
               
               inputvars <- private$input_variables
-              
+              inputvars$RUN <- i
               #update core and solve
+              vns <- private$input_variables$varName
               private$MyCore$UpdateDirty(unique(private$input_variables$varName))
               self$PrepKaasM()
               
@@ -239,36 +255,38 @@ SolverModule <-
                                                                     m = emis), 
                                                                     parms = list(MoreParams)))
             private$Solution[,,i] <- solvedFormat[[1]]
-            if(length(solvedFormat) == 2){
-              private$UsedEmissions[,,i] <- solvedFormat[[2]]
-            } else {
-              private$UsedEmissions[,,i] = emis
+            private$UsedEmissions[,,i] <- solvedFormat[[2]]
+            
+            if(is.null(private$AllVars)){
+              private$AllVars <- inputvars
+            } else { 
+              private$AllVars <- bind_rows(private$AllVars, inputvars) # This could maybe be done in a faster way? 
             }
+            
           }
         } else { # Solve once
           #browser()
+          emis <- self$emissions()
           solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
                                                                   m = emis), 
                                                                   parms = list(MoreParams)))
+          dimsolved <- dim(solvedFormat[[1]])
+          dimempty <- dim(private$Solution[,,1])
           private$Solution[,,1] <- solvedFormat[[1]]
-          if(length(solvedFormat) == 2){
-            private$UsedEmissions[,,1] <- solvedFormat[[2]]
-          } else {
-            private$UsedEmissions[,,1] = emis
-          }
+          private$UsedEmissions[,,1] <- solvedFormat[[2]]
         }
-        
-        
       },
       
       #` Function that returns the solution
       GetSolution = function() {
         # Prep and return the solution
+        #browser()
         if (is.null(private$Solution)) {
           stop("first solve, then ask again")
         }
         SolDF <- array2DF(private$Solution)
-        names(SolDF)[names(SolDF) == "Var1"] <- "Abbr"
+        names(SolDF)[names(SolDF) == "Var2"] <- "Abbr"
+        names(SolDF)[names(SolDF) == "Value"] <- "Mass_kg"
         return(SolDF)
       },
       
@@ -278,8 +296,14 @@ SolverModule <-
         }
         
         EmisDF <- array2DF(private$UsedEmissions)
-        names(EmisDF)[names(EmisDF) == "Var1"] <- "Abbr"
+        names(EmisDF)[names(EmisDF) == "Var2"] <- "Abbr"
+        names(EmisDF)[names(EmisDF) == "Value"] <- "Emission_kg_s"
         return(EmisDF)
+      },
+      
+      #' @description Function that returns the values for the LHS samples scaled to the distributions given by the user
+      GetVarValues = function(){
+        return(private$AllVars)
       },
       
       #' @description Function that returns the concentration calculated from masses 
@@ -410,11 +434,11 @@ SolverModule <-
         private$emissionModule$emissions(scenario)
       },
       
-      emissionVector = function(){
+      emissionDF = function(){
         if(is.null(private$emissionModule)) {
           stop("set emission data first, using PrepemisV()")
         }
-        private$emissionModule$emissionVector()
+        private$emissionModule$emissionDF()
       },
       
       emissionFunctions = function(){
@@ -443,20 +467,20 @@ SolverModule <-
         }
         if (fun_type == "normal") {
           if (!(inherits(pars, "list")) && length(pars) == 2) {
-            stop("the normal is created using a list of two parameters, mean = mean, sd = maximum, c = peak")
+            stop("the normal is created using a list of two parameters, a = mean, b = sigma, c = peak")
           }
-          mu <- pars[["mean"]]
-          sig <- pars[["sigma"]]
+          mu <- pars[["a"]]
+          sig <- pars[["b"]]
           return(function(x) {
             qnorm(p = x, mean = mu, sd = sig)
           })
         }
         if (fun_type == "uniform") {
           if (!(inherits(pars, "list")) && length(pars) == 2) {
-            stop("the uniform is created using a list of two parameters, min = minimum, max = maximum")
+            stop("the uniform is created using a list of two parameters, a = minimum, b = maximum")
           }
-          minx <- pars[["min"]]
-          maxx <- pars[["max"]]
+          minx <- pars[["a"]]
+          maxx <- pars[["b"]]
           return(function(x) {
             minx + x * (maxx - minx)
           })
@@ -495,6 +519,7 @@ SolverModule <-
       },
       
       ScaleLHS = function(lhsRUNs, var_invfun) {
+        #browser()
         # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
         if (is.vector(lhsRUNs)) {
           lhsRUNs <- matrix(lhsRUNs, ncol = 1)
@@ -510,9 +535,15 @@ SolverModule <-
           transformed_samples <- sapply(lhsRUNs[, 1], var_invfun[[1]])
         } else if (num_columns == num_functions) {
           # Apply each function to the corresponding column
-          transformed_samples <- apply(lhsRUNs, 2, function(column, col_index) {
-            sapply(column, var_invfun[[col_index]])
-          }, col_index = seq_len(num_columns))
+          # transformed_samples <- apply(lhsRUNs, 2, function(column, col_index) {
+          #   sapply(column, var_invfun[[col_index]])}, 
+          #   col_index = seq_len(num_columns))
+          transformed_samples <- mapply(function(column, inv_fun) {
+            sapply(column, inv_fun)
+          }, as.data.frame(lhsRUNs), var_invfun, SIMPLIFY = FALSE)
+          
+          # Convert the list back to a matrix if needed
+          transformed_samples <- do.call(cbind, transformed_samples)
         } else {
           stop("The number of columns in lhsRUNs must match the number of functions in var_invfun.")
         }

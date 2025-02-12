@@ -7,10 +7,6 @@
 #' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
 #' @returns dm (i) = change in mass as list
 #' 
-# SteadyODE <- function(k, m, tol=1e-30, parms) {
-#   dm <- solve(k, -m, tol = tol)
-#   return(list(dm))
-# }
 
 SimpleBoxODE = function(t, m, parms) {
   dm <- with(parms, K %*% m + e)
@@ -18,6 +14,7 @@ SimpleBoxODE = function(t, m, parms) {
 }
 
 SteadyODE <- function(k, m, parms){
+  SBNames = colnames(k)
   tmax=1e20 # solution for >1e12 year horizon
   sol <- rootSolve::runsteady(
     y = rep(0,nrow(k)),
@@ -25,6 +22,8 @@ SteadyODE <- function(k, m, parms){
     func = SimpleBoxODE,
     parms = list(K = k, e = m)
   )
+  
+  return(sol)
 }
 
 EmisBoxODE <- function(t, m, parms) {
@@ -40,50 +39,32 @@ EventODE <- function(k, m, parms) {
   return(list(dm))
 }
 
-# ODEapprox <- function(times, y, parms) {
-#   
-#   t <- times
-#   with(as.list(c(parms, y)), {
-#     e <- c(rep(0, length(SBNames)))
-#     for (name in names(parms$emislist)) {
-#       e[grep(name, SBNames)] <- parms$emislist[[name]](t)
-#     }
-#     dm <- with(parms, K %*% y + e) 
-# 
-#     return(list(dm, signal = e))
-#   })
-# }
-
 ODEapprox = function(t, m, parms) {
   with(as.list(c(parms, m)), {
-    e <- numeric(length(SBNames))  # Initialize emissions vector with zeros
-    #print(e)
+    e <- c(rep(0, length(SBNames)))
     for (name in names(parms$emislist)) {
-      idx <- match(name, SBNames)  # Find the exact index of the compartment
-      if (!is.na(idx)) {
-        e[idx] <- parms$emislist[[name]](t)  # Assign emission to the correct compartment
-      }
+      e[grep(name, SBNames)] <- parms$emislist[[name]](t) 
     }
-    # Debugging: Print emissions vector
-    #print(paste("Time:", t, "Emissions:", paste(e, collapse = ", ")))
-    
     dm <- with(parms, K %*% m + e) 
     return(list(dm, signal = e))
   })
 }
 
 ApproxODE <- function(k, m, parms) {
-  SBNames <- colnames(k)  # Assuming k is a matrix
+  tmax <- parms[[1]]
+  nTIMES <- parms[[2]]
+  SB.K = k
+  SBNames = colnames(k)
   SB.m0 <- rep(0, length(SBNames))
-  SBtime <- seq(0, parms$tmax, length.out = parms$nTIMES)
+  SBtime <- seq(0,tmax,length.out = nTIMES)
+  vEmis <- m
   
   out <- deSolve::ode(
     y = as.numeric(SB.m0),
     times = SBtime,
     func = ODEapprox,
-    parms = list(K = k, SBNames = SBNames, emislist = m),
-    rtol = 1e-30, atol = 1e-3
-  )
+    parms = list(K = SB.K, SBNames=SBNames, emislist= vEmis),
+    rtol = 1e-11, atol = 1e-3)
   
   colnames(out)[1:length(SBNames) + 1] <- SBNames
   colnames(out)[grep("signal", colnames(out))] <- paste("signal", SBNames, sep = "2")
@@ -122,7 +103,6 @@ ConstGrep <- function(grepSearch, ...){
   constants::codata[grep(grepSearch, constants::codata$quantity, ...), ]
 }
 
-
 #' Title
 #' @param df input object df, or df-alike
 #' @param callingName name of the calling function, or? user informative string
@@ -144,7 +124,6 @@ is.df.with <- function(df, callingName, mustHavecols, reallystop = T){
       stop(rep_text)
     } else warning(rep_text)
   }
-  
 }
 
 #' @name  expand.grid.df

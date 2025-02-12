@@ -216,6 +216,13 @@ SBcore <- R6::R6Class("SBcore",
       private$solver$GetSolution()
     },
     
+    VariableValues = function(){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetVarValues()
+    },
+    
     #'@description Function to obtain steady state concentrations, using the solution saved in world.
     Concentration = function(){
       if (is.null(private$solver)) {
