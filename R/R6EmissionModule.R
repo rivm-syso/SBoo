@@ -71,33 +71,7 @@ EmissionModule <-
           }
         }
         
-
-
-        #     
-        # else if (is.numeric(scenario)) {
-        #   
-        #   # } else {
-        #   #   rowNum <- match(scenario, rownames(private$Emissions))
-        #   #   stopifnot(is.na(rowNum))
-        #   # }
-        #   
-        # } else {
-        #   lhssamples <- private$Emissions$Emis[private$emis$RUN == scenario,]
-        #   emis[lhssamples$Abbr] <- lhssamples$Emis
-        # }
-         
         return(emis)
-      },
-      
-      # return vector for SS emissions
-      emissionDF = function(){
-   
-        type <- private$emission_tp
-        if(private$emission_tp == "Steady_det_df"){ # A df for solving deterministically steady state
-          return(private$df2Vector(private$Emissions, private$solvedAbbr))
-        } else if (private$emission_tp == "Steady_prob_df"){ # A df for solving probabilistically steady state
-          return(private$df2RunVector(private$Emissions, private$solvedAbbr))
-        }
       },
       
       # return approx function 
@@ -137,11 +111,11 @@ EmissionModule <-
     ),
 
     private = list(
-      emission_tp = NULL,
+      emission_tp = NULL, # Character string containing the type of emissions
       Emissions = NULL, #vector / dataframe or list of functions, attributes as input at init
       solvedAbbr = NULL, #vector Abbr of solveStates
       UnitFactor = 1,
-      Scenarios = NULL,
+      Scenarios = NULL, 
       Times = NULL,
       uncertainFun = NULL,
       EmissionSource = NULL,
@@ -183,9 +157,8 @@ EmissionModule <-
         return (read.csv(fn))
       },
 
-      # detemine format, return emission_tp
+      # Determine the format of the emission dataframe
       setEmissionDataFrame = function(emis) {
-        #browser()
         if (all(c("Abbr", "Emis", "Timed", "RUN") %in% names(emis))) {
           return("Dynamic_prob_df")
         } else if(all(c("Abbr", "Emis", "Timed") %in% names(emis))) {
@@ -194,20 +167,6 @@ EmissionModule <-
           return("Steady_prob_df")
         } else if(all(c("Abbr", "Emis") %in% names(emis))) {
           return("Steady_det_df")
-        }
-        
-        
-        if (all(c("Abbr", "Emis") %in% names(emis))) {
-          if ("Timed" %in% names(emis)) {
-            return("Dynamic_det_df")
-          } else {
-            stopifnot(all(emis$Abbr %in% private$solvedAbbr))
-            if (any(c("RUN", "scenario") %in% names(emis))) {
-              return ("Steady_prob_df")
-            } else {
-              return("Steady_det_df")
-            }
-          }
         } else {
           # it can be a data.frame with a run/scenario per row
           if (all(names(emis) %in% private$solvedAbbr)) {
@@ -219,7 +178,6 @@ EmissionModule <-
       
       # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
       makeApprox = function(vEmissions){
-        #browser()
         is.df.with(vEmissions, "EmissionModule$makeApprox", c("Timed", "Emis", "Abbr"))
         
         vEmis <- 
@@ -249,23 +207,6 @@ EmissionModule <-
         } else {
           stop("Dataframe does not contain columns Abbr and Emis")
         }
-      },
-      
-      df2RunVector = function(emis,solvedAbbr){
-        browser()
-        if ("data.frame" %in% class(emis) && all(c("Abbr", "Emis", "RUN") %in% names(emis))) {
-          # Create an array with the correct dimensions to save the emissions in inside the loop
-          nruns <- length(unique(emis$RUN))
-          emis_array <- array(NA, dim = c(nruns, length(solvedAbbr)), dimnames = list(RUNs = 1:nruns, Abbr = solvedAbbr))
-          if ((!1 %in% emis$RUN) || (max(emis$RUN) != nruns)) {
-            stop("RUN should start at 1 and finish at nRUNs")
-          }  else {
-            for (i in unique(emis$RUN)){
-            
-            }
-          }
-          
-        } 
       }
       
     )
