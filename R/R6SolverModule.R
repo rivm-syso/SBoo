@@ -260,6 +260,7 @@ SolverModule <-
       
       #' @description Function that returns the concentration calculated from masses 
       GetConcentrations = function() {
+      
         #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
         if (is.null(private$Solution)) {
           stop("first solve, then ask again")
@@ -272,9 +273,17 @@ SolverModule <-
             stop ("concentration calculation depends on at least of the uncertainty params, not implemented yet")
           }
         }
+        # browser()
         divide <- private$Mass2ConcFun$execute()
         divide <- dplyr::left_join(private$SolveStates$asDataFrame, divide)
-        array2DF(private$Solution / divide$NewData)
+        solution_df <- array2DF(private$Solution) 
+        names(solution_df)[names(solution_df) == "Var2"] <- "Abbr"
+        solution_df <- dplyr::left_join(solution_df, divide, by="Abbr")
+
+        solution_df$Concentration_kg_m3 <- solution_df$Value * solution_df$NewData 
+        concentration_df <- solution_df[, c('time', 'RUNs', 'Abbr', 'Concentration_kg_m3')]
+
+        return(concentration_df)
       },
       
       #' @description prepare kaas for matrix calculations
