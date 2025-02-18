@@ -241,6 +241,22 @@ SBcore <- R6::R6Class("SBcore",
       private$solver$GetEmissions()
     },
     
+    #' @description Return the appropriate concentration plot
+    PlotConcentration = function(scale = NULL, subcompart = NULL){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetConcentrationPlot(scale, subcompart)
+    },
+    
+    #' @description Return the appropriate concentration plot
+    PlotSolution = function(scale = NULL, subcompart = NULL){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetSolutionPlot(scale, subcompart)
+    },
+    
     #' @description Injection from SolverModule
     SolutionAsRelational = function(...){
       if (is.null(private$solver)) {

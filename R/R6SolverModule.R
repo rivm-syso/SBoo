@@ -16,6 +16,7 @@ SolverModule <-
         NULL
       },
       Solution = NULL,
+      Concentration = NULL,
       UsedEmissions = NULL,
       AllVars = NULL,
       SolveStates = NULL,
@@ -273,7 +274,7 @@ SolverModule <-
             stop ("concentration calculation depends on at least of the uncertainty params, not implemented yet")
           }
         }
-        # browser()
+
         divide <- private$Mass2ConcFun$execute()
         divide <- dplyr::left_join(private$SolveStates$asDataFrame, divide)
         solution_df <- array2DF(private$Solution) 
@@ -282,8 +283,76 @@ SolverModule <-
 
         solution_df$Concentration_kg_m3 <- solution_df$Value * solution_df$NewData 
         concentration_df <- solution_df[, c('time', 'RUNs', 'Abbr', 'Concentration_kg_m3')]
+        
+        concentration_df <- self$ConcentrationToGrams(concentration_df)
 
         return(concentration_df)
+      },
+      
+      #' @description Function that creates the appropriate concentration plot
+      GetConcentrationPlot = function(scale = NULL, subcompart = NULL){
+        concentration <- self$GetConcentrations() 
+        
+        ntime <- length(unique(concentration$time))
+        nrun <- length(unique(concentration$RUNs))
+        
+        if(is.null(scale)){
+          scale <- "Regional"
+          print("No scale was given to function, Regional scale is selected")
+        }
+        
+          # Steady state deterministic
+        if(ntime == 1 && nrun == 1){
+          stop("No plot available for deterministic steady state output")
+          # Dynamic deterministic  
+        } else if(ntime > 1 && nrun == 1){
+          concplot <- DetDynConcPlot(scale = scale, subcompart = subcompart)
+          # Steady state probabilistic    
+        } else if(ntime == 1 && nrun > 1){
+          concplot <- ProbSSConcPlot(scale = scale) 
+          # Dynamic probabilistic  
+        } else if(ntime > 1 && nrun > 1){
+          if(is.null(subcompart)){
+            subcompart <- "agriculturalsoil"
+            print("No subcompart was given to function, agriculturalsoil is selected")
+          }
+          concplot <- ProbDynConcPlot(scale = scale, subcompart = subcompart)
+        }
+        
+        return(concplot)
+      }, 
+      
+      #' @description Function that creats the appropriate solution plot
+      GetSolutionPlot = function(scale = NULL, subcompart = NULL){
+        solution <- self$GetSolution()
+        
+        ntime <- length(unique(solution$time))
+        nrun <- length(unique(solution$RUNs))
+        
+        if(is.null(scale)){
+          scale <- "Regional"
+          print("No scale was given to function, Regional scale is selected")
+        }
+
+          # Steady state deterministic
+        if(ntime == 1 && nrun == 1){
+          stop("No plot available for deterministic steady state output")
+          # Dynamic deterministic  
+        } else if(ntime > 1 && nrun == 1){
+          solplot <- DetDynSolPlot(scale = scale, subcompart = subcompart)
+          # Steady state probabilistic    
+        } else if(ntime == 1 && nrun > 1){
+          solplot <- ProbSSSolPlot(scale = scale) 
+          # Dynamic probabilistic  
+        } else if(ntime > 1 && nrun > 1){
+          if(is.null(subcompart)){
+            subcompart <- "agriculturalsoil"
+            print("No subcompart was given to function, agriculturalsoil is selected")
+          }
+          solplot <- ProbDynSolPlot(scale = scale, subcompart = subcompart)
+        }
+        
+        return(solplot)
       },
       
       #' @description prepare kaas for matrix calculations
@@ -538,6 +607,41 @@ SolverModule <-
           diff = Diff[ShowDiff]
         )
       },
+      
+      #' @description return dataframe with concentrations
+      #' in g/l, g/m3 or g/kg dw instead of kg/m3
+      ConcentrationToGrams = function(Concentration_df) {
+        # Fetch and filter the rhoMatrix data
+        rho_data <- private$MyCore$fetchData("rhoMatrix")
+        rho <- rho_data[rho_data$SubCompart == "agriculturalsoil", "rhoMatrix"]
+        
+        # Merge Concentration_df with MyCore states data
+        Concentration_df <- merge(Concentration_df, private$MyCore$states$asDataFrame, by = "Abbr")
+        
+        # Create a multiplier column based on SubCompart
+        Concentration_df$Multiplier <- ifelse(Concentration_df$SubCompart %in% c("air", "cloudwater"), 1000,
+                                      ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), 1000000,
+                                             ifelse(Concentration_df$SubCompart %in% c("naturalsoil", "agriculturalsoil", "othersoil", 
+                                                                               "freshwatersediment", "marinesediment", "lakesediment"), 
+                                                    rho * 1000, 1)))
+        
+        # Calculate the Concentration using the Multiplier
+        Concentration_df$Concentration <- Concentration_df$Concentration_kg_m3 * Concentration_df$Multiplier
+        
+        # Create a Unit column based on SubCompart
+        Concentration_df$Unit <- ifelse(Concentration_df$SubCompart %in% c("air", "cloudwater"), "g/m3",
+                                ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), "g/L",
+                                       ifelse(Concentration_df$SubCompart %in% c("naturalsoil", "agriculturalsoil", "othersoil", 
+                                                                         "freshwatersediment", "marinesediment", "lakesediment"), 
+                                              "g/kg dw", "kg/m3")))
+        
+        # Add up the concentration in air and cloudwater, name the compartment air + cloudwater
+        
+        # Select the desired columns
+        Concentration_df <- Concentration_df[, c("Abbr", "time", "RUNs", "Concentration", "Unit")]
+        return(Concentration_df)
+      },
+      
       #' @description return dataframe with
       #' state in three columns,
       #' time input in one or t[est]vars in separate columns,
