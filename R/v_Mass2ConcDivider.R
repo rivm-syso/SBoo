@@ -8,7 +8,7 @@
 #' @return Concentration, kg/kg wet for soils, kg/kg wet for sediment, otherwise kg/m3 
 #' @export
 Mass2ConcDivider <- function (Volume, Matrix, all.rhoMatrix, FRACa, FRACw) {
-  #browser()
+
   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "othersoil"]
   RHOw <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "lake"]
   
