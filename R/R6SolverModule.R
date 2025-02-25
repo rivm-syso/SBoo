@@ -12,24 +12,25 @@ SolverModule <-
     public = list( #
       #' @description prepare kaas for matrix calculations
       #' @param needdebug if T, the solver defining function execute in debugmode 
-      execute = function(needdebug = F, emissions=NULL, ...){ 
+      execute = function(needdebug = F, emissions=NULL, solvername=NULL, ...){ 
         #browser()
+        
+        MoreParams <- list(...)
+        
+        private$SolverName <- solvername
 
         if (needdebug){
           debugonce(private$Function)
         }
+        
         private$Solution <- do.call(private$Function, args = c(
-            list(ParentModule = self),
-            list(...)))
+          list(ParentModule = self),
+          list(...)))
         
-        ST <- attr(private$Solution, "SolverType")
-        
-        if(is.null(ST)){
-          ST <- "SteadyState"}
-      
-        if (ST == "SimpleDynamic" | ST == "ApproxDynamic" | ST == "EventSolver" | ST == "UncertainSteady") {
+        solvernames <- c("EventSolver", "DynApproxSolve", "SBsolve", "UncertainSolver", "vUncertain", "UncertainDynamicSolver")
+        if (private$SolverName %in% solvernames) {
           Sol <- private$Solution
-          data.frame(Sol)
+          Sol
         } else {
         # Solvers (should) return a vector [states] or
         # a Matrix[states, time|run] with the mass in the state in equilibrium in the last column/row
@@ -54,6 +55,23 @@ SolverModule <-
         }
       },
       
+      GetSolution = function(solvername) {
+        #browser()
+        if (solvername == "SB1Solve" | solvername == "SBsteady") {
+          df <- as.data.frame(private$Solution)
+          df <- cbind(Abbr = rownames(df), df)  # Add row names as a new column
+          colnames(df) <- c("Abbr", "EqMass") 
+        } else if(solvername == "UncertainSolver") {
+          df <- private$Solution
+        } else if(solvername == "UncertainDynamicSolver") {
+          df <- private$Solution
+        } else if(solvername == "DynApproxSolve") {
+          df <- as.data.frame(private$Solution)
+        }
+        return(df)
+        
+      },
+      
       #' @description prepare kaas for matrix calculations
       #' 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
       #' including aggregation of kaas with identical (i,j)
@@ -63,12 +81,13 @@ SolverModule <-
       #' @param kaas k's
       #' @return matrix with kaas; ready to go
       PrepKaasM = function (kaas = NULL) {
-        if (!is.null(private$Emissions)){
-          SavedEmissions <- private$Emissions
-          private$Emissions <- NULL
-        } else { #know they should update
-          SavedEmissions <- NULL
-        }
+        #browser()
+        # if (!is.null(private$Emissions)){
+        #   SavedEmissions <- private$Emissions
+        #   private$Emissions <- NULL
+        # } else { #know they should update
+        #   SavedEmissions <- NULL
+        # }
         
         if (is.null(kaas)) { #copy latest from core
           kaas <- self$myCore$kaas}
@@ -116,13 +135,13 @@ SolverModule <-
         }  
         
         #Reinstate(s) emissions
-        if (!is.null(SavedEmissions)){
-          OldEmissions <- data.frame(
-            Abbr = names(SavedEmissions)[!is.na(names(SavedEmissions))],
-            Emis = SavedEmissions[!is.na(names(SavedEmissions))]
-          ) 
-          self$PrepemisV(OldEmissions)
-        }
+        # if (!is.null(SavedEmissions)){
+        #   OldEmissions <- data.frame(
+        #     Abbr = names(SavedEmissions)[!is.na(names(SavedEmissions))],
+        #     Emis = SavedEmissions[!is.na(names(SavedEmissions))]
+        #   ) 
+        #   self$PrepemisV(OldEmissions)
+        # }
         
         nrowStates <- self$solveStates$nStates
         k2times <- as.integer(nrowStates*nrowStates)
@@ -148,15 +167,36 @@ SolverModule <-
       #' @description sync emissions as relational table with states into vector 
       #' @param emissions 
       #' @return vector of functions(t) with emissions; ready to solve
-      PrepemisV = function (emissions = NULL, ...) { #for backward compatibly
+      PrepemisV = function (emissions = NULL, solvername = private$SolverName, ...) { #for backward compatibly
         #browser()
-        SolverFunction <- private$Function
-        kaas <- private$SB.K
-        private$Emission <- EmissionModule$new(self, emissions, SolverFunction, kaas, ...)
+
+        private$Emission <- EmissionModule$new(self, emissions, solvername, private$SB.K, ...)
 
         emis <- private$Emission$CleanEmissions()
         private$Emissions <- private$Emission$CleanEmissions()
 
+      },
+      
+      PrepUncertain = function(input) {
+        #browser()
+                # Colnames that should be in the df
+        cn <- c("varName", "Scale", "SubCompart", "data")
+        
+        if(!all(cn %in% names(input))) {
+          stop("Column name(s) incorrect. The tibble should contain columns with the following names: 'varName', 'Scale', 'SubCompart' and 'data'.")
+        }
+        
+        row_counts <- input %>%
+          pull(data) %>%
+          map_int(nrow)
+        
+        unique_rc <- length(unique(row_counts)) 
+        
+        if(unique_rc != 1) {
+          stop("Not all variables have the same number of samples.")
+        }
+        
+        private$lUncertainInput <- input
       },
       
       #' @description basic ODE function for simplebox; the function for the ode-call; 
@@ -268,11 +308,11 @@ SolverModule <-
                 FUN <- Params$FUN
                 if (is.null(FUN)) {
                   warning("no FUN found, no aggregation")
-                  browser()
+                  #browser()
                   leftRightHS <- private$interprFormula(Params$terms)
                   #Add Name to attribute name, if needed
                   fNasName <- sapply(fAsList, function(x) {
-                    browser()
+                    #browser()
                     ifelse (any(x %in% The3D), paste(x, "Name", sep = ""), x)
                   })
                   
@@ -340,6 +380,11 @@ SolverModule <-
           stop("`$SB.k` is set by PrepKaasM", call. = FALSE)
         }
       },
+      
+      UncertainInput = function(value){
+        private$lUncertainInput
+      },
+      
       SBtime.tvars = function(value) { 
         if (missing(value)) {
           private$lSBtime.tvars
@@ -371,7 +416,7 @@ SolverModule <-
             return(structure(listree)) #remove formule attributes
           } 
         }
-        browser()
+        #browser()
         if (is.call(TheCall[1]) && TheCall[[1]] == "~") {
           hasTilde <- T
           lhs <- plusflat(TheCall[2])
@@ -386,6 +431,7 @@ SolverModule <-
         NULL
       },
       Solution = NULL,
+      ST = NULL,
       SolveStates = NULL,
       Emissions = NULL,
       emis = NULL, 
@@ -394,6 +440,7 @@ SolverModule <-
       lSBtime.tvars = NULL,
       lvnamesDistSD = NULL,
       Emission = NULL,
-      SolverType = NULL
+      SolverName = NULL,
+      lUncertainInput = NULL
     )
   )

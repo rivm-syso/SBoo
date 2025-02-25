@@ -11,8 +11,7 @@
 x_RiverDischarge <- function (all.Runoff, RainOnFreshwater, 
                               dischargeFRAC, all.x_ContRiver2Reg, 
                               ScaleName, SubCompartName){
-
-  x_ContRiver2Reg <- sum(all.x_ContRiver2Reg$flux) #sum to force an atomic number ?
+  x_ContRiver2Reg <- sum(all.x_ContRiver2Reg$flow) #sum to force an atomic number ?
   SumRainRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
   
     switch (SubCompartName,

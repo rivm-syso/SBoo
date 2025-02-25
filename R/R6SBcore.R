@@ -49,6 +49,7 @@ SBcore <- R6::R6Class("SBcore",
     #' because it will be needed in sensitivity analyses etc.)
     PostponeVarProcess = function(VarFunctions = NULL, FlowFunctions = NULL, ProcesFunctions) {
       #test if all exist
+      #browser()
       for (modname in c(VarFunctions, FlowFunctions, ProcesFunctions)){
         TheModule <- self$moduleList[[modname]]
         if (is.null(TheModule)) {
@@ -132,6 +133,7 @@ SBcore <- R6::R6Class("SBcore",
     NewSolver = function(SolverFunction, ...){
       #existing function?
       stopifnot("function" %in% class(match.fun(SolverFunction)))
+      private$solvername <- SolverFunction
       private$solver <- SolverModule$new(self, SolverFunction, ...)
     },
     
@@ -158,20 +160,37 @@ SBcore <- R6::R6Class("SBcore",
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
     Solve = function(emissions, needdebug = F, ...){
+      #browser()
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
       }
+      #browser()
+      # prepare the kaas
       private$solver$PrepKaasM()
-      # if (!"data.frame" %in% class(emissions)) #TODO make warning, return NULL 
-      #   stop("emissions should be a dataframe(like) with columns")
-      # if (!all(c("Abbr", "Emis") %in% names(emissions))) 
-      #   stop("emissions should contain Abbr and Emis as columns, and possibly Timed")
-      private$solver$PrepemisV(emissions)
+      
+      # prepare the emissions     
+      private$solver$PrepemisV(emissions, private$solvername)
+      
+      MoreParams <- list(...)
+      
+      if(length(MoreParams) > 0){
+        if(is_tibble(MoreParams[[1]])){
+          uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
+          uncertaininput <- MoreParams[[1]]
+        }
+      }
+      
+      Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+      
       # the solver does the actual work
-      Solution = private$solver$execute(needdebug = needdebug, emissions, ...)
-      #private$UpdateDL(Solution)
-      #Solution = private$solver$solvetrial(...)
+      # if(!is.null(MoreParams)){
+      #   if(exists("uncertaininput")){
+      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
+      #   } else {
+      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
+      #   }
+      # }
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
@@ -191,6 +210,22 @@ SBcore <- R6::R6Class("SBcore",
         return(NULL)
       }
       private$solver$PrepKaasM()
+    },
+    
+    #'@description Save the last calculated masses in the core
+    Solution = function(){
+      #browser()
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetSolution(private$solvername)
+    },
+    
+    #'@description Function to obtain steady state concentrations, using the solution saved in world.
+    GetConcentration = function(){
+      private$concentration <- ConcentrationModule$new(self, private$solvername)
+      private$concentration$GetConc()
+
     },
     
     #' @description Injection from SolverModule
@@ -218,6 +253,35 @@ SBcore <- R6::R6Class("SBcore",
     #' @param varname the name of the variable. Returns a list of variables if varname == "all"
     fetchData = function(varname="all"){
       private$FetchData(varname)
+    },
+    
+    #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv
+    #' @param varname name of the variable
+    fetchDataUnits = function(varname="all"){
+      #browser()
+      fd <- private$FetchData(varname)
+      
+      if(varname != "all"){
+        unitTable <- private$SB4Ndata[["Units"]]
+        if(varname %in% unitTable$VarName){
+          
+          # Check if 'fd' is a data.frame or an atomic vector
+          if (is.data.frame(fd)) {
+            unit <- unitTable |> filter(VarName == varname)
+            unit <- unit$Unit
+            fd <- fd |> mutate(Unit = unit)
+            
+          } else if (is.atomic(fd) && length(fd) == 1) {
+            # If fd is an atomic vector (e.g., a named number), attach unit as attribute
+            unit <- unitTable |> filter(VarName == varname)
+            unit <- unit$Unit
+            
+            # Add the unit attribute to the vector
+            attr(fd, "unit") <- unit
+          }
+        }
+      }
+      return(fd)
     },
     
     #' @description Pseudo-inherit data; for instance from compartment to subcompartments.
@@ -271,6 +335,7 @@ SBcore <- R6::R6Class("SBcore",
     #' not mergeExisting, all process results (kaas) are cleared first
     UpdateKaas = function(aProcessModule = NULL, #(Default) NULL means calculate CalcTreeBack
                           mergeExisting = T){ 
+      #browser()
 
       if (is.null(aProcessModule)) {
         NewKaas <- private$CalcTreeBack(aProcessModule = NULL)
@@ -332,7 +397,7 @@ SBcore <- R6::R6Class("SBcore",
       }
     },
     
-    #' @description runs (or tries to) the calculation for aVariable and stores the results.
+    #' @description runs (or tries to) the calculation for a Variable and stores the results.
     #' After this, the SBvariable can be viewed with fetchData and this data will be used 
     #' when calculating processes, or other variables.
     #' @param aVariable the name of the Variable
@@ -364,6 +429,7 @@ SBcore <- R6::R6Class("SBcore",
     #' @param Variables the name(s) of the Variable(s) that are "dirty" 
     #' (Datalayer has been updated)
     UpdateDirty = function(Variables){#recalc DAG, starting onwards from vector of Variables
+      #browser()
       NotUsed <- Variables[!Variables %in% private$nodeList$Params]
       if (length(NotUsed)> 0) warning(do.call(paste, as.list(
             c("Not all Variables are used:", NotUsed))))
@@ -391,6 +457,7 @@ SBcore <- R6::R6Class("SBcore",
     #' @description if UpdateRows is a list of variables (each containing a fetchdata() result): see private$MutateVar,
     #' if UpdateRows is (a csv filename of) a single dataframe it will be converted before the call
     mutateVars = function(UpdateRows) {
+      #browser()
       if ("character" %in% class(UpdateRows)) {
         stopifnot(endsWith(UpdateRows, ".csv") && file.exists(UpdateRows))
         UpdateRows <- read.csv(UpdateRows) #now it's a data.frame
@@ -435,7 +502,11 @@ SBcore <- R6::R6Class("SBcore",
         if ("data.frame" %in% class(UpdateRows[[i]])) {
           private$MutateVar(UpdateRows[[i]])
         } else {
-          private$MutateVar(UpdateRows[i]) #mind the single []; leaving atomic values as list
+          UR <- UpdateRows[i] #mind the single []; leaving atomic values as list
+          if (is.list(UpdateRows[[1]])) {
+            UR[[1]] <- UR[[1]][[1]]
+          }
+          private$MutateVar(UR) 
         }
       }
     },
@@ -700,6 +771,50 @@ SBcore <- R6::R6Class("SBcore",
         warning("cannot set substanceProperties")
       }
     },
+    
+    #' @description Export everything in fetchdata
+    exportMetadata = function() {
+      #browser()
+      fetchdatanames <- unique(self$fetchData())
+
+      exclusions <- c("Dimension", "FlowName", "forWhich", "Unit", "VarName", "X", "DefaultFRACarea", "DefaultPH", "Kow_default", "MOLMASSAIR", "outdated", "outdated.1", "outdated.2", "Pvap25_default")
+      
+      # Initialize an empty tibble to store the results
+      result_tibble <- tibble(
+        varname = character(),  # Column for the variable name
+        data = list()           # Column for nested tibbles
+      )
+      
+      # Iterate through the fetched data names
+      for(i in fetchdatanames) {
+        if (!i %in% exclusions) {
+          
+          fd <- data.frame(self$fetchDataUnits(i))
+          
+          # Convert fd to a tibble if it's not already one
+          fd_tibble <- as_tibble(fd)
+          
+          # Add a new row to the result_tibble
+          result_tibble <- bind_rows(result_tibble, tibble(
+            varname = i,       # Column for the variable name
+            data = list(fd_tibble)  # Nest the tibble 
+          ))
+        }
+      }
+      
+      result_tibble <- result_tibble |>
+        distinct()
+      
+      # Get the kaas and format it the same as the fetchdata items
+      kaas <- self$kaas
+      kaas_tibble <- as_tibble(kaas)
+      kaas_tibble <- tibble(varname = "kaas",
+                            data = list(kaas))
+      
+      # Bind the fetchdata tibble and the kaas tibble together
+      result_tibble <- rbind(result_tibble, kaas_tibble)
+    },
+    
     filterStates = function(value){
       if (missing(value)) {
         return(private$filterstates)
@@ -719,11 +834,13 @@ SBcore <- R6::R6Class("SBcore",
     SB4Ndata = NULL,
     States = NULL,
     Substance = NULL,
+    solvername = NULL, 
     SBkaas = NULL,
     ModuleList =  NULL,
     nodeList = NULL,
     solver = NULL,
     l_postPoneList = NULL,
+    concentration = NULL,
     filterstates = list(),
     substanceproperties = list(),
 
@@ -821,6 +938,7 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     CalcTreeForward = function(DirtyVariables){ #calculation of variables and kaas
+      #browser()
       if (is.null(DirtyVariables)) stop("Cannot CalcTreeForward without a(starting/dirty)Variable")
       # determine modules that need updating by module dependencies, derived from params of SB vars etc.
       # loop until Trunc does not grow anymore
@@ -846,13 +964,14 @@ SBcore <- R6::R6Class("SBcore",
       for (i in 1:length(ToCalculate)){ #these are in proper order, all should succeed
         ModName <- ToCalculate[i]
         CalcMod <- private$ModuleList[[ModName]]
+        clcm <- class(CalcMod)
         if (exists("verbose") && verbose){
             cat(paste("calculating", ModName), "\n")
         }
         if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             private$UpdateDL(ModName)
         } else { # a process; add kaas to the list
-            kaaslist[[CalcMod$myName]] <- CalcMod$execute()
+            kaaslist[[CalcMod$myName]] <- CalcMod$execute() # Hier komt de error vandaan
         }
       }
       return(private$IntegrateKaaslist(kaaslist))
@@ -944,8 +1063,13 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     DoPostponed = function() {
-      if (!is.null(private$l_postPoneList)){
-        for (postNames in do.call(c,private$l_postPoneList)){ #force order??
+      #browser()
+      ppl <- private$l_postPoneList
+      
+      validPostPoneList <- Filter(Negate(is.null), private$l_postPoneList)
+      
+      if (!is.null(validPostPoneList)){
+        for (postNames in validPostPoneList){ #force order??
           CalcMod <- private$ModuleList[[postNames]]
           if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             succes <- private$UpdateDL(postNames)
@@ -969,6 +1093,7 @@ SBcore <- R6::R6Class("SBcore",
     ## '  @param ParamName.Dimensions data.frame with columns ParamName and the 3Dimensions() use merge x.all = T
     #' return vector values (if found; else NA)
     FetchData = function(varname) {
+      #browser()
       #hack; because of ugly deposition dependency
       if (varname == "kaas") {
         return(self$kaas)
@@ -1015,17 +1140,19 @@ SBcore <- R6::R6Class("SBcore",
             ) & ! MetaData$Tablenames %in% c("SubstanceCompartments"),]
             grepVars <- do.call(paste,
                                 as.list(allVars$AttributeNames[grep(varname, allVars$AttributeNames, ignore.case=TRUE)]))
-            warning (paste("Cannot find property", varname, "; but found", grepVars))
+            warning (paste("Cannot find property ", varname, "; but found", grepVars))
             return(NA)
           } 
           
           if(length(Attrn) > 1) {
-            stop (paste0(varname, "in multiple tables:", Attrn))
+            stop (paste0(varname, " in multiple tables: ", Attrn))
           } 
           subvec <- MetaData[MetaData$Tablenames == Attrn, "AttributeNames"]
           Dims <- c(The3D, paste("to.", The3D, sep = ""), "Substance") %in% subvec
           names(Dims)[Dims] <- c(The3D, paste("to.", The3D, sep = ""), "Substance")[Dims]
           DimsVarCols <- c(names(Dims)[Dims], varname)
+          
+          #browser()
           
           #Check if unit should be converted to SI
           unitTable <- private$SB4Ndata[["Units"]]
@@ -1074,6 +1201,7 @@ SBcore <- R6::R6Class("SBcore",
     #' 1 other column containing values, named as the var name
     #' @return side-effect; new "fetchdata()" is returned
     MutateVar = function(UpdateRows) {
+      #browser()
       if ("data.frame" %in% class(UpdateRows)) {
         dims <- The3D[The3D %in% names(UpdateRows)]
         varName <- names(UpdateRows)[!names(UpdateRows) %in% dims]
@@ -1089,7 +1217,8 @@ SBcore <- R6::R6Class("SBcore",
         }
         #merge the "newValue" to the nowVar
         names(UpdateRows)[names(UpdateRows) == varName] <- "newValue"
-        wannebeVar <- merge(nowVar, UpdateRows, all.x = T)
+        wannebeVar <- merge(nowVar, UpdateRows, all.x = T) |>
+          distinct()
         if (nrow(nowVar) < nrow(wannebeVar)) {
           #browser() #start debugging?
           stop("illegal UpdateRows in MutateVar")
@@ -1110,7 +1239,7 @@ SBcore <- R6::R6Class("SBcore",
     #' uh, not in use at this point in time
     #' return side-effect; vector?
     UpdateDL = function(VarFunName = NULL, DIMRestrict = NULL, ...) {
-     
+      #browser()
       MetaData <- self$metaData()
       if (is.null(VarFunName)) {
         inp <- list(...)
@@ -1179,6 +1308,7 @@ SBcore <- R6::R6Class("SBcore",
       #Special Case a "constant" or substance property
       if (Target.Table == "CONSTANTS") {
         private$SB4Ndata[[Target.Table]][names(NewData)] <- NewData
+        nd <- private$SB4Ndata[[Target.Table]][names(NewData)]
       } else {
         #delete and merge the DL-table
         if (Target.Table == "Flows") {
@@ -1203,6 +1333,7 @@ SBcore <- R6::R6Class("SBcore",
       if (!exists("diffTable")){ #new in the DL
         return(NewData)
       } else {
+        mt <- merge(diffTable, NewData, all = T)
         return(merge(diffTable, NewData, all = T)) 
       }
     },

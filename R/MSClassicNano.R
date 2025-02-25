@@ -169,7 +169,7 @@ ClassicNanoWorld <- R6::R6Class(
     }
     
     #actual method DeriveState #####
-    
+    #browser()
     #expanding in The3D
     ToPermute <- lapply(The3D, function(TheD) {
       TheSheetName = paste0(TheD, "Sheet")

@@ -13,8 +13,8 @@
 
 FracROWatComp <- function(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName) {
   compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale ==  ScaleName]
-  all.landFrac <- as.tibble(all.landFRAC)
-  all.Matrix <- as.tibble(all.Matrix)
+  all.landFrac <- as_tibble(all.landFRAC)
+  all.Matrix <- as_tibble(all.Matrix)
   mergeddata <- left_join(
     x = all.landFRAC,
     y = all.Matrix,
