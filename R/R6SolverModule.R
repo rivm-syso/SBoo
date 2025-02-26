@@ -303,7 +303,7 @@ SolverModule <-
         
           # Steady state deterministic
         if(ntime == 1 && nrun == 1){
-          stop("No plot available for deterministic steady state output")
+          concplot <- DetSSConcPlot(scale = scale, subcompart = subcompart)
           # Dynamic deterministic  
         } else if(ntime > 1 && nrun == 1){
           concplot <- DetDynConcPlot(scale = scale, subcompart = subcompart)
@@ -336,7 +336,7 @@ SolverModule <-
 
           # Steady state deterministic
         if(ntime == 1 && nrun == 1){
-          stop("No plot available for deterministic steady state output")
+          solplot <- DetSSPlot(scale = scale, subcompart = subcompart)
           # Dynamic deterministic  
         } else if(ntime > 1 && nrun == 1){
           solplot <- DetDynSolPlot(scale = scale, subcompart = subcompart)
