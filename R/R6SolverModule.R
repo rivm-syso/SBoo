@@ -322,7 +322,7 @@ SolverModule <-
         return(concplot)
       }, 
       
-      #' @description Function that creats the appropriate solution plot
+      #' @description Function that creates the appropriate solution plot
       GetSolutionPlot = function(scale = NULL, subcompart = NULL){
         solution <- self$GetSolution()
         
@@ -353,6 +353,36 @@ SolverModule <-
         }
         
         return(solplot)
+      },
+      
+      #' @description Function that creates a mass distribution tree map for
+      #' steady state solutions
+      GetMassDist = function(scale = NULL){
+        solution <- self$GetSolution()
+        
+        ntime <- length(unique(solution$time))
+        nrun <- length(unique(solution$RUNs))
+        
+        if(is.null(scale)){
+          scale <- "Regional"
+          print("No scale was given to function, Regional scale is selected")
+        }
+        
+        # Steady state deterministic
+        if(ntime == 1 && nrun == 1){
+          massdistplot <- DetSSMassDist(scale = scale)
+          # Dynamic deterministic  
+        } else if(ntime > 1 && nrun == 1){
+          stop("No mass distribution plot available for dynamic masses")
+          # Steady state probabilistic    
+        } else if(ntime == 1 && nrun > 1){
+          massdistplot <- ProbSSMassDist(scale = scale) 
+          # Dynamic probabilistic  
+        } else if(ntime > 1 && nrun > 1){
+          stop("No mass distribution plot available for dynamic masses")
+        }
+        
+        return(massdistplot)
       },
       
       #' @description prepare kaas for matrix calculations

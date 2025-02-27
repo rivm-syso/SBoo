@@ -170,7 +170,8 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
   ggplot(summary_stats, aes(x = Year, y = Mean_Value)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2, fill = "blue") +
-    labs(title = paste("Dynamic mean mass in", subcompart, " at ", scale, " scale with uncertainty bands over time"),
+    labs(title = paste("Dynamic mean mass in", subcompart, " at ", scale, " scale"),
+         subtitle = "with uncertainty bands over time",
          x = "Year",
          y = paste("Mass of substance in [kg]")) +
     theme_minimal()+
@@ -396,7 +397,8 @@ ProbDynConcPlot <- function(scale = NULL, subcompart = NULL){
   ggplot(summary_stats, aes(x = Year, y = Mean_Value)) +
     geom_line(color = "green", size = 1) +
     geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2, fill = "green") +
-    labs(title = paste0("Dynamic mean concentration in ", subcompart, " at ", scale, " scale with uncertainty bands over time"),
+    labs(title = paste0("Dynamic mean concentration in ", subcompart, " at ", scale, " scale"),
+         subtitle = "with uncertainty bands over time",
          x = "Year",
          y = paste0("Concentration of substance [", unit, "]")) +
     theme_minimal()+
@@ -448,4 +450,85 @@ ProbSSConcPlot <- function(scale = NULL){
           axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
+######################## Mass distribution plot functions ######################
 
+# For deterministic steady state masses
+DetSSMassDist <- function(scale = NULL){
+  
+  # Get the solution and join to states df
+  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- solution[c('SubCompart', 'Scale', 'Species', 'Mass_kg')]
+  
+  # Make sure 1 scale is selected
+  if(length(scale) != 1){
+    stop("Please select 1 scale")
+  }
+  
+  # Make sure the selected scale and subcompartments exist
+  if(!scale %in% unique(solution$Scale)){
+    stop("Selected scale does not exist")
+  }
+  
+  # Aggregate over species
+  cnames <- names(solution)
+  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
+  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
+  solution <- aggregate(formula, data = solution, sum)
+  
+  if (!is.null(scale)) {
+    solution <- solution[solution$Scale %in% scale, ]
+  } else {
+    solution <- solution
+  }
+  
+  ggplot(solution, aes(area = Mass_kg, fill = Mass_kg, label = SubCompart)) +
+    treemapify::geom_treemap() +
+    treemapify::geom_treemap_text(colour = "white",
+                                  place = "centre",
+                                  size = 15) +
+    labs(title = paste0("Distribution of steady state masses at ", scale, " scale"),
+         fill = "Mass [kg]") 
+}
+
+# For probabilistic steady state masses
+ProbSSMassDist <- function(scale = NULL){
+  
+  # Get the solution and join to states df
+  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
+  
+  # Make sure 1 scale is selected
+  if(length(scale) != 1){
+    stop("Please select 1 scale")
+  }
+  
+  # Make sure the selected scale and subcompartments exist
+  if(!scale %in% unique(solution$Scale)){
+    stop("Selected scale does not exist")
+  }
+  
+  # Aggregate over species
+  cnames <- names(solution)
+  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
+  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
+  solution <- aggregate(formula, data = solution, sum)
+  
+  if (!is.null(scale)) {
+    solution <- solution[solution$Scale %in% scale, ]
+  } else {
+    solution <- solution
+  }
+  
+  solution <- solution |>
+    group_by(SubCompart, Scale) |>
+    summarise(Mass_kg = mean(Mass_kg)) |>
+    ungroup()
+  
+  ggplot(solution, aes(area = Mass_kg, fill = Mass_kg, label = SubCompart)) +
+    treemapify::geom_treemap() +
+    treemapify::geom_treemap_text(colour = "white",
+                                  place = "centre",
+                                  size = 15) +
+    labs(title = paste0("Distribution of steady state mean masses at ", scale, " scale"),
+         fill = "Mass [kg]") 
+}

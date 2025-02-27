@@ -249,12 +249,20 @@ SBcore <- R6::R6Class("SBcore",
       private$solver$GetConcentrationPlot(scale, subcompart)
     },
     
-    #' @description Return the appropriate concentration plot
+    #' @description Return the appropriate solution plot
     PlotSolution = function(scale = NULL, subcompart = NULL){
       if (is.null(private$solver)) {
         stop("No active solver")
       }
       private$solver$GetSolutionPlot(scale, subcompart)
+    },
+    
+    #' @description Return the appropriate mass distribution plot
+    PlotMassDistribution = function(scale = NULL){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetMassDist(scale)
     },
     
     #' @description Injection from SolverModule
