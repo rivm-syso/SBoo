@@ -507,46 +507,6 @@ SolverModule <-
         private$emissionModule$emissionFunctions(private$SolveStates)
       },
 
-      # #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
-      # Make_inv_unif01 = function(fun_type = "triangular", pars) {
-      #   if (!fun_type %in% c("triangular", "normal", "uniform")) {
-      #     stop("! fun_type %in% c('triangular', 'normal', 'uniform')")
-      #   }
-      #   if (fun_type == "triangular") {
-      #     if (!(inherits(pars, "list") && length(pars) == 3)) {
-      #       stop(
-      #         "the triangular is created using a list of three parameters, a = minimum, b = maximum, c = peak")
-      #     }
-      #     a <- pars[["a"]]
-      #     b <- pars[["b"]]
-      #     c <- pars[["c"]]
-      #     return(function(x) {
-      #       private$triangular_cdf_inv(x, a, b, c)
-      #     })
-      #   }
-      #   if (fun_type == "normal") {
-      #     if (!(inherits(pars, "list")) && length(pars) == 2) {
-      #       stop("the normal is created using a list of two parameters, a = mean, b = sigma, c = peak")
-      #     }
-      #     mu <- pars[["a"]]
-      #     sig <- pars[["b"]]
-      #     return(function(x) {
-      #       qnorm(p = x, mean = mu, sd = sig)
-      #     })
-      #   }
-      #   if (fun_type == "uniform") {
-      #     if (!(inherits(pars, "list")) && length(pars) == 2) {
-      #       stop("the uniform is created using a list of two parameters, a = minimum, b = maximum")
-      #     }
-      #     minx <- pars[["a"]]
-      #     maxx <- pars[["b"]]
-      #     return(function(x) {
-      #       minx + x * (maxx - minx)
-      #     })
-      #   }
-      #   
-      # },
-        
       PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100){
         #checks
         # states should also be in # should be in private$SolveStates?
