@@ -1,12 +1,11 @@
 # fGeneral
 
-#' @description 2 basic ODE functions for simplebox; the function for the ode-call;
+#' @description 2 basic ordinary differential equation (ODE) functions for simplebox; the function for the ode-call;
 #' see desolve/rootsolve packages
 #' @param t time (vector ?)
 #' @param m  (i) = initial mass
 #' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
 #' @returns dm (i) = change in mass as list
-#' 
 
 SimpleBoxODE = function(t, m, parms) {
   dm <- with(parms, K %*% m + e)
@@ -26,30 +25,34 @@ SimpleBoxODEapprox = function(t, m, parms) {
   })
 }
 
-#' @description Solver functions that are called from the SolverModule
-#' @param t time (vector)
-#' @param m  (i) = initial mass
-#' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
+#' @description Steady state solver function
+#' @param k the first order rate constant matrix
+#' @param m emission vector
+#' @param parms = empty list (needed so that the SteadyStateSolver and DynamicSolver can be called in the same manner from the SolverModule)
 #' @returns dm (i) = change in mass as list
-#'
+
 SteadyStateSolver <- function(k, m, parms){
   SBNames = colnames(k)
   tmax=1e20 # solution for >1e12 year horizon
-  sol <- rootSolve::runsteady(
+  dm <- rootSolve::runsteady(
     y = rep(0,nrow(k)),
     times = c(0,tmax),
     func = SimpleBoxODE,
     parms = list(K = k, e = m)
   )
-  
-  return(sol)
+  return(dm)
 }
 
+#' @description Dynamic solver function
+#' @param k the first order rate constant matrix
+#' @param m list of emission approx functions per compartment
+#' @param parms = list containing nTIMES and tmax
+#' @returns a list containing main (a matrix with the masses per compartment per
+#'  timestep) and signals (a matrix with the emissions per compartment per timestep)
+
 DynamicSolver <- function(k, m, parms) {
-  # why is parms a variable in this function?
-  
-  tmax <- parms[[1]] # this is error sensitive. use names.
-  nTIMES <- parms[[2]] # this is error sensitive. use names.
+  tmax <- parms$tmax 
+  nTIMES <- parms$nTIMES 
   SB.K = k
   SBNames = colnames(k)
   SB.m0 <- rep(0, length(SBNames))
