@@ -1,6 +1,6 @@
 # fGeneral
 
-#' @description 4 basic ODE functions for simplebox; the function for the ode-call;
+#' @description 2 basic ODE functions for simplebox; the function for the ode-call;
 #' see desolve/rootsolve packages
 #' @param t time (vector ?)
 #' @param m  (i) = initial mass
@@ -13,33 +13,6 @@ SimpleBoxODE = function(t, m, parms) {
   return(list(dm, signal = parms$e)) 
 }
 
-SteadyStateSolver <- function(k, m, parms){
-  SBNames = colnames(k)
-  tmax=1e20 # solution for >1e12 year horizon
-  sol <- rootSolve::runsteady(
-    y = rep(0,nrow(k)),
-    times = c(0,tmax),
-    func = SimpleBoxODE,
-    parms = list(K = k, e = m)
-  )
-  
-  return(sol)
-}
-
-EmisBoxODE <- function(t, m, parms) { # what is ODE function used for?
-  e_t <- parms$e(t)
-  dm <- with(parms, K %*% m + e_t)
-  return(dm)
-}
-
-EventODE <- function(k, m, parms) { # What is ODE function used for?
-  with(as.list(c(parms, m)), {
-    dm <- k %*% m
-  })
-  return(list(dm))
-}
-
-
 SimpleBoxODEapprox = function(t, m, parms) {
   # define what parms are needed
   with(as.list(c(parms, m)), {
@@ -51,6 +24,25 @@ SimpleBoxODEapprox = function(t, m, parms) {
     dm <- with(parms, K %*% m + e) 
     return(list(dm, signal = e))
   })
+}
+
+#' @description Solver functions that are called from the SolverModule
+#' @param t time (vector)
+#' @param m  (i) = initial mass
+#' @param parms = (K, e) i.e. the matrix of speed constants and the emissions as vector, or functions
+#' @returns dm (i) = change in mass as list
+#'
+SteadyStateSolver <- function(k, m, parms){
+  SBNames = colnames(k)
+  tmax=1e20 # solution for >1e12 year horizon
+  sol <- rootSolve::runsteady(
+    y = rep(0,nrow(k)),
+    times = c(0,tmax),
+    func = SimpleBoxODE,
+    parms = list(K = k, e = m)
+  )
+  
+  return(sol)
 }
 
 DynamicSolver <- function(k, m, parms) {
