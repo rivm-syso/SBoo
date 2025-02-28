@@ -13,7 +13,7 @@ SimpleBoxODE = function(t, m, parms) {
   return(list(dm, signal = parms$e)) 
 }
 
-SteadyODE <- function(k, m, parms){
+SteadyStateSolver <- function(k, m, parms){
   SBNames = colnames(k)
   tmax=1e20 # solution for >1e12 year horizon
   sol <- rootSolve::runsteady(
@@ -26,22 +26,25 @@ SteadyODE <- function(k, m, parms){
   return(sol)
 }
 
-EmisBoxODE <- function(t, m, parms) {
+EmisBoxODE <- function(t, m, parms) { # what is ODE function used for?
   e_t <- parms$e(t)
   dm <- with(parms, K %*% m + e_t)
   return(dm)
 }
 
-EventODE <- function(k, m, parms) {
+EventODE <- function(k, m, parms) { # What is ODE function used for?
   with(as.list(c(parms, m)), {
     dm <- k %*% m
   })
   return(list(dm))
 }
 
-ODEapprox = function(t, m, parms) {
+
+SimpleBoxODEapprox = function(t, m, parms) {
+  # define what parms are needed
   with(as.list(c(parms, m)), {
     e <- c(rep(0, length(SBNames)))
+    
     for (name in names(parms$emislist)) {
       e[grep(name, SBNames)] <- parms$emislist[[name]](t) 
     }
@@ -50,9 +53,11 @@ ODEapprox = function(t, m, parms) {
   })
 }
 
-ApproxODE <- function(k, m, parms) {
-  tmax <- parms[[1]]
-  nTIMES <- parms[[2]]
+DynamicSolver <- function(k, m, parms) {
+  # why is parms a variable in this function?
+  
+  tmax <- parms[[1]] # this is error sensitive. use names.
+  nTIMES <- parms[[2]] # this is error sensitive. use names.
   SB.K = k
   SBNames = colnames(k)
   SB.m0 <- rep(0, length(SBNames))
@@ -62,7 +67,7 @@ ApproxODE <- function(k, m, parms) {
   out <- deSolve::ode(
     y = as.numeric(SB.m0),
     times = SBtime,
-    func = ODEapprox,
+    func = SimpleBoxODEapprox,
     parms = list(K = SB.K, SBNames=SBNames, emislist= vEmis),
     rtol = 1e-11, atol = 1e-3)
   

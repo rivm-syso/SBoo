@@ -271,9 +271,9 @@ DetSSConcPlot <- function(scale = NULL, subcompart = NULL){
     labs(title = paste0("Steady state concentration at ", scale, " scale"),
          x = "",
          y = paste0("Concentration of substance")) +
-    scale_y_log10(
-      breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
-      labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+    # scale_y_log10(
+    #   breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
+    #   labels = scales::trans_format("log10", scales::math_format(10^.x))) +
     theme(legend.position = "none",
           axis.text.x = element_text(angle = 45, hjust = 1)) 
 }

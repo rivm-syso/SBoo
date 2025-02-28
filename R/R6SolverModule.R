@@ -1,8 +1,8 @@
 #' @title SolverModule
 #' @description
 #' wrapper for your solver function and collection of general methods needed for most solvers,
-#' like preparing kaas matrix and matching emissions vector and
-#' the general ODE for simplebox
+#' like preparing K matrix and matching emission vector and
+#' the general ODE for SimpleBox
 #' @import R6
 #' @export
 SolverModule <-
@@ -271,7 +271,7 @@ SolverModule <-
           ConcParams <- private$Mass2ConcFun$needVars
           DependVar <- private$MyCore$DependOn(ConcParams)
           if (any(unique(private$input_variables$varName) %in% c(ConcParams, DependVar))){
-            stop ("concentration calculation depends on at least of the uncertainty params, not implemented yet")
+            stop ("concentration calculation depends on at least one of the uncertain parameters, this not implemented yet")
           }
         }
 
@@ -650,7 +650,7 @@ SolverModule <-
         
         # Create a multiplier column based on SubCompart
         Concentration_df$Multiplier <- ifelse(Concentration_df$SubCompart %in% c("air", "cloudwater"), 1000,
-                                      ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), 1000000,
+                                      ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), 1,
                                              ifelse(Concentration_df$SubCompart %in% c("naturalsoil", "agriculturalsoil", "othersoil", 
                                                                                "freshwatersediment", "marinesediment", "lakesediment"), 
                                                     rho * 1000, 1)))
