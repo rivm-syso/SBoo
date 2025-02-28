@@ -180,12 +180,36 @@ SBcore <- R6::R6Class("SBcore",
     #' triangular: a Minimum, b Maximum, c Peak value
     #' norm: mu mean, sigma sd
     #' unif: min , max
-    Make_inv_unif01 = function(fun_type, pars){
-      if (is.null(private$solver)) {
-        warning("No active solver")
-        return(NULL)
-      }
-      return(private$solver$Make_inv_unif01(fun_type, pars))
+    makeInvFuns = function(paramdf){
+      
+      # Define functions for each row based on the distribution type
+      varFuns <- apply(paramdf, 1, function(aRow) {
+        dist_type <- aRow["Distribution"]
+        
+        if (dist_type == "triangular") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
+        } else if (dist_type == "normal") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
+          names(prepArgs) <- c("a", "b")
+        } else if (dist_type == "uniform") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
+          names(prepArgs) <- c("a", "b")
+        } else {
+          stop("Unsupported distribution type")
+        }
+        
+        # Create the inverse CDF function using the prepared arguments
+        Make_inv_unif01(fun_type = dist_type, pars = prepArgs)
+      })
+      
+      return(varFuns)
+      
+      # if (is.null(private$solver)) {
+      #   warning("No active solver")
+      #   return(NULL)
+      # }
+      # return(private$solver$Make_inv_unif01(fun_type, pars))
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
