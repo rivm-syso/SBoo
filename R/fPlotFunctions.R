@@ -210,7 +210,7 @@ ProbSSSolPlot <- function(scale = NULL){
   ggplot(solution, aes(x = SubCompart, y = Mass_kg, fill = SubCompart)) +
     geom_violin()+
     theme_bw() +
-    labs(title = paste("Steadt state mass at ", scale, "scale"),
+    labs(title = paste("Steady state mass at ", scale, "scale"),
          x = "",
          y = paste("Mass of substance [kg]")) +
     scale_y_log10(
@@ -475,19 +475,47 @@ DetSSMassDist <- function(scale = NULL){
   formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
   solution <- aggregate(formula, data = solution, sum)
   
+  # Aggregate over scales
+  scale_solution <- solution |>
+    group_by(Scale) |>
+    summarise(Mass_kg = sum(Mass_kg))
+  
+  # Calculate percentages from masses
+  mass_sum <- sum(scale_solution$Mass_kg)
+  scale_solution <- scale_solution |>
+    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
+    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
+  
+  scale_plot <- ggplot(scale_solution, aes(area = Mass_kg, fill = Scale, 
+                                                     label = paste(Scale, Mass_percent_label, sep = "\n"))) +
+    geom_treemap() +
+    geom_treemap_text(colour = "white", place = "centre", size = 15) +
+    scale_fill_discrete()+
+    labs(title = paste0("Distribution of steady state masses over scales")) +
+    theme(legend.position = "none")  
+  
+  # Filter for the chosen scale
   if (!is.null(scale)) {
-    solution <- solution[solution$Scale %in% scale, ]
+    subcompart_solution <- solution[solution$Scale %in% scale, ]
   } else {
-    solution <- solution
+    subcompart_solution <- solution
   }
   
-  ggplot(solution, aes(area = Mass_kg, fill = Mass_kg, label = SubCompart)) +
-    treemapify::geom_treemap() +
-    treemapify::geom_treemap_text(colour = "white",
-                                  place = "centre",
-                                  size = 15) +
-    labs(title = paste0("Distribution of steady state masses at ", scale, " scale"),
-         fill = "Mass [kg]") 
+  # Calculate percentages from masses
+  mass_sum <- sum(subcompart_solution$Mass_kg)
+  subcompart_solution <- subcompart_solution |>
+    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
+    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
+  
+ subcompart_plot <- ggplot(subcompart_solution, aes(area = Mass_kg, fill = SubCompart, 
+                     label = paste(SubCompart, Mass_percent_label, sep = "\n"))) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white", place = "centre", size = 15) +
+  scale_fill_manual(values = subcompart_colors) +  
+  labs(title = paste0("Distribution of steady state masses at ", scale, " scale")) +
+  theme(legend.position = "none")  
+
+ grid.arrange(scale_plot, subcompart_plot, ncol = 1)
 }
 
 # For probabilistic steady state masses
@@ -513,22 +541,65 @@ ProbSSMassDist <- function(scale = NULL){
   formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
   solution <- aggregate(formula, data = solution, sum)
   
-  if (!is.null(scale)) {
-    solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    solution <- solution
-  }
-  
   solution <- solution |>
     group_by(SubCompart, Scale) |>
     summarise(Mass_kg = mean(Mass_kg)) |>
     ungroup()
   
-  ggplot(solution, aes(area = Mass_kg, fill = Mass_kg, label = SubCompart)) +
-    treemapify::geom_treemap() +
-    treemapify::geom_treemap_text(colour = "white",
-                                  place = "centre",
-                                  size = 15) +
-    labs(title = paste0("Distribution of steady state mean masses at ", scale, " scale"),
-         fill = "Mass [kg]") 
+  # Aggregate over scales
+  scale_solution <- solution |>
+    group_by(Scale) |>
+    summarise(Mass_kg = sum(Mass_kg))
+
+  # Calculate percentages from masses
+  mass_sum <- sum(scale_solution$Mass_kg)
+  scale_solution <- scale_solution |>
+    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
+    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
+  
+  scale_plot <- ggplot(scale_solution, aes(area = Mass_kg, fill = Scale, 
+                                           label = paste(Scale, Mass_percent_label, sep = "\n"))) +
+    geom_treemap() +
+    geom_treemap_text(colour = "white", place = "centre", size = 15) +
+    scale_fill_discrete()+
+    labs(title = paste0("Distribution of steady state masses over scales")) +
+    theme(legend.position = "none")  
+  
+  if (!is.null(scale)) {
+    subcompart_solution <- solution[solution$Scale %in% scale, ]
+  } else {
+    subcompart_solution <- solution
+  }
+  
+  # Calculate percentages from masses
+  mass_sum <- sum(subcompart_solution$Mass_kg)
+  subcompart_solution <- subcompart_solution |>
+    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
+    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
+  
+  subcompart_plot <- ggplot(subcompart_solution, aes(area = Mass_kg, fill = SubCompart, 
+                                                     label = paste(SubCompart, Mass_percent_label, sep = "\n"))) +
+    geom_treemap() +
+    geom_treemap_text(colour = "white", place = "centre", size = 15) +
+    scale_fill_manual(values = subcompart_colors) +  
+    labs(title = paste0("Distribution of steady state masses at ", scale, " scale")) +
+    theme(legend.position = "none")  
+  
+  grid.arrange(scale_plot, subcompart_plot, ncol = 1)
 }
+
+subcompart_colors <- c(
+  "sea" = "dodgerblue4",
+  "river" = "dodgerblue4",
+  "lake" = "dodgerblue4",
+  "deepocean" = "dodgerblue4",
+  "cloudwater" = "slategray3",
+  "air" = "slategray3",
+  "agriculturalsoil" = "darkgoldenrod",
+  "naturalsoil" = "darkgoldenrod",
+  "othersoil" = "darkgoldenrod",
+  "freshwatersediment" = "burlywood4",
+  "marinesediment" = "burlywood4",
+  "lakesediment" = "burlywood4" 
+)
+
