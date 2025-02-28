@@ -173,13 +173,15 @@ SBcore <- R6::R6Class("SBcore",
       
     },
     
-    #' @description injected from solverModule; create function to transform 0-1 unif 
-    #' to the desired function shape
-    #' @param fun_type ("triangular", "norm" "unif") 
-    #' @param pars (named?) parameters for the function type
-    #' triangular: a Minimum, b Maximum, c Peak value
-    #' norm: mu mean, sigma sd
-    #' unif: min , max
+    #' @description Creates inverse functions for each row of the given dataframe
+    #' @param paramdf A dataframe with one row for eacht distribution. Must at 
+    #' least contain the columns "Distribution" (which can contain "triangular", "uniform" or "normal"), 
+    #' "a", "b", and "c".
+    #' 
+    #' "a", "b" and "c" contain the following:
+    #' triangular: a = Minimum, b = Maximum, c = Peak value
+    #' normal: a = Mean, b = Standard deviation 
+    #' uniform: a = Minimum , b = Maximum
     makeInvFuns = function(paramdf){
       
       # Define functions for each row based on the distribution type
@@ -204,12 +206,6 @@ SBcore <- R6::R6Class("SBcore",
       })
       
       return(varFuns)
-      
-      # if (is.null(private$solver)) {
-      #   warning("No active solver")
-      #   return(NULL)
-      # }
-      # return(private$solver$Make_inv_unif01(fun_type, pars))
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
