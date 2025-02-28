@@ -28,19 +28,8 @@ SolverModule <-
       input_variables = NULL,
       ConcParams = NULL,
       Mass2ConcFun = NULL,
-      LHSruns = matrix(), # LFS matrix for the uncertainty variables
-      
-      #' @description helper function for Make_inv_unif01
-      triangular_cdf_inv = function(u, # LH scaling factor
-                                    a, # Minimum
-                                    b, # Maximum
-                                    c) { # Peak value
-        ifelse(u < (c-a)/(b-a),
-               a + sqrt(u * (b-a) * (c-a)),
-               b - sqrt((1-u) * (b-a) * (b-c)))
-      }
-      
-    ),
+      LHSruns = matrix()) # LFS matrix for the uncertainty variables
+    ,
     
     public = list(
       initialize = function(TheCore, exeFunction, ...) {
