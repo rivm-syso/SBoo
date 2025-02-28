@@ -172,9 +172,7 @@ SolverModule <-
         if (needdebug) {
           debugonce(private$Function)
         }
-        
-        #browser()
-        
+
         if(nRUNs > 1){
           #loop over scenarios / lhs RUNs, if any
           for (i in 1:nRUNs){
@@ -192,8 +190,6 @@ SolverModule <-
             
             # possibly update dirty to create a new SB.k for uncertainty variables
             if (nVars > 0) {
-              # to do in getRUNvars:
-              
               lhsruns <- private$LHSruns
               private$input_variables$Waarde <- private$LHSruns[,i]
               private$MyCore$mutateVars(private$input_variables)
@@ -201,7 +197,6 @@ SolverModule <-
               inputvars <- private$input_variables
               inputvars$RUN <- i
               #update core and solve
-              vns <- private$input_variables$varName
               private$MyCore$UpdateDirty(unique(private$input_variables$varName))
               self$PrepKaasM()
               
