@@ -91,8 +91,8 @@ EmissionModule <-
         
           if (private$emission_tp %in% c("Dynamic_det_df", "Dynamic_prob_df")) {
             #return the df as list of functions
-            if(!(all(c("Abbr","Emis", "Timed") %in% names(emissions)))){
-              stop("Expected 'Abbr', 'Emis' and 'Timed' columns in dataframe")
+            if(!(all(c("Abbr","Emis", "Time") %in% names(emissions)))){
+              stop("Expected 'Abbr', 'Emis' and 'Time' columns in dataframe")
             }
             if (!is.null(private$uncertainFun) && !is.na(private$uncertainFun)) {
               stop("not possible to combine uncertain emissions with dynamic emissions, yet")
@@ -161,9 +161,9 @@ EmissionModule <-
 
       # Determine the format of the emission dataframe
       setEmissionDataFrame = function(emis) {
-        if (all(c("Abbr", "Emis", "Timed", "RUN") %in% names(emis))) {
+        if (all(c("Abbr", "Emis", "Time", "RUN") %in% names(emis))) {
           return("Dynamic_prob_df")
-        } else if(all(c("Abbr", "Emis", "Timed") %in% names(emis))) {
+        } else if(all(c("Abbr", "Emis", "Time") %in% names(emis))) {
           return("Dynamic_det_df")
         } else if(all(c("Abbr", "Emis", "RUN") %in% names(emis))) {
           return("Steady_prob_df")
@@ -178,9 +178,9 @@ EmissionModule <-
         }
       },
       
-      # Create function to make approx functions from data (input is a df with the columns Abbr, Timed and Emis)
+      # Create function to make approx functions from data (input is a df with the columns Abbr, Time and Emis)
       makeApprox = function(vEmissions){
-        is.df.with(vEmissions, "EmissionModule$makeApprox", c("Timed", "Emis", "Abbr"))
+        is.df.with(vEmissions, "EmissionModule$makeApprox", c("Time", "Emis", "Abbr"))
         
         vEmis <- 
           vEmissions |> 
@@ -188,7 +188,7 @@ EmissionModule <-
           summarise(n=n(),
                     EmisFun = list(
                       approxfun(
-                        data.frame(Timed = c(0,Timed), 
+                        data.frame(Time = c(0,Time), 
                                    Emis=c(0,Emis)),
                         rule = 1:2)
                     )

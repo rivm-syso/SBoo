@@ -15,14 +15,14 @@ SolverModule <-
         #overrule CalcGraphModule
         NULL
       },
-      Solution = NULL,
+      Masses = NULL,
       Concentration = NULL,
       UsedEmissions = NULL,
       AllVars = NULL,
       SolveStates = NULL,
       emissionModule = NULL,
       SB.K = NULL,
-      MatrixSolutionInRows = NULL,
+      MatrixMassesInRows = NULL,
       lSBtime.tvars = NULL,
       lvnamesDistSD = NULL,
       input_variables = NULL,
@@ -150,7 +150,7 @@ SolverModule <-
         }
 
         # the resulting array is (allocated once)
-        private$Solution <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
+        private$Masses <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
                                   dimnames = list(
                                     time = seq(0, tmax, length.out = nTIMES),
                                     self$solveStates$asDataFrame$Abbr,
@@ -201,7 +201,7 @@ SolverModule <-
             solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
                                                                     m = emis), 
                                                                     parms = list(MoreParams)))
-            private$Solution[,,i] <- solvedFormat[[1]]
+            private$Masses[,,i] <- solvedFormat[[1]]
             private$UsedEmissions[,,i] <- solvedFormat[[2]]
             
             if(is.null(private$AllVars)){
@@ -217,19 +217,19 @@ SolverModule <-
                                                                   m = emis), 
                                                                   parms = list(MoreParams)))
           dimsolved <- dim(solvedFormat[[1]])
-          dimempty <- dim(private$Solution[,,1])
-          private$Solution[,,1] <- solvedFormat[[1]]
+          dimempty <- dim(private$Masses[,,1])
+          private$Masses[,,1] <- solvedFormat[[1]]
           private$UsedEmissions[,,1] <- solvedFormat[[2]]
         }
       },
       
       #` Function that returns the solution
-      GetSolution = function() {
+      GetMasses = function() {
         # Prep and return the solution
-        if (is.null(private$Solution)) {
+        if (is.null(private$Masses)) {
           stop("first solve, then ask again")
         }
-        SolDF <- array2DF(private$Solution)
+        SolDF <- array2DF(private$Masses)
         names(SolDF)[names(SolDF) == "Var2"] <- "Abbr"
         names(SolDF)[names(SolDF) == "Value"] <- "Mass_kg"
         return(SolDF)
@@ -255,7 +255,7 @@ SolverModule <-
       GetConcentrations = function() {
       
         #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
-        if (is.null(private$Solution)) {
+        if (is.null(private$Masses)) {
           stop("first solve, then ask again")
         }
         if (!is.null(private$input_variables)) {
@@ -269,7 +269,7 @@ SolverModule <-
 
         divide <- private$Mass2ConcFun$execute()
         divide <- dplyr::left_join(private$SolveStates$asDataFrame, divide)
-        solution_df <- array2DF(private$Solution) 
+        solution_df <- array2DF(private$Masses) 
         names(solution_df)[names(solution_df) == "Var2"] <- "Abbr"
         solution_df <- dplyr::left_join(solution_df, divide, by="Abbr")
 
@@ -315,8 +315,8 @@ SolverModule <-
       }, 
       
       #' @description Function that creates the appropriate solution plot
-      GetSolutionPlot = function(scale = NULL, subcompart = NULL){
-        solution <- self$GetSolution()
+      GetMassesPlot = function(scale = NULL, subcompart = NULL){
+        solution <- self$GetMasses()
         
         ntime <- length(unique(solution$time))
         nrun <- length(unique(solution$RUNs))
@@ -350,7 +350,7 @@ SolverModule <-
       #' @description Function that creates a mass distribution tree map for
       #' steady state solutions
       GetMassDist = function(scale = NULL){
-        solution <- self$GetSolution()
+        solution <- self$GetMasses()
         
         ntime <- length(unique(solution$time))
         nrun <- length(unique(solution$RUNs))
@@ -611,15 +611,15 @@ SolverModule <-
       #' state in three columns,
       #' time input in one or t[est]vars in separate columns,
       #' and the Mass in the Mass column
-      SolutionAsRelational = function(fullStates = FALSE) {
-        if (is.null(private$Solution)) {
+      MassesAsRelational = function(fullStates = FALSE) {
+        if (is.null(private$Masses)) {
           warning("no calculation available")
           return(NULL)
         } else {
           if (fullStates){
-            array2DF(private$Solution)
+            array2DF(private$Masses)
           } else { #append states
-            arrayAsDF <- array2DF(private$Solution)
+            arrayAsDF <- array2DF(private$Masses)
             dplyr::left_join(arrayAsDF, private$solveStates$asDataFrame)
           }
         }

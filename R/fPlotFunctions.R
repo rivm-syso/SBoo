@@ -1,10 +1,10 @@
 #################### Functions for solution plots
 
-# Solution plot for deterministic steady state output
+# Masses plot for deterministic steady state output
 DetSSPlot <- function(scale = NULL, subcompart = NULL){
   
   # Get the solution
-  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'Mass_kg')]
   
   # Make sure 1 scale is selected
@@ -54,11 +54,11 @@ DetSSPlot <- function(scale = NULL, subcompart = NULL){
           axis.text.x = element_text(angle = 45, hjust = 1)) 
 }
 
-# Solution plot for deterministic dynamic output
+# Masses plot for deterministic dynamic output
 DetDynSolPlot <- function(scale = NULL, subcompart = NULL){
   
   # Get the solution
-  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'Mass_kg')]
   
   # Make sure 1 scale is selected
@@ -108,12 +108,12 @@ DetDynSolPlot <- function(scale = NULL, subcompart = NULL){
     guides(color = guide_legend(title = NULL))
 }
 
-# Solution plot for probabilistic dynamic output
+# Masses plot for probabilistic dynamic output
 
 ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
   
   # Get the solution
-  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Mass_kg')]
   
   # Make sure 1 scale is selected
@@ -178,11 +178,11 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
     guides(color = guide_legend(title = NULL))
 }
 
-# Solution plot for probabilistic steady state output
+# Masses plot for probabilistic steady state output
 ProbSSSolPlot <- function(scale = NULL){
   
   # Get the solution
-  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
   
   # Make sure 1 scale is selected
@@ -456,7 +456,7 @@ ProbSSConcPlot <- function(scale = NULL){
 DetSSMassDist <- function(scale = NULL){
   
   # Get the solution and join to states df
-  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'Mass_kg')]
   
   # Make sure 1 scale is selected
@@ -522,7 +522,7 @@ DetSSMassDist <- function(scale = NULL){
 ProbSSMassDist <- function(scale = NULL){
   
   # Get the solution and join to states df
-  solution <- merge(World$Solution(), World$states$asDataFrame, by = "Abbr")
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
   
   # Make sure 1 scale is selected

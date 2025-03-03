@@ -228,12 +228,12 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #'@description Save the last calculated masses in the core
-    Solution = function(){
+    Masses = function(){
       #browser()
       if (is.null(private$solver)) {
         stop("No active solver")
       }
-      private$solver$GetSolution()
+      private$solver$GetMasses()
     },
     
     VariableValues = function(){
@@ -270,11 +270,11 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #' @description Return the appropriate solution plot
-    PlotSolution = function(scale = NULL, subcompart = NULL){
+    PlotMasses = function(scale = NULL, subcompart = NULL){
       if (is.null(private$solver)) {
         stop("No active solver")
       }
-      private$solver$GetSolutionPlot(scale, subcompart)
+      private$solver$GetMassesPlot(scale, subcompart)
     },
     
     #' @description Return the appropriate mass distribution plot
@@ -286,12 +286,12 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #' @description Injection from SolverModule
-    SolutionAsRelational = function(...){
+    MassesAsRelational = function(...){
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
       }
-      private$solver$SolutionAsRelational(...)
+      private$solver$MassesAsRelational(...)
     },
     
     #' @description Obtain the names of the variables and tablename in which the data resides 
