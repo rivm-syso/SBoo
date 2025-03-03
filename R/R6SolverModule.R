@@ -81,16 +81,22 @@ SolverModule <-
           argName <- unique(sapply(emissions, formalArgs))
         }
         
+        #browser()
+        
         # Ensure that 'argName' has exactly one element
         stopifnot(length(argName) == 1)
         
-        if (argName %in% c("", "t", "v")) { # This means the functions for emissions are approxfuns: for dynamic solver
+        # This means the functions for emissions are approxfuns, this imput is not implemented currently
+        if (argName %in% c("t", "v")) {
           
-          # Use PrepemisV (check what this does? Maybe the resulting functions need to be repeated in a list for every run)
+          stop("Approx funs as emissions are not implemented yet")
+          
+        } else if(argName == ""){
+          
           self$PrepemisV(emissions)
-          
           nEmisComps <- 0 # prevent emissions from being overwritten - no LHS samples will be taken for emissions
-        } else { # This means the functions for emissions are distribution functions: for steady solver only? 
+          
+        } else { # This means the functions for emissions are distribution functions: for steady solver only.
           # we need to prep lhs; possibly combined with uncertainty in variables. If so, we need to know how many compartments have a distribution function
           nEmisComps <- length(emissions)
         }
@@ -185,6 +191,8 @@ SolverModule <-
               
               inputvars <- private$input_variables
               inputvars$RUN <- i
+              
+              vns <- unique(private$input_variables$varName)
               #update core and solve
               private$MyCore$UpdateDirty(unique(private$input_variables$varName))
               self$PrepKaasM()
@@ -404,8 +412,6 @@ SolverModule <-
           )
         )
         stateInd <- sort(unique(c(kaas$fromIndex, kaas$toIndex)))
-        #TODO Will the matrix be sane?
-        #private$States <- SBstates$new(self$myCore$states$asDataFrame[self$myCore$states$matchi(stateInd),])
         newStates <- self$myCore$states$asDataFrame[stateInd, ]
         if (nrow(newStates) != self$myCore$states$nStates) {
           if (exists("verbose") && verbose) {
@@ -417,7 +423,6 @@ SolverModule <-
                 removedStates
               )
             )
-            #remove states without state in columns OR rows => matrix is singular
           }
           private$SolveStates <- SBstates$new(newStates)
           private$SolveStates$myCore <- private$MyCore
@@ -470,25 +475,14 @@ SolverModule <-
           EmissionModule$new(emis, private$SolveStates$asDataFrame$Abbr)
       },
       
+      #' @description Function that returns the emissions for a specific RUN
+      #' @param scenario run number 
+      #' @return emissions for the given run
       emissions = function(scenario = NULL){
         if (is.null(private$emissionModule)) {
           stop("set emission data first, using PrepemisV()")
         }
         private$emissionModule$emissions(scenario)
-      },
-      
-      emissionDF = function(){
-        if(is.null(private$emissionModule)) {
-          stop("set emission data first, using PrepemisV()")
-        }
-        private$emissionModule$emissionDF()
-      },
-      
-      emissionFunctions = function(){
-        if (is.null(private$emissionModule)) {
-          stop("set emission data first, using PrepemisV()")
-        }
-        private$emissionModule$emissionFunctions(private$SolveStates)
       },
 
       PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100){
@@ -538,9 +532,6 @@ SolverModule <-
           transformed_samples <- sapply(lhsRUNs[, 1], var_invfun[[1]])
         } else if (num_columns == num_functions) {
           # Apply each function to the corresponding column
-          # transformed_samples <- apply(lhsRUNs, 2, function(column, col_index) {
-          #   sapply(column, var_invfun[[col_index]])}, 
-          #   col_index = seq_len(num_columns))
           transformed_samples <- mapply(function(column, inv_fun) {
             sapply(column, inv_fun)
           }, as.data.frame(lhsRUNs), var_invfun, SIMPLIFY = FALSE)

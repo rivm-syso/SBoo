@@ -35,7 +35,7 @@ EmissionModule <-
       },
       
       emissions = function(scenario = NULL){ #scenario also used for "RUN"
-        #browser()
+   
         type <- private$emission_tp
         if (is.null(private$Emissions)) return (NULL)
 
@@ -120,42 +120,44 @@ EmissionModule <-
       uncertainFun = NULL,
       EmissionSource = NULL,
       
-      readFromClassicExcel = function(fn) {
-        tryCatch(df <- openxlsx::read.xlsx(fn, sheet = "scenarios", startRow = 3),
-                 error = function(e) NULL)
-        if (is.null(df)) stop ("Not a proper scenarios sheet in the xlsx")
-        #clean a lot
-        names(df)[c(3,4)] <- c("VarName", "Unit") #names(df) == "X3"
-        df$current.settings <- NULL
-        #remove all Xnames
-        Xnames <- startsWith(names(df), "X")
-        df <- df[startsWith(df$VarName, "E.") & !is.na(df$VarName),!Xnames]
-        StateAbbr <- substr(df$VarName, start = 3, stop = 9)
-        df$i <- private$MyCore$findState(StateAbbr)
-        setEmissionDataFrame(df)
-      },
+      # The use of the functions below is currently not implemented, but will be used in the future.
       
-      readfromexcel = function(fn){
-        sheetNames <- openxlsx::getSheetNames(fn)
-        #ignore the Sheetx names others are assumes to be scenario name
-        sheetNames <- sheetNames[!grepl("Sheet[23]", sheetNames)]
-        if (length(sheetNames) == 1){
-          return(openxlsx::read.xlsx(fn, sheet = sheetNames))
-        } else {
-          dfs <- lapply(sheetNames, function(sheet){
-            openxlsx::read.xlsx(fn, sheet = sheet)
-          })
-          for (i in 1:length(sheetNames)){
-            df <- dfs[[i]]
-            df$scenario <- sheetNames
-          }
-          return(do.call(rbind, dfs))
-        }
-      },
+      # readFromClassicExcel = function(fn) {
+      #   tryCatch(df <- openxlsx::read.xlsx(fn, sheet = "scenarios", startRow = 3),
+      #            error = function(e) NULL)
+      #   if (is.null(df)) stop ("Not a proper scenarios sheet in the xlsx")
+      #   #clean a lot
+      #   names(df)[c(3,4)] <- c("VarName", "Unit") #names(df) == "X3"
+      #   df$current.settings <- NULL
+      #   #remove all Xnames
+      #   Xnames <- startsWith(names(df), "X")
+      #   df <- df[startsWith(df$VarName, "E.") & !is.na(df$VarName),!Xnames]
+      #   StateAbbr <- substr(df$VarName, start = 3, stop = 9)
+      #   df$i <- private$MyCore$findState(StateAbbr)
+      #   setEmissionDataFrame(df)
+      # },
       
-      readfromcsv = function(fn) {
-        return (read.csv(fn))
-      },
+      # readfromexcel = function(fn){
+      #   sheetNames <- openxlsx::getSheetNames(fn)
+      #   #ignore the Sheetx names others are assumes to be scenario name
+      #   sheetNames <- sheetNames[!grepl("Sheet[23]", sheetNames)]
+      #   if (length(sheetNames) == 1){
+      #     return(openxlsx::read.xlsx(fn, sheet = sheetNames))
+      #   } else {
+      #     dfs <- lapply(sheetNames, function(sheet){
+      #       openxlsx::read.xlsx(fn, sheet = sheet)
+      #     })
+      #     for (i in 1:length(sheetNames)){
+      #       df <- dfs[[i]]
+      #       df$scenario <- sheetNames
+      #     }
+      #     return(do.call(rbind, dfs))
+      #   }
+      # },
+      # 
+      # readfromcsv = function(fn) {
+      #   return (read.csv(fn))
+      # },
 
       # Determine the format of the emission dataframe
       setEmissionDataFrame = function(emis) {
