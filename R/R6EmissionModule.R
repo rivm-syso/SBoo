@@ -35,6 +35,7 @@ EmissionModule <-
       },
       
       emissions = function(scenario = NULL){ #scenario also used for "RUN"
+        #browser()
    
         type <- private$emission_tp
         if (is.null(private$Emissions)) return (NULL)
@@ -57,6 +58,9 @@ EmissionModule <-
         # When there are runs:          
         } else if (is.numeric(scenario)) {
           if(private$emission_tp == "Steady_prob_df"){
+            
+            emissions <- private$Emissions
+            abbrs <- private$solvedAbbr
             filtered <- private$Emissions[private$Emissions$RUN == scenario, ]
             emis <- private$df2Vector(filtered, private$solvedAbbr)
           } else if (private$emission_tp == "Dynamic_prob_df"){

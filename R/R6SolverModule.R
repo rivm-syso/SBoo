@@ -28,8 +28,8 @@ SolverModule <-
       input_variables = NULL,
       ConcParams = NULL,
       Mass2ConcFun = NULL,
-      LHSruns = matrix()) # LFS matrix for the uncertainty variables
-    ,
+      LHSruns = matrix() # LFS matrix for the uncertainty variables
+      ),
     
     public = list(
       initialize = function(TheCore, exeFunction, ...) {
@@ -80,8 +80,6 @@ SolverModule <-
         } else {
           argName <- unique(sapply(emissions, formalArgs))
         }
-        
-        #browser()
         
         # Ensure that 'argName' has exactly one element
         stopifnot(length(argName) == 1)
@@ -223,6 +221,21 @@ SolverModule <-
         }
       },
       
+      #' @description return dataframe without time and RUNs column if they 
+      #' only have one unique entry
+      RemoveUnusedCols = function(df){
+        # Check and remove 'time' if it has only one unique value
+        if (length(unique(df$time)) == 1) {
+          df$time <- NULL
+        }
+        
+        # Check and remove 'RUNs' if it has only one unique value
+        if (length(unique(df$RUNs)) == 1) {
+          df$RUNs <- NULL
+        }
+        return(df)
+      },
+      
       #` Function that returns the solution
       GetMasses = function() {
         # Prep and return the solution
@@ -232,6 +245,8 @@ SolverModule <-
         SolDF <- array2DF(private$Masses)
         names(SolDF)[names(SolDF) == "Var2"] <- "Abbr"
         names(SolDF)[names(SolDF) == "Value"] <- "Mass_kg"
+        
+        SolDF <- self$RemoveUnusedCols(SolDF)
         return(SolDF)
       },
       
@@ -243,12 +258,16 @@ SolverModule <-
         EmisDF <- array2DF(private$UsedEmissions)
         names(EmisDF)[names(EmisDF) == "Var2"] <- "Abbr"
         names(EmisDF)[names(EmisDF) == "Value"] <- "Emission_kg_s"
+        
+        EmisDF <- self$RemoveUnusedCols(EmisDF)
         return(EmisDF)
       },
       
       #' @description Function that returns the values for the LHS samples scaled to the distributions given by the user
       GetVarValues = function(){
-        return(private$AllVars)
+        
+        vars <- private$AllVars
+        return(vars)
       },
       
       #' @description Function that returns the concentration calculated from masses 
@@ -277,7 +296,9 @@ SolverModule <-
         concentration_df <- solution_df[, c('time', 'RUNs', 'Abbr', 'Concentration_kg_m3')]
         
         concentration_df <- self$ConcentrationToGrams(concentration_df)
-
+        
+        concentration_df <- self$RemoveUnusedCols(concentration_df)
+        
         return(concentration_df)
       },
       
@@ -285,25 +306,22 @@ SolverModule <-
       GetConcentrationPlot = function(scale = NULL, subcompart = NULL){
         concentration <- self$GetConcentrations() 
         
-        ntime <- length(unique(concentration$time))
-        nrun <- length(unique(concentration$RUNs))
-        
         if(is.null(scale)){
           scale <- "Regional"
           print("No scale was given to function, Regional scale is selected")
         }
         
           # Steady state deterministic
-        if(ntime == 1 && nrun == 1){
+        if (identical(colnames(concentration), c("Abbr", "Concentration", "Unit"))) {
           concplot <- DetSSConcPlot(scale = scale, subcompart = subcompart)
           # Dynamic deterministic  
-        } else if(ntime > 1 && nrun == 1){
+        } else if (identical(colnames(concentration), c("Abbr", "time",  "Concentration", "Unit"))) {
           concplot <- DetDynConcPlot(scale = scale, subcompart = subcompart)
           # Steady state probabilistic    
-        } else if(ntime == 1 && nrun > 1){
+        } else if (identical(colnames(concentration), c("Abbr", "RUNs", "Concentration", "Unit"))) {
           concplot <- ProbSSConcPlot(scale = scale) 
           # Dynamic probabilistic  
-        } else if(ntime > 1 && nrun > 1){
+        } else if (identical(colnames(concentration), c("Abbr", "time", "RUNs", "Concentration", "Unit"))) {
           if(is.null(subcompart)){
             subcompart <- "agriculturalsoil"
             print("No subcompart was given to function, agriculturalsoil is selected")
@@ -318,25 +336,22 @@ SolverModule <-
       GetMassesPlot = function(scale = NULL, subcompart = NULL){
         solution <- self$GetMasses()
         
-        ntime <- length(unique(solution$time))
-        nrun <- length(unique(solution$RUNs))
-        
         if(is.null(scale)){
           scale <- "Regional"
           print("No scale was given to function, Regional scale is selected")
         }
 
           # Steady state deterministic
-        if(ntime == 1 && nrun == 1){
+        if (identical(colnames(solution), c("Abbr", "Mass_kg"))) {
           solplot <- DetSSPlot(scale = scale, subcompart = subcompart)
           # Dynamic deterministic  
-        } else if(ntime > 1 && nrun == 1){
+        } else if (identical(colnames(solution), c("time", "Abbr", "Mass_kg"))) {
           solplot <- DetDynSolPlot(scale = scale, subcompart = subcompart)
           # Steady state probabilistic    
-        } else if(ntime == 1 && nrun > 1){
+        } else if (identical(colnames(solution), c("Abbr", "RUNs", "Mass_kg"))) {
           solplot <- ProbSSSolPlot(scale = scale) 
           # Dynamic probabilistic  
-        } else if(ntime > 1 && nrun > 1){
+        } else if (identical(colnames(solution), c("time", "Abbr", "RUNs", "Mass_kg"))) {
           if(is.null(subcompart)){
             subcompart <- "agriculturalsoil"
             print("No subcompart was given to function, agriculturalsoil is selected")
@@ -352,25 +367,22 @@ SolverModule <-
       GetMassDist = function(scale = NULL){
         solution <- self$GetMasses()
         
-        ntime <- length(unique(solution$time))
-        nrun <- length(unique(solution$RUNs))
-        
         if(is.null(scale)){
           scale <- "Regional"
           print("No scale was given to function, Regional scale is selected")
         }
         
         # Steady state deterministic
-        if(ntime == 1 && nrun == 1){
+        if (identical(colnames(solution), c("Abbr", "Mass_kg"))) {
           massdistplot <- DetSSMassDist(scale = scale)
           # Dynamic deterministic  
-        } else if(ntime > 1 && nrun == 1){
+        } else if (identical(colnames(solution), c("time", "Abbr", "Mass_kg"))) {
           stop("No mass distribution plot available for dynamic masses")
           # Steady state probabilistic    
-        } else if(ntime == 1 && nrun > 1){
+        } else if (identical(colnames(solution), c("Abbr", "RUNs", "Mass_kg"))) {
           massdistplot <- ProbSSMassDist(scale = scale) 
           # Dynamic probabilistic  
-        } else if(ntime > 1 && nrun > 1){
+        } else if (identical(colnames(solution), c("time", "Abbr", "RUNs", "Mass_kg"))) {
           stop("No mass distribution plot available for dynamic masses")
         }
         
