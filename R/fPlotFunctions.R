@@ -46,7 +46,7 @@ DetSSPlot <- function(scale = NULL, subcompart = NULL){
     geom_col() +  # Use geom_col() to plot the actual values of Mass_kg
     labs(title = paste0("Steady state mass at ", scale, " scale"),
          x = "",
-         y = paste0("Mass of substance [kg]")) +
+         y = paste0("Mass of ", World$substance, " [kg]")) +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
       labels = scales::trans_format("log10", scales::math_format(10^.x))) +
@@ -103,7 +103,7 @@ DetDynSolPlot <- function(scale = NULL, subcompart = NULL){
     geom_line() +
     labs(title = paste0("Dynamic mass at ", scale, " scale"),
          x = "Year",
-         y = paste0("Mass of substance [kg]")) +
+         y = paste0("Mass of ", World$substance, " [kg]")) +
     scale_y_continuous(labels = scales::label_scientific()) +
     guides(color = guide_legend(title = NULL))
 }
@@ -170,10 +170,10 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
   ggplot(summary_stats, aes(x = Year, y = Mean_Value)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2, fill = "blue") +
-    labs(title = paste("Dynamic mean mass in", subcompart, " at ", scale, " scale"),
+    labs(title = paste0("Dynamic mean mass in ", subcompart, " at ", scale, " scale"),
          subtitle = "with uncertainty bands over time",
          x = "Year",
-         y = paste("Mass of substance in [kg]")) +
+         y = paste0("Mass of ", World$substance, " [kg]")) +
     theme_minimal()+
     guides(color = guide_legend(title = NULL))
 }
@@ -210,9 +210,9 @@ ProbSSSolPlot <- function(scale = NULL){
   ggplot(solution, aes(x = SubCompart, y = Mass_kg, fill = SubCompart)) +
     geom_violin()+
     theme_bw() +
-    labs(title = paste("Steady state mass at ", scale, "scale"),
+    labs(title = paste0("Steady state mass at ", scale, "scale"),
          x = "",
-         y = paste("Mass of substance [kg]")) +
+         y = paste0("Mass of ", World$substance, " [kg]")) +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
       labels = scales::trans_format("log10", scales::math_format(10^.x))) +
@@ -270,7 +270,7 @@ DetSSConcPlot <- function(scale = NULL, subcompart = NULL){
     geom_col() +  
     labs(title = paste0("Steady state concentration at ", scale, " scale"),
          x = "",
-         y = paste0("Concentration of substance")) +
+         y = paste0("Concentration of ", World$substance)) +
     # scale_y_log10(
     #   breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
     #   labels = scales::trans_format("log10", scales::math_format(10^.x))) +
@@ -329,7 +329,7 @@ DetDynConcPlot <- function(scale = NULL, subcompart = NULL){
     geom_line() +
     labs(title = paste0("Dynamic concentration at ", scale, " scale"),
          x = "Year",
-         y = "Concentration of substance") +
+         y = paste0("Concentration of ", World$substance)) +
     scale_y_continuous(labels = scales::label_scientific()) +
     guides(color = guide_legend(title = NULL))
 }
@@ -400,7 +400,7 @@ ProbDynConcPlot <- function(scale = NULL, subcompart = NULL){
     labs(title = paste0("Dynamic mean concentration in ", subcompart, " at ", scale, " scale"),
          subtitle = "with uncertainty bands over time",
          x = "Year",
-         y = paste0("Concentration of substance [", unit, "]")) +
+         y = paste0("Concentration of ", World$substance," [", unit, "]")) +
     theme_minimal()+
     guides(color = guide_legend(title = NULL))
 }
@@ -441,7 +441,7 @@ ProbSSConcPlot <- function(scale = NULL){
     theme_bw() +
     labs(title = paste0("Steady state concentration at ", scale, " scale"),
          x = "",
-         y = paste0("Concentration")) +
+         y = paste0("Concentration of ", World$substance)) +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
       labels = scales::trans_format("log10", scales::math_format(10^.x))) +
