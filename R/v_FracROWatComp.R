@@ -1,6 +1,6 @@
 #'@title FracRoWatComp
 #'@name  FracROWatComp
-#'@description fraction of water component compared to total water in scale for correction of runoff
+#'@description Fraction of water component compared to total water in scale for setting fraction of runoff reaching each freshwater compartment
 #'@param all.landFRAC Fractions of land compartments #[-]
 #'@param all.Matrix Matrix compartment the subcompartments belong to #[-]
 #'@param Matrix Current matrix the function calculates for [-]

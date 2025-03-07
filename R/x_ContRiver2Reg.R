@@ -11,6 +11,7 @@
 x_ContRiver2Reg <- function (ScaleName, SubCompartName, 
                              all.Runoff, RainOnFreshwater, 
                              dischargeFRAC, LakeFracRiver){
+
   switch (ScaleName,
           "Continental" = {
             switch (SubCompartName,
