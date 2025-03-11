@@ -16,15 +16,15 @@ x_LakeOutflow <- function (RainOnFreshwater,
                            ScaleName){
   # browser()
   #x_RiverDischarge <- all.x_RiverDischarge$flow[all.x_RiverDischarge$fromScale==ScaleName]
-  SumRainRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
+  SumRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
   if(ScaleName == "Continental"){
-    return(RainOnFreshwater + FracROWatComp*SumRainRunoff)
+    return(RainOnFreshwater + FracROWatComp*SumRunoff)
     # return(LakeFracRiver * x_RiverDischarge)
   } 
   if(ScaleName == "Regional"){
     # x_ContRiver2Reg <- all.x_ContRiver2Reg$flow
     # return(LakeFracRiver * (x_RiverDischarge + x_ContRiver2Reg)) # x_ContRiver2Reg is faulty!
-    return(RainOnFreshwater + FracROWatComp*SumRainRunoff)
+    return(RainOnFreshwater + FracROWatComp*SumRunoff)
   } 
   else NA
 }

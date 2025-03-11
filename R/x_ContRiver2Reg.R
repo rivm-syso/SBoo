@@ -11,20 +11,21 @@
 x_ContRiver2Reg <- function (ScaleName, SubCompartName, 
                              all.Runoff, RainOnFreshwater, 
                              dischargeFRAC, LakeFracRiver){
-
+  
   switch (ScaleName,
           "Continental" = {
             switch (SubCompartName,
-                    "river" = {            SumRainRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == "Continental"])
-                    River2sea  <- RainOnFreshwater + SumRainRunoff * (1-dischargeFRAC)
-                    Lake2River <- LakeFracRiver * River2sea
-                    
-                    return((RainOnFreshwater + SumRainRunoff + Lake2River) * dischargeFRAC)
+                    "river" = {
+                      SumRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == "Continental"])
+                      River2sea  <- RainOnFreshwater + SumRunoff * (1-dischargeFRAC)
+                      Lake2River <- LakeFracRiver * River2sea
+                      
+                      return((RainOnFreshwater + SumRunoff + Lake2River) * dischargeFRAC)
                     },
                     return(NA)
             )
           },
           return(NA)
-            )
-
+  )
+  
 }
