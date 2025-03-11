@@ -18,10 +18,10 @@ x_RiverDischarge <- function (all.Runoff, all.RainOnFreshwater,
   switch (SubCompartName,
           "river" = {
             if(ScaleName == "Continental"){
-              return((SumRainRunoff + RainOnFreshwater) * (1-dischargeFRAC))
+              return((SumRainRunoff) * (1-dischargeFRAC))
             } 
             if(ScaleName == "Regional"){
-              return((SumRainRunoff + RainOnFreshwater + x_ContRiver2Reg) * (1-dischargeFRAC))
+              return((SumRainRunoff + x_ContRiver2Reg) * (1-dischargeFRAC))
             } 
             else NA
           },
