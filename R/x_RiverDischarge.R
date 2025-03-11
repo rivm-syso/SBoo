@@ -2,7 +2,7 @@
 #' @name x_RiverDischarge
 #' @param Runoff Runoff flow from soil to river [m3.s-1]
 #' @param RainOnFreshwater Water flow of rain directly on lake/river [m3.s-1] 
-#' @param dischargeFRAC Fraction discharge regional fresh water to continental scale [-]
+#' @param dischargeFRAC Fraction discharge of freshwater between regional and continental scales and vice versa [-]
 #' @param x_ContRiver2Reg Flow from continental to regional river water [s-1] 
 #' @param ScaleName Name of the scale of the box at hand
 #' @param SubCompartName Name of the subcompartment of the box at hand
