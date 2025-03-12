@@ -16,12 +16,11 @@ Mass2Conc <- function (EqMass, Volume, Matrix, all.rhoMatrix, Fracs, Fracw) {
     Conc.soil*1000/(Fracw*RHOw+Fracs*RHOsolid) # in g/kg (wet) soil
   }
 
-  if (Matrix %in% c("air", "water")) {
-    return(EqMass / Volume)
-  } else {
-    RHOsolid <- all.rhoMatrix$rhoMatrix[SubCompart == "othersoil"]
-    RHOw <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "lake"]
-    return(f_Soil.wetweight(EqMass / Volume, Fracw, Fracs, RHOsolid))
-  }
+  ifelse (Matrix %in% c("air", "water"), 
+          EqMass / Volume, 
+          { RHOsolid <- all.rhoMatrix$rhoMatrix[SubCompart == "othersoil"]
+            RHOw <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "lake"]
+          f_Soil.wetweight(EqMass / Volume, Fracw, Fracs, RHOsolid)}
+  )
 }
 
