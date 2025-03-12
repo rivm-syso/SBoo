@@ -1,5 +1,5 @@
-#' @title LakeOutflow
-#' @name x_LakeOutflow
+#' @title LakeOut
+#' @name x_LakeOut
 #' @description This calculates the flow from a freshwater compartment within the regional or continental scale to the main freshwater compartment (w1).
 #' @param RainOnFreshwater The direct rain on the freshwater compartment (e.g. a lake).
 #' @param all.Runoff Runoff from soil to the freshwater compartment
@@ -7,7 +7,7 @@
 #' @param ScaleName different formula for scale Continental or Regional
 #' @return River Discharge 
 #' @export
-x_LakeOutflow <- function (RainOnFreshwater,
+x_LakeOut <- function (RainOnFreshwater,
                            #all.x_RiverDischarge, 
                            #all.x_ContRiver2Reg,
                            #LakeFracRiver, 
