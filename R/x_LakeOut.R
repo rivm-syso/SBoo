@@ -14,7 +14,7 @@ x_LakeOut <- function (RainOnFreshwater,
                            all.Runoff,
                            FracROWatComp,
                            ScaleName){
-  browser()
+  # browser()
   SumRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
   return(RainOnFreshwater + FracROWatComp*SumRunoff)
   #x_RiverDischarge <- all.x_RiverDischarge$flow[all.x_RiverDischarge$fromScale==ScaleName]
