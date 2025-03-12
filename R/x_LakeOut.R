@@ -8,15 +8,22 @@
 #' @return River Discharge 
 #' @export
 x_LakeOut <- function (RainOnFreshwater,
-                           #all.x_RiverDischarge, 
-                           #all.x_ContRiver2Reg,
-                           #LakeFracRiver, 
-                           all.Runoff,
-                           FracROWatComp,
-                           ScaleName){
-  # browser()
-  SumRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
-  return(RainOnFreshwater + FracROWatComp*SumRunoff)
+                       #all.x_RiverDischarge, 
+                       #all.x_ContRiver2Reg,
+                       #LakeFracRiver, 
+                       all.Runoff,
+                       FracROWatComp,
+                       SubCompartName,
+                       ScaleName){
+  switch (SubCompartName, # if this is coded with if statement it fails as SubCompartName for Arctic is NA
+          "lake" = {
+            SumRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
+            return(RainOnFreshwater + FracROWatComp*SumRunoff)
+          },
+          NA
+  )
+  
+  
   #x_RiverDischarge <- all.x_RiverDischarge$flow[all.x_RiverDischarge$fromScale==ScaleName]
   # SumRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
   # if(ScaleName == "Continental"){
