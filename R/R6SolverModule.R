@@ -28,6 +28,7 @@ SolverModule <-
       input_variables = NULL,
       ConcParams = NULL,
       Mass2ConcFun = NULL,
+      run_df = NULL,
       LHSruns = matrix() # LFS matrix for the uncertainty variables
       ),
     
@@ -51,173 +52,254 @@ SolverModule <-
       execute = function(needdebug = F,
                          emissions = NULL,
                          var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL, 
+                         ParallelPreparation=F, LHSmatrix = NULL, 
                          ...) {
-
-        if (is.null(private$SB.K)) {
-          stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
-        }
-        
-        MoreParams <- list(...)
-        if (length(MoreParams) != 0) {
-          nTIMES <- MoreParams$nTIMES
-          tmax <- MoreParams$tmax
-        } else {
-          nTIMES <- NULL
-          tmax <- NULL
-        }
-
-        # Check if all elements in 'emissions' are functions
-        if (all(sapply(emissions, is.function))) {
-          emisFuns <- length(emissions)  # Number of functions in 'emissions'
-        } else {
-          emisFuns <- 0  # Not all elements are functions
-        }
-        
-        # are the functions inv.lhs or in time? # or use nTIMES as criterion?
-        # Determine the value of 'argName' based on 'emisFuns'
-        if (emisFuns == 0) {
-          argName <- ""
-        } else {
-          argName <- unique(sapply(emissions, formalArgs))
-        }
-        
-        # Ensure that 'argName' has exactly one element
-        stopifnot(length(argName) == 1)
-        
-        # This means the functions for emissions are approxfuns, this imput is not implemented currently
-        if (argName %in% c("t", "v")) {
-          
-          stop("Approx funs as emissions are not implemented yet")
-          
-        } else if(argName == ""){
-          
-          self$PrepemisV(emissions)
-          nEmisComps <- 0 # prevent emissions from being overwritten - no LHS samples will be taken for emissions
-          
-        } else { # This means the functions for emissions are distribution functions: for steady solver only.
-          # we need to prep lhs; possibly combined with uncertainty in variables. If so, we need to know how many compartments have a distribution function
-          nEmisComps <- length(emissions)
-        }
-        
+        #browser()
         lhsRUNS <- 0 #unless overwritten:
         nVars <- length(var_invFun)
         
-        if (is.null(nRUNs) || is.na(nRUNs)) {
+        if(is.null(nRUNs) || is.na(nRUNs)) {
           nRUNs <- 1
         }
         
-        # If nRUNs is specified by the user, pull samples from emission/variable distributions
-        if (nRUNs != 0 && nRUNs != 1) {
-          if (nVars + nEmisComps > 0){
-            # create the RUNs for variables and possibly emissions
-            # NB PrepLHS sets private$input_variables to var_box_df
-            if (nEmisComps > 0) {
-              lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = emissions, nRUNs)
-            } else {
+        # If ParallelPreparation is TRUE, the LHS samples and World need to be saved for later use. 
+        if(ParallelPreparation == T){
+          
+          # Prep LHS samples
+          if (nRUNs < 2){
+            stop("nRUNs should be greater than 1")
+          } else if(length(var_invFun) == 0){
+            stop("Please provide inverse functions")
+          } else if(nrow(var_box_df) == 0){
+            stop("Please provide variable dataframe")
+          } else if (nRUNs != 0 && nRUNs != 1) {
+            if (nVars > 0){
+              # create the RUNs for variables and possibly emissions
+              # NB PrepLHS sets private$input_variables to var_box_df
               lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
+
+              scaled_samples <- self$ScaleLHS(lhsRUNS, var_invFun)
+              
+              private$LHSruns <- t(scaled_samples)
+              # Mind the transpose, for easy substituting the samples
+              idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
+              rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
+              
+              saveRDS(private$LHSruns, "data/scaledLHSsamples.RData")
             }
           }
-        } else { 
-          self$PrepemisV(emissions)
-        }
-
-        # split the lhs results over vars and emissions, apply to emissions
-        if (nEmisComps > 1) {
-          emissRuns <- lhsRUNS[,1:nEmisComps]
-          colnames(emissRuns) <- names(emissions)
-          self$PrepemisV(emissRuns)
-        }
-        if (nVars > 0) { # MIND YOU: the private lhsruns are for variables only!
-          varLHS <- lhsRUNS[,(nEmisComps+1):ncol(lhsRUNS)]
-          scaled_samples <- self$ScaleLHS(varLHS, var_invFun)
-          
-          private$LHSruns <- t(scaled_samples)
-          # Mind the transpose, for easy substituting the samples
-          idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
-          rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
-        } else {
-          nVars = 1
-        }
-
-        if(is.null(nTIMES)){
-          nTIMES <- 1
-        } 
+            # Export World
+            saveRDS(World, file = "data/World.RData")
         
-        if(is.null(tmax)){
-          tmax = 0
-        }
-
-        # the resulting array is (allocated once)
-        private$Masses <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
+        # If ParallelPreparation is FALSE, regular solver use.
+        } else {
+          #browser()
+          
+          if (is.null(private$SB.K)) {
+            stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
+          }
+          
+          MoreParams <- list(...)
+          if (length(MoreParams) != 0) {
+            nTIMES <- MoreParams$nTIMES
+            tmax <- MoreParams$tmax
+          } else {
+            nTIMES <- NULL
+            tmax <- NULL
+          }
+          
+          if (nRUNs > 1) {
+            # Create a matrix with original_runs and solver_runs
+            used_runs <- 1:nRUNs
+            solver_runs <- unique(emissions$RUN)
+            
+            run_matrix <- cbind(used_runs, solver_runs)
+            private$run_df <- as.data.frame(run_matrix)
+            
+            emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)]
+            
+          } else {
+            # Create a matrix with a single row
+            private$run_df <- data.frame(used_runs = 1,
+                                         solver_runs = 1)
+            
+          }
+          
+          # Check if all elements in 'emissions' are functions
+          if (all(sapply(emissions, is.function))) {
+            emisFuns <- length(emissions)  # Number of functions in 'emissions'
+          } else {
+            emisFuns <- 0  # Not all elements are functions
+          }
+          
+          # are the functions inv.lhs or in time? # or use nTIMES as criterion?
+          # Determine the value of 'argName' based on 'emisFuns'
+          if (emisFuns == 0) {
+            argName <- ""
+          } else {
+            argName <- unique(sapply(emissions, formalArgs))
+          }
+          
+          # Ensure that 'argName' has exactly one element
+          stopifnot(length(argName) == 1)
+          
+          # This means the functions for emissions are approxfuns, this imput is not implemented currently
+          if (argName %in% c("t", "v")) {
+            
+            stop("Approx funs as emissions are not implemented yet")
+            
+          } else if(argName == ""){
+            
+            self$PrepemisV(emissions)
+            nEmisComps <- 0 # prevent emissions from being overwritten - no LHS samples will be taken for emissions
+            
+          } else { # This means the functions for emissions are distribution functions: for steady solver only.
+            # we need to prep lhs; possibly combined with uncertainty in variables. If so, we need to know how many compartments have a distribution function
+            nEmisComps <- length(emissions)
+          }
+          
+          # Check if LHS samples still need to be prepared
+          if(is.null(LHSmatrix)){
+            # If nRUNs is specified by the user, pull samples from emission/variable distributions
+            if (nRUNs != 0 && nRUNs != 1) {
+              if (nVars + nEmisComps > 0){
+                # create the RUNs for variables and possibly emissions
+                # NB PrepLHS sets private$input_variables to var_box_df
+                if (nEmisComps > 0) {
+                  lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = emissions, nRUNs)
+                } else {
+                  lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
+                }
+              }
+            } else { 
+              self$PrepemisV(emissions)
+            }
+            
+            # split the lhs results over vars and emissions, apply to emissions
+            if (nEmisComps > 1) {
+              emissRuns <- lhsRUNS[,1:nEmisComps]
+              colnames(emissRuns) <- names(emissions)
+              self$PrepemisV(emissRuns)
+            }
+            if (nVars > 0) { # MIND YOU: the private lhsruns are for variables only!
+              varLHS <- lhsRUNS[,(nEmisComps+1):ncol(lhsRUNS)]
+              scaled_samples <- self$ScaleLHS(varLHS, var_invFun)
+              inputvars <- private$input_variables
+              private$LHSruns <- t(scaled_samples)
+              # Mind the transpose, for easy substituting the samples
+              idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
+              rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
+            } else {
+              nVars = 1
+            }
+          # If LHS samples are already prepared, assign LHSmatrix to private$LHSruns  
+          } else {
+            #browser()
+            private$LHSruns <- LHSmatrix
+            
+            # Get the number of runs
+            nRUNs <- ncol(private$LHSruns)
+            
+            # Get the number of variables
+            nVars <- dim(private$LHSruns)[1] 
+            
+            # Set the input_variables dataframe from the matrix
+            df <- as.data.frame(LHSmatrix)
+            df <- cbind(do.call(rbind, strsplit(rownames(df), " ")), df)
+            colnames(df)[1:4] <- c("varName", "Scale", "SubCompart", "Species")
+            rownames(df) <- 1:nrow(df)
+            df <- df[1:4]
+            df[df == "NA"] <- NA
+            
+            private$input_variables <- df
+            
+            # Check if the length of the emission df is the same as nRUNs
+            nRUNsEmis <- length(unique(emissions$RUN))
+            if(!nRUNsEmis == nRUNs){
+              stop("Different number of runs in LHS samples and emissions")
+            }
+          }
+          
+          if(is.null(nTIMES)){
+            nTIMES <- 1
+          } 
+          
+          if(is.null(tmax)){
+            tmax = 0
+          }
+          
+          # the resulting array is (allocated once)
+          private$Masses <- array(dim = c(nTIMES,self$solveStates$nStates, nRUNs),
                                   dimnames = list(
                                     time = seq(0, tmax, length.out = nTIMES),
                                     self$solveStates$asDataFrame$Abbr,
-                                    RUNs = as.character(1:nRUNs)
+                                    RUNs = as.character(private$run_df$used_runs)
                                   ))
-        
-        private$UsedEmissions <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
-                                       dimnames = list(
-                                         time = seq(0, tmax, length.out = nTIMES),
-                                         self$solveStates$asDataFrame$Abbr,
-                                         RUNs = as.character(1:nRUNs)
-                                       ))
-        
-        if (needdebug) {
-          debugonce(private$Function)
-        }
-
-        if(nRUNs > 1){
-          #loop over scenarios / lhs RUNs, if any
-          for (i in 1:nRUNs){
-            
-            # If there is one set of emissions: 
-            if(!"RUN" %in% colnames(emissions) && emisFuns == 0){
-              emis <- self$emissions()
-            # If there are nRUNs sets of emissions or distribution functions for emissions:
-            } else if(length(unique(emissions$RUN)) == nRUNs || (emisFuns != 0)){
-              emis <- self$emissions(i)
-            # Emissions are not of length 1 or nRUNs
-            } else {
-              stop("There should be 1 or nRUNs sets of emissions")
+          
+          private$UsedEmissions <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
+                                         dimnames = list(
+                                           time = seq(0, tmax, length.out = nTIMES),
+                                           self$solveStates$asDataFrame$Abbr,
+                                           RUNs = as.character(private$run_df$used_runs)
+                                         ))
+          
+          if (needdebug) {
+            debugonce(private$Function)
+          }
+          
+          #browser()
+          if(nRUNs > 1){
+            #loop over scenarios / lhs RUNs, if any
+            for (i in 1:nRUNs){
+              
+              # If there is one set of emissions: 
+              if(!"RUN" %in% colnames(emissions) && emisFuns == 0){
+                emis <- self$emissions()
+                # If there are nRUNs sets of emissions or distribution functions for emissions:
+              } else if(length(unique(emissions$RUN)) == nRUNs || (emisFuns != 0)){
+                emis <- self$emissions(i)
+                # Emissions are not of length 1 or nRUNs
+              } else {
+                stop("There should be 1 or nRUNs sets of emissions")
+              }
+              
+              # possibly update dirty to create a new SB.k for uncertainty variables
+              if (nVars > 0) {
+                lhsruns <- private$LHSruns
+                private$input_variables$Waarde <- private$LHSruns[,i]
+                private$MyCore$mutateVars(private$input_variables)
+                
+                inputvars <- private$input_variables
+                inputvars$RUN <- i
+                
+                vns <- unique(private$input_variables$varName)
+                #update core and solve
+                private$MyCore$UpdateDirty(unique(private$input_variables$varName))
+                self$PrepKaasM()
+                
+              }
+              solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
+                                                                      m = emis), 
+                                                                 parms = list(MoreParams)))
+              private$Masses[,,i] <- solvedFormat[[1]]
+              private$UsedEmissions[,,i] <- solvedFormat[[2]]
+              
+              if(is.null(private$AllVars)){
+              } else { 
+                private$AllVars <- bind_rows(private$AllVars, inputvars) # This could maybe be done in a faster way? 
+              }
+              
             }
-            
-            # possibly update dirty to create a new SB.k for uncertainty variables
-            if (nVars > 0) {
-              lhsruns <- private$LHSruns
-              private$input_variables$Waarde <- private$LHSruns[,i]
-              private$MyCore$mutateVars(private$input_variables)
-              
-              inputvars <- private$input_variables
-              inputvars$RUN <- i
-              
-              vns <- unique(private$input_variables$varName)
-              #update core and solve
-              private$MyCore$UpdateDirty(unique(private$input_variables$varName))
-              self$PrepKaasM()
-              
-            }
+          } else { # Solve once
+            emis <- self$emissions()
             solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
                                                                     m = emis), 
-                                                                    parms = list(MoreParams)))
-            private$Masses[,,i] <- solvedFormat[[1]]
-            private$UsedEmissions[,,i] <- solvedFormat[[2]]
-            
-            if(is.null(private$AllVars)){
-              private$AllVars <- inputvars
-            } else { 
-              private$AllVars <- bind_rows(private$AllVars, inputvars) # This could maybe be done in a faster way? 
-            }
-            
+                                                               parms = list(MoreParams)))
+            dimsolved <- dim(solvedFormat[[1]])
+            dimempty <- dim(private$Masses[,,1])
+            private$Masses[,,1] <- solvedFormat[[1]]
+            private$UsedEmissions[,,1] <- solvedFormat[[2]]
           }
-        } else { # Solve once
-          emis <- self$emissions()
-          solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
-                                                                  m = emis), 
-                                                                  parms = list(MoreParams)))
-          dimsolved <- dim(solvedFormat[[1]])
-          dimempty <- dim(private$Masses[,,1])
-          private$Masses[,,1] <- solvedFormat[[1]]
-          private$UsedEmissions[,,1] <- solvedFormat[[2]]
         }
       },
       
@@ -238,19 +320,24 @@ SolverModule <-
       
       #` Function that returns the solution
       GetMasses = function() {
-        # Prep and return the solution
+
+                # Prep and return the solution
         if (is.null(private$Masses)) {
           stop("first solve, then ask again")
         }
         SolDF <- array2DF(private$Masses)
         names(SolDF)[names(SolDF) == "Var2"] <- "Abbr"
         names(SolDF)[names(SolDF) == "Value"] <- "Mass_kg"
+                
+        SolDF$RUNs <- private$run_df$solver_runs[match(SolDF$RUNs, private$run_df$used_runs)]
         
         SolDF <- self$RemoveUnusedCols(SolDF)
+
         return(SolDF)
       },
       
       GetEmissions = function() {
+
         if (is.null(private$UsedEmissions)) {
           stop("first solve, then ask again")
         }
@@ -258,6 +345,8 @@ SolverModule <-
         EmisDF <- array2DF(private$UsedEmissions)
         names(EmisDF)[names(EmisDF) == "Var2"] <- "Abbr"
         names(EmisDF)[names(EmisDF) == "Value"] <- "Emission_kg_s"
+        
+        EmisDF$RUNs <- private$run_df$solver_runs[match(EmisDF$RUNs, private$run_df$used_runs)]
         
         EmisDF <- self$RemoveUnusedCols(EmisDF)
         return(EmisDF)
@@ -267,12 +356,15 @@ SolverModule <-
       GetVarValues = function(){
         
         vars <- private$AllVars
+        
+        vars$RUN <- private$run_df$solver_runs[match(vars$RUN, private$run_df$used_runs)]
+        
         return(vars)
       },
       
       #' @description Function that returns the concentration calculated from masses 
       GetConcentrations = function() {
-      
+  
         #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
         if (is.null(private$Masses)) {
           stop("first solve, then ask again")
@@ -296,6 +388,8 @@ SolverModule <-
         concentration_df <- solution_df[, c('time', 'RUNs', 'Abbr', 'Concentration_kg_m3')]
         
         concentration_df <- self$ConcentrationToGrams(concentration_df)
+        
+        concentration_df$RUNs <- private$run_df$solver_runs[match(concentration_df$RUNs, private$run_df$used_runs)]
         
         concentration_df <- self$RemoveUnusedCols(concentration_df)
         
