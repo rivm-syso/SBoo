@@ -360,6 +360,8 @@ SolverModule <-
         
         vars$RUN <- private$run_df$solver_runs[match(vars$RUN, private$run_df$used_runs)]
         
+        names(vars)[names(vars) == "RUN"] <- "RUNs"
+        
         return(vars)
       },
       
