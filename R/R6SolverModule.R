@@ -285,6 +285,7 @@ SolverModule <-
               private$UsedEmissions[,,i] <- solvedFormat[[2]]
               
               if(is.null(private$AllVars)){
+                private$AllVars <- inputvars
               } else { 
                 private$AllVars <- bind_rows(private$AllVars, inputvars) # This could maybe be done in a faster way? 
               }
