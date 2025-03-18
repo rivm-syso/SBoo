@@ -54,7 +54,7 @@ SolverModule <-
                          var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL, 
                          ParallelPreparation=F, LHSmatrix = NULL, 
                          ...) {
-        #browser()
+
         lhsRUNS <- 0 #unless overwritten:
         nVars <- length(var_invFun)
         
@@ -93,8 +93,6 @@ SolverModule <-
         
         # If ParallelPreparation is FALSE, regular solver use.
         } else {
-          #browser()
-          
           if (is.null(private$SB.K)) {
             stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
           }
@@ -194,7 +192,7 @@ SolverModule <-
             }
           # If LHS samples are already prepared, assign LHSmatrix to private$LHSruns  
           } else {
-            #browser()
+
             private$LHSruns <- LHSmatrix
             
             # Get the number of runs
@@ -247,7 +245,6 @@ SolverModule <-
             debugonce(private$Function)
           }
           
-          #browser()
           if(nRUNs > 1){
             #loop over scenarios / lhs RUNs, if any
             for (i in 1:nRUNs){
@@ -625,7 +622,7 @@ SolverModule <-
       },
       
       ScaleLHS = function(lhsRUNs, var_invfun) {
-        #browser()
+
         # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
         if (is.vector(lhsRUNs)) {
           lhsRUNs <- matrix(lhsRUNs, ncol = 1)
