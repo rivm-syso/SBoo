@@ -85,11 +85,11 @@ SolverModule <-
               idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
               rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
               
-              saveRDS(private$LHSruns, "data/scaledLHSsamples.RData")
+              saveRDS(private$LHSruns, "data/scaledLHSsamples.RDS")
             }
           }
             # Export World
-            saveRDS(World, file = "data/World.RData")
+            saveRDS(World, file = "data/World.RDS")
         
         # If ParallelPreparation is FALSE, regular solver use.
         } else {
