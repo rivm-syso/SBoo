@@ -192,8 +192,8 @@ EmissionModule <-
           summarise(n=n(),
                     EmisFun = list(
                       approxfun(
-                        data.frame(Time = c(Time), 
-                                   Emis=c(Emis)),
+                        data.frame(Time = c(0,Time), 
+                                   Emis=c(0,Emis)),
                         rule = 1:1)
                     )
           )
