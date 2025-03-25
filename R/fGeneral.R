@@ -8,7 +8,8 @@
 #' @returns dm (i) = change in mass as list
 
 SimpleBoxODE = function(t, m, parms) {
-  dm <- with(parms, K %*% m + e)
+  dm <- with(parms, 
+             K %*% m + e)
   return(list(dm, signal = parms$e)) 
 }
 
@@ -38,7 +39,8 @@ SteadyStateSolver <- function(k, e, parms){
     y = rep(0,nrow(k)),
     times = c(0,tmax),
     func = SimpleBoxODE,
-    parms = list(K = k, e)
+    parms = list(K = k, 
+                 e = e)
   )
   return(dm)
 }
@@ -51,7 +53,12 @@ SteadyStateSolver <- function(k, e, parms){
 #'  timestep) and signals (a matrix with the emissions per compartment per timestep)
 
 DynamicSolver <- function(k, e, parms) {
-  # browser()
+    if(is.null(parms$rtol_ode)){
+    rtol_ode = 1e-11
+  } else rtol_ode = parms$rtol_ode
+  if(is.null(parms$atol_ode)){
+    atol_ode = 1e-3
+  } else atol_ode = parms$atol_ode
   tmax = parms$tmax 
   nTIMES = parms$nTIMES 
   SB.K = k
@@ -67,8 +74,7 @@ DynamicSolver <- function(k, e, parms) {
     parms = list(K = SB.K, 
                  SBNames=SBNames,
                  emislist = e),
-   rtol = 1e-11, atol = 1e-3
-    )
+   rtol = rtol_ode, atol =  atol_ode)
 
   colnames(out)[1:length(SBNames) + 1] <- SBNames
   colnames(out)[grep("signal", colnames(out))] <- paste("signal", SBNames, sep = "2")
