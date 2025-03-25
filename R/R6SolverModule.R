@@ -61,9 +61,11 @@ SolverModule <-
         if (length(MoreParams) != 0) {
           nTIMES <- MoreParams$nTIMES
           tmax <- MoreParams$tmax
+          tmin <- MoreParams$tmin
         } else {
           nTIMES <- NULL
           tmax <- NULL
+          tmin <- NULL
         }
 
         # Check if all elements in 'emissions' are functions
@@ -146,18 +148,22 @@ SolverModule <-
         if(is.null(tmax)){
           tmax = 0
         }
+        
+        if(is.null(tmin)){
+          tmin = 0
+        }
 
         # the resulting array is (allocated once)
         private$Masses <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
                                   dimnames = list(
-                                    time = seq(0, tmax, length.out = nTIMES),
+                                    time = seq(tmin, tmax, length.out = nTIMES),
                                     self$solveStates$asDataFrame$Abbr,
                                     RUNs = as.character(1:nRUNs)
                                   ))
         
         private$UsedEmissions <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
                                        dimnames = list(
-                                         time = seq(0, tmax, length.out = nTIMES),
+                                         time = seq(tmin, tmax, length.out = nTIMES),
                                          self$solveStates$asDataFrame$Abbr,
                                          RUNs = as.character(1:nRUNs)
                                        ))
