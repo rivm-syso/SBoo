@@ -520,7 +520,7 @@ DetSSMassDist <- function(scale = NULL){
 
 # For probabilistic steady state masses
 ProbSSMassDist <- function(scale = NULL){
-  browser()
+
   # Get the solution and join to states df
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   # solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
