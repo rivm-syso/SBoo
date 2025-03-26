@@ -96,7 +96,7 @@ SolverModule <-
           if (is.null(private$SB.K)) {
             stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
           }
-          
+          #browser()
           MoreParams <- list(...)
           if (length(MoreParams) != 0) {
             nTIMES <- MoreParams$nTIMES
@@ -106,6 +106,7 @@ SolverModule <-
             tmax <- NULL
           }
           if (nRUNs > 1) {
+            #browser()
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
             solver_runs <- unique(emissions$RUN)
@@ -113,7 +114,7 @@ SolverModule <-
             run_matrix <- cbind(used_runs, solver_runs)
             private$run_df <- as.data.frame(run_matrix)
             
-            if(class(emissions) != "list"){
+            if(!"list" %in% class(emissions)){
                emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)] 
             }
 
