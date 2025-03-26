@@ -105,7 +105,6 @@ SolverModule <-
             nTIMES <- NULL
             tmax <- NULL
           }
-
           if (nRUNs > 1) {
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
