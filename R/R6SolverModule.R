@@ -49,10 +49,13 @@ SolverModule <-
       #' @param var_invFun = list(), 
       #' @param emis_invFun = list(), 
       #' @param nRUNs = NULL
+      #' @param ParallelPreparation = F 
+      #' @param LHSmatrix = NULL
+      #' @param correlations = NULL 
       execute = function(needdebug = F,
                          emissions = NULL,
                          var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL, 
-                         ParallelPreparation=F, LHSmatrix = NULL, 
+                         ParallelPreparation=F, LHSmatrix = NULL, correlations = NULL, 
                          ...) {
 
         lhsRUNS <- 0 #unless overwritten:
@@ -78,7 +81,7 @@ SolverModule <-
               # NB PrepLHS sets private$input_variables to var_box_df
               lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
 
-              scaled_samples <- self$ScaleLHS(lhsRUNS, var_invFun)
+              scaled_samples <- self$ScaleLHS(lhsRUNS, var_invFun, correlations)
               
               private$LHSruns <- t(scaled_samples)
               # Mind the transpose, for easy substituting the samples
@@ -93,6 +96,7 @@ SolverModule <-
         
         # If ParallelPreparation is FALSE, regular solver use.
         } else {
+          #browser()
           if (is.null(private$SB.K)) {
             stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
           }
@@ -181,12 +185,11 @@ SolverModule <-
             }
             if (nVars > 0) { # MIND YOU: the private lhsruns are for variables only!
               varLHS <- lhsRUNS[,(nEmisComps+1):ncol(lhsRUNS)]
-              scaled_samples <- self$ScaleLHS(varLHS, var_invFun)
+              scaled_samples <- self$ScaleLHS(varLHS, var_invFun, correlations)
               inputvars <- private$input_variables
               private$LHSruns <- t(scaled_samples)
-              # Mind the transpose, for easy substituting the samples
-              idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
-              rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
+              rownames(private$LHSruns) <- gsub("_", " ", rownames(private$LHSruns))
+
             } else {
               nVars = 1
             }
@@ -248,7 +251,7 @@ SolverModule <-
           if(nRUNs > 1){
             #loop over scenarios / lhs RUNs, if any
             for (i in 1:nRUNs){
-              
+              #browser()
               # If there is one set of emissions: 
               if(!"RUN" %in% colnames(emissions) && emisFuns == 0){
                 emis <- self$emissions()
@@ -592,6 +595,7 @@ SolverModule <-
       },
 
       PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100){
+        #browser()
         #checks
         # states should also be in # should be in private$SolveStates?
         solveStateAbbr <- private$SolveStates$asDataFrame
@@ -613,30 +617,43 @@ SolverModule <-
             var_box_df <- dplyr::left_join(var_box_df, solveStateAbbr)
           }
         }
+        
         #only now:
         stopifnot(length(var_invFun) == nrow(var_box_df))
         
         private$input_variables <- var_box_df
-        return (lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun)))
-
+        lhs_samples <- lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun))
+        
+        # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
+        if (is.vector(lhs_samples)) {
+          lhs_samples <- matrix(lhs_samples, ncol = 1)
+        }
+        
+        # Name the columns of the LHS matrix
+        colnames(lhs_samples) <- paste0(private$input_variables$varName, "_", private$input_variables$Scale, "_", private$input_variables$SubCompart, "_", private$input_variables$Species)
+        
+        return(lhs_samples)
       },
       
-      ScaleLHS = function(lhsRUNs, var_invfun) {
-
-        # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
-        if (is.vector(lhsRUNs)) {
-          lhsRUNs <- matrix(lhsRUNs, ncol = 1)
-        }
+      ScaleLHS = function(lhsRUNs, var_invfun, correlations) {
+        #browser()
         
         # Determine the number of columns and functions
         num_columns <- ncol(lhsRUNs)
         num_functions <- length(var_invfun)
         
+        # Check if the number of columns and number of functions is the same
+        if(num_columns != num_functions){
+          stop("The number of columns in lhsRUNs must match the number of functions in var_invfun.")
+        }
+        
+        # Transform the samples
+        
         # Check if there is only one function and one column
         if (num_columns == 1 && num_functions == 1) {
           # Apply the single inverse function to each element of the single column
           transformed_samples <- sapply(lhsRUNs[, 1], var_invfun[[1]])
-        } else if (num_columns == num_functions) {
+        } else if(is.null(correlations)){
           # Apply each function to the corresponding column
           transformed_samples <- mapply(function(column, inv_fun) {
             sapply(column, inv_fun)
@@ -644,11 +661,248 @@ SolverModule <-
           
           # Convert the list back to a matrix if needed
           transformed_samples <- do.call(cbind, transformed_samples)
-        } else {
-          stop("The number of columns in lhsRUNs must match the number of functions in var_invfun.")
+        } else if (!is.null(correlations)){
+          transformed_samples <- self$TransformCorrelatedLHS(lhsRUNs, correlations, var_invfun)
         }
         
+        # Expand columns if needed (i.e. if one kdeg was given for all water compartments, copy for all water compartments etc.)
+        transformed_samples <- self$ExpandLHS(transformed_samples)
+        
+        vars <- private$input_variables
+        
         return(transformed_samples)
+      },
+      
+      #' @description Function that transforms LHS samples for correlated variables
+      #' @param 
+      TransformCorrelatedLHS = function(lhsRUNs, correlations, var_invfun) {
+        # Filter and prepare correlations 
+        correlations <- data.frame(varName_1 = paste0(correlations$varName_1, "_", correlations$Scale_1, "_", correlations$SubCompart_1, "_", correlations$Species_1),
+                                   varName_2 = paste0(correlations$varName_2, "_", correlations$Scale_2, "_", correlations$SubCompart_2, "_", correlations$Species_2),
+                                   correlation = correlations$correlation)
+        
+        prepped_correlations <- correlations[
+          correlations$varName_1 %in% colnames(lhsRUNs) & correlations$varName_2 %in% colnames(lhsRUNs),]
+        
+        #### Split lhs columns and functions
+        
+        # Get names of correlated columns
+        unique_correlated_columns <- unique(c(prepped_correlations$varName_1, prepped_correlations$varName_2))
+        
+        # Get correlated columns
+        lhs_correlated <- as.matrix(lhsRUNs[, unique_correlated_columns])
+        colnames(lhs_correlated) <- unique_correlated_columns
+        
+        # Get non-correlated columns
+        all_columns <- colnames(lhsRUNs)  # Get all column names from lhsRUNs
+        non_correlated_columns <- setdiff(all_columns, unique_correlated_columns)
+        lhs_non_correlated <- as.matrix(lhsRUNs[, non_correlated_columns])
+        colnames(lhs_non_correlated) <- non_correlated_columns
+        
+        # Get the correlated and non-correlated column indices
+        correlated_column_indices <- which(colnames(lhsRUNs) %in% unique_correlated_columns)
+        non_correlated_column_indices <- setdiff(1:ncol(lhsRUNs), correlated_column_indices)
+        
+        # Split the varFuns list into two based on the column indices
+        varFuns_correlated <- var_invfun[correlated_column_indices]
+        varFuns_non_correlated <- var_invfun[non_correlated_column_indices]
+        
+        #### Scale correlated LHS samples
+        lhs_correlated <- correlatedLHS(
+          lhs_correlated,  
+          marginal_transform_function = function(W, ...) {
+            # Apply varFuns
+            for (i in seq_along(varFuns_correlated)) {
+              W[, i] <- varFuns_correlated[[i]](W[, i])
+            }
+            return(W)
+          },
+          cost_function = function(W, ...) {
+            
+            cost <- 0
+            
+            # Loop through each desired correlation and compute the cost
+            for (i in seq_len(nrow(prepped_correlations))) {
+              # Get variable names and desired correlation
+              var_1 <- prepped_correlations$varName_1[i]
+              var_2 <- prepped_correlations$varName_2[i]
+              desired_corr <- prepped_correlations$correlation[i]
+              
+              # Get corresponding column indices in the filtered data
+              col_1 <- which(colnames(W) == var_1)
+              col_2 <- which(colnames(W) == var_2)
+              
+              # If both columns exist, compute the correlation
+              if (length(col_1) > 0 && length(col_2) > 0) {
+                actual_corr <- cor(W[, col_1], W[, col_2])
+                
+                # Add the squared error to the cost
+                cost <- cost + (actual_corr - desired_corr)^2
+              }
+            }
+            
+            return(cost)
+          },
+          debug = FALSE,  
+          maxiter = 10000  
+        )
+        
+        #### Scale the non-correlated LHS samples
+        lhs_non_correlated_transformed <- lhs_non_correlated
+        
+        for (i in seq_along(varFuns_non_correlated)) {
+          lhs_non_correlated_transformed[, i] <- varFuns_non_correlated[[i]](lhs_non_correlated_transformed[, i])
+        }
+        
+        transformed_lhs <- cbind(lhs_non_correlated_transformed, lhs_correlated$transformed_lhs)
+        
+        return(transformed_lhs)
+      },
+      
+      #' @description Function that copies LHS columns for variables when a SubCompart is Water, Sediment or Soil
+      #' or when a variable that should be present is NA
+      ExpandLHS = function(lhsRUNs){
+        # Function to check which states are needed for the variable
+        check_states <- function(varname){
+          var_df <- World$fetchData(varname)
+          var_cnames <- colnames(var_df)
+          var_cnames <- setdiff(var_cnames, varname)
+          return(var_cnames)
+        }
+        
+        # List of possible states
+        water_compartments <- c("deepocean", "lake", "river", "sea")
+        soil_compartments <- c("agriculturalsoil", "naturalsoil", "othersoil")
+        sediment_compartments <- c("freshwatersediment", "lakesediment", "marinesediment")
+        all_compartments <- unique(World$states$asDataFrame$SubCompart)
+        species <- c("Unbound", "Small", "Large", "Solid")
+        scales <- c("Tropic", "Moderate", "Arctic", "Continental", "Regional")
+        
+        # Initialize a list to store expanded columns
+        expanded_lhs_list <- list()
+        expanded_lhs_colnames <- c()
+        
+        # Loop through each column in lhsRUNs
+        for(i in seq_len(ncol(lhsRUNs))) {
+          
+          # Extract column name and data
+          cname <- colnames(lhsRUNs)[i]
+          lhs_col <- as.matrix(lhsRUNs[, i])
+          
+          # Extract varname, scale, subcompartment, and species from the column name
+          name_parts <- strsplit(cname, "_")[[1]]
+          varname <- name_parts[1]
+          current_scale <- ifelse(length(name_parts) >= 2, name_parts[2], "NA")
+          current_subcompart <- ifelse(length(name_parts) >= 3, name_parts[3], "NA")
+          current_species <- ifelse(length(name_parts) >= 4, name_parts[4], "NA")
+          
+          # Check which states are required for varname
+          needed_states <- check_states(varname)
+          
+          # Initialize a list to store expanded columns
+          expanded_columns <- list()
+          
+          # If no expansion is needed, store as is
+          if (is.null(needed_states)) {
+            expanded_columns[[cname]] <- lhs_col
+          } else {
+            # Expansion for Species
+            expanded_columns_species <- list()
+            if ("Species" %in% needed_states && current_species == "NA") {
+              for (species_type in species) {
+                col_name <- paste(varname, current_scale, current_subcompart, species_type, sep = "_")
+                expanded_columns_species[[col_name]] <- lhs_col
+              }
+            } else {
+              expanded_columns_species[[cname]] <- lhs_col
+            }
+            
+            # Expansion for Scale
+            expanded_columns_scale <- list()
+            for (expanded_col_name in names(expanded_columns_species)) {
+              expanded_col_data <- expanded_columns_species[[expanded_col_name]]
+              parts <- strsplit(expanded_col_name, "_")[[1]]
+              scale <- parts[2]
+              
+              if ("Scale" %in% needed_states && scale == "NA") {
+                for (scale_type in scales) {
+                  col_name <- paste(parts[1], scale_type, parts[3], parts[4], sep = "_")
+                  expanded_columns_scale[[col_name]] <- expanded_col_data
+                }
+              } else {
+                expanded_columns_scale[[expanded_col_name]] <- expanded_col_data
+              }
+            }
+            
+            # Expansion for SubCompartments (Final Step - Add Names Here)
+            expanded_columns_final <- list()
+            for (expanded_col_name in names(expanded_columns_scale)) {
+              expanded_col_data <- expanded_columns_scale[[expanded_col_name]]
+              parts <- strsplit(expanded_col_name, "_")[[1]]
+              subcompart <- parts[3]
+              
+              if ("SubCompart" %in% needed_states) {
+                if (subcompart == "Soil") {
+                  for (soil in soil_compartments) {
+                    col_name <- paste(parts[1], parts[2], soil, parts[4], sep = "_")
+                    expanded_columns_final[[col_name]] <- expanded_col_data
+                  }
+                } else if (subcompart == "Water") {
+                  for (water in water_compartments) {
+                    col_name <- paste(parts[1], parts[2], water, parts[4], sep = "_")
+                    expanded_columns_final[[col_name]] <- expanded_col_data
+                  }
+                } else if (subcompart == "Sediment") {
+                  for (sediment in sediment_compartments) {
+                    col_name <- paste(parts[1], parts[2], sediment, parts[4], sep = "_")
+                    expanded_columns_final[[col_name]] <- expanded_col_data
+                  }
+                } else if (subcompart == "NA") {
+                  for (comp in all_compartments) {
+                    col_name <- paste(parts[1], parts[2], comp, parts[4], sep = "_")
+                    expanded_columns_final[[col_name]] <- expanded_col_data
+                  }
+                } else {
+                  expanded_columns_final[[expanded_col_name]] <- expanded_col_data
+                }
+              } else {
+                expanded_columns_final[[expanded_col_name]] <- expanded_col_data
+              }
+            }
+            
+            # Store only the final column names now
+            expanded_columns <- expanded_columns_final
+          }
+          
+          # Add fully expanded columns to final matrix
+          expanded_lhs_list[[length(expanded_lhs_list) + 1]] <- do.call(cbind, expanded_columns)
+          
+          # Update column names to avoid saving intermediate names
+          expanded_lhs_colnames <- c(expanded_lhs_colnames, names(expanded_columns))
+        }
+        
+        # Combine all expanded columns into a single matrix
+        expanded_lhs_matrix <- do.call(cbind, expanded_lhs_list)
+        
+        # Now, set the column names of the expanded LHS matrix
+        if (length(expanded_lhs_colnames) == ncol(expanded_lhs_matrix)) {
+          colnames(expanded_lhs_matrix) <- expanded_lhs_colnames
+        } else {
+          stop("Mismatch between the number of column names and columns in the expanded LHS matrix.")
+        }
+        
+        # Update private$input_variables with the new column names
+        cnames <- colnames(expanded_lhs_matrix)
+        
+        vars <- sapply(strsplit(cnames, "_"), `[`, 1)
+        scales <- sapply(strsplit(cnames, "_"), `[`, 2)
+        subcomparts <- sapply(strsplit(cnames, "_"), `[`, 3)
+        species <- sapply(strsplit(cnames, "_"), `[`, 4)
+        
+        private$input_variables <- data.frame(varName = vars, Scale = scales, SubCompart = subcomparts, Species = species)
+        private$input_variables[] <- sapply(private$input_variables, function(x) ifelse(x == "NA", NA, x))
+        
+        return(expanded_lhs_matrix)
       },
       
       #' @description diff between kaas in this and k's in OtherSB.K
