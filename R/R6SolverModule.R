@@ -96,7 +96,7 @@ SolverModule <-
         
         # If ParallelPreparation is FALSE, regular solver use.
         } else {
-          #browser()
+          
           if (is.null(private$SB.K)) {
             stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
           }
@@ -113,8 +113,13 @@ SolverModule <-
           if (nRUNs > 1) {
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
-            solver_runs <- unique(emissions$RUN)
             
+            if(class(emissions) == "data.frame"){
+              solver_runs <- unique(emissions$RUN)
+            } else if(class(emissions) == "list"){
+              solver_runs <- used_runs
+            }
+
             run_matrix <- cbind(used_runs, solver_runs)
             private$run_df <- as.data.frame(run_matrix)
             
@@ -253,7 +258,7 @@ SolverModule <-
           if(nRUNs > 1){
             #loop over scenarios / lhs RUNs, if any
             for (i in 1:nRUNs){
-              #browser()
+              
               # If there is one set of emissions: 
               if(!"RUN" %in% colnames(emissions) && emisFuns == 0){
                 emis <- self$emissions()
@@ -273,8 +278,7 @@ SolverModule <-
                 
                 inputvars <- private$input_variables
                 inputvars$RUN <- i
-                
-                vns <- unique(private$input_variables$varName)
+
                 #update core and solve
                 private$MyCore$UpdateDirty(unique(private$input_variables$varName))
                 self$PrepKaasM()
@@ -340,6 +344,7 @@ SolverModule <-
       },
       
       GetEmissions = function() {
+        
 
         if (is.null(private$UsedEmissions)) {
           stop("first solve, then ask again")
@@ -597,7 +602,6 @@ SolverModule <-
       },
 
       PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100){
-        #browser()
         #checks
         # states should also be in # should be in private$SolveStates?
         solveStateAbbr <- private$SolveStates$asDataFrame
@@ -631,14 +635,26 @@ SolverModule <-
           lhs_samples <- matrix(lhs_samples, ncol = 1)
         }
         
+        if(!is.null(private$input_variables)){
+          colnames_lhs <- paste0(private$input_variables$varName, "_", private$input_variables$Scale, "_", private$input_variables$SubCompart, "_", private$input_variables$Species)
+        } else{
+          colnames_lhs <- c()
+        }
+        
+        if(!is.null(emis_invFun)){
+          colnames_emis <- names(emis_invFun)
+        } else{
+          colnames_emis <- c()
+        }
+        
         # Name the columns of the LHS matrix
-        colnames(lhs_samples) <- paste0(private$input_variables$varName, "_", private$input_variables$Scale, "_", private$input_variables$SubCompart, "_", private$input_variables$Species)
+        colnames(lhs_samples) <- c(colnames_emis, colnames_lhs) 
         
         return(lhs_samples)
       },
       
       ScaleLHS = function(lhsRUNs, var_invfun, correlations) {
-        #browser()
+        
         
         # Determine the number of columns and functions
         num_columns <- ncol(lhsRUNs)
