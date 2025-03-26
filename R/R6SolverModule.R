@@ -774,7 +774,7 @@ SolverModule <-
         water_compartments <- c("deepocean", "lake", "river", "sea")
         soil_compartments <- c("agriculturalsoil", "naturalsoil", "othersoil")
         sediment_compartments <- c("freshwatersediment", "lakesediment", "marinesediment")
-        all_compartments <- unique(World$states$asDataFrame$SubCompart)
+        all_compartments <- unique(private$MyCore$states$asDataFrame$SubCompart)
         species <- c("Unbound", "Small", "Large", "Solid")
         scales <- c("Tropic", "Moderate", "Arctic", "Continental", "Regional")
         
