@@ -8,7 +8,8 @@
 #' @returns dm (i) = change in mass as list
 
 SimpleBoxODE = function(t, m, parms) {
-  dm <- with(parms, K %*% m + e)
+  dm <- with(parms, 
+             K %*% m + e)
   return(list(dm, signal = parms$e)) 
 }
 
@@ -31,14 +32,15 @@ SimpleBoxODEapprox = function(t, m, parms) {
 #' @param parms = empty list (needed so that the SteadyStateSolver and DynamicSolver can be called in the same manner from the SolverModule)
 #' @returns dm (i) = change in mass as list
 
-SteadyStateSolver <- function(k, m, parms){
+SteadyStateSolver <- function(k, e, parms){
   SBNames = colnames(k)
   tmax=1e20 # solution for >1e12 year horizon
   dm <- rootSolve::runsteady(
     y = rep(0,nrow(k)),
     times = c(0,tmax),
     func = SimpleBoxODE,
-    parms = list(K = k, e = m)
+    parms = list(K = k, 
+                 e = e)
   )
   return(dm)
 }
@@ -46,26 +48,34 @@ SteadyStateSolver <- function(k, m, parms){
 #' @description Dynamic solver function
 #' @param k the first order rate constant matrix
 #' @param m list of emission approx functions per compartment
-#' @param parms = list containing nTIMES and tmax
+#' @param parms = list containing nTIMES, tmin and tmax
 #' @returns a list containing main (a matrix with the masses per compartment per
 #'  timestep) and signals (a matrix with the emissions per compartment per timestep)
 
-DynamicSolver <- function(k, m, parms) {
-  tmax <- parms$tmax 
-  nTIMES <- parms$nTIMES 
+DynamicSolver <- function(k, e, parms) {
+    if(is.null(parms$rtol_ode)){
+    rtol_ode = 1e-11
+  } else rtol_ode = parms$rtol_ode
+  if(is.null(parms$atol_ode)){
+    atol_ode = 1e-3
+  } else atol_ode = parms$atol_ode
+  tmax = parms$tmax 
+  nTIMES = parms$nTIMES 
   SB.K = k
   SBNames = colnames(k)
-  SB.m0 <- rep(0, length(SBNames))
-  SBtime <- seq(0,tmax,length.out = nTIMES)
-  vEmis <- m
+  SB.m0 = rep(0, length(SBNames))
+  tmin = parms$tmin
+  SBtime <- seq(tmin,tmax,length.out = nTIMES)
   
   out <- deSolve::ode(
     y = as.numeric(SB.m0),
     times = SBtime,
     func = SimpleBoxODEapprox,
-    parms = list(K = SB.K, SBNames=SBNames, emislist= vEmis),
-    rtol = 1e-11, atol = 1e-3)
-  
+    parms = list(K = SB.K, 
+                 SBNames=SBNames,
+                 emislist = e),
+   rtol = rtol_ode, atol =  atol_ode)
+
   colnames(out)[1:length(SBNames) + 1] <- SBNames
   colnames(out)[grep("signal", colnames(out))] <- paste("signal", SBNames, sep = "2")
   
