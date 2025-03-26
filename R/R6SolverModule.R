@@ -105,7 +105,7 @@ SolverModule <-
             nTIMES <- NULL
             tmax <- NULL
           }
-          
+
           if (nRUNs > 1) {
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
@@ -114,8 +114,10 @@ SolverModule <-
             run_matrix <- cbind(used_runs, solver_runs)
             private$run_df <- as.data.frame(run_matrix)
             
-            emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)]
-            
+            if(class(emissions) != "list"){
+               emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)] 
+            }
+
           } else {
             # Create a matrix with a single row
             private$run_df <- data.frame(used_runs = 1,
