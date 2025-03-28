@@ -9,7 +9,7 @@
 
 k_Volatilisation <- function(to.MTC_2w, from.MTC_2a, to.MTC_2s, Kacompw, from.FRorig, from.FRorig_spw, FRinw, Kscompw,
                              VertDistance, SpeciesName, Matrix, relevant_depth_s, penetration_depth_s,
-                             from.SubCompartName, from.ScaleName){ 
+                             from.SubCompartName, from.ScaleName, to.SubCompartName,to.ScaleName){ 
 # browser()
 
   if (SpeciesName %in% c("Molecular")) {
