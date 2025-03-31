@@ -21,6 +21,20 @@ CalcGraphModule <-
         private$MyName <- exeFunction
         private$MyCore <- TheCore
         private$MoreParams <- list(...)
+      },
+      
+      #' @description fetch specific values from core
+      #' @param withoutValues data.frame-ish with columns `varname` and needed D 
+      fetch_current = function(withoutValues) {
+        
+        pervar <- split(withoutValues, f = withoutValues$varName)
+        toJoin <- lapply(names(pervar), private$MyCore$fetchData)
+        stillsplit <- lapply(1:length(pervar), function(i){
+          specvar <- left_join(pervar[[i]], toJoin[[i]]) 
+          names(specvar)[names(specvar) == names(pervar)[i]] <- "waarde"
+          specvar
+        })
+        bind_rows(stillsplit)
       }
     ),
     active = list(
