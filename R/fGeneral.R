@@ -64,7 +64,7 @@ DynamicSolver <- function(k, m, parms) {
     times = SBtime,
     func = SimpleBoxODEapprox,
     parms = list(K = SB.K, SBNames=SBNames, emislist= vEmis),
-    rtol = 1e-11, atol = 1e-3)
+    rtol = 1e-30, atol = 0.5e-2)
   
   colnames(out)[1:length(SBNames) + 1] <- SBNames
   colnames(out)[grep("signal", colnames(out))] <- paste("signal", SBNames, sep = "2")
@@ -180,10 +180,10 @@ triangular_cdf_inv = function(u, # LH scaling factor
 
 #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
 Make_inv_unif01 = function(fun_type = "triangular", pars) {
-  if (!fun_type %in% c("triangular", "normal", "uniform")) {
-    stop("! fun_type %in% c('triangular', 'normal', 'uniform')")
+  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size")) {
+    stop("! fun_type %in% c('triangular', 'normal', 'uniform', 'log uniform', 'TRWP_size')")
   }
-  if (fun_type == "triangular") {
+  if (fun_type == "triangular" || fun_type == "Triangular") {
     if (!(inherits(pars, "list") && length(pars) == 3)) {
       stop(
         "the triangular is created using a list of three parameters, a = minimum, b = maximum, c = peak")
@@ -195,7 +195,7 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       triangular_cdf_inv(x, a, b, c)
     })
   }
-  if (fun_type == "normal") {
+  if (fun_type == "normal" || fun_type == "Normal") {
     if (!(inherits(pars, "list")) && length(pars) == 2) {
       stop("the normal is created using a list of two parameters, a = mean, b = sigma, c = peak")
     }
@@ -205,7 +205,7 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       qnorm(p = x, mean = mu, sd = sig)
     })
   }
-  if (fun_type == "uniform") {
+  if (fun_type == "uniform" || fun_type == "Uniform") {
     if (!(inherits(pars, "list")) && length(pars) == 2) {
       stop("the uniform is created using a list of two parameters, a = minimum, b = maximum")
     }
@@ -215,5 +215,37 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       minx + x * (maxx - minx)
     })
   }
-  
+  if (fun_type == "log uniform" || fun_type == "Log uniform") {
+    if (!(inherits(pars, "list")) && length(pars) == 2) {
+      stop("the log uniform is created using a list of two parameters, a = minimum, b = maximum")
+    }
+    minx <- pars[["a"]]
+    maxx <- pars[["b"]]
+    return(function(x) {
+      log_scaled <- -log(1 - x)
+      a + (b - a) * (log_scaled / max(log_scaled))
+    })
+  }
+  if (fun_type == "TRWP_size") {
+    if (!(inherits(pars, "list")) && length(pars) == 1) {
+      stop("the log uniform is created using a list of two parameters, a = minimum, b = maximum")
+    }
+    path <- pars[["d"]]
+    return(function(x) {
+      # Read the data and process it
+      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data") |>
+        separate(`Size Fraction (µm)`,
+                 into = c("Size_um","max_size_um"), sep = "-") |> 
+        mutate(Size_um = as.numeric(gsub("400", "1000", Size_um))) |>  # Change "400" to "1000"
+        mutate(Size_nm = Size_um*1000) |> # convert sizes to nanometer
+        mutate(PSD_um = as.numeric(PSD_um)) |> # Assuming PSD_um is the particle size distribution (weights)
+        mutate(cdf = cumsum(PSD_um)) |>
+        mutate(cdf = cdf / max(cdf))  # Normalize the CDF
+      
+      # Use the approx function to interpolate Size_um based on the CDF
+      approx(x = TRWP_data$cdf, y = TRWP_data$Size_nm, xout = x, rule = 2)$y
+    })
+  }
 }
+
+

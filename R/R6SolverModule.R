@@ -96,7 +96,7 @@ SolverModule <-
         
         # If ParallelPreparation is FALSE, regular solver use.
         } else {
-          
+          #browser()
           if (is.null(private$SB.K)) {
             stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
           }
@@ -114,7 +114,7 @@ SolverModule <-
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
             
-            if(class(emissions) == "data.frame"){
+            if("data.frame" %in% class(emissions)){
               solver_runs <- unique(emissions$RUN)
             } else if(class(emissions) == "list"){
               solver_runs <- used_runs
@@ -123,7 +123,7 @@ SolverModule <-
             run_matrix <- cbind(used_runs, solver_runs)
             private$run_df <- as.data.frame(run_matrix)
             
-            if(class(emissions) != "list"){
+            if(!"list" %in% class(emissions)){
               emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)] 
             }
             
@@ -792,6 +792,7 @@ SolverModule <-
         water_compartments <- c("deepocean", "lake", "river", "sea")
         soil_compartments <- c("agriculturalsoil", "naturalsoil", "othersoil")
         sediment_compartments <- c("freshwatersediment", "lakesediment", "marinesediment")
+        soil_sediment_compartments <- c(soil_compartments, sediment_compartments)
         all_compartments <- unique(private$MyCore$states$asDataFrame$SubCompart)
         species <- c("Unbound", "Small", "Large", "Solid")
         scales <- c("Tropic", "Moderate", "Arctic", "Continental", "Regional")
@@ -873,6 +874,11 @@ SolverModule <-
                 } else if (subcompart == "Sediment") {
                   for (sediment in sediment_compartments) {
                     col_name <- paste(parts[1], parts[2], sediment, parts[4], sep = "_")
+                    expanded_columns_final[[col_name]] <- expanded_col_data
+                  }
+                } else if (subcompart == "Soil_Sediment") {
+                  for (comp in soil_sediment_compartments) {
+                    col_name <- paste(parts[1], parts[2], comp, parts[4], sep = "_")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
                 } else if (subcompart == "NA") {
