@@ -22,7 +22,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   if (SpeciesName != "Molecular"){
     
     if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
-      return(0)
+      return(NA)
       
     }
     
@@ -34,7 +34,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
     } else {
       if (as.character(Test) == "TRUE"){
         if(to.SubCompartName == "lakesediment"){
-          return(0)
+          return(NA)
         } else {
           SetlingVelocityCP <- 2.5/(24*3600)
         }

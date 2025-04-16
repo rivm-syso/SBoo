@@ -25,6 +25,7 @@ Mother of all Modules where all defining functions will be called
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-CalcGraphModule-new}{\code{CalcGraphModule$new()}}
+\item \href{#method-CalcGraphModule-fetch_current}{\code{CalcGraphModule$fetch_current()}}
 \item \href{#method-CalcGraphModule-clone}{\code{CalcGraphModule$clone()}}
 }
 }
@@ -46,6 +47,23 @@ init
 for identification (a function does not know its own name)}
 
 \item{\code{...}}{other parameters for various uses, end up in private$MoreParams}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CalcGraphModule-fetch_current"></a>}}
+\if{latex}{\out{\hypertarget{method-CalcGraphModule-fetch_current}{}}}
+\subsection{Method \code{fetch_current()}}{
+fetch specific values from core
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CalcGraphModule$fetch_current(withoutValues)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{withoutValues}}{data.frame-ish with columns `varname` and needed D}
 }
 \if{html}{\out{</div>}}
 }

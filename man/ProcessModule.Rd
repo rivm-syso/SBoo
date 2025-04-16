@@ -19,6 +19,7 @@ Initializes processes with their from and to dimensions
 \if{html}{\out{
 <details open><summary>Inherited methods</summary>
 <ul>
+<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="initialize"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-initialize'><code>sboo::CalcGraphModule$initialize()</code></a></span></li>
 </ul>
 </details>

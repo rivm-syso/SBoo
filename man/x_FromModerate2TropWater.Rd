@@ -2,20 +2,24 @@
 % Please edit documentation in R/x_FromModerate2TropWater.R
 \name{x_FromModerate2TropWater}
 \alias{x_FromModerate2TropWater}
-\title{Mixing of upper and deeper sea water layers (w2 and w3)}
+\title{Flow from Moderate to Tropic deep ocean (w3)
+Moderate scale waters flow into Tropical scale through deep ocean currents 
+based on a set ocean current of r World$fetchData("OceanCurrent")/(60*60*24) m3/day.}
 \usage{
 x_FromModerate2TropWater(OceanCurrent, SubCompartName, ScaleName)
 }
 \arguments{
-\item{OceanCurrent}{[m3.s-1]}
+\item{OceanCurrent}{Ocean Current between global zones [m3.s-1]}
 
 \item{SubCompartName}{name of the subcompartment of the box at hand}
 
 \item{ScaleName}{name of the scale of the box at hand}
 }
 \value{
-Advection sea - deepocean
+Flow [m3.s-1]
 }
 \description{
-Mixing of upper and deeper sea water layers (w2 and w3)
+Flow from Moderate to Tropic deep ocean (w3)
+Moderate scale waters flow into Tropical scale through deep ocean currents 
+based on a set ocean current of r World$fetchData("OceanCurrent")/(60*60*24) m3/day.
 }

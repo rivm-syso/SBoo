@@ -19,7 +19,9 @@ k_Volatilisation(
   relevant_depth_s,
   penetration_depth_s,
   from.SubCompartName,
-  from.ScaleName
+  from.ScaleName,
+  to.SubCompartName,
+  to.ScaleName
 )
 }
 \arguments{

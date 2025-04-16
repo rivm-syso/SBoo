@@ -44,6 +44,7 @@ return data.frame with variable in sb4n spreatsheet and their values
 \if{html}{\out{
 <details open><summary>Inherited methods</summary>
 <ul>
+<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="sboo" data-topic="ProcessModule" data-id="execute"><a href='../../sboo/html/ProcessModule.html#method-ProcessModule-execute'><code>sboo::ProcessModule$execute()</code></a></span></li>
 </ul>
 </details>

@@ -14,9 +14,17 @@ Module dealing with computing and initializing the variables
 \itemize{
 \item \href{#method-VariableModule-execute}{\code{VariableModule$execute()}}
 \item \href{#method-VariableModule-new}{\code{VariableModule$new()}}
+\item \href{#method-VariableModule-prepdata}{\code{VariableModule$prepdata()}}
 \item \href{#method-VariableModule-clone}{\code{VariableModule$clone()}}
 }
 }
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-VariableModule-execute"></a>}}
 \if{latex}{\out{\hypertarget{method-VariableModule-execute}{}}}
@@ -31,7 +39,16 @@ Module dealing with computing and initializing the variables
 \if{latex}{\out{\hypertarget{method-VariableModule-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VariableModule$new(TheCore, exeFunction, AggrBy, AggrFun)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{VariableModule$new(TheCore, exeFunction, IsVectorised = F, AggrBy, AggrFun)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-VariableModule-prepdata"></a>}}
+\if{latex}{\out{\hypertarget{method-VariableModule-prepdata}{}}}
+\subsection{Method \code{prepdata()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{VariableModule$prepdata(squeezeVar = NULL, debugAt = NULL)}\if{html}{\out{</div>}}
 }
 
 }

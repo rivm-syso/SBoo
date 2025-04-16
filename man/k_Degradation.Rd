@@ -16,7 +16,9 @@ k_Degradation(
   Matrix,
   SpeciesName,
   SubCompartName,
-  ScaleName
+  ScaleName,
+  Test,
+  kdis = NA
 )
 }
 \arguments{

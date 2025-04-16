@@ -4,12 +4,12 @@
 \alias{k_Fragmentation}
 \title{Fragmentation and degradation of plastics}
 \usage{
-k_Fragmentation(kmpdeg, kfrag, SubCompartName, ScaleName)
+k_Fragmentation(kfrag, SubCompartName, ScaleName)
 }
 \arguments{
-\item{kmpdeg}{degradation rate of plastic in certain subcompartment [s-1]}
-
 \item{kfrag}{fragmentation rate of plastic in certain subcompartment}
+
+\item{kmpdeg}{degradation rate of plastic in certain subcompartment [s-1]}
 }
 \value{
 k_Fragmentation, the combined degradation and fragmentation rate of microplastics [s-1]

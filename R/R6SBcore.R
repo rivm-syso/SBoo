@@ -160,7 +160,7 @@ SBcore <- R6::R6Class("SBcore",
     #' "emis" numbers
     #' @param needdebug if T the defining function will open in debugging modus
     Solve = function(emissions, needdebug = F, ...){
-      #browser()
+      
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
@@ -169,28 +169,43 @@ SBcore <- R6::R6Class("SBcore",
       # prepare the kaas
       private$solver$PrepKaasM()
       
-      # prepare the emissions     
-      private$solver$PrepemisV(emissions, private$solvername)
+      private$solver$execute(needdebug = needdebug, emissions, ...)
       
-      MoreParams <- list(...)
+    },
+    
+    #' @description Creates inverse functions for each row of the given dataframe
+    #' @param paramdf A dataframe with one row for eacht distribution. Must at 
+    #' least contain the columns "Distribution" (which can contain "triangular", "uniform" or "normal"), 
+    #' "a", "b", and "c".
+    #' 
+    #' "a", "b" and "c" contain the following:
+    #' triangular: a = Minimum, b = Maximum, c = Peak value
+    #' normal: a = Mean, b = Standard deviation 
+    #' uniform: a = Minimum , b = Maximum
+    makeInvFuns = function(paramdf){
       
-      if(length(MoreParams) > 0){
-        if(is_tibble(MoreParams[[1]])){
-          uncertaininput <- private$solver$PrepUncertain(MoreParams[[1]])
-          uncertaininput <- MoreParams[[1]]
+      # Define functions for each row based on the distribution type
+      varFuns <- apply(paramdf, 1, function(aRow) {
+        dist_type <- aRow["Distribution"]
+        
+        if (dist_type == "triangular") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
+        } else if (dist_type == "normal") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
+          names(prepArgs) <- c("a", "b")
+        } else if (dist_type == "uniform") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
+          names(prepArgs) <- c("a", "b")
+        } else {
+          stop("Unsupported distribution type")
         }
-      }
+        
+        # Create the inverse CDF function using the prepared arguments
+        Make_inv_unif01(fun_type = dist_type, pars = prepArgs)
+      })
       
-      Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
-      
-      # the solver does the actual work
-      # if(!is.null(MoreParams)){
-      #   if(exists("uncertaininput")){
-      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, uncertaininput, ...)
-      #   } else {
-      #     Solution = private$solver$execute(needdebug = needdebug, emissions, private$solvername, ...)
-      #   }
-      # }
+      return(varFuns)
     },
     
     #' @description Export the matrix of speed constants, aka Engine, to an excel file
@@ -213,28 +228,70 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #'@description Save the last calculated masses in the core
-    Solution = function(){
+    Masses = function(){
       #browser()
       if (is.null(private$solver)) {
         stop("No active solver")
       }
-      private$solver$GetSolution(private$solvername)
+      private$solver$GetMasses()
+    },
+    
+    VariableValues = function(){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetVarValues()
     },
     
     #'@description Function to obtain steady state concentrations, using the solution saved in world.
-    GetConcentration = function(){
-      private$concentration <- ConcentrationModule$new(self, private$solvername)
-      private$concentration$GetConc()
-
+    Concentration = function(){
+      if (is.null(private$solver)) {
+        stop("No active solver, (then Solve ..., then ask again)")
+        return(NULL)
+      }
+      private$solver$GetConcentrations()
+    },
+    
+    #'@description Save the last used emissions in the core
+    Emissions = function(){
+      #browser()
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetEmissions()
+    },
+    
+    #' @description Return the appropriate concentration plot
+    PlotConcentration = function(scale = NULL, subcompart = NULL){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetConcentrationPlot(scale, subcompart)
+    },
+    
+    #' @description Return the appropriate solution plot
+    PlotMasses = function(scale = NULL, subcompart = NULL){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetMassesPlot(scale, subcompart)
+    },
+    
+    #' @description Return the appropriate mass distribution plot
+    PlotMassDistribution = function(scale = NULL){
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetMassDist(scale)
     },
     
     #' @description Injection from SolverModule
-    SolutionAsRelational = function(...){
+    MassesAsRelational = function(...){
       if (is.null(private$solver)) {
         warning("No active solver")
         return(NULL)
       }
-      private$solver$SolutionAsRelational(...)
+      private$solver$MassesAsRelational(...)
     },
     
     #' @description Obtain the names of the variables and tablename in which the data resides 
@@ -249,10 +306,36 @@ SBcore <- R6::R6Class("SBcore",
       res[!(res$Tablenames %in% c("Flows", "MatrixSheet", "Substances", "SubstanceCompartments", "SubstanceSubCompartSpeciesData")),]
     },
     
+    fetchDims = function(vars){
+      MetaData <- self$metaData()
+      Attrn <- MetaData[MetaData$AttributeNames %in% vars,]
+      unique(unlist(
+        lapply(unique(Attrn$Tablenames), function(tname){
+          allNames <- names(private$SB4Ndata[[tname]])
+          allNames[allNames %in% The3D]
+        })
+      ))
+      
+    },
+    
     #' @description Obtain the data for a SBvariable or a flow
     #' @param varname the name of the variable. Returns a list of variables if varname == "all"
     fetchData = function(varname="all"){
       private$FetchData(varname)
+    },
+    
+    #' @description fetch specific values from core
+    #' @param withoutValues data.frame-ish with columns `varname` and needed D 
+    fetch_current = function(withoutValues) {
+      
+      pervar <- split(withoutValues, f = withoutValues$varName)
+      toJoin <- lapply(names(pervar), private$FetchData)
+      stillsplit <- lapply(1:length(pervar), function(i){
+        specvar <- left_join(pervar[[i]], toJoin[[i]]) 
+        names(specvar)[names(specvar) == names(pervar)[i]] <- "waarde"
+        specvar
+      })
+      bind_rows(stillsplit)
     },
     
     #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv
@@ -439,6 +522,19 @@ SBcore <- R6::R6Class("SBcore",
       private$SBkaas <- rbind(NewKaas[,names(private$SBkaas)], private$SBkaas)
       
       private$DoPostponed()
+    },
+    
+    #' @description  Which Graph elements SBVars depend on?
+    DependOn = function(SBVars){
+      AllDependVar <- NULL
+      DependVar <- SBVars
+      numDepend <- 1 #anything > 0
+      while (numDepend > 0) {
+        DependVar <- unique(private$nodeList$Params[private$nodeList$Calc %in% DependVar])
+        AllDependVar <- unique(c(AllDependVar, DependVar))
+        numDepend <- length(DependVar)
+      }
+      return(AllDependVar)
     },
     
     #' @description Verifies the presence of needed variables for the calculation of 
@@ -670,8 +766,26 @@ SBcore <- R6::R6Class("SBcore",
       })
       return(AllKaasCalc[exist.from & exist.to, ]) 
       
-    }
+    },
     
+    #' @description states and all data-layer to an rds-file
+    save_world = function(filename){
+      whole_world <- list(
+        substance = private$Substance,
+        states = private$States$asDataFrame,
+        SB4Ndata = private$SB4Ndata,
+        filterstates = private$filterstates)
+      saveRDS(whole_world, file = filename)
+    },
+    
+    load_world = function(filename){
+      whole_world <- readRDS(filename)
+      private$Substance <- whole_world$substance
+      private$States <- SBstates$new(whole_world$states)
+      private$States$myCore <- self
+      private$SB4Ndata <- whole_world$SB4Ndata
+      private$filterstates <- whole_world$filterstates
+    }
   ), 
   
   active = list(

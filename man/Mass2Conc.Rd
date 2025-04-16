@@ -2,24 +2,24 @@
 % Please edit documentation in R/v_Mass2Conc.R
 \name{Mass2Conc}
 \alias{Mass2Conc}
-\title{calculate concentration from mass}
+\title{Conversion factor mass to concentration}
 \usage{
-Mass2Conc(EqMass, Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
+Mass2Conc(Volume, SubCompartName, all.rhoMatrix, FRACa, FRACw)
 }
 \arguments{
 \item{Volume}{of the Box (state) [m3]}
 
-\item{Fracs}{fraction of solids in the compartment [-]}
+\item{all.rhoMatrix}{density of the matrix [kg m-3]}
 
-\item{Fracw}{fraction of water in compartment [-]}
+\item{FRACa}{fraction of air in media/matrix [-]}
 
-\item{eqMass}{mass, as returned by solvers [kg]}
+\item{FRACw}{fraction of water in media/matrix [-]}
 
-\item{rhoMatrix}{density of the matrix [kg m-3]}
+\item{Matrix}{Media or Matrix type}
 }
 \value{
-Concentration, kg/kg wet for soils, kg/kg wet for sediment, otherwise kg/m3
+Mass2Conc factor
 }
 \description{
-calculates Concentrations from mass per Box [g/kg] or [kg/m3]
+Mass2Conc returns the factor to calculate relevant concentrations in reach compartment e.g. to get[kg/kg w] or [kg/m3]
 }

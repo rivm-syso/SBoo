@@ -17,6 +17,13 @@ the module computing all flows between compartments.
 \item \href{#method-FlowModule-clone}{\code{FlowModule$clone()}}
 }
 }
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FlowModule-new"></a>}}
 \if{latex}{\out{\hypertarget{method-FlowModule-new}{}}}

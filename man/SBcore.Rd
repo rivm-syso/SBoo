@@ -15,10 +15,7 @@ the centre object for running simple box with an R script.
 
 \item{\code{nodelist}}{getter for r.o. property}
 
-\item{\code{moduleList}}{getter for r.o. property
-description fetch the values for a dataframe with parameters/dimensions (any purpose),
-param varname name of variable to find
-return vector values (if found; else NA)}
+\item{\code{moduleList}}{getter for r.o. property}
 }
 \if{html}{\out{</div>}}
 }
@@ -33,25 +30,39 @@ return vector values (if found; else NA)}
 \item \href{#method-SBcore-NewSolver}{\code{SBcore$NewSolver()}}
 \item \href{#method-SBcore-FindStatefrom3D}{\code{SBcore$FindStatefrom3D()}}
 \item \href{#method-SBcore-Solve}{\code{SBcore$Solve()}}
+\item \href{#method-SBcore-makeInvFuns}{\code{SBcore$makeInvFuns()}}
 \item \href{#method-SBcore-exportEngine}{\code{SBcore$exportEngine()}}
 \item \href{#method-SBcore-exportEngineR}{\code{SBcore$exportEngineR()}}
-\item \href{#method-SBcore-SolutionAsRelational}{\code{SBcore$SolutionAsRelational()}}
+\item \href{#method-SBcore-Masses}{\code{SBcore$Masses()}}
+\item \href{#method-SBcore-VariableValues}{\code{SBcore$VariableValues()}}
+\item \href{#method-SBcore-Concentration}{\code{SBcore$Concentration()}}
+\item \href{#method-SBcore-Emissions}{\code{SBcore$Emissions()}}
+\item \href{#method-SBcore-PlotConcentration}{\code{SBcore$PlotConcentration()}}
+\item \href{#method-SBcore-PlotMasses}{\code{SBcore$PlotMasses()}}
+\item \href{#method-SBcore-PlotMassDistribution}{\code{SBcore$PlotMassDistribution()}}
+\item \href{#method-SBcore-MassesAsRelational}{\code{SBcore$MassesAsRelational()}}
 \item \href{#method-SBcore-metaData}{\code{SBcore$metaData()}}
+\item \href{#method-SBcore-fetchDims}{\code{SBcore$fetchDims()}}
 \item \href{#method-SBcore-fetchData}{\code{SBcore$fetchData()}}
+\item \href{#method-SBcore-fetch_current}{\code{SBcore$fetch_current()}}
+\item \href{#method-SBcore-fetchDataUnits}{\code{SBcore$fetchDataUnits()}}
 \item \href{#method-SBcore-doInherit}{\code{SBcore$doInherit()}}
 \item \href{#method-SBcore-findState}{\code{SBcore$findState()}}
-\item \href{#method-SBcore-filterStates}{\code{SBcore$filterStates()}}
+\item \href{#method-SBcore-filterStatesFrame}{\code{SBcore$filterStatesFrame()}}
 \item \href{#method-SBcore-whichDataTable}{\code{SBcore$whichDataTable()}}
 \item \href{#method-SBcore-UpdateKaas}{\code{SBcore$UpdateKaas()}}
 \item \href{#method-SBcore-VarsFromprocesses}{\code{SBcore$VarsFromprocesses()}}
 \item \href{#method-SBcore-CalcVar}{\code{SBcore$CalcVar()}}
 \item \href{#method-SBcore-SetConst}{\code{SBcore$SetConst()}}
 \item \href{#method-SBcore-UpdateDirty}{\code{SBcore$UpdateDirty()}}
+\item \href{#method-SBcore-DependOn}{\code{SBcore$DependOn()}}
 \item \href{#method-SBcore-whichUnresolved}{\code{SBcore$whichUnresolved()}}
 \item \href{#method-SBcore-CleanupCalcGraphAbove}{\code{SBcore$CleanupCalcGraphAbove()}}
 \item \href{#method-SBcore-mutateVars}{\code{SBcore$mutateVars()}}
 \item \href{#method-SBcore-UpdateData}{\code{SBcore$UpdateData()}}
 \item \href{#method-SBcore-FromDataAndTo}{\code{SBcore$FromDataAndTo()}}
+\item \href{#method-SBcore-save_world}{\code{SBcore$save_world()}}
+\item \href{#method-SBcore-load_world}{\code{SBcore$load_world()}}
 \item \href{#method-SBcore-clone}{\code{SBcore$clone()}}
 }
 }
@@ -217,6 +228,30 @@ Results are available
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-makeInvFuns"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-makeInvFuns}{}}}
+\subsection{Method \code{makeInvFuns()}}{
+Creates inverse functions for each row of the given dataframe
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$makeInvFuns(paramdf)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{paramdf}}{A dataframe with one row for eacht distribution. Must at 
+least contain the columns "Distribution" (which can contain "triangular", "uniform" or "normal"), 
+"a", "b", and "c".
+
+"a", "b" and "c" contain the following:
+triangular: a = Minimum, b = Maximum, c = Peak value
+normal: a = Mean, b = Standard deviation 
+uniform: a = Minimum , b = Maximum}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-exportEngine"></a>}}
 \if{latex}{\out{\hypertarget{method-SBcore-exportEngine}{}}}
 \subsection{Method \code{exportEngine()}}{
@@ -237,12 +272,81 @@ Export the matrix to World
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SBcore-SolutionAsRelational"></a>}}
-\if{latex}{\out{\hypertarget{method-SBcore-SolutionAsRelational}{}}}
-\subsection{Method \code{SolutionAsRelational()}}{
+\if{html}{\out{<a id="method-SBcore-Masses"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-Masses}{}}}
+\subsection{Method \code{Masses()}}{
+Save the last calculated masses in the core
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$Masses()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-VariableValues"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-VariableValues}{}}}
+\subsection{Method \code{VariableValues()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$VariableValues()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-Concentration"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-Concentration}{}}}
+\subsection{Method \code{Concentration()}}{
+Function to obtain steady state concentrations, using the solution saved in world.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$Concentration()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-Emissions"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-Emissions}{}}}
+\subsection{Method \code{Emissions()}}{
+Save the last used emissions in the core
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$Emissions()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-PlotConcentration"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-PlotConcentration}{}}}
+\subsection{Method \code{PlotConcentration()}}{
+Return the appropriate concentration plot
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$PlotConcentration(scale = NULL, subcompart = NULL)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-PlotMasses"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-PlotMasses}{}}}
+\subsection{Method \code{PlotMasses()}}{
+Return the appropriate solution plot
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$PlotMasses(scale = NULL, subcompart = NULL)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-PlotMassDistribution"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-PlotMassDistribution}{}}}
+\subsection{Method \code{PlotMassDistribution()}}{
+Return the appropriate mass distribution plot
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$PlotMassDistribution(scale = NULL)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-MassesAsRelational"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-MassesAsRelational}{}}}
+\subsection{Method \code{MassesAsRelational()}}{
 Injection from SolverModule
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBcore$SolutionAsRelational(...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$MassesAsRelational(...)}\if{html}{\out{</div>}}
 }
 
 }
@@ -259,6 +363,15 @@ see
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-fetchDims"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-fetchDims}{}}}
+\subsection{Method \code{fetchDims()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$fetchDims(vars)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-fetchData"></a>}}
 \if{latex}{\out{\hypertarget{method-SBcore-fetchData}{}}}
 \subsection{Method \code{fetchData()}}{
@@ -271,6 +384,40 @@ Obtain the data for a SBvariable or a flow
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{varname}}{the name of the variable. Returns a list of variables if varname == "all"}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-fetch_current"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-fetch_current}{}}}
+\subsection{Method \code{fetch_current()}}{
+fetch specific values from core
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$fetch_current(withoutValues)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{withoutValues}}{data.frame-ish with columns `varname` and needed D}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-fetchDataUnits"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-fetchDataUnits}{}}}
+\subsection{Method \code{fetchDataUnits()}}{
+function to obtain the data for a variable or flow, including the units whenever present in the Units csv
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$fetchDataUnits(varname = "all")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{varname}}{name of the variable}
 }
 \if{html}{\out{</div>}}
 }
@@ -313,12 +460,12 @@ returns the state for a state-name. Injected from States property
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SBcore-filterStates"></a>}}
-\if{latex}{\out{\hypertarget{method-SBcore-filterStates}{}}}
-\subsection{Method \code{filterStates()}}{
+\if{html}{\out{<a id="method-SBcore-filterStatesFrame"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-filterStatesFrame}{}}}
+\subsection{Method \code{filterStatesFrame()}}{
 limits the states according to the filter
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBcore$filterStates(...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$filterStatesFrame(inDataFrame)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -381,7 +528,7 @@ Tries to create all variable modules that current processes and all flows need
 \if{html}{\out{<a id="method-SBcore-CalcVar"></a>}}
 \if{latex}{\out{\hypertarget{method-SBcore-CalcVar}{}}}
 \subsection{Method \code{CalcVar()}}{
-runs (or tries to) the calculation for aVariable and stores the results.
+runs (or tries to) the calculation for a Variable and stores the results.
 After this, the SBvariable can be viewed with fetchData and this data will be used 
 when calculating processes, or other variables.
 \subsection{Usage}{
@@ -432,6 +579,16 @@ that have a depency of any of the Variables, recursively.
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-DependOn"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-DependOn}{}}}
+\subsection{Method \code{DependOn()}}{
+Which Graph elements SBVars depend on?
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$DependOn(SBVars)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-whichUnresolved"></a>}}
@@ -511,6 +668,25 @@ derive transfer processes from datalayer
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-save_world"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-save_world}{}}}
+\subsection{Method \code{save_world()}}{
+states and all data-layer to an rds-file
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$save_world(filename)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-load_world"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-load_world}{}}}
+\subsection{Method \code{load_world()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$load_world(filename)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBcore-clone"></a>}}
