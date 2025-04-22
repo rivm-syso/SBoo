@@ -8,12 +8,13 @@
 #' @export
 RainOnFreshwater <- function (RAINrate, Area, SubCompartName) {
   if (SubCompartName %in% c("river", "lake")) {
-    #TODO resolve lake issues in waterflow; for now: old formulas
-    if (SubCompartName == "lake"){
-      return(0)
-    } else {
-      # RAINrateToSI is generarted from units !
-      return(RAINrate * Area)
-    }     
+    # #TODO resolve lake issues in waterflow; for now: old formulas
+    # if (SubCompartName == "lake"){
+    #   return(0)
+    # } else {
+    #   # RAINrateToSI is generarted from units !
+    #   return(RAINrate * Area)
+    # }     
+    return(RAINrate * Area)
   } else    return(NA)
 }
