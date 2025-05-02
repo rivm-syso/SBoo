@@ -21,7 +21,8 @@
 #' @export
 KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
                           Q.10, KswDorC, Biodeg, CorgStandard, rhoMatrix,
-                          Matrix, SpeciesName) {
+                          Matrix, SpeciesName,RadS,Kssdr,Shape,CorFacSSA) {
+
   if (SpeciesName %in% c("Molecular")) {
     
     switch(Matrix,
@@ -89,11 +90,20 @@ KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
              } else return(kdeg)
            })
   } else { 
+    
+    #Determine the shape factor, based on the approach of Maga et al. (2022) for surface degradation rate
+    if (!is.na(Shape) && Shape == "Fiber") {
+      ShapeFac <- 3
+    } else if (!is.na(Shape) && Shape == "Film") {
+      ShapeFac <- 2
+    } else {
+      ShapeFac <- 4 #If the shape is sphere, not given or irregular, use the Kssdr calculation for a sphere
+    }
     switch(Matrix, # particulate
-           "air" = kdeg,
-           "soil" = kdeg,
-           "sediment" = kdeg,
-           "water" = kdeg,
+           "air" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/RadS else kdeg, #if Kssdr is given use it to compute kdeg, or use default kdeg
+           "soil" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/RadS else kdeg,
+           "sediment" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/RadS else kdeg,
+           "water" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/RadS else kdeg,
            return(NA)
     )
   }

@@ -20,10 +20,18 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              DynViscWaterStandard,
                              DynViscAirStandard,
                              Matrix,SubCompartName, Shape,
-                             Longest_side, Intermediate_side, Shortest_side, DragMethod) {
+                             Longest_side, Intermediate_side, Shortest_side, DragMethod, MinSettVel) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
+  
+  if (rho_species < rhoMatrix & SubCompartName %in% c("sea","deepocean")){
+    return(MinSettVel) #For sea and deepocean
+  }
+  else if (rho_species < rhoMatrix){
+    return(0) 
+  } 
+  
   if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
     Longest_side <- rad_species * 2
     Intermediate_side <- rad_species * 2
@@ -40,8 +48,12 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   
   if(DragMethod == "Original" & Matrix =="water"){
     sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
-    if (sv <= 0){
-      return(0)
+    if (sv <= 0 & SubCompartName %in% c("sea","deepocean")){
+      return(MinSettVel) #For sea and deepocean
+    } 
+    else if (sv <= 0)
+    {
+      return(0) #for lake and river, don't use MinSettVel if sv<=0
     } 
     else {
       return(sv)
@@ -57,8 +69,18 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
       return(sv)
     }
   } 
+  
+  
   volume <- fVol(rad_species, Shape, Longest_side, Intermediate_side, Shortest_side)
-  d_eq <- ( 6/ pi * volume)^(1/3)
+  
+  if(DragMethod == "Bagheri" & Shape =="Fiber"){
+    #For Bagheri's model, this definition of d_eq leads to better fit for fibers (Dittmar et al., 2024)
+    d_eq <- (Longest_side*Intermediate_side*Shortest_side)^(1/3) 
+  }
+  else {
+    d_eq <- ( 6/ pi * volume)^(1/3)
+  }
+   
   surfaceareaparticle <- f_SurfaceArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
   surfaceareaperfectsphere <- f_SurfaceArea("Sphere", d_eq, d_eq, d_eq, rad_species)
   #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
@@ -68,13 +90,24 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   sphericity <- surfaceareaperfectsphere/surfaceareaparticle
   Psi <- sphericity/circularity # Shape factor Dioguardi
   CSF <- Shortest_side/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
+  #Parameters for Bagheri et al. 2016
+  alpha <- 0.45+10/exp(2.5*log10(rho_species/rhoMatrix)+30) 
+  beta <- 1-37/exp(3*log10(rho_species/rhoMatrix)+100)
+  f <- Shortest_side/Intermediate_side
+  e <-  Intermediate_side/Longest_side
+  FN <- f^2*e*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  FS <- f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  kS <- 1/2*(FS^(1/3)+FS^(-1/3))
+  kN <- 10^(alpha*(-log10(FN))^beta)
+  
+  
   switch (Matrix,
           "water" = { 
-            v_s <- f_SetVelSolver(d_eq, Psi, DynViscWaterStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species)
+            v_s <- f_SetVelSolver(d_eq, Psi, DynViscWaterStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species, kS, kN)
             return(v_s)
             }, 
           "air"= {
-            v_s <- f_SetVelSolver(d_eq, Psi, DynViscAirStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species)
+            v_s <- f_SetVelSolver(d_eq, Psi, DynViscAirStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species, kS, kN)
             return(v_s)
           },
           NA

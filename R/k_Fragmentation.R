@@ -19,6 +19,7 @@ k_Fragmentation <- function (kfrag, SubCompartName, ScaleName){
     return(NA)
   } else {
     return(kfrag)
+    #return(NA) #remove fragmentation and keep degradation only
   }
     
 }

@@ -12,7 +12,7 @@
 #' @export
 Runoff <- function (FRACrun, Area, RAINrate, Compartment){
   if (Compartment == "soil") {
-    return(FRACrun * Area * RAINrate)
+    return(FRACrun * Area * RAINrate) 
   } else {
     return(NA)
   }

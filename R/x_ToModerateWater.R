@@ -30,7 +30,8 @@ x_ToModerateWater <- function (Volume, TAUsea,
                    "sea" = {
                      RegSea2Cont <- all.x_RegSea2Cont$flow[all.x_RegSea2Cont$fromSubCompart == "sea" & 
                                                              all.x_RegSea2Cont$fromScale == "Regional"]
-                     return((Volume/TAUsea)-RegSea2Cont)}, 
+                     #return((Volume/TAUsea)-RegSea2Cont)}, 
+                     return(NA)}, #Remove advection to global scale 
                    NA
            )},
          return(NA)

@@ -26,23 +26,22 @@ fVol <- function(rad_particle, Shape = NULL, Longest_side = NULL, Intermediate_s
         volume <- (4/3) * pi * radius^3
         return(volume)
       } else if (Shape == "Ellipsoid") {
-        volume <- (4/3) * pi * Longest_side * Intermediate_side * Shortest_side
+        volume <- (4/3) * pi * 1/2* Longest_side * Intermediate_side* 1/2 * Shortest_side* 1/2
         return(volume)
-      } else if (Shape == "Cube" | Shape == "Box") {
+      } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
         #Longest_side <- sqrt(3)*Longest_side
         #Intermediate_side <-sqrt(2)*Longest_side
         volume <- Longest_side * Intermediate_side * Shortest_side
         return(volume)
-      } else if (Shape == "Cylindric - circular") {
-
-        radius <- Longest_side / 2
-        height <- Intermediate_side
+      } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
+        radius <- Shortest_side / 2
+        height <- Longest_side
         volume <- pi * radius^2 * height
         return(volume)
       } else if (Shape == "Cylindric - elliptic") {
-        radius_major <- Longest_side / 2
-        radius_minor <- Intermediate_side / 2
-        height <- Shortest_side
+        radius_major <- Intermediate_side / 2
+        radius_minor <- Shortest_side / 2
+        height <- Longest_side
         volume <- pi * radius_major * radius_minor * height
         return(volume)
       } else {

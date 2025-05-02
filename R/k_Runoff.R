@@ -14,13 +14,14 @@
 #'@param FRACrun Fraction of precipation of run-off #[-]
 #'@param RAINrate Average precipitation #[m/s]
 #'@param VertDistance Mixing depth soil #[m]
+#'@param kinterception Fraction of particles that stays in soil - defined only for microplastics for now
 #'@return k_Run-off Run-off of particles from soil to water #[s-1]
 #'@export
 
 k_Runoff <- function(Runoff,VertDistance, to.FracROWatComp,
                      Volume, Kscompw,
                      relevant_depth_s, penetration_depth_s,
-                     ScaleName, to.SubCompartName, to.ScaleName, SpeciesName, Matrix, all.Matrix){
+                     ScaleName, to.SubCompartName, to.ScaleName, SpeciesName, Matrix, all.Matrix, kinterception){
   if (ScaleName %in% c("Regional", "Continental") & to.SubCompartName == "sea") {
     return(NA)
   } 
@@ -34,7 +35,7 @@ k_Runoff <- function(Runoff,VertDistance, to.FracROWatComp,
              f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / Volume  * to.FracROWatComp  #[s-1]
          },
          (Runoff *
-            f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume * to.FracROWatComp 
+            f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume * to.FracROWatComp * (1-kinterception) #adjusted runoff for microplastics 
          
   )
 }

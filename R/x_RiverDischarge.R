@@ -8,20 +8,20 @@
 #' @param SubCompartName Name of the subcompartment of the box at hand
 #' @return River Discharge [s-1]
 #' @export
-x_RiverDischarge <- function (all.Runoff, RainOnFreshwater, 
+x_RiverDischarge <- function (all.Runoff, all.RainOnFreshwater, 
                               dischargeFRAC, all.x_ContRiver2Reg, 
                               ScaleName, SubCompartName){
   x_ContRiver2Reg <- sum(all.x_ContRiver2Reg$flow) #sum to force an atomic number ?
   SumRainRunoff <- sum(all.Runoff$Runoff[all.Runoff$Scale == ScaleName])
+  SumRainOnFreshwater <- sum(all.RainOnFreshwater$RainOnFreshwater[all.RainOnFreshwater$Scale == ScaleName])
   
     switch (SubCompartName,
     "river" = {
       if(ScaleName == "Continental"){
-        
-        return((SumRainRunoff + RainOnFreshwater) * (1-dischargeFRAC))
+        return((SumRainRunoff + SumRainOnFreshwater) * (1-dischargeFRAC))
       } 
       if(ScaleName == "Regional"){
-        return((SumRainRunoff + RainOnFreshwater + x_ContRiver2Reg) * (1-dischargeFRAC))
+        return((SumRainRunoff + SumRainOnFreshwater + x_ContRiver2Reg) * (1-dischargeFRAC))
       } 
       else NA
     },

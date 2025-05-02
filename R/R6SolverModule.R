@@ -408,7 +408,7 @@ SolverModule <-
         }
         if (any(kaas$k == 0.0)) {
           # or a very small value?? for solver stability?
-          message(paste(table(kaas$k == 0.0)["TRUE"]), " rate constants (k values) equal to 0; removed for solver")
+          #message(paste(table(kaas$k == 0.0)["TRUE"]), " rate constants (k values) equal to 0; removed for solver")
           kaas <- kaas[kaas$k > 0, ]
         }
         # copy, clean states (remove those without any k)

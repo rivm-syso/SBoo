@@ -21,7 +21,7 @@ f_SurfaceArea <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, 
   
   
     if (Shape == "Sphere" | Shape == "Default") {
-      radius <- Longest_side / 2
+      radius <- Shortest_side / 2
       surface_area <- 4 * pi * radius^2
       return(surface_area)
     } else if (Shape == "Ellipsoid") {
@@ -31,16 +31,16 @@ f_SurfaceArea <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, 
       z <- 1.6075
       surface_area <-  surface_area <- 4 * pi * ((((a / 2)^z * (b / 2)^z) + ((a / 2)^z * (c / 2)^z) + ((b / 2)^z * (c / 2)^z)) / 3)^(1/z)
       return(surface_area)
-    } else if (Shape == "Cube" | Shape == "Box") {
+    } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
       surface_area <- 2 * (Longest_side * Intermediate_side + Intermediate_side * Shortest_side + Shortest_side * Longest_side)
       return(surface_area)
-    } else if (Shape == "Cylindric - circular") {
-      radius <- Longest_side / 2
-      height <- Intermediate_side
+    } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
+      radius <- Shortest_side / 2
+      height <- Longest_side
       surface_area <- (2 * radius^2 + Longest_side * Shortest_side) * pi
       return(surface_area)
     } else if (Shape == "Cylindric - elliptic") {
-      a <- Longest_side / 2
+      a <- Shortest_side / 2
       b <- Intermediate_side / 2
       surface_area <- (pi() * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b))) * Shortest_side) + 2 * (pi * (a * b))
       return(surface_area)
