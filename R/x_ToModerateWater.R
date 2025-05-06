@@ -1,13 +1,13 @@
-#' @title Mixing of upper and deeper sea water layers (w2 and w3) [s-1]
-#' @title ToModerateWater [s-1]
-#' @name x_ToModerateWater
+#' @title Ocean currents flowing to Moderate scale (w2 and w3) 
+#' @description 
+#' Advection of continental sea, Tropic and Arctic sea compartments to sea and deepocean at Moderate scale.
 #' @param Volume Volume of compartment [m3]
 #' @param TAUsea Residence time of water in sea - scale variable [s]
-#' @param x_RegSea2Cont Flow from regional to continental seawater [s-1]
+#' @param all.x_RegSea2Cont All flows from regional to continental seawater [s-1]
 #' @param OceanCurrent Global ocean circulation current [m3.s-1] 
 #' @param SubCompartName Name of the subcompartment of the box at hand
 #' @param ScaleName Name of the scale of the box at hand
-#' @return Advection sea - deepocean [s-1]
+#' @return Water flow to Moderate scale surface and deepocean waters [m3 s-1]
 #' @export
 #' 
 x_ToModerateWater <- function (Volume, TAUsea, 

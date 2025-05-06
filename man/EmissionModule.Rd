@@ -4,14 +4,14 @@
 \alias{EmissionModule}
 \title{Emission module}
 \description{
-Function to get emissions from excel/csv files
+to set/get emissions, possibly make into functions
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-EmissionModule-new}{\code{EmissionModule$new()}}
-\item \href{#method-EmissionModule-execute}{\code{EmissionModule$execute()}}
 \item \href{#method-EmissionModule-emissions}{\code{EmissionModule$emissions()}}
+\item \href{#method-EmissionModule-emissionFunctions}{\code{EmissionModule$emissionFunctions()}}
 \item \href{#method-EmissionModule-clone}{\code{EmissionModule$clone()}}
 }
 }
@@ -20,16 +20,7 @@ Function to get emissions from excel/csv files
 \if{latex}{\out{\hypertarget{method-EmissionModule-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EmissionModule$new(TheCore, ...)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-EmissionModule-execute"></a>}}
-\if{latex}{\out{\hypertarget{method-EmissionModule-execute}{}}}
-\subsection{Method \code{execute()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EmissionModule$execute()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{EmissionModule$new(emis, solvedAbbr)}\if{html}{\out{</div>}}
 }
 
 }
@@ -39,6 +30,15 @@ Function to get emissions from excel/csv files
 \subsection{Method \code{emissions()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EmissionModule$emissions(scenario = NULL)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-EmissionModule-emissionFunctions"></a>}}
+\if{latex}{\out{\hypertarget{method-EmissionModule-emissionFunctions}{}}}
+\subsection{Method \code{emissionFunctions()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{EmissionModule$emissionFunctions(emissions, states)}\if{html}{\out{</div>}}
 }
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/x_OceanMixing2Sea.R
 \name{x_OceanMixing2Sea}
 \alias{x_OceanMixing2Sea}
-\title{Mixing of upper and deeper sea water layers (w2 and w3)}
+\title{Mixing of deep ocean to surface sea water layer (w2 and w3)}
 \usage{
 x_OceanMixing2Sea(all.Volume, TAUsea, OceanCurrent, SubCompartName, ScaleName)
 }
@@ -22,8 +22,8 @@ x_OceanMixing2Sea(all.Volume, TAUsea, OceanCurrent, SubCompartName, ScaleName)
 \item{from.TAUsea}{TAU - Residence time in sea; for the "to" box}
 }
 \value{
-Advection sea - deepocean
+Mixing flow from deep ocean to surface sea [m3.s-1]
 }
 \description{
-Mixing of upper and deeper sea water layers (w2 and w3)
+Mixing of deep ocean to surface sea water layer (w2 and w3)
 }
