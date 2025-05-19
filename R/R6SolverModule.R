@@ -115,6 +115,8 @@ SolverModule <-
           self$PrepemisV(emissions)
         }
         
+        browser()
+        
         # split the lhs results over vars and emissions, apply to emissions
         if (nEmisComps > 1) {
           emissRuns <- lhsRUNS[, 1:nEmisComps]
@@ -529,7 +531,7 @@ SolverModule <-
         return(lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun)))
       },
       ScaleLHS = function(lhsRUNs, var_invfun) {
-        # browser()
+        #browser()
         # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
         if (is.vector(lhsRUNs)) {
           lhsRUNs <- matrix(lhsRUNs, ncol = 1)
