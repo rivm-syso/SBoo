@@ -115,7 +115,7 @@ SolverModule <-
           self$PrepemisV(emissions)
         }
         
-        browser()
+        #browser()
         
         # split the lhs results over vars and emissions, apply to emissions
         if (nEmisComps > 1) {
@@ -169,7 +169,7 @@ SolverModule <-
         if (needdebug) {
           debugonce(private$Function)
         }
-        
+        #browser()
         if (nRUNs > 1) {
           # loop over scenarios / lhs RUNs, if any
           for (i in 1:nRUNs) {
