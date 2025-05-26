@@ -64,6 +64,7 @@ SolverModule <-
         if(is.null(nRUNs) || is.na(nRUNs)) {
           nRUNs <- 1
         }
+        browser()
         
         # If ParallelPreparation is TRUE, the LHS samples and World need to be saved for later use. 
         if(ParallelPreparation == T){
@@ -84,6 +85,7 @@ SolverModule <-
               scaled_samples <- self$ScaleLHS(lhsRUNS, var_invFun, correlations)
               
               private$LHSruns <- t(scaled_samples)
+              t_samples <- private$LHSruns
               # Mind the transpose, for easy substituting the samples
               idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
               rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
@@ -726,7 +728,7 @@ SolverModule <-
         varFuns_non_correlated <- var_invfun[non_correlated_column_indices]
         
         #### Scale correlated LHS samples
-        lhs_correlated <- correlatedLHS(
+        lhs_correlated <- lhs::correlatedLHS(
           lhs_correlated,  
           marginal_transform_function = function(W, ...) {
             # Apply varFuns
