@@ -188,15 +188,21 @@ SBcore <- R6::R6Class("SBcore",
       varFuns <- apply(paramdf, 1, function(aRow) {
         dist_type <- aRow["Distribution"]
         
-        if (dist_type == "triangular") {
+        if (dist_type == "triangular" || dist_type == "Triangular") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
           names(prepArgs) <- c("a", "b", "c")
-        } else if (dist_type == "normal") {
+        } else if (dist_type == "normal" || dist_type == "Normal") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
           names(prepArgs) <- c("a", "b")
-        } else if (dist_type == "uniform") {
+        } else if (dist_type == "uniform" || dist_type == "Uniform") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
           names(prepArgs) <- c("a", "b")
+        } else if (dist_type == "log uniform" || dist_type == "Log uniform") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
+          names(prepArgs) <- c("a", "b")
+        } else if (dist_type == "TRWP_size") {
+          prepArgs <- as.list(as.character(aRow[c("d")]))
+          names(prepArgs) <- c("d")
         } else {
           stop("Unsupported distribution type")
         }
