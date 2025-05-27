@@ -1,6 +1,6 @@
 #'@title FracRoWatComp
 #'@name  FracROWatComp
-#'@description fraction of water component compared to total water in scale for correction of runoff
+#'@description Fraction of water component compared to total water in scale for setting fraction of runoff reaching each freshwater compartment
 #'@param all.landFRAC Fractions of land compartments #[-]
 #'@param all.Matrix Matrix compartment the subcompartments belong to #[-]
 #'@param Matrix Current matrix the function calculates for [-]
@@ -12,22 +12,14 @@
 #
 
 FracROWatComp <- function(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName) {
-  compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale ==  ScaleName]
-  all.landFrac <- as_tibble(all.landFRAC)
-  all.Matrix <- as_tibble(all.Matrix)
-  mergeddata <- left_join(
-    x = all.landFRAC,
-    y = all.Matrix,
-    by = join_by(SubCompart))
+  # browser()
 
   if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
-    # total landfrac of (fresh) water compartments
-    waterFrac <- mergeddata |>
-      filter(Matrix == "water" & Scale == ScaleName) |>
-      summarise(waterFrac = sum(landFRAC, na.rm = TRUE)) |>
-      pull(waterFrac)
+    compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale ==  ScaleName]
+    mergeddata <- merge(all.landFRAC,all.Matrix)
+    waterFrac = sum(mergeddata$landFRAC[mergeddata$Matrix == "water" & mergeddata$Scale ==  ScaleName])
     return(compFrac / waterFrac)
   } else {
-    return(1)
+    return(NA)
   }
 }
