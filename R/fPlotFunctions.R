@@ -520,10 +520,10 @@ DetSSMassDist <- function(scale = NULL){
 
 # For probabilistic steady state masses
 ProbSSMassDist <- function(scale = NULL){
-  
+
   # Get the solution and join to states df
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
-  solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
+  # solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
   
   # Make sure 1 scale is selected
   if(length(scale) != 1){
@@ -535,16 +535,24 @@ ProbSSMassDist <- function(scale = NULL){
     stop("Selected scale does not exist")
   }
   
-  # Aggregate over species
-  cnames <- names(solution)
-  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
-  solution <- aggregate(formula, data = solution, sum)
+  # Aggregate over species and take average
+
+  nRUNs = length(unique(solution$RUNs))
   
-  solution <- solution |>
-    group_by(SubCompart, Scale) |>
-    summarise(Mass_kg = mean(Mass_kg)) |>
+  solution <- 
+    solution |>
+    ungroup() |> 
+    group_by(SubCompart, Scale, RUNs) |>
+    summarise(Mass_kg = sum(Mass_kg)) |> 
+    ungroup() |> 
+    group_by(SubCompart, Scale) |> 
+    summarise(Mass_kg = mean(Mass_kg),
+              n=n()) |>
     ungroup()
+  
+  if(nRUNs != unique(solution$n)){
+    stop("nRUNs not equal to n in summarise")
+  }
   
   # Aggregate over scales
   scale_solution <- solution |>
@@ -552,9 +560,9 @@ ProbSSMassDist <- function(scale = NULL){
     summarise(Mass_kg = sum(Mass_kg))
 
   # Calculate percentages from masses
-  mass_sum <- sum(scale_solution$Mass_kg)
   scale_solution <- scale_solution |>
-    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
+    mutate(TotalMass = sum(Mass_kg)) |> 
+    mutate(Mass_percent = round(((Mass_kg/TotalMass)*100), 2)) |>
     mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
   
   scale_plot <- ggplot(scale_solution, aes(area = Mass_kg, fill = Scale, 
@@ -562,7 +570,7 @@ ProbSSMassDist <- function(scale = NULL){
     geom_treemap() +
     geom_treemap_text(colour = "white", place = "centre", size = 15) +
     scale_fill_discrete()+
-    labs(title = paste0("Distribution of steady state masses over scales")) +
+    labs(title = paste0("Distribution of average steady state masses over scales")) +
     theme(legend.position = "none")  
   
   if (!is.null(scale)) {
@@ -572,18 +580,24 @@ ProbSSMassDist <- function(scale = NULL){
   }
   
   # Calculate percentages from masses
-  mass_sum <- sum(subcompart_solution$Mass_kg)
   subcompart_solution <- subcompart_solution |>
-    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
+    mutate(TotalMass = sum(Mass_kg)) |> 
+    mutate(Mass_percent = round(((Mass_kg/TotalMass)*100), 2)) |>
     mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
   
   subcompart_plot <- ggplot(subcompart_solution, aes(area = Mass_kg, fill = SubCompart, 
                                                      label = paste(SubCompart, Mass_percent_label, sep = "\n"))) +
     geom_treemap() +
     geom_treemap_text(colour = "white", place = "centre", size = 15) +
-    scale_fill_manual(values = subcompart_colors) +  
-    labs(title = paste0("Distribution of steady state masses at ", scale, " scale")) +
-    theme(legend.position = "none")  
+    scale_fill_manual(values = subcompart_colors) 
+    if (!is.null(scale)) {
+      subcompart_plot <-subcompart_plot +
+      labs(title = paste0("Distribution of average steady state masses at ", scale, " scale"))
+    } else {
+      subcompart_plot <-subcompart_plot + 
+      labs(title = paste0("Distribution of average steady state masses at all scales"))
+    }
+  subcompart_plot <-  subcompart_plot+theme(legend.position = "none")  
   
   grid.arrange(scale_plot, subcompart_plot, ncol = 1)
 }

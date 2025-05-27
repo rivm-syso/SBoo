@@ -9,10 +9,9 @@ SolverModule <-
   R6::R6Class(
     "SolverModule",
     inherit = CalcGraphModule,
-
     private = list(
       NeedVars = function() {
-        #overrule CalcGraphModule
+        # overrule CalcGraphModule
         NULL
       },
       Masses = NULL,
@@ -30,8 +29,7 @@ SolverModule <-
       Mass2ConcFun = NULL,
       run_df = NULL,
       LHSruns = matrix() # LFS matrix for the uncertainty variables
-      ),
-    
+    ),
     public = list(
       initialize = function(TheCore, exeFunction, ...) {
         # Call the parent class's initialize method; inits also private$MyName
@@ -39,15 +37,14 @@ SolverModule <-
         
         # a SB variable outside of the ModuleList and nodelist of the core
         private$Mass2ConcFun <-
-          VariableModule$new(TheCore, "Mass2ConcDivider", IsVectorised = T, AggrBy = NULL, AggrFun = NULL)
-
+          VariableModule$new(TheCore, "Mass2Conc", IsVectorised = T, AggrBy = NULL, AggrFun = NULL)
       },
       #' @description Solve matrix / emissions
       #' @param needdebug if T, the solver defining function execute in debugmode
       #' @param emissions
-      #' @param var_box_df = data.frame(), 
-      #' @param var_invFun = list(), 
-      #' @param emis_invFun = list(), 
+      #' @param var_box_df = data.frame(),
+      #' @param var_invFun = list(),
+      #' @param emis_invFun = list(),
       #' @param nRUNs = NULL
       #' @param ParallelPreparation = F 
       #' @param LHSmatrix = NULL
@@ -102,7 +99,7 @@ SolverModule <-
           if (is.null(private$SB.K)) {
             stop("run PrepKaasM() first") #solveStates should be known, set by PrepKaasM()
           }
-          
+          #browser()
           MoreParams <- list(...)
           if (length(MoreParams) != 0) {
             nTIMES <- MoreParams$nTIMES
@@ -111,8 +108,8 @@ SolverModule <-
             nTIMES <- NULL
             tmax <- NULL
           }
-          
           if (nRUNs > 1) {
+            #browser()
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
             
@@ -126,6 +123,7 @@ SolverModule <-
             private$run_df <- as.data.frame(run_matrix)
             
             if(!"list" %in% class(emissions)){
+
               emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)] 
             }
             
@@ -312,9 +310,9 @@ SolverModule <-
         }
       },
       
-      #' @description return dataframe without time and RUNs column if they 
+      #' @description return dataframe without time and RUNs column if they
       #' only have one unique entry
-      RemoveUnusedCols = function(df){
+      RemoveUnusedCols = function(df) {
         # Check and remove 'time' if it has only one unique value
         if (length(unique(df$time)) == 1) {
           df$time <- NULL
@@ -327,7 +325,7 @@ SolverModule <-
         return(df)
       },
       
-      #` Function that returns the solution
+      # ` Function that returns the solution
       GetMasses = function() {
 
                 # Prep and return the solution
@@ -344,7 +342,6 @@ SolverModule <-
 
         return(SolDF)
       },
-      
       GetEmissions = function() {
         
 
@@ -363,8 +360,7 @@ SolverModule <-
       },
       
       #' @description Function that returns the values for the LHS samples scaled to the distributions given by the user
-      GetVarValues = function(){
-        
+      GetVarValues = function() {
         vars <- private$AllVars
         
         vars$RUN <- private$run_df$solver_runs[match(vars$RUN, private$run_df$used_runs)]
@@ -374,10 +370,11 @@ SolverModule <-
         return(vars)
       },
       
-      #' @description Function that returns the concentration calculated from masses 
+      #' @description Function that returns the concentration calculated from masses
       GetConcentrations = function() {
   
         #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
+        
         if (is.null(private$Masses)) {
           stop("first solve, then ask again")
         }
@@ -385,19 +382,19 @@ SolverModule <-
           # make sure params of private$Mass2ConcFun are not affected by dirty params
           ConcParams <- private$Mass2ConcFun$needVars
           DependVar <- private$MyCore$DependOn(ConcParams)
-          if (any(unique(private$input_variables$varName) %in% c(ConcParams, DependVar))){
-            stop ("concentration calculation depends on at least one of the uncertain parameters, this not implemented yet")
+          if (any(unique(private$input_variables$varName) %in% c(ConcParams, DependVar))) {
+            stop("concentration calculation depends on at least one of the uncertain parameters, this not implemented yet")
           }
         }
 
         divide <- private$Mass2ConcFun$execute()
         divide <- dplyr::left_join(private$SolveStates$asDataFrame, divide)
-        solution_df <- array2DF(private$Masses) 
+        solution_df <- array2DF(private$Masses)
         names(solution_df)[names(solution_df) == "Var2"] <- "Abbr"
-        solution_df <- dplyr::left_join(solution_df, divide, by="Abbr")
-
-        solution_df$Concentration_kg_m3 <- solution_df$Value * solution_df$NewData 
-        concentration_df <- solution_df[, c('time', 'RUNs', 'Abbr', 'Concentration_kg_m3')]
+        solution_df <- dplyr::left_join(solution_df, divide, by = "Abbr")
+        
+        solution_df$Concentration_kg_m3 <- solution_df$Value * solution_df$NewData
+        concentration_df <- solution_df[, c("time", "RUNs", "Abbr", "Concentration_kg_m3")]
         
         concentration_df <- self$ConcentrationToGrams(concentration_df)
         
@@ -409,26 +406,26 @@ SolverModule <-
       },
       
       #' @description Function that creates the appropriate concentration plot
-      GetConcentrationPlot = function(scale = NULL, subcompart = NULL){
-        concentration <- self$GetConcentrations() 
+      GetConcentrationPlot = function(scale = NULL, subcompart = NULL) {
+        concentration <- self$GetConcentrations()
         
-        if(is.null(scale)){
+        if (is.null(scale)) {
           scale <- "Regional"
           print("No scale was given to function, Regional scale is selected")
         }
         
-          # Steady state deterministic
+        # Steady state deterministic
         if (identical(colnames(concentration), c("Abbr", "Concentration", "Unit"))) {
           concplot <- DetSSConcPlot(scale = scale, subcompart = subcompart)
-          # Dynamic deterministic  
-        } else if (identical(colnames(concentration), c("Abbr", "time",  "Concentration", "Unit"))) {
+          # Dynamic deterministic
+        } else if (identical(colnames(concentration), c("Abbr", "time", "Concentration", "Unit"))) {
           concplot <- DetDynConcPlot(scale = scale, subcompart = subcompart)
-          # Steady state probabilistic    
+          # Steady state probabilistic
         } else if (identical(colnames(concentration), c("Abbr", "RUNs", "Concentration", "Unit"))) {
-          concplot <- ProbSSConcPlot(scale = scale) 
-          # Dynamic probabilistic  
+          concplot <- ProbSSConcPlot(scale = scale)
+          # Dynamic probabilistic
         } else if (identical(colnames(concentration), c("Abbr", "time", "RUNs", "Concentration", "Unit"))) {
-          if(is.null(subcompart)){
+          if (is.null(subcompart)) {
             subcompart <- "agriculturalsoil"
             print("No subcompart was given to function, agriculturalsoil is selected")
           }
@@ -436,29 +433,29 @@ SolverModule <-
         }
         
         return(concplot)
-      }, 
+      },
       
       #' @description Function that creates the appropriate solution plot
-      GetMassesPlot = function(scale = NULL, subcompart = NULL){
+      GetMassesPlot = function(scale = NULL, subcompart = NULL) {
         solution <- self$GetMasses()
         
-        if(is.null(scale)){
+        if (is.null(scale)) {
           scale <- "Regional"
           print("No scale was given to function, Regional scale is selected")
         }
-
-          # Steady state deterministic
+        
+        # Steady state deterministic
         if (identical(colnames(solution), c("Abbr", "Mass_kg"))) {
           solplot <- DetSSPlot(scale = scale, subcompart = subcompart)
-          # Dynamic deterministic  
+          # Dynamic deterministic
         } else if (identical(colnames(solution), c("time", "Abbr", "Mass_kg"))) {
           solplot <- DetDynSolPlot(scale = scale, subcompart = subcompart)
-          # Steady state probabilistic    
+          # Steady state probabilistic
         } else if (identical(colnames(solution), c("Abbr", "RUNs", "Mass_kg"))) {
-          solplot <- ProbSSSolPlot(scale = scale) 
-          # Dynamic probabilistic  
+          solplot <- ProbSSSolPlot(scale = scale)
+          # Dynamic probabilistic
         } else if (identical(colnames(solution), c("time", "Abbr", "RUNs", "Mass_kg"))) {
-          if(is.null(subcompart)){
+          if (is.null(subcompart)) {
             subcompart <- "agriculturalsoil"
             print("No subcompart was given to function, agriculturalsoil is selected")
           }
@@ -470,10 +467,10 @@ SolverModule <-
       
       #' @description Function that creates a mass distribution tree map for
       #' steady state solutions
-      GetMassDist = function(scale = NULL){
+      GetMassDist = function(scale = NULL) {
         solution <- self$GetMasses()
         
-        if(is.null(scale)){
+        if (is.null(scale)) {
           scale <- "Regional"
           print("No scale was given to function, Regional scale is selected")
         }
@@ -481,13 +478,13 @@ SolverModule <-
         # Steady state deterministic
         if (identical(colnames(solution), c("Abbr", "Mass_kg"))) {
           massdistplot <- DetSSMassDist(scale = scale)
-          # Dynamic deterministic  
+          # Dynamic deterministic
         } else if (identical(colnames(solution), c("time", "Abbr", "Mass_kg"))) {
           stop("No mass distribution plot available for dynamic masses")
-          # Steady state probabilistic    
+          # Steady state probabilistic
         } else if (identical(colnames(solution), c("Abbr", "RUNs", "Mass_kg"))) {
-          massdistplot <- ProbSSMassDist(scale = scale) 
-          # Dynamic probabilistic  
+          massdistplot <- ProbSSMassDist(scale = scale)
+          # Dynamic probabilistic
         } else if (identical(colnames(solution), c("time", "Abbr", "RUNs", "Mass_kg"))) {
           stop("No mass distribution plot available for dynamic masses")
         }
@@ -503,14 +500,13 @@ SolverModule <-
       #' NB emission depend on order of states; if available: resort!
       #' @param kaas k's
       #' @return matrix with kaas; ready to go
-      PrepKaasM = function (kaas = NULL) {
-
+      PrepKaasM = function(kaas = NULL) {
         if (is.null(kaas)) {
-          #copy latest from core
+          # copy latest from core
           kaas <- self$myCore$kaas
         }
         if (any(kaas$k == 0.0)) {
-          #or a very small value?? for solver stability?
+          # or a very small value?? for solver stability?
           message(paste(table(kaas$k == 0.0)["TRUE"]), " rate constants (k values) equal to 0; removed for solver")
           kaas <- kaas[kaas$k > 0, ]
         }
@@ -544,7 +540,7 @@ SolverModule <-
           }
           private$SolveStates <- SBstates$new(newStates)
           private$SolveStates$myCore <- private$MyCore
-          #redo the indices
+          # redo the indices
           # copy, clean states (remove those without any k)
           kaas$fromIndex <- sapply(1:nrow(kaas), function(i) {
             which(
@@ -569,14 +565,16 @@ SolverModule <-
           aggregate(k ~ fromIndex + toIndex, data = kaas, FUN = sum)
         
         for (SBi in (1:nrow(sumkaas))) {
-          SB.K[sumkaas$toIndex[SBi],
-               sumkaas$fromIndex[SBi]] <- sumkaas$k[SBi]
+          SB.K[
+            sumkaas$toIndex[SBi],
+            sumkaas$fromIndex[SBi]
+          ] <- sumkaas$k[SBi]
         }
-        #Add the from quantities(i) to the to-states by
-        #substracting the (negative) factors(i) to the diagonal
+        # Add the from quantities(i) to the to-states by
+        # substracting the (negative) factors(i) to the diagonal
         # store the diag (== degradation and other removal processes)
         degrdiag <- diag(SB.K)
-        diag(SB.K) <- 0.0 #yes, irt colSums!
+        diag(SB.K) <- 0.0 # yes, irt colSums!
         diag(SB.K) <- -degrdiag - colSums(SB.K)
         rownames(SB.K) <- newStates$Abbr
         colnames(SB.K) <- newStates$Abbr
@@ -585,43 +583,41 @@ SolverModule <-
       },
       
       #' @description sync emissions as relational table with states into vector
-      #' @param emissions named vector / 
+      #' @param emissions named vector /
       #' @return emissions; ready to solve for the appropriate solver
       PrepemisV = function(emis) {
-
         private$emissionModule <-
           EmissionModule$new(emis, private$SolveStates$asDataFrame$Abbr)
       },
       
       #' @description Function that returns the emissions for a specific RUN
-      #' @param scenario run number 
+      #' @param scenario run number
       #' @return emissions for the given run
-      emissions = function(scenario = NULL){
+      emissions = function(scenario = NULL) {
         if (is.null(private$emissionModule)) {
           stop("set emission data first, using PrepemisV()")
         }
         private$emissionModule$emissions(scenario)
       },
-
-      PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100){
-        #checks
+      PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100) {
+        # checks
         # states should also be in # should be in private$SolveStates?
         solveStateAbbr <- private$SolveStates$asDataFrame
-        if (!all(sapply(emis_invFun, is.function))){
-          stop ("emis_invFun should be a list of functions with a single parameter")
+        if (!all(sapply(emis_invFun, is.function))) {
+          stop("emis_invFun should be a list of functions with a single parameter")
         }
-        if (!all(names(emis_invFun) %in% solveStateAbbr$Abbr)){
-            stop("not all names of the emis_invFun are in states (that have k''s)")
-        } 
-        if (!all(sapply(var_invFun, is.function))){
-          stop ("var_invFun should be a list of functions with a single parameter")
+        if (!all(names(emis_invFun) %in% solveStateAbbr$Abbr)) {
+          stop("not all names of the emis_invFun are in states (that have k''s)")
         }
-        if (length(var_box_df) > 0){
+        if (!all(sapply(var_invFun, is.function))) {
+          stop("var_invFun should be a list of functions with a single parameter")
+        }
+        if (length(var_box_df) > 0) {
           # var_box_df should contain varName and have the same length as var_invFun
           is.df.with(var_box_df, "SolverModule$PrepLHS", c("varName"))
           neededDims <- private$MyCore$fetchDims(unique(var_box_df))
           if (!all(neededDims %in% names(var_box_df))) {
-            #expand from Abbr?
+            # expand from Abbr?
             var_box_df <- dplyr::left_join(var_box_df, solveStateAbbr)
           }
         }
@@ -632,6 +628,14 @@ SolverModule <-
         private$input_variables <- var_box_df
         lhs_samples <- lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun))
         
+        # only now:
+      #  stopifnot(length(var_invFun) == nrow(var_box_df))
+        
+       # private$input_variables <- var_box_df
+       # return(lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun)))
+      #},
+      #ScaleLHS = function(lhsRUNs, var_invfun) {
+
         # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
         if (is.vector(lhs_samples)) {
           lhs_samples <- matrix(lhs_samples, ncol = 1)
@@ -932,11 +936,12 @@ SolverModule <-
       },
       
       #' @description diff between kaas in this and k's in OtherSB.K
+      #' 
       #' @param OtherSB.K the 'other' kaas
       #' @param tiny (epsilon) permitted rounding error (we might be dealing with excel/csv files ! :( )
       DiffSB.K = function(OtherSB.K, tiny = 1e-20) {
         SB.K <- self$PrepKaasM()
-        #match on row/colnames?!
+        # match on row/colnames?!
         rowMatch <- private$SolveStates$findState(rownames(OtherSB.K))
         colMatch <- private$SolveStates$findState(colnames(OtherSB.K))
         if (anyNA(c(rowMatch, colMatch))) {
@@ -958,33 +963,41 @@ SolverModule <-
           diff = Diff[ShowDiff]
         )
       },
-      
-      #' @description return dataframe with concentrations
-      #' in g/l, g/m3 or g/kg dw instead of kg/m3
+      #' Multiply to gram
+      #' ConcentrationToGrams returns a dataframe with concentrations and units column
+      #' This is a generic function to get
+      #' g/m3 or g/kg w instead of kg/m3 or kg/kg w
+      #' @param Concentration_df The concentration dafatfame as calculated using Mass2Conc
       ConcentrationToGrams = function(Concentration_df) {
-        # Fetch and filter the rhoMatrix data
-        rho_data <- private$MyCore$fetchData("rhoMatrix")
-        rho <- rho_data[rho_data$SubCompart == "agriculturalsoil", "rhoMatrix"]
-        
         # Merge Concentration_df with MyCore states data
         Concentration_df <- merge(Concentration_df, private$MyCore$states$asDataFrame, by = "Abbr")
         
         # Create a multiplier column based on SubCompart
         Concentration_df$Multiplier <- ifelse(Concentration_df$SubCompart %in% c("air", "cloudwater"), 1000,
-                                      ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), 1,
-                                             ifelse(Concentration_df$SubCompart %in% c("naturalsoil", "agriculturalsoil", "othersoil", 
-                                                                               "freshwatersediment", "marinesediment", "lakesediment"), 
-                                                    rho * 1000, 1)))
+                                              ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), 1,
+                                                     ifelse(Concentration_df$SubCompart %in% c(
+                                                       "naturalsoil", "agriculturalsoil", "othersoil",
+                                                       "freshwatersediment", "marinesediment", "lakesediment"
+                                                     ),
+                                                     1000, 1
+                                                     )
+                                              )
+        )
         
         # Calculate the Concentration using the Multiplier
         Concentration_df$Concentration <- Concentration_df$Concentration_kg_m3 * Concentration_df$Multiplier
         
         # Create a Unit column based on SubCompart
         Concentration_df$Unit <- ifelse(Concentration_df$SubCompart %in% c("air", "cloudwater"), "g/m3",
-                                ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), "g/L",
-                                       ifelse(Concentration_df$SubCompart %in% c("naturalsoil", "agriculturalsoil", "othersoil", 
-                                                                         "freshwatersediment", "marinesediment", "lakesediment"), 
-                                              "g/kg dw", "kg/m3")))
+                                        ifelse(Concentration_df$SubCompart %in% c("river", "lake", "sea", "deepocean"), "g/L",
+                                               ifelse(Concentration_df$SubCompart %in% c(
+                                                 "naturalsoil", "agriculturalsoil", "othersoil",
+                                                 "freshwatersediment", "marinesediment", "lakesediment"
+                                               ),
+                                               "g/kg w", "kg/m3"
+                                               )
+                                        )
+        )
         
         # Add up the concentration in air and cloudwater, name the compartment air + cloudwater
         
@@ -1002,9 +1015,9 @@ SolverModule <-
           warning("no calculation available")
           return(NULL)
         } else {
-          if (fullStates){
+          if (fullStates) {
             array2DF(private$Masses)
-          } else { #append states
+          } else { # append states
             arrayAsDF <- array2DF(private$Masses)
             dplyr::left_join(arrayAsDF, private$solveStates$asDataFrame)
           }
@@ -1014,14 +1027,14 @@ SolverModule <-
     active = list(
       
       #' @field needVars getter for parameters, derived from the defining function
-      needVars = function(value) { #overrule
+      needVars = function(value) { # overrule
         formalArgs(private$Function)
       },
       
       #' @field states injected from States
       solveStates = function(value) { # these might differ from the core states, they are cleaned
         if (missing(value)) {
-            private$SolveStates
+          private$SolveStates
         } else {
           stop("`$states` are set by new()", call. = FALSE)
         }
@@ -1037,16 +1050,15 @@ SolverModule <-
       },
       
       #' @field RUNs LHS samples; TODO more generally named scenarios?
-      RUNs = function(value){
-        if (missing(value)){
+      RUNs = function(value) {
+        if (missing(value)) {
           private$LHSruns
-        } else stop("not yet possible to set RUNs, use PrepUncertain()") #or accept scenarios?
+        } else {
+          stop("not yet possible to set RUNs, use PrepUncertain()")
+        } # or accept scenarios?
       },
-      
-      Input_Variables = function(value){
+      Input_Variables = function(value) {
         private$input_variables
       }
-      
     )
-    
   )
