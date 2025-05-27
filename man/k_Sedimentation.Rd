@@ -11,6 +11,7 @@ k_Sedimentation(
   VertDistance,
   from.RhoCP,
   from.RadCP,
+  RadS,
   SpeciesName,
   SubCompartName,
   to.SubCompartName,
