@@ -61,7 +61,7 @@ SolverModule <-
         if(is.null(nRUNs) || is.na(nRUNs)) {
           nRUNs <- 1
         }
-        browser()
+        #browser()
         
         # If ParallelPreparation is TRUE, the LHS samples and World need to be saved for later use. 
         if(ParallelPreparation == T){
@@ -254,7 +254,7 @@ SolverModule <-
           if (needdebug) {
             debugonce(private$Function)
           }
-          
+          #browser()
           if(nRUNs > 1){
             #loop over scenarios / lhs RUNs, if any
             for (i in 1:nRUNs){
@@ -285,7 +285,7 @@ SolverModule <-
                 
               }
               solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
-                                                                      m = emis), 
+                                                                      e = emis), 
                                                                  parms = list(MoreParams)))
               private$Masses[,,i] <- solvedFormat[[1]]
               private$UsedEmissions[,,i] <- solvedFormat[[2]]
@@ -700,6 +700,7 @@ SolverModule <-
       #' @description Function that transforms LHS samples for correlated variables
       #' @param 
       TransformCorrelatedLHS = function(lhsRUNs, correlations, var_invfun) {
+        #browser()
         # Filter and prepare correlations 
         correlations <- data.frame(varName_1 = paste0(correlations$varName_1, "_", correlations$Scale_1, "_", correlations$SubCompart_1, "_", correlations$Species_1),
                                    varName_2 = paste0(correlations$varName_2, "_", correlations$Scale_2, "_", correlations$SubCompart_2, "_", correlations$Species_2),

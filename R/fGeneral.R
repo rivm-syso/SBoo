@@ -72,10 +72,6 @@ DynamicSolver <- function(k, e, parms) {
     times = SBtime,
     func = SimpleBoxODEapprox,
     parms = list(K = SB.K, 
-                 SBNames=SBNames, 
-                 emislist= vEmis),
-    rtol = 1e-30, atol = 0.5e-2)
-      parms = list(K = SB.K, 
                  SBNames=SBNames,
                  emislist = e),
    rtol = rtol_ode, atol =  atol_ode)
@@ -237,7 +233,7 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
     maxx <- pars[["b"]]
     return(function(x) {
       log_scaled <- -log(1 - x)
-      a + (b - a) * (log_scaled / max(log_scaled))
+      minx + (maxx - minx) * (log_scaled / max(log_scaled))
     })
   }
   if (fun_type == "TRWP_size") {
