@@ -52,6 +52,6 @@ k_Resuspension(
 k_Resuspension Resuspension flow from sediment #[s-1]
 }
 \description{
-Calculation of the resuspension rate. The top layer of sediment is assumed to be well mixed and thus continiously refreshed, 
+Calculation of the resuspension rate. The top layer of sediment is assumed to be well mixed and thus continiously refreshed,
 for additional details see Schoorl et al. (2015)
 }

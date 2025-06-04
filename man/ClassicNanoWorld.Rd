@@ -37,7 +37,7 @@ the centre object for running simple box with an R script.
 \subsection{Method \code{new()}}{
 init
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClassicNanoWorld$new(MlikeFile, Substance)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClassicNanoWorld$new(MlikeFile, Substance = "default substance")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -45,8 +45,7 @@ init
 \describe{
 \item{\code{MlikeFile}}{location for standard input data}
 
-\item{\code{Substance}}{The substance for which all calculation are. 
-You cannot switch the substance, reinitialize a new SBcore (like "World")}
+\item{\code{Substance}}{The substance for which all calculation are.}
 }
 \if{html}{\out{</div>}}
 }
