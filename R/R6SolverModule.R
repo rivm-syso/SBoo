@@ -55,6 +55,7 @@ SolverModule <-
                          ParallelPreparation=F, LHSmatrix = NULL, correlations = NULL, 
                          ...) {
 
+        
         lhsRUNS <- 0 #unless overwritten:
         nVars <- length(var_invFun)
         
@@ -75,6 +76,7 @@ SolverModule <-
             stop("Please provide variable dataframe")
           } else if (nRUNs != 0 && nRUNs != 1) {
             if (nVars > 0){
+              #browser()
               # create the RUNs for variables and possibly emissions
               # NB PrepLHS sets private$input_variables to var_box_df
               lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
@@ -84,9 +86,12 @@ SolverModule <-
               private$LHSruns <- t(scaled_samples)
               t_samples <- private$LHSruns
               # Mind the transpose, for easy substituting the samples
-              idnames <- c("varName", names(var_box_df)[names(var_box_df) %in% The3D])
-              rownames(private$LHSruns) <- do.call(paste, as.list(var_box_df[,idnames]))
+              rnames <- colnames(scaled_samples)
+              new_names <- apply(as.data.frame(do.call(rbind, strsplit(rnames, "_"))), 1, paste, collapse = " ")
               
+              # Rename the rows
+              rownames(private$LHSruns) <- new_names
+
               saveRDS(private$LHSruns, "data/scaledLHSsamples.RDS")
             }
           }
@@ -602,6 +607,7 @@ SolverModule <-
       PrepLHS = function(var_box_df = data.frame(), var_invFun = list(), emis_invFun = list(), nRUNs = 100) {
         # checks
         # states should also be in # should be in private$SolveStates?
+        #browser()
         solveStateAbbr <- private$SolveStates$asDataFrame
         if (!all(sapply(emis_invFun, is.function))) {
           stop("emis_invFun should be a list of functions with a single parameter")
@@ -626,8 +632,9 @@ SolverModule <-
         stopifnot(length(var_invFun) == nrow(var_box_df))
         
         private$input_variables <- var_box_df
-        lhs_samples <- lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun))
         
+        k <- length(var_invFun) + ifelse(is.null(emis_invFun), 0, length(emis_invFun))
+        lhs_samples <- lhs::randomLHS(n = nRUNs, k = k)        
         # only now:
       #  stopifnot(length(var_invFun) == nrow(var_box_df))
         
@@ -660,7 +667,7 @@ SolverModule <-
       },
       
       ScaleLHS = function(lhsRUNs, var_invfun, correlations) {
-        
+        #browser()
         
         # Determine the number of columns and functions
         num_columns <- ncol(lhsRUNs)
@@ -700,7 +707,7 @@ SolverModule <-
       #' @description Function that transforms LHS samples for correlated variables
       #' @param 
       TransformCorrelatedLHS = function(lhsRUNs, correlations, var_invfun) {
-        #browser()
+
         # Filter and prepare correlations 
         correlations <- data.frame(varName_1 = paste0(correlations$varName_1, "_", correlations$Scale_1, "_", correlations$SubCompart_1, "_", correlations$Species_1),
                                    varName_2 = paste0(correlations$varName_2, "_", correlations$Scale_2, "_", correlations$SubCompart_2, "_", correlations$Species_2),
@@ -787,6 +794,7 @@ SolverModule <-
       #' @description Function that copies LHS columns for variables when a SubCompart is Water, Sediment or Soil
       #' or when a variable that should be present is NA
       ExpandLHS = function(lhsRUNs){
+        #browser()
         # Function to check which states are needed for the variable
         check_states <- function(varname){
           var_df <- World$fetchData(varname)
@@ -883,7 +891,7 @@ SolverModule <-
                     col_name <- paste(parts[1], parts[2], sediment, parts[4], sep = "_")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
-                } else if (subcompart == "Soil_Sediment") {
+                } else if (subcompart == "SoilSediment") {
                   for (comp in soil_sediment_compartments) {
                     col_name <- paste(parts[1], parts[2], comp, parts[4], sep = "_")
                     expanded_columns_final[[col_name]] <- expanded_col_data
