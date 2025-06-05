@@ -69,7 +69,7 @@ DynamicSolver <- function(k, e, parms) {
   
   out <- deSolve::ode(
     y = as.numeric(SB.m0),
-    times = SBtime,
+    t = SBtime,
     func = SimpleBoxODEapprox,
     parms = list(K = SB.K, 
                  SBNames=SBNames,
