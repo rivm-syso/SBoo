@@ -109,9 +109,11 @@ SolverModule <-
           if (length(MoreParams) != 0) {
             nTIMES <- MoreParams$nTIMES
             tmax <- MoreParams$tmax
+            tmin <- MoreParams$tmin
           } else {
             nTIMES <- NULL
             tmax <- NULL
+            tmin <- 0
           }
           if (nRUNs > 1) {
             #browser()
@@ -241,17 +243,22 @@ SolverModule <-
             tmax = 0
           }
           
+          if(is.null(tmin)){
+            tmin = 0
+            MoreParams$tmin = 0
+          }
+          
           # the resulting array is (allocated once)
           private$Masses <- array(dim = c(nTIMES,self$solveStates$nStates, nRUNs),
                                   dimnames = list(
-                                    time = seq(0, tmax, length.out = nTIMES),
+                                    time = seq(tmin, tmax, length.out = nTIMES),
                                     self$solveStates$asDataFrame$Abbr,
                                     RUNs = as.character(private$run_df$used_runs)
                                   ))
           
           private$UsedEmissions <- array(dim = c(nTIMES,self$solveStates$nStates,  nRUNs),
                                          dimnames = list(
-                                           time = seq(0, tmax, length.out = nTIMES),
+                                           time = seq(tmin, tmax, length.out = nTIMES),
                                            self$solveStates$asDataFrame$Abbr,
                                            RUNs = as.character(private$run_df$used_runs)
                                          ))
