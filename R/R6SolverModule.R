@@ -312,7 +312,7 @@ SolverModule <-
           } else { # Solve once
             emis <- self$emissions()
             solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
-                                                                    m = emis), 
+                                                                    e = emis), 
                                                                parms = list(MoreParams)))
             dimsolved <- dim(solvedFormat[[1]])
             dimempty <- dim(private$Masses[,,1])
