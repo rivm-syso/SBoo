@@ -747,44 +747,44 @@ SolverModule <-
         varFuns_non_correlated <- var_invfun[non_correlated_column_indices]
         
         #### Scale correlated LHS samples
-        lhs_correlated <- lhs::correlatedLHS(
-          lhs_correlated,  
-          marginal_transform_function = function(W, ...) {
-            # Apply varFuns
-            for (i in seq_along(varFuns_correlated)) {
-              W[, i] <- varFuns_correlated[[i]](W[, i])
-            }
-            return(W)
-          },
-          cost_function = function(W, ...) {
-            
-            cost <- 0
-            
-            # Loop through each desired correlation and compute the cost
-            for (i in seq_len(nrow(prepped_correlations))) {
-              # Get variable names and desired correlation
-              var_1 <- prepped_correlations$varName_1[i]
-              var_2 <- prepped_correlations$varName_2[i]
-              desired_corr <- prepped_correlations$correlation[i]
-              
-              # Get corresponding column indices in the filtered data
-              col_1 <- which(colnames(W) == var_1)
-              col_2 <- which(colnames(W) == var_2)
-              
-              # If both columns exist, compute the correlation
-              if (length(col_1) > 0 && length(col_2) > 0) {
-                actual_corr <- cor(W[, col_1], W[, col_2])
-                
-                # Add the squared error to the cost
-                cost <- cost + (actual_corr - desired_corr)^2
-              }
-            }
-            
-            return(cost)
-          },
-          debug = FALSE,  
-          maxiter = 10000  
-        )
+        # lhs_correlated <- lhs::correlatedLHS(
+        #   lhs_correlated,  
+        #   marginal_transform_function = function(W, ...) {
+        #     # Apply varFuns
+        #     for (i in seq_along(varFuns_correlated)) {
+        #       W[, i] <- varFuns_correlated[[i]](W[, i])
+        #     }
+        #     return(W)
+        #   },
+        #   cost_function = function(W, ...) {
+        #     
+        #     cost <- 0
+        #     
+        #     # Loop through each desired correlation and compute the cost
+        #     for (i in seq_len(nrow(prepped_correlations))) {
+        #       # Get variable names and desired correlation
+        #       var_1 <- prepped_correlations$varName_1[i]
+        #       var_2 <- prepped_correlations$varName_2[i]
+        #       desired_corr <- prepped_correlations$correlation[i]
+        #       
+        #       # Get corresponding column indices in the filtered data
+        #       col_1 <- which(colnames(W) == var_1)
+        #       col_2 <- which(colnames(W) == var_2)
+        #       
+        #       # If both columns exist, compute the correlation
+        #       if (length(col_1) > 0 && length(col_2) > 0) {
+        #         actual_corr <- cor(W[, col_1], W[, col_2])
+        #         
+        #         # Add the squared error to the cost
+        #         cost <- cost + (actual_corr - desired_corr)^2
+        #       }
+        #     }
+        #     
+        #     return(cost)
+        #   },
+        #   debug = FALSE,  
+        #   maxiter = 10000  
+        # )
         
         #### Scale the non-correlated LHS samples
         lhs_non_correlated_transformed <- lhs_non_correlated
