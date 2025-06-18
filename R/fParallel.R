@@ -1,6 +1,7 @@
 solveInParallelSteadyState <- function(max_runs_per_batch,
                             nCores,
                             emissions_data,
+                            correlations = NULL, 
                             LHSsamples_path = "data/scaledLHSsamples.RDS",
                             world_path = "data/World.RDS"
                             ) {
@@ -79,10 +80,18 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
     # Load a fresh instance of World to avoid mutability issues
     localWorld <- readRDS(world_path)
     
-    # Perform computations using `Solve`
-    localWorld$Solve(emissions = emis_slices[[i]], 
+    if(is.null(correlations)){
+      # Perform computations using `Solve`
+      localWorld$Solve(emissions = emis_slices[[i]], 
                      LHSmatrix = LHS_slices[[i]], 
                      nRUNs = length(unique(emis_slices[[i]]$RUN)))
+    } else {
+      # Perform computations using `Solve`
+      localWorld$Solve(emissions = emis_slices[[i]], 
+                       LHSmatrix = LHS_slices[[i]], 
+                       nRUNs = length(unique(emis_slices[[i]]$RUN)),
+                       correlations = correlations)
+    }
     
     # Collect and return results
     result_list <- list(
@@ -128,6 +137,7 @@ solveInParallelDynamic <- function(max_runs_per_batch,
                                    tmin, 
                                    tmax, 
                                    nTIMES,
+                                   correlations = NULL,
                                    LHSsamples_path = "data/scaledLHSsamples.RDS", 
                                    world_path = "data/World.RDS"
                                    ) {
@@ -210,15 +220,26 @@ solveInParallelDynamic <- function(max_runs_per_batch,
     # Load World object
     localWorld <- readRDS(world_path)
     
-    # Perform computations
-    localWorld$Solve(
-      emissions = emis_slices[[i]], 
-      LHSmatrix = LHS_slices[[i]], 
-      nRUNs = length(unique(emis_slices[[i]]$RUN)),
-      tmin = tmin,
-      tmax = tmax,
-      nTIMES = nTIMES
-    )
+    if(is.null(correlations)){
+      # Perform computations
+      localWorld$Solve(
+        emissions = emis_slices[[i]], 
+        LHSmatrix = LHS_slices[[i]], 
+        nRUNs = length(unique(emis_slices[[i]]$RUN)),
+        tmin = tmin,
+        tmax = tmax,
+        nTIMES = nTIMES)
+    } else {
+      # Perform computations
+      localWorld$Solve(
+        emissions = emis_slices[[i]], 
+        LHSmatrix = LHS_slices[[i]], 
+        nRUNs = length(unique(emis_slices[[i]]$RUN)),
+        tmin = tmin,
+        tmax = tmax,
+        nTIMES = nTIMES,
+        correlations= correlations)
+    }
     
     # Return results
     result_list <- list(
