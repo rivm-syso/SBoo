@@ -237,7 +237,7 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       log(EnvStats::qlnormTrunc(p=x, meanlog = mu, sdlog = sig, min = min))
     })
   }
-  if (fun_type == "powerlaw" || fun_type == "Powerlaw") {
+  if (fun_type == "power law" || fun_type == "Power law") {
     if (!(inherits(pars, "list")) && length(pars) == 3) {
       stop("the powerlaw distribution is created using a list of three parameters, a = minimum, b = maximum, c = alpha")
     }
