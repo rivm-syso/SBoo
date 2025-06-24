@@ -190,7 +190,7 @@ triangular_cdf_inv = function(u, # LH scaling factor
 
 #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
 Make_inv_unif01 = function(fun_type = "triangular", pars) {
-  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "log normal", "weibull", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size",  "Log normal", "Weibull")) {
+  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "log normal", "weibull", "trapezoidal", "powerlaw", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size", "Log normal", "Weibull", "Powerlaw", "Trapezoidal")) {
     stop("! fun_type %in% c('triangular', 'normal', 'uniform', 'log uniform', 'TRWP_size')")
   }
   if (fun_type == "triangular" || fun_type == "Triangular") {
@@ -228,13 +228,51 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
   }
   if (fun_type == "log normal" || fun_type == "Log normal") {
     if (!(inherits(pars, "list")) && length(pars) == 3) {
-      stop("the log normal distribution is created using a list of two parameters, a = minimum, b = sigma, c = mean")
+      stop("the log normal distribution is created using a list of three parameters, a = minimum, b = sigma, c = mean")
     }
     min <- pars[["a"]]
     sig <- pars[["b"]]
     mu <- pars[["c"]]
     return(function(x) {
       log(EnvStats::qlnormTrunc(p=x, meanlog = mu, sdlog = sig, min = min))
+    })
+  }
+  if (fun_type == "powerlaw" || fun_type == "Powerlaw") {
+    if (!(inherits(pars, "list")) && length(pars) == 3) {
+      stop("the powerlaw distribution is created using a list of three parameters, a = minimum, b = maximum, c = alpha")
+    }
+    min <- pars[["a"]]
+    max <- pars[["b"]]
+    alpha <- pars[["c"]]
+    return(function(x) {
+      min * ((max / min) ^ x) ^ (1 / (1 - alpha))
+    })
+  }
+  if (fun_type == "trapezoidal" || fun_type == "Trapezoidal") {
+    if (!(inherits(pars, "list")) && length(pars) == 4) {
+      stop("the powerlaw distribution is created using a list of four parameters, a = minimum, b = peak1, c = peak2, d = maximum")
+    }
+    min <- pars[["a"]]
+    peak1 <- pars[["b"]]
+    peak2 <- pars[["c"]]
+    max <- pars[["d"]]
+    return(function(x) {
+      # Total width of the trapezoid
+      width_total <- max - min
+      base1 <- peak1 - min    # Width of the left base
+      base2 <- max - peak2    # Width of the right base
+      
+      # Calculate the CDF segments
+      CDF_left <- base1 / width_total         # Area under the left triangle
+      CDF_flat <- 1 - base2 / width_total     # Area under the flat top
+      
+      ifelse(x < (base1 / width_total), 
+             min + sqrt(x * (base1) * width_total),  # Left triangle
+             ifelse(x <= (CDF_flat + base1 / width_total), 
+                    peak1 + (x - base1 / width_total) * (max - peak1),  # Flat top
+                    max - sqrt((1 - x) * (base2) * width_total)  # Right triangle
+             )
+      )
     })
   }
   if (fun_type == "uniform" || fun_type == "Uniform") {
@@ -260,7 +298,7 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
   }
   if (fun_type == "TRWP_size") {
     if (!(inherits(pars, "list")) && length(pars) == 1) {
-      stop("the log uniform is created using a list of two parameters, a = minimum, b = maximum")
+      stop("")
     }
     path <- pars[["d"]]
     return(function(x) {
