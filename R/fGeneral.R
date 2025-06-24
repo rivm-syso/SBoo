@@ -190,13 +190,13 @@ triangular_cdf_inv = function(u, # LH scaling factor
 
 #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
 Make_inv_unif01 = function(fun_type = "triangular", pars) {
-  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size")) {
+  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "log normal", "weibull", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size",  "Log normal", "Weibull")) {
     stop("! fun_type %in% c('triangular', 'normal', 'uniform', 'log uniform', 'TRWP_size')")
   }
   if (fun_type == "triangular" || fun_type == "Triangular") {
     if (!(inherits(pars, "list") && length(pars) == 3)) {
       stop(
-        "the triangular is created using a list of three parameters, a = minimum, b = maximum, c = peak")
+        "the triangular distribution is created using a list of three parameters, a = minimum, b = maximum, c = peak")
     }
     a <- pars[["a"]]
     b <- pars[["b"]]
@@ -207,17 +207,39 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
   }
   if (fun_type == "normal" || fun_type == "Normal") {
     if (!(inherits(pars, "list")) && length(pars) == 2) {
-      stop("the normal is created using a list of two parameters, a = mean, b = sigma, c = peak")
+      stop("the normal distribution is created using a list of two parameters, a = sigma, b = mean")
     }
-    mu <- pars[["a"]]
-    sig <- pars[["b"]]
+    sig <- pars[["a"]]
+    mu <- pars[["b"]]
     return(function(x) {
-      qnorm(p = x, mean = mu, sd = sig)
+      EnvStats::qnormTrunc(p=x, mean = mu, sd = sig, min = 0) 
+    })
+  }
+  if (fun_type == "weibull" || fun_type == "Weibull") {
+    if (!(inherits(pars, "list")) && length(pars) == 3) {
+      stop("the weibull distribution is created using a list of three parameters, a = location, b = shape, c = scale")
+    }
+    location <- pars[["a"]]
+    shape <- pars[["b"]]
+    scale <- pars[["c"]]
+    return(function(x) {
+      weibull_samples <- qweibull(x, shape=shape, scale=scale) + location
+    })
+  }
+  if (fun_type == "log normal" || fun_type == "Log normal") {
+    if (!(inherits(pars, "list")) && length(pars) == 3) {
+      stop("the log normal distribution is created using a list of two parameters, a = minimum, b = sigma, c = mean")
+    }
+    min <- pars[["a"]]
+    sig <- pars[["b"]]
+    mu <- pars[["c"]]
+    return(function(x) {
+      log(EnvStats::qlnormTrunc(p=x, meanlog = mu, sdlog = sig, min = min))
     })
   }
   if (fun_type == "uniform" || fun_type == "Uniform") {
     if (!(inherits(pars, "list")) && length(pars) == 2) {
-      stop("the uniform is created using a list of two parameters, a = minimum, b = maximum")
+      stop("the uniform distribution is created using a list of two parameters, a = minimum, b = maximum")
     }
     minx <- pars[["a"]]
     maxx <- pars[["b"]]

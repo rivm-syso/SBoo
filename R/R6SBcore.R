@@ -203,6 +203,12 @@ SBcore <- R6::R6Class("SBcore",
         } else if (dist_type == "TRWP_size") {
           prepArgs <- as.list(as.character(aRow[c("d")]))
           names(prepArgs) <- c("d")
+        } else if (dist_type == "weibull" || dist_type == "Weibull") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
+        } else if (dist_type == "log normal" || dist_type == "Log normal") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
         } else {
           stop("Unsupported distribution type")
         }
