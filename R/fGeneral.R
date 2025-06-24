@@ -190,8 +190,8 @@ triangular_cdf_inv = function(u, # LH scaling factor
 
 #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
 Make_inv_unif01 = function(fun_type = "triangular", pars) {
-  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "log normal", "weibull", "trapezoidal", "powerlaw", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size", "Log normal", "Weibull", "Powerlaw", "Trapezoidal")) {
-    stop("! fun_type %in% c('triangular', 'normal', 'uniform', 'log uniform', 'TRWP_size')")
+  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "log normal", "weibull", "trapezoidal", "power law", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size", "Log normal", "Weibull", "Power law", "Trapezoidal")) {
+    stop("! fun_type %in% c('triangular', 'normal', 'uniform', 'log uniform', 'TRWP_size', 'log normal', 'trapezoidal', 'power law')")
   }
   if (fun_type == "triangular" || fun_type == "Triangular") {
     if (!(inherits(pars, "list") && length(pars) == 3)) {

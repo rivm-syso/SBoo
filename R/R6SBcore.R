@@ -209,7 +209,7 @@ SBcore <- R6::R6Class("SBcore",
         } else if (dist_type == "log normal" || dist_type == "Log normal") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
           names(prepArgs) <- c("a", "b", "c")
-        } else if (dist_type == "powerlaw" || dist_type == "Powerlaw") {
+        } else if (dist_type == "power law" || dist_type == "Power law") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
           names(prepArgs) <- c("a", "b", "c")
         } else if (dist_type == "trapezoidal" || dist_type == "Trapezoidal") {
