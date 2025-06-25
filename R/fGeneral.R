@@ -245,7 +245,10 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
     max <- pars[["b"]]
     alpha <- pars[["c"]]
     return(function(x) {
-      min * ((max / min) ^ x) ^ (1 / (1 - alpha))
+      x_scaled <- x^alpha
+      x_out <- x_scaled * (max - min) + min
+      
+      return(x_out)
     })
   }
   if (fun_type == "trapezoidal" || fun_type == "Trapezoidal") {
