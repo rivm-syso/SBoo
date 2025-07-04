@@ -33,6 +33,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
                 return(NA)
               } else {
                 SetlingVelocityCP <- 2.5/(24*3600)
+                return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
               }
             }
             SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
