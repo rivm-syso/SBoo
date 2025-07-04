@@ -19,42 +19,33 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
     return(NA)
   }
-  if (SpeciesName != "Molecular"){
-    
-    if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
-      return(NA)
-      
-    }
-    
-  } else {
-    
-    if (to.SubCompartName == "deepocean") {
-      return(0)
-      
-    } else {
-      if (as.character(Test) == "TRUE"){
-        if(to.SubCompartName == "lakesediment"){
-          return(NA)
-        } else {
-          SetlingVelocityCP <- 2.5/(24*3600)
-        }
-        
-      } else {
-         SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
-                                      rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
-      }
-     
-    return(SetlingVelocityCP*(1-FRinw) / VertDistance)
-      
-    }
-    
+  if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
+    return(NA)
   }
   
-  if (SettlingVelocity <= 0){
-      return(0)
-  } 
+  switch(SpeciesName,
+          "Molecular" = {
+            if (to.SubCompartName == "deepocean") {
+              return(NA)
+            } 
+            if (as.character(Test) == "TRUE") {
+              if (to.SubCompartName == "lakesediment") {
+                return(NA)
+              } else {
+                SetlingVelocityCP <- 2.5/(24*3600)
+              }
+            }
+            SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
+                                               rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
+            return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
+          },
+          {
+            if (SettlingVelocity <= 0) {
+              return(0)
+            }
+            return(SettlingVelocity/VertDistance)
+          }
+          
+  )
   
-  else {
-      return(SettlingVelocity/VertDistance)
-  } 
 }
