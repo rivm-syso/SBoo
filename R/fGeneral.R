@@ -37,12 +37,11 @@ SteadyStateSolver <- function(k, e, parms){
   tmax=1e20 # solution for >1e12 year horizon
   dm <- rootSolve::runsteady(
     y = rep(0,nrow(k)),
-    times = c(0, Inf),
+    times = c(0, tmax),
     func = SimpleBoxODE,
     parms = list(K = k, 
                  e = e),
-    stol = 1e-20,
-    atol = 1e-20
+    stol = 1e-20
   )
   return(dm)
 }
