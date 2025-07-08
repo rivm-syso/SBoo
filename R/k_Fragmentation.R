@@ -18,8 +18,8 @@ k_Fragmentation <- function (kfrag, SubCompartName, ScaleName){
   } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean")){
     return(NA)
   } else {
-    return(kfrag)
-    #return(NA) #remove fragmentation and keep degradation only
+    #return(kfrag)
+    return(NA) #remove fragmentation and keep degradation only
   }
     
 }
