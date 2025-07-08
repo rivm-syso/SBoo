@@ -19,12 +19,12 @@
 f_SetVelSolver <- function(d_eq, Psi, DynViscWaterStandard, rhoParticle, rhoWater, DragMethod, CSF, Matrix, rad_species) {
   # Define the RSS function to be minimized
   GN <- constants::syms$gn
-  switch (Matrix,
+  switch(Matrix,
           "water" = {
   
             RSS_function <- function(v_s) {
-              Re <- d_eq * v_s *rhoWater / DynViscWaterStandard
-              CD <- f_DragCoefficient (DragMethod, Re, Psi, CSF)
+              Re <- d_eq * v_s * rhoWater / DynViscWaterStandard
+              CD <- f_DragCoefficient(DragMethod, Re, Psi, CSF)
               v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoWater) / rhoWater) * GN)
               RSS <- (v_s - v_s_new) ^ 2
               return(RSS)}
@@ -34,9 +34,9 @@ f_SetVelSolver <- function(d_eq, Psi, DynViscWaterStandard, rhoParticle, rhoWate
             },
           "air" = {
             RSS_function <- function(v_s) {
-              Re <- d_eq * v_s *rhoWater / DynViscWaterStandard
+              Re <- d_eq * v_s * rhoWater / DynViscWaterStandard
               Cunningham <- f_Cunningham(rad_species)
-              CD <- f_DragCoefficient (DragMethod, Re, Psi, CSF)
+              CD <- f_DragCoefficient(DragMethod, Re, Psi, CSF)
               v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoWater) / rhoWater) * GN) * Cunningham
               RSS <- (v_s - v_s_new) ^ 2
               return(RSS)}
