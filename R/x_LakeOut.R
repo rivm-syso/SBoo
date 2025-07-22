@@ -8,12 +8,12 @@
 #' @param ScaleName Runoff needs to be calculated per scale.
 #' @return Lake discharge
 #' @export
-x_LakeOut <- function (RainOnFreshwater,
+x_LakeOut <- function(RainOnFreshwater,
                            all.RunoffFlow,
                            FracROWatComp,
                        SubCompartName,
                            ScaleName){
-  switch (SubCompartName, # if this is coded with if statement it fails as SubCompartName for Arctic is NA
+  switch(SubCompartName, # if this is coded with if statement it fails as SubCompartName for Arctic is NA
           "lake" = {
             SumRunoff <- sum(all.RunoffFlow$RunoffFlow[all.RunoffFlow$Scale == ScaleName])
             return(RainOnFreshwater + FracROWatComp*SumRunoff)
