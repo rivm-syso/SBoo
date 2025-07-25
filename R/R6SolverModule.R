@@ -849,7 +849,7 @@ SolverModule <-
           } else {
             # Expansion for Species
             expanded_columns_species <- list()
-            if ("Species" %in% needed_states && current_species == "NA") {
+            if ("Species" %in% needed_states && (current_species == "any" || current_species == "NA")) {
               for (species_type in species) {
                 col_name <- paste(varname, current_scale, current_subcompart, species_type, sep = "_")
                 expanded_columns_species[[col_name]] <- lhs_col
@@ -865,7 +865,7 @@ SolverModule <-
               parts <- strsplit(expanded_col_name, "_")[[1]]
               scale <- parts[2]
               
-              if ("Scale" %in% needed_states && scale == "NA") {
+              if ("Scale" %in% needed_states && (scale == "any" || scale == "NA")) {
                 for (scale_type in scales) {
                   col_name <- paste(parts[1], scale_type, parts[3], parts[4], sep = "_")
                   expanded_columns_scale[[col_name]] <- expanded_col_data
