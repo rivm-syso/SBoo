@@ -13,13 +13,18 @@
 
 FracROWatComp <- function(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName) {
   # browser()
-
+  
   if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
+    
     compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale == ScaleName]
     mergeddata <- merge(all.landFRAC, all.Matrix)
     waterFrac <- sum(mergeddata$landFRAC[mergeddata$Matrix == "water" & mergeddata$Scale == ScaleName])
     return(compFrac / waterFrac)
-  } else {
+    
+  } else if ((SubCompartName == "sea") & (ScaleName %in% c("Tropic", "Moderate", "Arctic"))){ 
+    return(1)
+  }  else
+  {
     return(NA)
   }
 }
