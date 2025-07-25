@@ -1,5 +1,6 @@
 #' @title RainOnFreshwater
 #' @name RainOnFreshwater
+#' @description The fraction of rain falling on lake or river water.
 #' @param RAINrate m.s-1
 #' @param Area in m2
 #' @param SubCompartName #only for lake/rivers
@@ -8,12 +9,7 @@
 #' @export
 RainOnFreshwater <- function (RAINrate, Area, SubCompartName) {
   if (SubCompartName %in% c("river", "lake")) {
-    #TODO resolve lake issues in waterflow; for now: old formulas
-    if (SubCompartName == "lake"){
-      return(0)
-    } else {
-      # RAINrateToSI is generarted from units !
-      return(RAINrate * Area)
-    }     
+    # RAINrateToSI is generarted from units !
+    return(RAINrate * Area)
   } else    return(NA)
 }

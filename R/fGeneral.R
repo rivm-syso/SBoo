@@ -37,10 +37,34 @@ SteadyStateSolver <- function(k, e, parms){
   tmax=1e20 # solution for >1e12 year horizon
   dm <- rootSolve::runsteady(
     y = rep(0,nrow(k)),
-    times = c(0,tmax),
+    times = c(0, tmax),
     func = SimpleBoxODE,
     parms = list(K = k, 
-                 e = e)
+                 e = e),
+    stol = 1e-20
+  )
+
+  return(dm)
+  
+}
+
+#' @title Steady state solver function
+#' @description Using the SimpleBoxODE function to solve the k matrix with emission (e) for steady state.
+#' This uses the steady function from the rootSolve package with possitive = TRUE.
+#' @param k the first order rate constant matrix [s-1]
+#' @param m emission vector [kg.s-1]
+#' @param parms = empty list (needed so that the SteadyStateSolver and DynamicSolver can be called in the same manner from the SolverModule)
+#' @returns dm (i) = change in mass as list
+SteadyStateSolver2 <- function(k, e, parms){
+  SBNames = colnames(k)
+  tmax=1e20 # solution for >1e12 year horizon
+  dm <- rootSolve::steady(
+    y = rep(0,nrow(k)),
+    # times = c(0, tmax),
+    func = SimpleBoxODE,
+    parms = list(K = k, 
+                 e = e),
+    positive = TRUE
   )
   return(dm)
 }

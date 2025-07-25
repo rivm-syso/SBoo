@@ -1,7 +1,7 @@
 #'@title Run-off of particles
 #'@name k_Runoff
 #'@description Runoff rate corrected for soil penetration depth for molecules and particulates
-#'@param Runoff Runoff, as computed by v_Runoff [s-1]
+#'@param RunoffFlow RunoffFlow, as computed by v_RunoffFlow [s-1]
 #'@param FracROWatComp fraction of water component runoff can flow to [-]
 #'@param Volume volume of compartment 
 #'@param Kscompw soil water partitioning coefficient [-]
@@ -17,7 +17,7 @@
 #'@return k_Run-off Run-off of particles from soil to water #[s-1]
 #'@export
 
-k_Runoff <- function(Runoff,VertDistance, to.FracROWatComp,
+k_Runoff <- function(RunoffFlow,VertDistance, to.FracROWatComp,
                      Volume, Kscompw,
                      relevant_depth_s, penetration_depth_s,
                      ScaleName, to.SubCompartName, to.ScaleName, SpeciesName, Matrix, all.Matrix){
@@ -30,10 +30,10 @@ k_Runoff <- function(Runoff,VertDistance, to.FracROWatComp,
 
   switch(SpeciesName,
          "Molecular" = {
-           (Runoff / Kscompw) * 
+           (RunoffFlow / Kscompw) * 
              f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / Volume  * to.FracROWatComp  #[s-1]
          },
-         (Runoff *
+         (RunoffFlow *
             f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume * to.FracROWatComp 
          
   )
