@@ -1182,11 +1182,12 @@ SBcore <- R6::R6Class("SBcore",
 
     IntegrateKaaslist = function(kaaslist){
       #select kaas names only for all kaaslist - data.frames
+      browser()
       kaaslist <- kaaslist[!sapply(kaaslist, anyNA)]
       kaaslist <- lapply(kaaslist, 
                          dplyr::select, c("process", "fromScale","fromSubCompart","fromSpecies",
-                                          "toScale","toSubCompart","toSpecies","k"))
-      VolleKaas <- do.call(rbind, kaaslist)
+                                          "toScale","toSubCompart","toSpecies","k")) # select now needs all_of(vars)
+      VolleKaas <- do.call(rbind, kaaslist) # replace above two actions with bind_rows(kaaslist)
       
       if(length(VolleKaas) > 0) { #length is 0 if no processes 
         return(VolleKaas)
