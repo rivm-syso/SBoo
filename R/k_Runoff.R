@@ -21,7 +21,8 @@
 k_Runoff <- function(RunoffFlow,VertDistance, to.FracROWatComp,
                      Volume, Kscompw,
                      relevant_depth_s, penetration_depth_s,
-                     ScaleName, to.SubCompartName, to.ScaleName, SpeciesName, Matrix, all.Matrix, kinterception){
+                     ScaleName, to.SubCompartName, to.ScaleName, SpeciesName, Matrix, all.Matrix, IntrcptFrac){
+  # browser()
   if (ScaleName %in% c("Regional", "Continental") & to.SubCompartName == "sea") {
     return(NA)
   } 
@@ -35,7 +36,7 @@ k_Runoff <- function(RunoffFlow,VertDistance, to.FracROWatComp,
              f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / Volume  * to.FracROWatComp  #[s-1]
          },
          
-         (Runoff *
-            f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume * to.FracROWatComp * (1-kinterception) #adjusted runoff for microplastics  
+         (RunoffFlow *
+            f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s))/ Volume * to.FracROWatComp * (1-IntrcptFrac) #adjusted runoff for microplastics  
   )
 }
