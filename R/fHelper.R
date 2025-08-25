@@ -65,3 +65,25 @@ f_AddAbbreviationsSBxlsx <- function(kaas = as_tibble(World$kaas), # table with 
   # 
   return(kaas)
 }
+
+
+#' @title Using variable name and vector of values use mutateVars
+#' @name f_MutateHelper
+#' @description Applies the mutateVars sequence of data based on fetchData.
+#' Make sure to set the correct vector of values, as not checks are done on value versus dimension!!!
+#' @param varName name of variable
+#' @param varData vector of values to change to (in units for input!! use World$fetchDataUnits("landFRAC"), if unsure)
+#' @return mutated variable table
+#' @export
+f_MutateHelper <- function(varName = "landFRAC",
+                           varData = c(0.6000, 0.0050, 0.2700, 0.1000, 0.0250, 0.6000, 0.0050, 0.2700, 0.1000, 0.0250)){
+  varWorld <- World$fetchData(varName)
+  varWorld[,varName] <- varData
+  varWorld <-
+    varWorld |> pivot_longer(cols = varName,
+                             names_to = "varName",
+                             values_to = "Waarde")
+  World$mutateVars(varWorld)
+  World$UpdateDirty(varName)
+  return(World$fetchData(varName))
+}
