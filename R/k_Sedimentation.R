@@ -14,7 +14,7 @@
 #' @return k_Sedimentation, the rate constant for sedimentation as first order process
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
-                            VertDistance, from.RhoCP, from.RadCP, RadS,
+                            VertDistance, from.RhoCP, from.RadCP, RadS, Matrix, rhoMatrix,
                             SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test){
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
     return(NA)
@@ -24,29 +24,38 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   }
   
   switch(SpeciesName,
-          "Molecular" = {
-            if (to.SubCompartName == "deepocean") {
-              return(NA)
-            } 
-            if (as.character(Test) == "TRUE") {
-              if (to.SubCompartName == "lakesediment") {
-                return(NA)
-              } else {
-                SetlingVelocityCP <- 2.5/(24*3600)
-                return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
-              }
-            }
-            SetlingVelocityCP <- f_SetVelWater(radius = from.RadCP,
-                                               rhoParticle = from.RhoCP, rhoWater = 998, DynViscWaterStandard) 
-            return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
-          },
-          {
-            if (SettlingVelocity <= 0) {
-              return(0)
-            }
-            return(SettlingVelocity/VertDistance)
-          }
-          
+         "Molecular" = {
+           if (to.SubCompartName == "deepocean") {
+             return(NA)
+           } 
+           if (as.character(Test) == "TRUE") {
+             if (to.SubCompartName == "lakesediment") {
+               return(NA)
+             } else {
+               SetlingVelocityCP <- 2.5/(24*3600)
+               return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
+             }
+           }
+           SetlingVelocityCP <- 
+             f_SetVelWater(rad_species=from.RadCP, 
+                           rho_species=from.RhoCP, 
+                           rhoWater=rhoMatrix, 
+                           DynViscWaterStandard=DynViscWaterStandard,
+                           DynViscAirStandard=NA,
+                           Matrix=Matrix,SubCompartName=SubCompartName, 
+                           Shape=NA,
+                           Longest_side=NA, Intermediate_side=NA,
+                           Shortest_side=NA, DragMethod="Original")
+           
+           return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
+         },
+         {
+           if (SettlingVelocity <= 0) {
+             return(0)
+           }
+           return(SettlingVelocity/VertDistance)
+         }
+         
   )
   
 }

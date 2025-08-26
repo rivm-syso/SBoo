@@ -12,7 +12,7 @@
 #' @return f_DragCoefficient 
 #' @export
 
-f_DragCoefficient <- function(DragMethod, Re, Psi, CSF) {
+f_DragCoefficient <- function(DragMethod, Re, Psi, CSF, kS, kN) {
   if (DragMethod == "Dioguardi" | DragMethod == "Default") {
     term1 <- (24 / Re) * (((1 - Psi) / Re) + 1) ^ 0.25
     term2 <- (24 / Re) * (0.1806 * Re ^ 0.6459) * Psi ^ - (Re^0.08)
@@ -24,6 +24,10 @@ f_DragCoefficient <- function(DragMethod, Re, Psi, CSF) {
     CD <- (term1 + term2) ^ 1.25
   } else if (DragMethod == "Stokes"){
     CD <- 24 / Re + 4 / sqrt(Re) + 0.4
+  } else if (DragMethod == "Bagheri"){
+    term1 <- 24*kS/Re*(1+0.125*(Re*kN/kS)^(2/3))
+    term2 <- 0.46*kN/(1+5330*kS/(Re*kN))
+    CD <- term1+term2
   } else {
     stop("Invalid DragMethod! Please choose from available DragMethods.")
   }

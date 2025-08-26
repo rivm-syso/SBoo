@@ -14,7 +14,7 @@
 #' @param Intermediate_side the intermediate side of the particle as defined by user [m]
 #' @param Shortest_side the shortst side of the particle as identified by user [m]
 #' @param DragMethod The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options
-#' @return Settling velocity
+#' @return Settling velocity [m.s-1]
 #' @export
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 
                              DynViscWaterStandard,
@@ -70,11 +70,19 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   CSF <- Shortest_side/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
   switch (Matrix,
           "water" = { 
-            v_s <- f_SetVelSolver(d_eq, Psi, DynViscWaterStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species)
+            v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
+                                  DynViscFluidStandard=DynViscWaterStandard, 
+                                  rhoParticle=rho_species, 
+                                  rhoFluid=rhoMatrix, DragMethod=DragMethod, 
+                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species)
             return(v_s)
             }, 
           "air"= {
-            v_s <- f_SetVelSolver(d_eq, Psi, DynViscAirStandard, rho_species, rhoMatrix, DragMethod, CSF, Matrix, rad_species)
+            v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
+                                  DynViscFluidStandard=DynViscAirStandard, 
+                                  rhoParticle=rho_species, 
+                                  rhoFluid=rhoMatrix, DragMethod=DragMethod, 
+                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species)
             return(v_s)
           },
           NA

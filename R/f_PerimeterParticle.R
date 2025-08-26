@@ -31,11 +31,11 @@ f_PerimeterParticle <- function(Shape, Longest_side = NULL, Intermediate_side = 
     # For simplicity, let's just consider the perimeter of the ellipse in the xy-plane
     perimeter <- pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
     return(perimeter)
-  } else if (Shape == "Cube" | Shape == "Box") {
+  } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
     # For cubes and boxes, perimeter of their 2D projection is just the perimeter of their base
     perimeter <- 4 * Longest_side
     return(perimeter)
-  } else if (Shape == "Cylindric - circular") {
+  } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
     radius <- Longest_side / 2
     # For circular cylinder, the perimeter of its 2D projection is just the circumference of the base circle
     perimeter <- 2 * pi * radius
