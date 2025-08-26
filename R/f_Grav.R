@@ -26,7 +26,7 @@ f_Grav <- function(radiusParticle, rhoParticle,
   
   SetVelOther <- f_SetVelWater(rad_species=radius_Otherparticle, 
                                rho_species=rho_Otherparticle, 
-                               rhoWater=rhoFluid, 
+                               rhoMatrix=rhoFluid, 
                                DynViscWaterStandard,
                                DynViscAirStandard=NA,
                                Matrix=Matrix,SubCompartName=SubCompartName, 

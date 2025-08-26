@@ -9,11 +9,11 @@
 #' @param GN gravitational force constabt [m2/s]
 #' @return f_SetVelWater
 #' @export
-f_SetVel <- function(rad_species, rho_species, rhoMatrix, 
-                          DynViscWaterStandard,
-                          DynViscAirStandard,
-                          Matrix,SubCompartName, Shape,
-                          Longest_side, Intermediate_side, Shortest_side, DragMethod) {
+f_SetVelWater <- function(rad_species, rho_species, rhoMatrix, 
+                     DynViscWaterStandard,
+                     DynViscAirStandard,
+                     Matrix,SubCompartName, Shape,
+                     Longest_side, Intermediate_side, Shortest_side, DragMethod) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
