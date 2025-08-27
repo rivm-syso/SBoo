@@ -5,6 +5,7 @@
 #' @param SubCompartName subcompartment considered
 #' @param NaturalRad natural particle radius all but small in air [m]
 #' @param RadS nanoparticle radius [m]
+#' @param Longest_side Longest side of the particle (nanomaterial or microplastics) [m]
 #' @param Df fractal dimension of combined heteroagglomerate [-]
 #' @param RadNuc Nucleation mode aerosol particle radius [m]
 #' @param RadCOL Accumulation mode aerosol particle radius [m]
@@ -15,7 +16,9 @@
 #' @export
 rad_species <- function(SpeciesName,SubCompartName,
                         RadCOL,RadCP,RadNuc,
-                        RadS,NumConcNuc,NumConcAcc, Df) {
+                        RadS,NumConcNuc,NumConcAcc, Df,
+                        Longest_side) {
+  if(is.na(RadS)||is.null(RadS)){RadS = Longest_side/2}
   switch (tolower(SpeciesName),
           "nanoparticle" = return(RadS),
           "aggregated" = {

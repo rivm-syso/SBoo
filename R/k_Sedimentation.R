@@ -14,7 +14,7 @@
 #' @return k_Sedimentation, the rate constant for sedimentation as first order process
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
-                            VertDistance, from.RhoCP, from.RadCP, RadS, Matrix, rhoMatrix,
+                            VertDistance, from.RhoCP, from.RadCP, Matrix, rhoMatrix,
                             SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test){
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
     return(NA)
@@ -39,7 +39,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
            SetlingVelocityCP <- 
              f_SetVelWater(rad_species=from.RadCP, 
                            rho_species=from.RhoCP, 
-                           rhoWater=rhoMatrix, 
+                           rhoMatrix=rhoMatrix, 
                            DynViscWaterStandard=DynViscWaterStandard,
                            DynViscAirStandard=NA,
                            Matrix=Matrix,SubCompartName=SubCompartName, 

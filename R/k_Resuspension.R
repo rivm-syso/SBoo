@@ -33,7 +33,7 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
       SettlingVelocitySPM <- 
         f_SetVelWater(rad_species=to.RadCP, 
                       rho_species=to.RhoCP, 
-                      rhoWater=to.rhoMatrix, 
+                      rhoMatrix=to.rhoMatrix, 
                       DynViscWaterStandard=DynViscWaterStandard,
                       DynViscAirStandard=NA,
                       Matrix=to.Matrix,SubCompartName=to.SubCompartName, 
@@ -47,7 +47,7 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
     SettlingVelocitySPM <-  
       f_SetVelWater(rad_species=to.RadCP, 
                     rho_species=to.RhoCP, 
-                    rhoWater=to.rhoMatrix, 
+                    rhoMatrix=to.rhoMatrix, 
                     DynViscWaterStandard=DynViscWaterStandard,
                     DynViscAirStandard=NA,
                     Matrix=to.Matrix,SubCompartName=to.SubCompartName, 

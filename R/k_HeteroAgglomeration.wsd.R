@@ -190,7 +190,11 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         rhoFluid = rhoWater,
-                                        DynVisc = DynViscWaterStandard)
+                                        DynVisc = DynViscWaterStandard,
+                                        Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
+                                        Longest_side=Longest_side, 
+                                        Intermediate_side=Intermediate_side, 
+                                        Shortest_side=Shortest_side, DragMethod=DragMethod)
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 
