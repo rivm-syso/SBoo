@@ -37,7 +37,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
              }
            }
            SetlingVelocityCP <- 
-             f_SetVelWater(rad_species=from.RadCP, 
+             f_SetVelWater(Shortest_side=from.RadCP*2, 
                            rho_species=from.RhoCP, 
                            rhoMatrix=rhoMatrix, 
                            DynViscWaterStandard=DynViscWaterStandard,
@@ -45,11 +45,11 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
                            Matrix=Matrix,SubCompartName=SubCompartName, 
                            Shape=NA,
                            Longest_side=NA, Intermediate_side=NA,
-                           Shortest_side=NA, DragMethod="Original")
+                           DragMethod="Original")
            
            return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
          },
-         {
+         { 
            if (SettlingVelocity <= 0) {
              return(0)
            }

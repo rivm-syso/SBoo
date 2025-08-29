@@ -65,11 +65,13 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
       (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
     return(NA)
   }
-  rhoWater = 998 # temp could be done more elegantly
+  rhoWater = 998 # easyfix could be done more elegantly
   kboltz <- constants::syms$k
   GN <- constants::syms$gn
   
-  switch (tolower(Matrix),
+  if(is.na(RadS) || is.null(RadS)) { RadS = Shortest_side/2 }
+  
+  switch(tolower(Matrix),
           "water" = {
             switch (tolower(to.SpeciesName),
                     "aggregated" = {
@@ -79,8 +81,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                           viscosity=DynViscWaterStandard,
                                           radius=RadS,
                                           radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(radiusParticle = RadS, 
-                                        rhoParticle= RhoS,
+                      ColGrav <- f_Grav(rhoParticle= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         rhoFluid = rhoMatrix,
@@ -88,7 +89,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                         Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
                                         Longest_side=Longest_side, 
                                         Intermediate_side=Intermediate_side, 
-                                        Shortest_side=Shortest_side, DragMethod=DragMethod)
+                                        Shortest_side=RadS*2, DragMethod=DragMethod)
 
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 
@@ -103,8 +104,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                           viscosity=DynViscWaterStandard,
                                           radius=RadS,
                                           radius_Otherparticle = RadCP )
-                      ColGrav <-f_Grav(radiusParticle = RadS, 
-                                       rhoParticle= RhoS,
+                      ColGrav <-f_Grav(rhoParticle= RhoS,
                                        radius_Otherparticle = RadCP,
                                        rho_Otherparticle = RhoCP, 
                                        rhoFluid = rhoMatrix,
@@ -112,7 +112,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                        Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
                                        Longest_side=Longest_side, 
                                        Intermediate_side=Intermediate_side, 
-                                       Shortest_side=Shortest_side, DragMethod=DragMethod)
+                                       Shortest_side=RadS*2, DragMethod=DragMethod)
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCP, 
                                                rho_particle=RhoCP, 
@@ -130,8 +130,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                          viscosity=DynViscWaterStandard,
                                          radius=RadS,
                                          radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(radiusParticle = RadS, 
-                                        rhoParticle= RhoS,
+                      ColGrav <- f_Grav(rhoParticle= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         rhoFluid = rhoMatrix,
@@ -139,7 +138,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                         Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
                                         Longest_side=Longest_side, 
                                         Intermediate_side=Intermediate_side, 
-                                        Shortest_side=Shortest_side, DragMethod=DragMethod)
+                                        Shortest_side=RadS*2, DragMethod=DragMethod)
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 
@@ -186,15 +185,15 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                           viscosity=DynViscWaterStandard,
                                           radius=RadS,
                                           radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(radius = RadS, rho= RhoS,
+                      ColGrav <- f_Grav(rhoParticle= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
                                         rhoFluid = rhoWater,
-                                        DynVisc = DynViscWaterStandard,
+                                        DynViscWaterStandard = DynViscWaterStandard,
                                         Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
                                         Longest_side=Longest_side, 
                                         Intermediate_side=Intermediate_side, 
-                                        Shortest_side=Shortest_side, DragMethod=DragMethod)
+                                        Shortest_side=RadS*2, DragMethod=DragMethod)
                       
                       NumConcOther <- f_NumConc(rad_particle=RadCOL, 
                                                rho_particle=RhoCOL, 

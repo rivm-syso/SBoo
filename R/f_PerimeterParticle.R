@@ -9,14 +9,21 @@
 #' @return fPerimeterParticle [m]
 #' @export
 
-f_PerimeterParticle <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL, rad_particle) {
+f_PerimeterParticle <- function(rad_particle,
+                                Shape, Longest_side = NULL, 
+                                Intermediate_side = NULL, 
+                                Shortest_side = NULL) {
   if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
-  if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
-    Longest_side <- rad_particle * 2
-    Intermediate_side <- rad_particle * 2
+  # Check if Shortest side is NA or NULL and assign default values if so
+  if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
     Shortest_side <- rad_particle * 2
+  }
+  # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+  if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
+    Intermediate_side <- rad_particle * 2 #maybe 0.75 or build in shape functions
+    Longest_side <- rad_particle * 2
   }
   
   

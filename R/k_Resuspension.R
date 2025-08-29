@@ -31,7 +31,7 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
     } else {
       # ScaleName
       SettlingVelocitySPM <- 
-        f_SetVelWater(rad_species=to.RadCP, 
+        f_SetVelWater(Shortest_side=to.RadCP*2, 
                       rho_species=to.RhoCP, 
                       rhoMatrix=to.rhoMatrix, 
                       DynViscWaterStandard=DynViscWaterStandard,
@@ -39,13 +39,13 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                       Matrix=to.Matrix,SubCompartName=to.SubCompartName, 
                       Shape=NA,
                       Longest_side=NA, Intermediate_side=NA,
-                      Shortest_side=NA, DragMethod="Original")
+                      DragMethod="Original")
       
     }
   } else {
     # ScaleName
     SettlingVelocitySPM <-  
-      f_SetVelWater(rad_species=to.RadCP, 
+      f_SetVelWater(Shortest_side=to.RadCP*2, 
                     rho_species=to.RhoCP, 
                     rhoMatrix=to.rhoMatrix, 
                     DynViscWaterStandard=DynViscWaterStandard,
@@ -53,7 +53,7 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                     Matrix=to.Matrix,SubCompartName=to.SubCompartName, 
                     Shape=NA,
                     Longest_side=NA, Intermediate_side=NA,
-                    Shortest_side=NA, DragMethod="Original")
+                    DragMethod="Original")
   }
   
   # Gross sedimentation rate from water [m/s]

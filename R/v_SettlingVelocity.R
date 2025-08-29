@@ -19,16 +19,18 @@
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 
                              DynViscWaterStandard,
                              DynViscAirStandard,
-                             Matrix,SubCompartName, Shape,
-                             Longest_side, Intermediate_side, Shortest_side, DragMethod) {
+                             Matrix,SubCompartName, Shape,Longest_side,
+                             Intermediate_side, DragMethod) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
-  if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
-    Longest_side <- rad_species * 2
-    Intermediate_side <- rad_species * 2
-    Shortest_side <- rad_species * 2
-  } #TODO check application of this default assumption
+  # Check if Shortest side is NA or NULL and assign default values if so
+  # if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
+  #   Shortest_side <- rad_particle * 2
+  # }
+  # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+
+  
   if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
@@ -56,18 +58,33 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
     else {
       return(sv)
     }
-  } 
-  volume <- fVol(rad_species, Shape, Longest_side, Intermediate_side, Shortest_side)
-  d_eq <- ( 6/ pi * volume)^(1/3)
-  surfaceareaparticle <- f_SurfaceArea(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
-  surfaceareaperfectsphere <- f_SurfaceArea("Sphere", d_eq, d_eq, d_eq, rad_species)
+  }
+  
+  if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
+    Intermediate_side <- rad_species * 2 #maybe 0.75 or build in shape functions
+    Longest_side <- rad_species * 2
+    warning("Need for Intermediate_side or Longest_side, but not provided, setting to 2*rad_species")
+  }
+  
+  Species_Volume <- fVol(rad_particle = rad_species,
+                         Shape = Shape, 
+                         Longest_side = Longest_side,
+                         Intermediate_side = Intermediate_side)
+  
+  d_eq <- (6/ pi * Species_Volume)^(1/3) # calculate equivalent diameter of perfect sphere
+  
+  surfaceareaparticle <- f_SurfaceAreaParticle(Shape=Shape, 
+                                               Intermediate_side=Intermediate_side, 
+                                               Longest_side=Longest_side, 
+                                               rad_particle=rad_species)
+  surfaceareaperfectsphere <- f_SurfaceAreaParticle(Shape="Sphere", rad_particle=d_eq/2)
   #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
-  perimeterparticle <- f_PerimeterParticle(Shape, Longest_side, Intermediate_side, Shortest_side, rad_species)
-  perimetercircle <- f_PerimeterParticle("Sphere", d_eq, d_eq, d_eq, rad_species)
+  perimeterparticle <- f_PerimeterParticle(Shape=Shape, Intermediate_side=Intermediate_side,Longest_side=Longest_side, rad_particle=rad_species)
+  perimetercircle <- f_PerimeterParticle(Shape="Sphere", rad_particle=d_eq/2)
   circularity <- perimeterparticle/perimetercircle
   sphericity <- surfaceareaperfectsphere/surfaceareaparticle
   Psi <- sphericity/circularity # Shape factor Dioguardi
-  CSF <- Shortest_side/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
+  CSF <- rad_species/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
   switch (Matrix,
           "water" = { 
             v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
@@ -76,7 +93,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                                   rhoFluid=rhoMatrix, DragMethod=DragMethod, 
                                   CSF=CSF, Matrix=Matrix, rad_species=rad_species)
             return(v_s)
-            }, 
+          }, 
           "air"= {
             v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
                                   DynViscFluidStandard=DynViscAirStandard, 
@@ -86,7 +103,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
             return(v_s)
           },
           NA
-        )
+  )
   if (v_s <= 0) {
     return(0)
   } 
@@ -95,4 +112,4 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
     return(v_s)
   }
 }
-  
+
