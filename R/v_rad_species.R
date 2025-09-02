@@ -16,11 +16,21 @@
 #' @param NumConcAcc Number concentration of Accumulation mode aerosol particles [#/m3]
 #' @return rad_species, Approach to calculate the radius of small heteroagglomerates in air/water [m]
 #' @export
-rad_species <- function(SpeciesName, SubCompartName,
+rad_species <- function(SpeciesName, SubCompartName,ScaleName,
                         RadCOL, RadCP, RadNuc,
                         RadS, NumConcNuc, NumConcAcc,
                         Shortest_side, Intermediate_side,
                         Longest_side, Shape) {
+  
+  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+                                                             SubCompartName == "lakesediment" |
+                                                             SubCompartName == "lake" |
+                                                             SubCompartName == "river" |
+                                                             SubCompartName == "agriculturalsoil"|
+                                                             SubCompartName == "othersoil")) | 
+      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+    return(NA)
+  }
   if (is.na(Shape) || is.null(Shape)) {
     Shape <- "Default"
   }

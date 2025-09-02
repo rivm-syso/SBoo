@@ -19,9 +19,16 @@
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 
                              DynViscWaterStandard,
                              DynViscAirStandard,
-                             Matrix,SubCompartName, Shape,Longest_side,
+                             Matrix,SubCompartName, ScaleName,
+                             Shape,Longest_side,
                              Intermediate_side, DragMethod) {
   if (anyNA(c(rho_species,rhoMatrix))){
+    return(NA)
+  }
+  if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean") {
+    return(NA)
+  }
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
     return(NA)
   }
   # Check if Shortest side is NA or NULL and assign default values if so

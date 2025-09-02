@@ -13,14 +13,22 @@
 #' @param NumConcAcc Number concentration of Accumulation mode aerosol particles [#/m3]
 #' @return rho_species, approach to calculate density of species in air or water [kg.m-3]
 #' @export
-rho_species <- function (SpeciesName, SubCompartName,
+rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                          RhoS, RadS, 
                          RadCOL, RadCP, RhoCOL, RhoCP,
                          RhoNuc, RadNuc, 
                          NumConcNuc, NumConcAcc,
                          Shortest_side, Intermediate_side,
                          Longest_side, Shape){
-  
+  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+                                                             SubCompartName == "lakesediment" |
+                                                             SubCompartName == "lake" |
+                                                             SubCompartName == "river" |
+                                                             SubCompartName == "agriculturalsoil"|
+                                                             SubCompartName == "othersoil")) | 
+      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+    return(NA)
+  }
   if (is.na(Shape) || is.null(Shape)) {
     Shape <- "Default"
   }
