@@ -133,7 +133,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                       ColGrav <- f_Grav(rhoParticle= RhoS,
                                         radius_Otherparticle = RadCOL,
                                         rho_Otherparticle = RhoCOL, 
-                                        rhoFluid = rhoMatrix,
+                                        rhoFluid = rhoWater,
                                         DynViscWaterStandard = DynViscWaterStandard,
                                         Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
                                         Longest_side=Longest_side, 
@@ -206,7 +206,6 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                                Temp, DynVisc=DynViscWaterStandard, 
                                                rad_species=RadS)
                       
-                      rhoWater <- 998
                       Por <- 1-to.FRACs
                       GammPDF <- (1-Por)^(1/3)
                       

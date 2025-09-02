@@ -33,13 +33,13 @@ f_Grav <- function(rhoParticle,
   SetVelOther <- f_SetVelWater(
     rho_species = rho_Otherparticle,
     rhoMatrix = rhoFluid,
-    DynViscWaterStandard,
+    DynViscWaterStandard=DynViscWaterStandard,
     DynViscAirStandard = NA,
     Matrix = Matrix, SubCompartName = SubCompartName,
     Shape = NA,
     Longest_side = NA,
     Intermediate_side = NA,
-    Shortest_side = Shortest_side,
+    Shortest_side = radius_Otherparticle*2,
     DragMethod = "Original"
   )
 
