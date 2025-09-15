@@ -28,9 +28,9 @@ f_SurfaceAreaParticle <- function(Shape, Longest_side = NULL, Intermediate_side 
     surface_area <- 4 * pi * radius^2
     return(surface_area)
   } else if (Shape == "Ellipsoid") {
-    a <- Longest_side / 2
-    b <- Intermediate_side / 2
-    c <- Shortest_side / 2
+    a <- Longest_side
+    b <- Intermediate_side
+    c <- Shortest_side
     z <- 1.6075
     surface_area <-  surface_area <- 4 * pi * ((((a / 2)^z * (b / 2)^z) + ((a / 2)^z * (c / 2)^z) + ((b / 2)^z * (c / 2)^z)) / 3)^(1/z)
     return(surface_area)
