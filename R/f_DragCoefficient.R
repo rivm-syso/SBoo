@@ -6,9 +6,12 @@
 #' @param Psi Shape factor, circularity/sphericity [-]
 #' @param Re Reynolds number, as returned by the solver [-]
 #' @param CSF Corey Shape Factor [-]
+#' @param kS Stokes' drag correction (Bagheri) [-]
+#' @param kN Newton's drag correction (Bagheri) [-]
 #' @param Dioguardi A Drag Coefficient method as described in Dioguardi & Mele (2018) https://doi.org/10.1016/j.powtec.2015.02.062
 #' @param Swamee A Drag Coefficient method as described in Swamee & Ojha (1991) https://doi.org/10.1061/(ASCE)0733-9429(1991)117:5(660)
 #' @param Stokes A Stokes-Dietrich approximation as described in Dietrich (1982) https://doi.org/10.1029/WR018i006p01615
+#' @param Bagheri A Drag Coefficient method as described in Bagheri & Bonadonna (2016) https://doi.org/10.1016/j.powtec.2016.06.015
 #' @return f_DragCoefficient 
 #' @export
 

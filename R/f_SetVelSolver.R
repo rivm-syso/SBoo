@@ -16,7 +16,7 @@
 #' @return settling velocity [m/s] 
 #' @export
 #' 
-f_SetVelSolver <- function(d_eq, Psi, DynViscFluidStandard, rhoParticle, rhoFluid, DragMethod, CSF, Matrix, rad_species) {
+f_SetVelSolver <- function(d_eq, Psi, DynViscFluidStandard, rhoParticle, rhoFluid, DragMethod, CSF, Matrix, rad_species, kS, kN) {
   # Define the RSS function to be minimized
   GN <- constants::syms$gn
   switch(Matrix,
@@ -24,7 +24,7 @@ f_SetVelSolver <- function(d_eq, Psi, DynViscFluidStandard, rhoParticle, rhoFlui
   
             RSS_function <- function(v_s) {
               Re <- d_eq * v_s * rhoFluid / DynViscFluidStandard
-              CD <- f_DragCoefficient(DragMethod, Re, Psi, CSF)
+              CD <- f_DragCoefficient(DragMethod, Re, Psi, CSF, kS, kN)
               v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoFluid) / rhoFluid) * GN)
               RSS <- (v_s - v_s_new) ^ 2
               return(RSS)}
@@ -36,7 +36,7 @@ f_SetVelSolver <- function(d_eq, Psi, DynViscFluidStandard, rhoParticle, rhoFlui
             RSS_function <- function(v_s) {
               Re <- d_eq * v_s * rhoFluid / DynViscFluidStandard
               Cunningham <- f_Cunningham(rad_species)
-              CD <- f_DragCoefficient(DragMethod, Re, Psi, CSF)
+              CD <- f_DragCoefficient(DragMethod, Re, Psi, CSF, kS, kN)
               v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoFluid) / rhoFluid) * GN) * Cunningham
               RSS <- (v_s - v_s_new) ^ 2
               return(RSS)}

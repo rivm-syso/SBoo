@@ -92,13 +92,24 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   sphericity <- surfaceareaperfectsphere/surfaceareaparticle
   Psi <- sphericity/circularity # Shape factor Dioguardi
   CSF <- rad_species/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
+  #Parameters for Bagheri et al. 2016
+  alpha <- 0.45+10/exp(2.5*log10(rho_species/rhoMatrix)+30) 
+  beta <- 1-37/exp(3*log10(rho_species/rhoMatrix)+100)
+  f <- Shortest_side/Intermediate_side
+  e <-  Intermediate_side/Longest_side
+  FN <- f^2*e*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  FS <- f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  kS <- 1/2*(FS^(1/3)+FS^(-1/3))
+  kN <- 10^(alpha*(-log10(FN))^beta)
+  
   switch (Matrix,
           "water" = { 
             v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
                                   DynViscFluidStandard=DynViscWaterStandard, 
                                   rhoParticle=rho_species, 
                                   rhoFluid=rhoMatrix, DragMethod=DragMethod, 
-                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species)
+                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species,
+                                  kS=kS, kN=kN)
             return(v_s)
           }, 
           "air"= {
@@ -106,7 +117,8 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                                   DynViscFluidStandard=DynViscAirStandard, 
                                   rhoParticle=rho_species, 
                                   rhoFluid=rhoMatrix, DragMethod=DragMethod, 
-                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species)
+                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species,
+                                  kS=kS, kN=kN)
             return(v_s)
           },
           NA
