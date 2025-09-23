@@ -32,7 +32,7 @@ f_SurfaceAreaParticle <- function(Shape, Longest_side = NULL, Intermediate_side 
     b <- Intermediate_side
     c <- Shortest_side
     z <- 1.6075
-    surface_area <-  surface_area <- 4 * pi * ((((a / 2)^z * (b / 2)^z) + ((a / 2)^z * (c / 2)^z) + ((b / 2)^z * (c / 2)^z)) / 3)^(1/z)
+    surface_area <- 4 * pi * ((((a / 2)^z * (b / 2)^z) + ((a / 2)^z * (c / 2)^z) + ((b / 2)^z * (c / 2)^z)) / 3)^(1/z)
     return(surface_area)
   } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
     surface_area <- 2 * (Longest_side * Intermediate_side + Intermediate_side * Shortest_side + Shortest_side * Longest_side)
@@ -48,6 +48,6 @@ f_SurfaceAreaParticle <- function(Shape, Longest_side = NULL, Intermediate_side 
     surface_area <- (pi() * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b))) * Shortest_side) + 2 * (pi * (a * b))
     return(surface_area)
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic.")
+    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
   }
 }

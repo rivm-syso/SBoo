@@ -41,7 +41,7 @@ fVol <- function(rad_particle, #option to use input as radius
     #Intermediate_side <-sqrt(2)*Longest_side
     volume <- Longest_side * Intermediate_side * Shortest_side
     return(volume)
-  } else if (Shape == "Cylindric - circular") {
+  } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
     
     radius <- Shortest_side / 2
     height <- Longest_side
@@ -54,7 +54,7 @@ fVol <- function(rad_particle, #option to use input as radius
     volume <- pi * radius_major * radius_minor * height
     return(volume)
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic.")
+    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
   }
 }
 

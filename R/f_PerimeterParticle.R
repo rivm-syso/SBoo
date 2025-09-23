@@ -28,7 +28,7 @@ f_PerimeterParticle <- function(rad_particle,
   
   
   if (Shape == "Sphere" | Shape == "Default") {
-    radius <- Longest_side / 2
+    radius <- Shortest_side / 2
     perimeter <- 2 * pi * radius
     return(perimeter)
   } else if (Shape == "Ellipsoid") {
@@ -40,20 +40,20 @@ f_PerimeterParticle <- function(rad_particle,
     return(perimeter)
   } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
     # For cubes and boxes, perimeter of their 2D projection is just the perimeter of their base
-    perimeter <- 4 * Longest_side
+    perimeter <- 2 * Longest_side + 2* Intermediate_side
     return(perimeter)
   } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
-    radius <- Longest_side / 2
+    radius <- Shortest_side / 2
     # For circular cylinder, the perimeter of its 2D projection is just the circumference of the base circle
     perimeter <- 2 * pi * radius
     return(perimeter)
   } else if (Shape == "Cylindric - elliptic") {
     a <- Longest_side / 2
     b <- Intermediate_side / 2
-    # For simplicity, let's just consider the perimeter of the ellipse in the xy-plane
+    # For simplicity, let's just consider the perimeter of the ellipse in the xy-plane - Ramanujan Equation
     perimeter <- pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
     return(perimeter)
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic.")
+    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
   }
 }
