@@ -21,7 +21,8 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              DynViscAirStandard,
                              Matrix,SubCompartName, ScaleName,
                              Shape,Longest_side,
-                             Intermediate_side, DragMethod) {
+                             Intermediate_side, DragMethod,
+                             MinSettVel) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
@@ -49,8 +50,8 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   
   if(DragMethod == "Original" & Matrix =="water"){
     sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
-    if (sv <= 0){
-      return(0)
+    if (sv <= MinSettVel){
+      return(MinSettVel)
     } 
     else {
       return(sv)
@@ -59,8 +60,8 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   if(DragMethod == "Original" & Matrix =="air") {
     Cunningham <- f_Cunningham(rad_species)
     sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN*Cunningham) / (9*DynViscAirStandard)
-    if (sv <= 0){
-      return(0)
+    if (sv <= MinSettVel){
+      return(MinSettVel)
     } 
     else {
       return(sv)
@@ -123,8 +124,8 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
           },
           NA
   )
-  if (v_s <= 0) {
-    return(0)
+  if (v_s <= MinSettVel) {
+    return(MinSettVel)
   } 
   
   else {
