@@ -68,13 +68,15 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
              if(SubCompartName == "air") {
                SingleMass <- 
                  ((NumConcNuc * 
-                     (RhoS * fVol(Shape = Shape,
+                     (RhoS * fVol(rad_particle=RadS,
+                                  Shape = Shape,
                                   Longest_side = Longest_side,
                                   Intermediate_side = Intermediate_side,
                                   Shortest_side = Shortest_side) +
                         RhoNuc * fVol(RadNuc))) +
                     (NumConcAcc * 
-                       (RhoS * fVol(Shape = Shape,
+                       (RhoS * fVol(rad_particle=RadS,
+                                    Shape = Shape,
                                     Longest_side = Longest_side,
                                     Intermediate_side = Intermediate_side,
                                     Shortest_side = Shortest_side) +
@@ -82,6 +84,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                  (NumConcNuc + NumConcAcc)
                
                SingleVol <- ((NumConcNuc * (fVol(
+                 rad_particle=RadS,
                  Shape = Shape,
                  Longest_side = Longest_side,
                  Intermediate_side = Intermediate_side,
@@ -89,6 +92,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                ) +
                  fVol(RadNuc))) +
                  (NumConcAcc * (fVol(
+                   rad_particle=RadS,
                    Shape = Shape,
                    Longest_side = Longest_side,
                    Intermediate_side = Intermediate_side,
@@ -97,11 +101,13 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                    fVol(RadCOL)))) / (NumConcNuc + NumConcAcc)
                return(SingleMass/SingleVol)
              } else {
-               SingleMass <- RhoS*fVol(Shape = Shape,
+               SingleMass <- RhoS*fVol(rad_particle=RadS,
+                                       Shape = Shape,
                                        Longest_side = Longest_side,
                                        Intermediate_side = Intermediate_side,
                                        Shortest_side = Shortest_side)  + RhoCOL*fVol(RadCOL)
-               SingleVol <- fVol(Shape = Shape,
+               SingleVol <- fVol(rad_particle=RadS,
+                                 Shape = Shape,
                                  Longest_side = Longest_side,
                                  Intermediate_side = Intermediate_side,
                                  Shortest_side = Shortest_side) + fVol(RadCOL)
@@ -109,11 +115,13 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
              }
            },
            "Attached" = {
-             SingleMass <- RhoS*fVol(Shape = Shape,
+             SingleMass <- RhoS*fVol(rad_particle=RadS,
+                                     Shape = Shape,
                                      Longest_side = Longest_side,
                                      Intermediate_side = Intermediate_side,
                                      Shortest_side = Shortest_side) + RhoCP*fVol(RadCP)
-             SingleVol <- fVol(RadCP) + fVol(Shape = Shape,
+             SingleVol <- fVol(RadCP) + fVol(rad_particle=RadS,
+                                             Shape = Shape,
                                              Longest_side = Longest_side,
                                              Intermediate_side = Intermediate_side,
                                              Shortest_side = Shortest_side)

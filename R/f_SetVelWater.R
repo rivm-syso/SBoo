@@ -55,7 +55,7 @@ f_SetVelWater <- function(Shortest_side, # for simplification only Shortest_side
     }
   }
   
-  volume <- fVol(Shape=Shape, Longest_side=Longest_side, Intermediate_side=Intermediate_side, Shortest_side=Shortest_side)
+  volume <- fVol(rad_particle=rad_particle,Shape=Shape, Longest_side=Longest_side, Intermediate_side=Intermediate_side, Shortest_side=Shortest_side)
   d_eq <- (6 / pi * volume)^(1 / 3)
   surfaceareaparticle <- f_SurfaceAreaParticle(Shape=Shape, Longest_side=Longest_side, Intermediate_side=Intermediate_side, Shortest_side=Shortest_side)
   surfaceareaperfectsphere <- f_SurfaceAreaParticle(Shape="Sphere", rad_particle=d_eq/2)
