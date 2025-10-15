@@ -61,7 +61,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
     
   } else if (Shape == "Ellipsoid" | Shape == "Cube" | Shape == "Box" | 
              Shape == "Film" | Shape == "Cylindric - circular" | 
-             Shape == "Cylindric - elliptic") {
+             Shape == "Cylindric - elliptic" | Shape == "Fiber") {
     switch(SpeciesName,
            "Nanoparticle" = return(RhoS),
            "Aggregated" = {
@@ -122,7 +122,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
            return(NA)
     )
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic.")
+    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, Fiber, or Cylindric - elliptic.")
   }
   
   

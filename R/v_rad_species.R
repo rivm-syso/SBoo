@@ -146,7 +146,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       return(NA)
     )
-  } else if (Shape == "Cylindric - circular") {
+  } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
     switch(tolower(SpeciesName),
       "nanoparticle" = return(Shortest_side),
       "aggregated" = {
@@ -241,6 +241,6 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       return(NA)
     )
   } else {
-    return(stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic."))
+    return(stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, Fiber, or Cylindric - elliptic."))
   }
 }
