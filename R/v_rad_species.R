@@ -64,6 +64,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -71,6 +72,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -81,6 +83,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(Shortest_side / 2)
         } else {
           SingleVol <- fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -92,6 +95,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
@@ -108,6 +112,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -115,6 +120,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -125,6 +131,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(Shortest_side / 2)
         } else {
           SingleVol <- fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -136,6 +143,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
@@ -152,6 +160,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -159,6 +168,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -169,6 +179,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(Shortest_side / 2)
         } else {
           SingleVol <- fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -180,6 +191,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
@@ -202,6 +214,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -209,6 +222,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -219,6 +233,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(rad_minor_particle)
         } else {
           SingleVol <- fVol(
+            rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -230,6 +245,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
