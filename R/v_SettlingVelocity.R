@@ -95,10 +95,11 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   #Parameters for Bagheri et al. 2016
   alpha <- 0.45+10/exp(2.5*log10(rho_species/rhoMatrix)+30) 
   beta <- 1-37/exp(3*log10(rho_species/rhoMatrix)+100)
-  f <- Shortest_side/Intermediate_side
+  rad_particle <- d_eq/2
+  f <- rad_particle/Intermediate_side
   e <-  Intermediate_side/Longest_side
-  FN <- f^2*e*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
-  FS <- f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  FN <- f^2*e*(d_eq^3/(Longest_side*Intermediate_side*rad_particle))
+  FS <- f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*rad_particle))
   kS <- 1/2*(FS^(1/3)+FS^(-1/3))
   kN <- 10^(alpha*(-log10(FN))^beta)
   
