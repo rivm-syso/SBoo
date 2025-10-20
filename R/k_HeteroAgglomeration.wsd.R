@@ -148,7 +148,8 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                     },
                     "attached" = {
                       DiffS.w <- f_Diffusivity(Matrix=Matrix, 
-                                               Temp, DynVisc=DynViscWaterStandard, 
+                                               Temp = Temp, 
+                                               DynVisc=DynViscWaterStandard, 
                                                rad_species=RadS)
                       
                       rhoWater <- 998
