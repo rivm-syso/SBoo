@@ -9,7 +9,7 @@
 #' @return fVol [m3]
 #' @export
 
-fVol <- function(rad_particle, #option to use input as radius
+fVol <- function(rad_particle = NULL, #option to use input as radius
                  Shape = NULL, 
                  Longest_side = NULL, # same characteristic as radius above, but given as diameter or longest side of other shape
                  Intermediate_side = NULL, 
@@ -23,9 +23,12 @@ fVol <- function(rad_particle, #option to use input as radius
     Shortest_side <- rad_particle * 2
   }
   # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
-  if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
-    Intermediate_side <- rad_particle * 2 #maybe 0.75 or build in shape functions
-    Longest_side <- rad_particle * 2
+  if (((is.na(Intermediate_side) || 
+       is.null(Intermediate_side)) & 
+       (is.na(Longest_side) || 
+       is.null(Longest_side))) & 
+      (!Shape %in% c("Sphere", "Default"))) {
+     stop("For shapes other than Sphere provide Intermediate_side and/or Longest_side")
   }
   
   
@@ -42,7 +45,6 @@ fVol <- function(rad_particle, #option to use input as radius
     volume <- Longest_side * Intermediate_side * Shortest_side
     return(volume)
   } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
-    
     radius <- Shortest_side / 2
     height <- Longest_side
     volume <- pi * radius^2 * height
@@ -54,7 +56,7 @@ fVol <- function(rad_particle, #option to use input as radius
     volume <- pi * radius_major * radius_minor * height
     return(volume)
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
+    stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
   }
 }
 
