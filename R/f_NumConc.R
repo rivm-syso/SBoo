@@ -7,5 +7,5 @@
 #' @return fNumConc [#.m-3]
 #' @export
 f_NumConc <- function(rad_particle,rho_particle, MasConc){
-  (MasConc)/(fVol(rad_particle)*rho_particle)
+  (MasConc)/(fVol(rad_particle=rad_particle)*rho_particle)
 }

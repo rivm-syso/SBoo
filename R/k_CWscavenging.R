@@ -14,7 +14,7 @@
 #' @param tdry duration of dry episodes [s]
 #' @param twet duration of wet episodes [s]
 #' @param COLLECTeff Aerosol collection efficiency for raindrops (Wang et al., 2010) [-]
-#' @param SettlingVelocity settling velocity as computed by the SB variable f_SetVelWater [m/s]
+#' @param SettlingVelocity settling velocity for particle species in air [m/s]
 #' @param Matrix compartment type 
 #' @param SpeciesName name of the considered species 
 #' @param SubCompartName considered subcompartment 

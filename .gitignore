@@ -99,3 +99,4 @@ Backup of *.doc*
 # more can be added from https://github.com/github/gitignore/tree/main/Global
 
 *.Rproj
+.DS_Store
