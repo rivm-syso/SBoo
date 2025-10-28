@@ -59,11 +59,20 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       return(NA)
     )
   } else if (Shape == "Ellipsoid") {
+    
+    if(is.na(Intermediate_side) || 
+       is.null(Intermediate_side) ||
+       is.na(Longest_side) || 
+       is.null(Longest_side) ||
+       is.null(Shortest_side) ||
+       is.null(Shortest_side)) stop(paste("For", Shape, "shape a side dimension is missing (e.g. Intermediate_side)"))
+    
     switch(tolower(SpeciesName),
       "nanoparticle" = return(Shortest_side),
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            # rad_particle=RadS, For ellipsoid shortest side should be given, not rads
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -71,6 +80,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              # rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -81,33 +91,44 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(Shortest_side / 2)
         } else {
           SingleVol <- fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
             Shortest_side = Shortest_side
           ) + fVol(RadCOL)
           Shortest_side <- SingleVol / ((1 / 6) * pi * Intermediate_side * Longest_side)
-          return(rad_particle)
+          return(Shortest_side)
         }
       },
       "attached" = {
         SingleVol <- fVol(
+          # rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
           Shortest_side = Shortest_side
         ) + fVol(RadCP)
         Shortest_side <- SingleVol / ((1 / 6) * pi * Intermediate_side * Longest_side)
-        return(rad_particle)
+        return(Shortest_side)
       },
       return(NA)
     )
   } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
+    
+    if(is.na(Intermediate_side) || 
+       is.null(Intermediate_side) ||
+       is.na(Longest_side) || 
+       is.null(Longest_side) ||
+       is.null(Shortest_side) ||
+       is.null(Shortest_side)) stop(paste("For",Shape,"shape a side dimension is missing (e.g. Intermediate_side)"))
+    
     switch(tolower(SpeciesName),
       "nanoparticle" = return(Shortest_side),
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -115,6 +136,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              # rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -125,6 +147,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(Shortest_side / 2)
         } else {
           SingleVol <- fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -136,6 +159,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          # rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
@@ -146,22 +170,27 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       return(NA)
     )
-  } else if (Shape == "Cylindric - circular") {
+  } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
+    if(is.na(Longest_side) || 
+       is.null(Longest_side) ||
+       is.null(Shortest_side) ||
+       is.null(Shortest_side)) stop(paste("For",Shape,"shape a side dimension is missing (e.g. Longest_side)"))
+    
     switch(tolower(SpeciesName),
       "nanoparticle" = return(Shortest_side),
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
-            Intermediate_side = Intermediate_side,
             Shortest_side = Shortest_side
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              # rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
-              Intermediate_side = Intermediate_side,
               Shortest_side = Shortest_side
             ) +
               fVol(RadCOL)))) / (NumConcNuc + NumConcAcc)
@@ -169,9 +198,9 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           return(Shortest_side / 2)
         } else {
           SingleVol <- fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
-            Intermediate_side = Intermediate_side,
             Shortest_side = Shortest_side
           ) + fVol(RadCOL)
           Shortest_side <- (SingleVol / (Longest_side * pi))^(1 / 2)
@@ -180,9 +209,9 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          # rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
-          Intermediate_side = Intermediate_side,
           Shortest_side = Shortest_side
         ) + fVol(RadCP)
         Shortest_side <- (SingleVol / (Longest_side * pi))^(1 / 2)
@@ -191,17 +220,19 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       return(NA)
     )
   } else if (Shape == "Cylindric - elliptic") {
-    radius_major <- Intermediate_side / 2
-    radius_minor <- Shortest_side / 2
-    height <- Longest_side
-    volume <- pi * radius_major * radius_minor * height
-    return(volume)
+    if(is.na(Intermediate_side) || 
+       is.null(Intermediate_side) ||
+       is.na(Longest_side) || 
+       is.null(Longest_side) ||
+       is.null(Shortest_side) ||
+       is.null(Shortest_side)) stop(paste("For",Shape,"shape a side dimension is missing (e.g. Intermediate_side)"))
 
     switch(tolower(SpeciesName),
       "nanoparticle" = return(Shortest_side),
       "aggregated" = {
         if (tolower(SubCompartName) == "air") {
           SingleVol <- ((NumConcNuc * (fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -209,6 +240,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
           ) +
             fVol(RadNuc))) +
             (NumConcAcc * (fVol(
+              # rad_particle=RadS,
               Shape = Shape,
               Longest_side = Longest_side,
               Intermediate_side = Intermediate_side,
@@ -216,9 +248,13 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
             ) +
               fVol(RadCOL)))) / (NumConcNuc + NumConcAcc)
           rad_minor_particle <- (SingleVol / (Longest_side / 2 * Intermediate_side / 2 * pi))
+          
+          if(is_na(rad_minor_particle)) stop("Result from v_rad_species is NA")
+          
           return(rad_minor_particle)
         } else {
           SingleVol <- fVol(
+            # rad_particle=RadS,
             Shape = Shape,
             Longest_side = Longest_side,
             Intermediate_side = Intermediate_side,
@@ -230,6 +266,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       },
       "attached" = {
         SingleVol <- fVol(
+          # rad_particle=RadS,
           Shape = Shape,
           Longest_side = Longest_side,
           Intermediate_side = Intermediate_side,
@@ -241,6 +278,6 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       return(NA)
     )
   } else {
-    return(stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic."))
+    return(stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, Fiber, or Cylindric - elliptic."))
   }
 }

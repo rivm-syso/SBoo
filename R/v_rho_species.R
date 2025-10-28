@@ -61,20 +61,22 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
     
   } else if (Shape == "Ellipsoid" | Shape == "Cube" | Shape == "Box" | 
              Shape == "Film" | Shape == "Cylindric - circular" | 
-             Shape == "Cylindric - elliptic") {
+             Shape == "Cylindric - elliptic" | Shape == "Fiber") {
     switch(SpeciesName,
            "Nanoparticle" = return(RhoS),
            "Aggregated" = {
              if(SubCompartName == "air") {
                SingleMass <- 
                  ((NumConcNuc * 
-                     (RhoS * fVol(Shape = Shape,
+                     (RhoS * fVol(rad_particle=RadS,
+                                  Shape = Shape,
                                   Longest_side = Longest_side,
                                   Intermediate_side = Intermediate_side,
                                   Shortest_side = Shortest_side) +
                         RhoNuc * fVol(RadNuc))) +
                     (NumConcAcc * 
-                       (RhoS * fVol(Shape = Shape,
+                       (RhoS * fVol(rad_particle=RadS,
+                                    Shape = Shape,
                                     Longest_side = Longest_side,
                                     Intermediate_side = Intermediate_side,
                                     Shortest_side = Shortest_side) +
@@ -82,6 +84,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                  (NumConcNuc + NumConcAcc)
                
                SingleVol <- ((NumConcNuc * (fVol(
+                 rad_particle=RadS,
                  Shape = Shape,
                  Longest_side = Longest_side,
                  Intermediate_side = Intermediate_side,
@@ -89,6 +92,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                ) +
                  fVol(RadNuc))) +
                  (NumConcAcc * (fVol(
+                   rad_particle=RadS,
                    Shape = Shape,
                    Longest_side = Longest_side,
                    Intermediate_side = Intermediate_side,
@@ -97,11 +101,13 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                    fVol(RadCOL)))) / (NumConcNuc + NumConcAcc)
                return(SingleMass/SingleVol)
              } else {
-               SingleMass <- RhoS*fVol(Shape = Shape,
+               SingleMass <- RhoS*fVol(rad_particle=RadS,
+                                       Shape = Shape,
                                        Longest_side = Longest_side,
                                        Intermediate_side = Intermediate_side,
                                        Shortest_side = Shortest_side)  + RhoCOL*fVol(RadCOL)
-               SingleVol <- fVol(Shape = Shape,
+               SingleVol <- fVol(rad_particle=RadS,
+                                 Shape = Shape,
                                  Longest_side = Longest_side,
                                  Intermediate_side = Intermediate_side,
                                  Shortest_side = Shortest_side) + fVol(RadCOL)
@@ -109,11 +115,13 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
              }
            },
            "Attached" = {
-             SingleMass <- RhoS*fVol(Shape = Shape,
+             SingleMass <- RhoS*fVol(rad_particle=RadS,
+                                     Shape = Shape,
                                      Longest_side = Longest_side,
                                      Intermediate_side = Intermediate_side,
                                      Shortest_side = Shortest_side) + RhoCP*fVol(RadCP)
-             SingleVol <- fVol(RadCP) + fVol(Shape = Shape,
+             SingleVol <- fVol(RadCP) + fVol(rad_particle=RadS,
+                                             Shape = Shape,
                                              Longest_side = Longest_side,
                                              Intermediate_side = Intermediate_side,
                                              Shortest_side = Shortest_side)
@@ -122,7 +130,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
            return(NA)
     )
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic.")
+    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, Fiber, or Cylindric - elliptic.")
   }
   
   

@@ -9,7 +9,11 @@
 #' @return f_SurfaceAreaParticle [m2]
 #' @export
 
-f_SurfaceAreaParticle <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL, rad_particle) {
+f_SurfaceAreaParticle <- function(Shape, 
+                                  Longest_side = NULL, 
+                                  Intermediate_side = NULL, 
+                                  Shortest_side = NULL, 
+                                  rad_particle) {
   if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
