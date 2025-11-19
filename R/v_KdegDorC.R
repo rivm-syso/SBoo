@@ -21,10 +21,21 @@
 #' @export
 KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
                      Q.10, KswDorC, Biodeg, CorgStandard, rhoMatrix,
-                     Matrix, SpeciesName,  Shortest_side,
-                     Kssdr, Shape, CorFacSSA, RadS) {
+                     Matrix, SpeciesName,  Shortest_side, Intermediate_side, Longest_side,
+                     Kssdr, Shape, CorFacSSA, RadS, deg_x, deg_tau, deg_y, 
+                     deg_theta, deg_z, deg_eta, UVintensity, MICROBconc, Degrading_enzyme) {
+  
+  #Set default shortest, intermediate and longest side, in case it is not defined
   if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
     Shortest_side <- RadS * 2
+  }
+  
+  if ( is.na(Intermediate_side) || is.null(Intermediate_side) ) {
+    Intermediate_side <- RadS * 2
+  }
+  
+  if ( is.na(Longest_side) || is.null(Longest_side) ) {
+    Longest_side <- RadS * 2
   }
   
   if (SpeciesName %in% c("Molecular")) {
@@ -96,20 +107,42 @@ KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
   } else { 
     
     #Determine the shape factor, based on the approach of Maga et al. (2022) for surface degradation rate
-    if (!is.na(Shape) && Shape == "Fiber") {
+    if (!is.na(Shape) && (Shape == "Cylindric - circular" | Shape == "Fiber")) {
       ShapeFac <- 3
+      SAV <- 4/(Shortest_side*100)+2/(Longest_side*100)#Surface area to volume ratio - in cm-1
     } else if (!is.na(Shape) && Shape == "Film") {
       ShapeFac <- 2
+      SAV <- 2/(Shortest_side*100)+2/(Intermediate_side*100)+2/(Longest_side*100)
     } else {
       ShapeFac <- 4 #If the shape is sphere, not given or irregular, use the Kssdr calculation for a sphere
+      SAV <- 6/(Shortest_side*100)
     }
-    switch(Matrix, # particulate
-           "air" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/Shortest_side else kdeg, #if Kssdr is given use it to compute kdeg, or use default kdeg
-           "soil" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/Shortest_side else kdeg,
-           "sediment" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/Shortest_side else kdeg,
-           "water" = if (!is.na(Kssdr)) ShapeFac*Kssdr*CorFacSSA/Shortest_side else kdeg,
-           return(NA)
-    )
+    
+    #Calculate kdeg (s-1) using either of the following 3 approaches
+    # Priority 1: empirical degradation parameters available (plasticFADE model)
+    if (!any(is.na(c(deg_x, deg_tau, deg_y, deg_theta, deg_z, deg_eta,SAV)))) {
+      kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + deg_z * MICROBconc^deg_eta) /(24*60*60) #plasticFADE results in a rate in d-1 to be converted in s-1
+    # Priority 2: Kssdr available (Maga et al., 2022)
+    } else if (!is.na(Kssdr)) {
+      kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
+      
+    # Priority 3: default kdeg value
+    } else {
+      kdeg <- kdeg
+    }
+    
+    #If polymer cannot be degraded in the absence of UV light (e.g. polyolefin) set kdeg to 0 in that compartment 
+    if ((!is.na(Degrading_enzyme) && Degrading_enzyme == "FALSE") &&
+        (!is.na(UVintensity) && UVintensity == 0)) {
+      kdeg <- 0
+    }
+    
+    switch(Matrix, #particulate
+           "air" = kdeg,
+           "soil" = kdeg,
+           "sediment" = kdeg,
+           "water" = kdeg,
+           NA)
   }
   
 }
