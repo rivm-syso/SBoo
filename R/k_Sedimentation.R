@@ -15,11 +15,23 @@
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
                             VertDistance, from.RhoCP, from.RadCP, RadS,
-                            SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test){
+                            SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test, Test_surface_water){
+  
+
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
     return(NA)
   }
-  if ((ScaleName %in% c("Regional", "Continental")) & to.SubCompartName == "deepocean") {
+  
+  #if Test_surface_water is TRUE, then compute a ksed for deepocean and sea at regional and continental scale
+  if ((ScaleName %in% c("Regional", "Continental")) &&
+      (SubCompartName == "deepocean") &&
+      (isFALSE(Test_surface_water) || is.na(Test_surface_water))) {
+    return(NA)
+  }
+  
+  #if Test_surface_water is TRUE, remove sea -> marinesediment (replaced by sea -> deepocean -> marinsediment)
+  if ((ScaleName %in% c("Regional", "Continental")) && SubCompartName == "sea" && to.SubCompartName == "marinesediment" &&
+      isTRUE(Test_surface_water)) {
     return(NA)
   }
   

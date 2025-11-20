@@ -12,7 +12,8 @@ Area <- function (AreaLand,
                      landFRAC,
                      all.landFRAC, 
                      SubCompartName,
-                     ScaleName) {
+                     ScaleName,
+                    Test_surface_water) {
   # easiest
   if (SubCompartName %in% c("air", "cloudwater")) {
     return(AreaLand + AreaSea)
@@ -23,6 +24,11 @@ Area <- function (AreaLand,
   }
   if (SubCompartName == "deepocean" &
       ScaleName %in% c("Arctic", "Moderate", "Tropic")) {
+    return(AreaSea)
+  }
+  if (SubCompartName == "deepocean" &
+      ScaleName %in% c("Regional", "Continental") &
+      isTRUE(Test_surface_water)) {
     return(AreaSea)
   }
   if (SubCompartName == "lakesediment" & ScaleName %in% c("Regional", "Continental")){

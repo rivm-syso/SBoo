@@ -17,18 +17,24 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA) {
+                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Test_surface_water) {
   # exclusions of process:
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                             SubCompartName == "lakesediment" |
                                                             SubCompartName == "lake" |
                                                             SubCompartName == "river" |
                                                             SubCompartName == "agriculturalsoil"|
-                                                            SubCompartName == "othersoil")) | 
-      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+                                                            SubCompartName == "othersoil"))) {
     return(NA)
   }
     
+  #if Test_surface_water is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
+  if ((ScaleName %in% c("Regional", "Continental")) &&
+      (SubCompartName == "deepocean") &&
+      (isFALSE(Test_surface_water) || is.na(Test_surface_water))) {
+    return(NA)
+  }
+  
   if (SpeciesName %in% c("Molecular")) {
     
     switch(Matrix,
