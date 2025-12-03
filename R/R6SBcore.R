@@ -492,7 +492,7 @@ SBcore <- R6::R6Class("SBcore",
         known <- knownFun | knownData
         if (!all(known)) {
           
-          stop(paste("unknown function or unavailable data", totVarsToGet[!known], "\n"))
+          stop(paste("R6SBcore: unknown function or unavailable data", totVarsToGet[!known], "\n"))
         }
         sapply(VarsToGet, self$NewCalcVariable)
         TestTree <- private$nodeList[private$nodeList$Calc %in% VarsToGet,]
