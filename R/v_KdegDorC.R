@@ -4,7 +4,7 @@
 #' if no specific value for kdeg is available it is scaled into categories 
 #' as defined in Technical Guidance Document on risk assessment in support of
 #' Commission Directive 93/67/EEC (European Commission, 2003)
-#' @param kdeg degradation rate (as input) [s-1]
+#' @param kdeg degradation rate (as input, e.g. based on half life) [s-1]
 #' @param C.OHrad OH radical concentration specific to compartment, based on Wania & Daly (2002) [mol m-3]
 #' @param C.OHrad.n general OH radical concentration, based on Wania & Daly (2002) [mol m-3]
 #' @param k0.OHrad frequency factor of the OH radical reaction [m3 s-1] 
@@ -19,7 +19,7 @@
 #' @param SpeciesName species name considered
 #' @return Degradation rate constant for molecular species
 #' @export
-KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
+KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
                      Q.10, KswDorC, Biodeg, CorgStandard, rhoMatrix,
                      Matrix, SpeciesName,  Shortest_side, Intermediate_side, Longest_side,
                      Kssdr, Shape, CorFacSSA, RadS, deg_x, deg_tau, deg_y, 
@@ -36,6 +36,11 @@ KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
   
   if ( is.na(Longest_side) || is.null(Longest_side) ) {
     Longest_side <- RadS * 2
+  }
+  # browser()
+  if (!DegApproach %in% c("Default","Kssdr","PlasticFADE")){
+    warning("v_KdegDorC: DegApproach not set to valid option, using Default.")
+    DegApproach <- "Default"
   }
   
   if (SpeciesName %in% c("Molecular")) {
@@ -118,31 +123,43 @@ KdegDorC <- function(kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
       SAV <- 6/(Shortest_side*100)
     }
     
-    #Calculate kdeg (s-1) using either of the following 3 approaches
-    # Priority 1: empirical degradation parameters available (plasticFADE model)
-    if (!any(is.na(c(deg_x, deg_tau, deg_y, deg_theta, deg_z, deg_eta,SAV)))) {
-      kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + deg_z * MICROBconc^deg_eta) /(24*60*60) #plasticFADE results in a rate in d-1 to be converted in s-1
-    # Priority 2: Kssdr available (Maga et al., 2022)
-    } else if (!is.na(Kssdr)) {
-      kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
-      
-    # Priority 3: default kdeg value
-    } else {
-      kdeg <- kdeg
-    }
+    switch(DegApproach,     # Calculate kdeg (s-1) using either of the following 3 approaches
+           "PlasticFADE" = {
+             
+             if(!is.na(UVintensity)){
+               warning("v_KdegDorC: UVintensity is not set (NA), now set to 0")
+               UVintensity = 0
+             }
+             if(!is.na(Degrading_enzyme)){
+               warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to 0")
+               Degrading_enzyme = 0
+             }
+             
+             kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + Degrading_enzyme * deg_z * MICROBconc^deg_eta) / (24*60*60)
+             #If polymer cannot be degraded in the absence of UV light (e.g. polyolefin) kdeg evaluates to 0 in that compartment.
+             
+             # changed && to || as I think you mean OR: either one of the statements can be true
+             # if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE") && # Nadim, can we make Degrading_enzyme 0 or 1 and add to above equation so we can omit this if statement?
+             #     (!is.na(UVintensity) || UVintensity == 0)) {
+             #   kdeg <- 0
+             # }
+           },
+           
+           "Kssdr" = {
+             kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
+           },
+           
+           "Default" = {
+             switch(Matrix, #particulate
+                    "air" = kdeg,
+                    "soil" = kdeg,
+                    "sediment" = kdeg,
+                    "water" = kdeg,
+                    NA)
+           },
+           NA
+    )
     
-    #If polymer cannot be degraded in the absence of UV light (e.g. polyolefin) set kdeg to 0 in that compartment 
-    if ((!is.na(Degrading_enzyme) && Degrading_enzyme == "FALSE") &&
-        (!is.na(UVintensity) && UVintensity == 0)) {
-      kdeg <- 0
-    }
-    
-    switch(Matrix, #particulate
-           "air" = kdeg,
-           "soil" = kdeg,
-           "sediment" = kdeg,
-           "water" = kdeg,
-           NA)
   }
   
 }
