@@ -22,11 +22,12 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              Matrix,SubCompartName, ScaleName,
                              Shape,Longest_side,
                              Intermediate_side, DragMethod,
-                             MinSettVel) {
+                             MinSettVel, Test_surface_water) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
-  if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean") {
+  if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean" &&
+      (isFALSE(Test_surface_water) || is.na(Test_surface_water))) {
     return(NA)
   }
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
@@ -103,6 +104,9 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   kS <- 1/2*(FS^(1/3)+FS^(-1/3))
   kN <- 10^(alpha*(-log10(FN))^beta)
   
+  if (rho_species <= rhoMatrix) {
+    return(MinSettVel)
+  } else {
   switch (Matrix,
           "water" = { 
             v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
@@ -124,12 +128,9 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
           },
           NA
   )
-  if (v_s <= MinSettVel) {
-    return(MinSettVel)
-  } 
   
-  else {
-    return(v_s)
+  
+  return(v_s)
   }
 }
 

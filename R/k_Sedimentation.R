@@ -13,7 +13,7 @@
 #' @param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #' @return k_Sedimentation, the rate constant for sedimentation as first order process
 #' @export
-k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
+k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard, rhoMatrix, Matrix,
                             VertDistance, from.RhoCP, from.RadCP, RadS,
                             SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test, Test_surface_water){
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
@@ -29,12 +29,10 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard,
   
   #if Test_surface_water is TRUE, remove sea -> marinesediment (replaced by sea -> deepocean -> marinsediment)
   if ((ScaleName %in% c("Regional", "Continental")) && SubCompartName == "sea" && to.SubCompartName == "marinesediment" &&
-      isTRUE(Test_surface_water)) {
+      (Test_surface_water %in% c(TRUE, "TRUE"))) {
     return(NA)
   }
-  if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean") {
-    return(NA)
-  }
+  
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
     return(NA)
   }

@@ -28,7 +28,8 @@ Area <- function (AreaLand,
   }
   if (SubCompartName == "deepocean" &
       ScaleName %in% c("Regional", "Continental") &
-      isTRUE(Test_surface_water)) {
+      (!is.na(Test_surface_water) && 
+       (isTRUE(Test_surface_water) || Test_surface_water == "TRUE"))) {
     return(AreaSea)
   }
   if (SubCompartName == "lakesediment" & ScaleName %in% c("Regional", "Continental")){

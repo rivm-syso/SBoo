@@ -519,7 +519,7 @@ SolverModule <-
         }
         if (any(kaas$k == 0.0)) {
           # or a very small value?? for solver stability?
-          message(paste(table(kaas$k == 0.0)["TRUE"]), " rate constants (k values) equal to 0; removed for solver")
+          #message(paste(table(kaas$k == 0.0)["TRUE"]), " rate constants (k values) equal to 0; removed for solver")
           kaas <- kaas[kaas$k > 0, ]
         }
         # copy, clean states (remove those without any k)
@@ -585,9 +585,25 @@ SolverModule <-
         # Add the from quantities(i) to the to-states by
         # substracting the (negative) factors(i) to the diagonal
         # store the diag (== degradation and other removal processes)
+        
         degrdiag <- diag(SB.K)
         diag(SB.K) <- 0.0 # yes, irt colSums!
         diag(SB.K) <- -degrdiag - colSums(SB.K)
+        
+        
+        
+        #precision <- 1e-15
+        #new_diag <- -diag(SB.K) - (colSums(SB.K) - diag(SB.K))
+        #rounded_diag <- floor(new_diag / precision) * precision #Round to avoid solver issues
+        #diag(SB.K) <- rounded_diag
+        
+        #precision <- 1e-8
+        # Identify large off-diagonal elements (> 1000)
+        #large_off_diag <- which(SB.K > 1e4 & !diag(nrow(SB.K)))
+        #Round DOWN (floor) only these large elements
+        #SB.K[large_off_diag] <- floor(SB.K[large_off_diag] / precision) * precision
+        
+        
         rownames(SB.K) <- newStates$Abbr
         colnames(SB.K) <- newStates$Abbr
         private$SB.K <- SB.K
