@@ -139,20 +139,23 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
              #kdeg evaluates to 0 in that compartment for that polymer in that case.
              #However, these polymers can be degraded in the presence of UV, as UV initiate the breakdown of the polymer chainl, allowing other enzymes to degrade the polymer.
 
-              if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) && # Nadim, can we make Degrading_enzyme 0 or 1 and add to above equation so we can omit this if statement?
+              if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) && 
                   (!is.na(UVintensity) || UVintensity == 0)) {
                 kdeg <- 0
-              }
-             
+              } else {
              kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + deg_z * MICROBconc^deg_eta) / (24*60*60)
-             
-             
-             
+             }
            },
            
            "Kssdr" = {
-             kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
-           },
+             #With the SSDR approach, k deg=0 when UV=0 and Degrading enzymes don't exist as well (same as for plasticFADE model)
+             if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) &&
+                (!is.na(UVintensity) || UVintensity == 0)) {
+                kdeg <- 0
+              } else {
+                  kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
+                }
+             },
            
            "Default" = {
              switch(Matrix, #particulate
