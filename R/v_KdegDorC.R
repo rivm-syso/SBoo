@@ -131,18 +131,23 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
                UVintensity = 0
              }
              if(!is.na(Degrading_enzyme)){
-               warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to 0")
-               Degrading_enzyme = 0
+               warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to FALSE")
+               Degrading_enzyme = "FALSE"
              }
+
+             #Some polymers cannot be degraded in the absence of UV light (e.g. polyolefin) (UVintensity=0), if degrading enzymes don't exist in the environment for the specific polymer chain (Degrading_enzyme=FALSE). 
+             #kdeg evaluates to 0 in that compartment for that polymer in that case.
+             #However, these polymers can be degraded in the presence of UV, as UV initiate the breakdown of the polymer chainl, allowing other enzymes to degrade the polymer.
+
+              if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) && # Nadim, can we make Degrading_enzyme 0 or 1 and add to above equation so we can omit this if statement?
+                  (!is.na(UVintensity) || UVintensity == 0)) {
+                kdeg <- 0
+              }
              
-             kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + Degrading_enzyme * deg_z * MICROBconc^deg_eta) / (24*60*60)
-             #If polymer cannot be degraded in the absence of UV light (e.g. polyolefin) kdeg evaluates to 0 in that compartment.
+             kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + deg_z * MICROBconc^deg_eta) / (24*60*60)
              
-             # changed && to || as I think you mean OR: either one of the statements can be true
-             # if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE") && # Nadim, can we make Degrading_enzyme 0 or 1 and add to above equation so we can omit this if statement?
-             #     (!is.na(UVintensity) || UVintensity == 0)) {
-             #   kdeg <- 0
-             # }
+             
+             
            },
            
            "Kssdr" = {
