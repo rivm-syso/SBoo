@@ -126,21 +126,22 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
     switch(DegApproach,     # Calculate kdeg (s-1) using either of the following 3 approaches
            "PlasticFADE" = {
              
-             if(!is.na(UVintensity)){
+             if(is.na(UVintensity)){
                warning("v_KdegDorC: UVintensity is not set (NA), now set to 0")
                UVintensity = 0
              }
-             if(!is.na(Degrading_enzyme)){
+             if(is.na(Degrading_enzyme)){
                warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to FALSE")
                Degrading_enzyme = "FALSE"
              }
 
-             #Some polymers cannot be degraded in the absence of UV light (e.g. polyolefin) (UVintensity=0), if degrading enzymes don't exist in the environment for the specific polymer chain (Degrading_enzyme=FALSE). 
+             #Some polymers cannot be degraded in the absence of UV light (e.g. polyolefins) (UVintensity=0), if degrading enzymes don't exist in the environment for the specific polymer chain (Degrading_enzyme=FALSE). 
              #kdeg evaluates to 0 in that compartment for that polymer in that case.
              #However, these polymers can be degraded in the presence of UV, as UV initiate the breakdown of the polymer chainl, allowing other enzymes to degrade the polymer.
 
-              if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) && 
-                  (!is.na(UVintensity) || UVintensity == 0)) {
+             if (!is.na(Degrading_enzyme) &&
+                 (Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) &&
+                 (!is.na(UVintensity) && UVintensity == 0)) {
                 kdeg <- 0
               } else {
              kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + deg_z * MICROBconc^deg_eta) / (24*60*60)
@@ -149,8 +150,9 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
            
            "Kssdr" = {
              #With the SSDR approach, k deg=0 when UV=0 and Degrading enzymes don't exist as well (same as for plasticFADE model)
-             if ((!is.na(Degrading_enzyme) || Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) &&
-                (!is.na(UVintensity) || UVintensity == 0)) {
+             if (!is.na(Degrading_enzyme) &&
+                 (Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) &&
+                 (!is.na(UVintensity) && UVintensity == 0)) {
                 kdeg <- 0
               } else {
                   kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
