@@ -246,6 +246,15 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #'@description Save the last calculated masses in the core
+    K_matrix = function(){
+      #browser()
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetK_matrix()
+    },
+    
+    #'@description Save the last calculated masses in the core
     Masses = function(){
       #browser()
       if (is.null(private$solver)) {
