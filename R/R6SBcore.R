@@ -246,6 +246,15 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #'@description Save the last calculated masses in the core
+    K_matrix = function(){
+      #browser()
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetK_matrix()
+    },
+    
+    #'@description Save the last calculated masses in the core
     Masses = function(){
       #browser()
       if (is.null(private$solver)) {
@@ -479,7 +488,9 @@ SBcore <- R6::R6Class("SBcore",
       
       #Loop until all vars are known
       totVarsToGet <- NULL
+      # browser()
       while (nrow(TestTree)>0) {
+        # browser()
         VarsToGet <- unique(TestTree$Params)
         totVarsToGet <- c(totVarsToGet, unique(TestTree$Params))
         #test if all totVarsToGet are known
@@ -489,7 +500,8 @@ SBcore <- R6::R6Class("SBcore",
         })
         known <- knownFun | knownData
         if (!all(known)) {
-          stop(paste("unknown function", totVarsToGet[!known], "\n"))
+          
+          stop(paste("unknown function or unavailable data", totVarsToGet[!known], "\n"))
         }
         sapply(VarsToGet, self$NewCalcVariable)
         TestTree <- private$nodeList[private$nodeList$Calc %in% VarsToGet,]

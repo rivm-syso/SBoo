@@ -14,6 +14,7 @@ SolverModule <-
         # overrule CalcGraphModule
         NULL
       },
+      K_matrix = list(),
       Masses = NULL,
       Concentration = NULL,
       UsedEmissions = NULL,
@@ -299,8 +300,10 @@ SolverModule <-
               solvedFormat <- do.call(private$Function, args = c(list(k = self$SB.k, 
                                                                       e = emis), 
                                                                  parms = list(MoreParams)))
+              
               private$Masses[,,i] <- solvedFormat[[1]]
               private$UsedEmissions[,,i] <- solvedFormat[[2]]
+              private$K_matrix[[i]] <- self$SB.k
               
               if(is.null(private$AllVars)){
                 private$AllVars <- inputvars
@@ -318,6 +321,7 @@ SolverModule <-
             dimempty <- dim(private$Masses[,,1])
             private$Masses[,,1] <- solvedFormat[[1]]
             private$UsedEmissions[,,1] <- solvedFormat[[2]]
+            private$K_matrix <- self$SB.k
           }
         }
       },
@@ -354,6 +358,20 @@ SolverModule <-
         
         return(SolDF)
       },
+      
+      # ` Function that returns the K matrices
+      GetK_matrix = function() {
+        
+        # Prep and return the solution
+        if (is.null(private$K_matrix)) {
+          stop("first solve, then ask again")
+        }
+        
+        K_matrix <- private$K_matrix
+        
+        return(K_matrix)
+      },
+      
       GetEmissions = function() {
         
         

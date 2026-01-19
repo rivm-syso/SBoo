@@ -22,31 +22,46 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                            DynViscWaterStandard,
                            to.rhoMatrix,
                            to.NETsedrate,
-                           to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test) {
+                           to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, 
+                           to.Matrix,
+                           SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test) {
   if (SpeciesName == "Molecular") {
     if (as.character(Test) == "TRUE") {
       SettlingVelocitySPM <- 2.5 / (24 * 3600)
     } else {
       # ScaleName
-      SettlingVelocitySPM <- f_SetVelWater(
-        radius = to.RadCP,
-        rhoParticle = to.RhoCP, rhoWater = to.rhoMatrix, DynViscWaterStandard
-      )
+      SettlingVelocitySPM <- 
+        f_SetVelWater(Shortest_side=to.RadCP*2, 
+                      rho_species=to.RhoCP, 
+                      rhoMatrix=to.rhoMatrix, 
+                      DynViscWaterStandard=DynViscWaterStandard,
+                      DynViscAirStandard=NA,
+                      Matrix=to.Matrix,SubCompartName=to.SubCompartName, 
+                      Shape=NA,
+                      Longest_side=NA, Intermediate_side=NA,
+                      DragMethod="Original")
+      
     }
   } else {
     # ScaleName
-    SettlingVelocitySPM <- f_SetVelWater(
-      radius = to.RadCP,
-      rhoParticle = to.RhoCP, rhoWater = to.rhoMatrix, DynViscWaterStandard
-    )
+    SettlingVelocitySPM <-  
+      f_SetVelWater(Shortest_side=to.RadCP*2, 
+                    rho_species=to.RhoCP, 
+                    rhoMatrix=to.rhoMatrix, 
+                    DynViscWaterStandard=DynViscWaterStandard,
+                    DynViscAirStandard=NA,
+                    Matrix=to.Matrix,SubCompartName=to.SubCompartName, 
+                    Shape=NA,
+                    Longest_side=NA, Intermediate_side=NA,
+                    DragMethod="Original")
   }
-
+  
   # Gross sedimentation rate from water [m/s]
   GROSSEDrate <- SettlingVelocitySPM * to.SUSP / (FRACs * from.RhoCP) # [m.s-1] possibly < NETsedrate
-
+  
   # Resuspension flow from sediment [m/s]; can't be < 0
   RESUSflow <- max(0, GROSSEDrate - to.NETsedrate) # for particulates this NETsedrate is not optimal!
-
+  
   # Resuspension k to water [s-1]
   return(RESUSflow / VertDistance)
 }

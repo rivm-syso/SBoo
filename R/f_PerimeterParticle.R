@@ -9,19 +9,26 @@
 #' @return fPerimeterParticle [m]
 #' @export
 
-f_PerimeterParticle <- function(Shape, Longest_side = NULL, Intermediate_side = NULL, Shortest_side = NULL, rad_particle) {
+f_PerimeterParticle <- function(rad_particle,
+                                Shape, Longest_side = NULL, 
+                                Intermediate_side = NULL, 
+                                Shortest_side = NULL) {
   if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
-  if (is.na(Longest_side) || is.null(Longest_side) || is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Shortest_side) || is.null(Shortest_side)) {
-    Longest_side <- rad_particle * 2
-    Intermediate_side <- rad_particle * 2
+  # Check if Shortest side is NA or NULL and assign default values if so
+  if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
     Shortest_side <- rad_particle * 2
+  }
+  # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+  if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
+    Intermediate_side <- rad_particle * 2 #maybe 0.75 or build in shape functions
+    Longest_side <- rad_particle * 2
   }
   
   
   if (Shape == "Sphere" | Shape == "Default") {
-    radius <- Longest_side / 2
+    radius <- Shortest_side / 2
     perimeter <- 2 * pi * radius
     return(perimeter)
   } else if (Shape == "Ellipsoid") {
@@ -31,22 +38,22 @@ f_PerimeterParticle <- function(Shape, Longest_side = NULL, Intermediate_side = 
     # For simplicity, let's just consider the perimeter of the ellipse in the xy-plane
     perimeter <- pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
     return(perimeter)
-  } else if (Shape == "Cube" | Shape == "Box") {
+  } else if (Shape == "Cube" | Shape == "Box" | Shape == "Film") {
     # For cubes and boxes, perimeter of their 2D projection is just the perimeter of their base
-    perimeter <- 4 * Longest_side
+    perimeter <- 2 * Longest_side + 2* Intermediate_side
     return(perimeter)
-  } else if (Shape == "Cylindric - circular") {
-    radius <- Longest_side / 2
+  } else if (Shape == "Cylindric - circular" | Shape == "Fiber") {
+    radius <- Shortest_side / 2
     # For circular cylinder, the perimeter of its 2D projection is just the circumference of the base circle
     perimeter <- 2 * pi * radius
     return(perimeter)
   } else if (Shape == "Cylindric - elliptic") {
     a <- Longest_side / 2
     b <- Intermediate_side / 2
-    # For simplicity, let's just consider the perimeter of the ellipse in the xy-plane
+    # For simplicity, let's just consider the perimeter of the ellipse in the xy-plane - Ramanujan Equation
     perimeter <- pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
     return(perimeter)
   } else {
-    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, or Cylindric - elliptic.")
+    return("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
   }
 }
