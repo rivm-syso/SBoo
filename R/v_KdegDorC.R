@@ -126,11 +126,11 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
     switch(DegApproach,     # Calculate kdeg (s-1) using either of the following 3 approaches
            "PlasticFADE" = {
              
-             if(!is.na(UVintensity)){
+             if(is.na(UVintensity)){
                warning("v_KdegDorC: UVintensity is not set (NA), now set to 0")
                UVintensity = 0
              }
-             if(!is.na(Degrading_enzyme)){
+             if(is.na(Degrading_enzyme)){
                warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to FALSE")
                Degrading_enzyme = "FALSE"
              }
