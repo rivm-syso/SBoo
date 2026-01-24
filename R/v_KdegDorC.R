@@ -22,8 +22,8 @@
 KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
                      Q.10, KswDorC, Biodeg, CorgStandard, rhoMatrix,
                      Matrix, SpeciesName,  Shortest_side, Intermediate_side, Longest_side,
-                     Kssdr, Shape, CorFacSSA, RadS, deg_x, deg_tau, deg_y, 
-                     deg_theta, deg_z, deg_eta, UVintensity, MICROBconc, Degrading_enzyme) {
+                     Kssdr, Shape, CorFacSSA, RadS, degx, degtau, degy, 
+                     degtheta, degz, degeta, UVintensity, MICROBconc, Degrading_enzyme) {
   
   #Set default shortest, intermediate and longest side, in case it is not defined
   if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
@@ -144,7 +144,7 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
                  (!is.na(UVintensity) && UVintensity == 0)) {
                 kdeg <- 0
               } else {
-             kdeg <- deg_x * SAV^deg_tau * (deg_y * UVintensity^deg_theta + deg_z * MICROBconc^deg_eta) / (24*60*60)
+             kdeg <- degx * SAV^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60)
              }
            },
            
