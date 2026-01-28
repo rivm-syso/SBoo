@@ -32,7 +32,7 @@ Kaers <- function (Kaw25,Kow, Corg, RhoCOL, Matrix,
     }
     if (is.na(Kow) || Kow == "NA") {
       Kow = 18 
-      warning("Kow is NA, default of 18 used!")
+      warning("v_Kaers: Kow is NA, default of 18 used!")
     }
     switch(Matrix,
           "air" = 0.54 * (Kow/Kaw25) * Corg * (RhoCOL/1000),
