@@ -17,7 +17,7 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
     stop("Error: emissions_data cannot be NULL. Please provide a valid emissions dataset.")
   }
   
-  ###################### Step 1: load the scaled LHS samples
+  ###################### Step 1: Load the scaled samples
   LHSsamples <- readRDS(LHSsamples_path)
   
   ###################### Step 2: Prepare emissions and LHS samples for parallel solving
@@ -25,21 +25,37 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   # Number of runs in the LHS matrix
   total_runs <- ncol(LHSsamples)
   
-  # Determine the number of batches and how runs are distributed across them
-  max_runs_per_batch <- max_runs_per_batch
-  nbatches <- total_runs %/% max_runs_per_batch
-  extra_runs <- total_runs %% max_runs_per_batch
+  # Minimum runs per batch
+  min_runs_per_batch <- 2
   
-  if (extra_runs != 0) {
-    nbatches <- nbatches + 1
+  # Maximum runs per batch (zoals opgegeven)
+  max_runs_per_batch <- max_runs_per_batch
+  
+  # Bepaal het minimale aantal batches zodat elke batch minstens 2 runs heeft
+  nbatches <- ceiling(total_runs / max_runs_per_batch)
+  
+  # Herverdeel de runs zodat elke batch minstens 2 runs heeft
+  runs_distribution <- rep(floor(total_runs / nbatches), nbatches)
+  remaining <- total_runs - sum(runs_distribution)
+  
+  # Verdeel de overgebleven runs over de eerste batches
+  if (remaining > 0) {
+    runs_distribution[1:remaining] <- runs_distribution[1:remaining] + 1
   }
   
-  # Add runs per batch to a vector
-  runs_distribution <- rep(max_runs_per_batch, nbatches)
-  
-  if (extra_runs != 0) {
-    # Override the last batch to fit the remaining runs
-    runs_distribution[length(runs_distribution)] <- extra_runs
+  # Controleer of alle batches minstens 2 runs hebben
+  if (any(runs_distribution < min_runs_per_batch)) {
+    # Combineer kleine batches met hun buurman
+    while (any(runs_distribution < min_runs_per_batch)) {
+      idx <- which(runs_distribution < min_runs_per_batch)[1]
+      if (idx > 1) {
+        runs_distribution[idx - 1] <- runs_distribution[idx - 1] + runs_distribution[idx]
+        runs_distribution <- runs_distribution[-idx]
+      } else {
+        runs_distribution[idx + 1] <- runs_distribution[idx + 1] + runs_distribution[idx]
+        runs_distribution <- runs_distribution[-idx]
+      }
+    }
   }
   
   # Split emissions data into chunks using the runs_distribution
@@ -56,7 +72,6 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   start_index <- 1
   for (run in runs_distribution) {
     end_index <- start_index + run - 1
-    # Ensure we don't exceed the total number of columns in the LHSsamples matrix
     slice <- LHSsamples[, start_index:min(end_index, total_runs), drop = FALSE]
     colnames(slice) <- colnames(LHSsamples)[start_index:min(end_index, total_runs)]
     LHS_slices[[length(LHS_slices) + 1]] <- slice
@@ -166,27 +181,44 @@ solveInParallelDynamic <- function(max_runs_per_batch,
   LHSsamples <- readRDS(LHSsamples_path)
   
   ###################### Step 2: Prepare emissions and LHS samples for parallel solving
-  
-  # Divide the emissions and LHS samples over different lists as evenly as possible for parallel solving
+
+    # Number of runs in the LHS matrix
   total_runs <- ncol(LHSsamples)
+  
+  # Minimum runs per batch
+  min_runs_per_batch <- 2
+  
+  # Maximum runs per batch (zoals opgegeven)
   max_runs_per_batch <- max_runs_per_batch
   
-  nbatches <- total_runs %/% max_runs_per_batch
-  extra_runs <- total_runs %% max_runs_per_batch
+  # Bepaal het minimale aantal batches zodat elke batch minstens 2 runs heeft
+  nbatches <- ceiling(total_runs / max_runs_per_batch)
   
-  if (extra_runs != 0) {
-    nbatches <- nbatches + 1
+  # Herverdeel de runs zodat elke batch minstens 2 runs heeft
+  runs_distribution <- rep(floor(total_runs / nbatches), nbatches)
+  remaining <- total_runs - sum(runs_distribution)
+  
+  # Verdeel de overgebleven runs over de eerste batches
+  if (remaining > 0) {
+    runs_distribution[1:remaining] <- runs_distribution[1:remaining] + 1
   }
   
-  # Initialize a vector to store the number of runs per core
-  runs_distribution <- rep(max_runs_per_batch, nbatches)
-  
-  if (extra_runs != 0) {
-    # Overwrite the last batch with the number in extra_runs
-    runs_distribution[length(runs_distribution)] <- extra_runs
+  # Controleer of alle batches minstens 2 runs hebben
+  if (any(runs_distribution < min_runs_per_batch)) {
+    # Combineer kleine batches met hun buurman
+    while (any(runs_distribution < min_runs_per_batch)) {
+      idx <- which(runs_distribution < min_runs_per_batch)[1]
+      if (idx > 1) {
+        runs_distribution[idx - 1] <- runs_distribution[idx - 1] + runs_distribution[idx]
+        runs_distribution <- runs_distribution[-idx]
+      } else {
+        runs_distribution[idx + 1] <- runs_distribution[idx + 1] + runs_distribution[idx]
+        runs_distribution <- runs_distribution[-idx]
+      }
+    }
   }
   
-  # Split emissions data into chunks based on computed runs_distribution
+  # Split emissions data into chunks using the runs_distribution
   emis_slices <- list()
   start_index <- 1
   for (runs in runs_distribution) {
@@ -195,12 +227,11 @@ solveInParallelDynamic <- function(max_runs_per_batch,
     start_index <- end_index + 1
   }
   
-  # Slice LHS samples based on runs_distribution
+  # Slice the LHS samples into chunks, matching the batch distribution
   LHS_slices <- list()
   start_index <- 1
   for (run in runs_distribution) {
     end_index <- start_index + run - 1
-    # Ensure we don't exceed the total number of columns in the LHS data
     slice <- LHSsamples[, start_index:min(end_index, total_runs), drop = FALSE]
     colnames(slice) <- colnames(LHSsamples)[start_index:min(end_index, total_runs)]
     LHS_slices[[length(LHS_slices) + 1]] <- slice
