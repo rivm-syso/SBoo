@@ -9,7 +9,7 @@
 #' 
 #' 
 
-k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Test_surface_water) { 
+k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Test_surface_water, AdvInput) { 
   if (ScaleName %in% c("Tropic", "Moderate", "Arctic") 
       & (!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
     return(NA) } 
@@ -18,7 +18,10 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
     #    & (!is.na(Test_surface_water) && (isTRUE(Test_surface_water) || Test_surface_water == "TRUE"))) { #Use the k_advection provided by default - Hajjar et al. 2025
    # }
     
-    
+    #if a certain value is input to replace the default, then use it
+    if (!is.null(AdvInput) && !is.na(AdvInput) && !is.nan(AdvInput) && AdvInput != 0) {
+      return(AdvInput)
+    }
     
     
     

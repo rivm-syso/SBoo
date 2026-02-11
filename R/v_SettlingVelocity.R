@@ -22,7 +22,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              Matrix,SubCompartName, ScaleName,
                              Shape,Longest_side,
                              Intermediate_side, Shortest_side, DragMethod,
-                             MinSettVel, Test_surface_water) {
+                             MinSettVel, Test_surface_water, VelInput) {
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
@@ -38,6 +38,11 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   #   Shortest_side <- rad_particle * 2
   # }
   # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+  
+  #return VelInput for that compartment, if it is defined and input
+  if (!is.null(VelInput) && !is.na(VelInput) && !is.nan(VelInput) && VelInput != 0) {
+    return(VelInput)
+  }
 
   
   if (is.na(Shape) || is.null(Shape)){
