@@ -19,7 +19,7 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
    # }
     
     #if a certain value is input to replace the default, then use it
-    if (!is.null(AdvInput) && !is.na(AdvInput) && !is.nan(AdvInput) && AdvInput != 0) {
+    if (!is.null(AdvInput) && !is.na(AdvInput) && !is.nan(AdvInput)) {
       return(AdvInput)
     }
     
