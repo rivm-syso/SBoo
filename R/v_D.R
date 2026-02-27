@@ -9,8 +9,8 @@
 D <- function(FRorig, pKa, Kow, ChemClass){
   
   if (is.na(Kow) || Kow == "NA") {
-    Kow = 18 
-    warning("Kow is NA, default of 18 used!")
+    Kow = 18
+    warning("v_D: Kow is NA, to continue Kow set to 18 by default.", call. = FALSE)
   }
   
   Kow.alt = 10^(log10(Kow)-3.5)
