@@ -5,11 +5,12 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
                             LHSsamples_path = "data/scaledLHSsamples.RDS",
                             world_path = "data/World.RDS"
                             ) {
-
   ###################### Input Validation
   if (is.null(max_runs_per_batch)) {
     stop("Error: max_runs_per_batch cannot be NULL. Please provide a valid value.")
   }
+  if (max_runs_per_batch < 2) {
+    stop("solveInParallelSteadyState: runs per batch (max_runs_per_batch) cannot be smaller than 2")}
   if (is.null(nCores)) {
     stop("Error: nCores cannot be NULL. Please provide a valid number of cores.")
   }
@@ -45,19 +46,19 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   
   # Make sure all batches have at least 2 runs
   # This avoids emission errors, due to the way the emissions module currently works
-  if (any(runs_distribution < min_runs_per_batch)) {
-    # Combine small batches with their neighbor
-    while (any(runs_distribution < min_runs_per_batch)) {
-      idx <- which(runs_distribution < min_runs_per_batch)[1]
-      if (idx > 1) {
-        runs_distribution[idx - 1] <- runs_distribution[idx - 1] + runs_distribution[idx]
-        runs_distribution <- runs_distribution[-idx]
-      } else {
-        runs_distribution[idx + 1] <- runs_distribution[idx + 1] + runs_distribution[idx]
-        runs_distribution <- runs_distribution[-idx]
-      }
-    }
-  }
+  # if (any(runs_distribution < min_runs_per_batch)) {
+  #   # Combine small batches with their neighbor
+  #   while (any(runs_distribution < min_runs_per_batch)) {
+  #     idx <- which(runs_distribution < min_runs_per_batch)[1]
+  #     if (idx > 1) {
+  #       runs_distribution[idx - 1] <- runs_distribution[idx - 1] + runs_distribution[idx]
+  #       runs_distribution <- runs_distribution[-idx]
+  #     } else {
+  #       runs_distribution[idx + 1] <- runs_distribution[idx + 1] + runs_distribution[idx]
+  #       runs_distribution <- runs_distribution[-idx]
+  #     }
+  #   }
+  # }
   
   # Split emissions data into chunks using the runs_distribution
   emis_slices <- list()
@@ -85,8 +86,8 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   nSlices <- length(emis_slices)
   
   # Create a parallel cluster
-  cl <- makeCluster(nCores)
-  registerDoParallel(cl)
+  cl <- parallel::makeCluster(nCores)
+  doParallel::registerDoParallel(cl)
   
   # Define the worker function for each slice
   processSlice <- function(i) {
