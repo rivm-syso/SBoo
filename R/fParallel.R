@@ -5,7 +5,7 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
                             LHSsamples_path = "data/scaledLHSsamples.RDS",
                             world_path = "data/World.RDS"
                             ) {
-  
+
   ###################### Input Validation
   if (is.null(max_runs_per_batch)) {
     stop("Error: max_runs_per_batch cannot be NULL. Please provide a valid value.")
@@ -31,21 +31,22 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   # Maximum runs per batch (zoals opgegeven)
   max_runs_per_batch <- max_runs_per_batch
   
-  # Bepaal het minimale aantal batches zodat elke batch minstens 2 runs heeft
+  # Estimate minimal amount of batches baed on max_runs_per_batch
   nbatches <- ceiling(total_runs / max_runs_per_batch)
   
-  # Herverdeel de runs zodat elke batch minstens 2 runs heeft
+  # Create runs_distribution with amount of runs per batch
   runs_distribution <- rep(floor(total_runs / nbatches), nbatches)
   remaining <- total_runs - sum(runs_distribution)
   
-  # Verdeel de overgebleven runs over de eerste batches
+  # Redistribute the runs which remain over runs_distribution
   if (remaining > 0) {
     runs_distribution[1:remaining] <- runs_distribution[1:remaining] + 1
   }
   
-  # Controleer of alle batches minstens 2 runs hebben
+  # Make sure all batches have at least 2 runs
+  # This avoids emission errors, due to the way the emissions module currently works
   if (any(runs_distribution < min_runs_per_batch)) {
-    # Combineer kleine batches met hun buurman
+    # Combine small batches with their neighbor
     while (any(runs_distribution < min_runs_per_batch)) {
       idx <- which(runs_distribution < min_runs_per_batch)[1]
       if (idx > 1) {
