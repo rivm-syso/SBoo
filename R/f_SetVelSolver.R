@@ -28,7 +28,7 @@ f_SetVelSolver <- function(d_eq, Psi, DynViscFluidStandard, rhoParticle, rhoFlui
               v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoFluid) / rhoFluid) * GN)
               RSS <- (v_s - v_s_new) ^ 2
               return(RSS)}
-            result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-10)
+            result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
             
             return(result$minimum)
             },
@@ -40,7 +40,7 @@ f_SetVelSolver <- function(d_eq, Psi, DynViscFluidStandard, rhoParticle, rhoFlui
               v_s_new <- sqrt(4 / 3 * d_eq / CD * ((rhoParticle - rhoFluid) / rhoFluid) * GN) * Cunningham
               RSS <- (v_s - v_s_new) ^ 2
               return(RSS)}
-            result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-10)
+            result <- optimize(RSS_function, interval = c(0, 1), tol = 1e-9)
             
             return(result$minimum)
             },

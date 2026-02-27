@@ -2,7 +2,7 @@
 #' @name f_DragCoefficient
 #' @description Computes the Drag Coefficoent based on the DragMethod as defined by user 
 #' @param CD Drag Coefficient of a particle [-]
-#' @param DragMethod Method of calculating the Drag Coefficient. Options are: "Original", "Dioguardi" or "Default", "Swamee", "Stokes", "Bagheri".
+#' @param DragMethod Method of calculating the Drag Coefficient
 #' @param Psi Shape factor, circularity/sphericity [-]
 #' @param Re Reynolds number, as returned by the solver [-]
 #' @param CSF Corey Shape Factor [-]

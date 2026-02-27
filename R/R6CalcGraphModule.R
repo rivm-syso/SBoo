@@ -107,12 +107,10 @@ CalcGraphModule <-
         if ("FlowModule" %in% class(self)) {
           AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
                                      join_by(fromScale == Scale,
-                                             fromSubCompart == SubCompart),
-                                     relationship = "many-to-many")
+                                             fromSubCompart == SubCompart))
           if ("toScale" %in% names(AllIn)) {
             AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
-                                       join_by(toScale == Scale),
-                                       relationship = "many-to-many")
+                                       join_by(toScale == Scale))
           } else {
             AllIn <- dplyr::inner_join(AllIn, private$MyCore$states$asDataFrame,
                                        join_by(toSubCompart == SubCompart))
@@ -264,9 +262,8 @@ CalcGraphModule <-
               ByY <- The3D[The3D %in% names(TheDataColumn)]
               names(ByY) <- ByX
               AllIn <- dplyr::full_join(AllIn, TheDataColumn, by = ByY)#, by.x = ByX, by.y = ByY) 
-              # browser() below warning only relevant for debugging. commented out for now.
               if (anyNA(AllIn$process)) {
-                # warning(paste("R6CalcGraphModule: NAs filtered from input data; not all ", Fpars$FullName[i], "in FromAndTo property"), call. = FALSE)
+                warning(paste("input data ignored; not all ", Fpars$FullName[i], "in FromAndTo property"))
                 AllIn <- AllIn[!is.na(AllIn$process),]
               }
             }

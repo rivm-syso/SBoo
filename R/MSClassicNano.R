@@ -224,13 +224,13 @@ ClassicNanoWorld <- R6::R6Class(
     #check for common field .. can only be matrix
     theMatrix <- names(MatrixSheet)[names(MatrixSheet) %in% names(SubCompartSheet)]
     stopifnot(length(theMatrix) == 1)
-    SubCompartSheet <- left_join(SubCompartSheet, MatrixSheet, by = "Matrix")
+    SubCompartSheet <- left_join(SubCompartSheet, MatrixSheet)
 
     #"inherit" Compartments to SubCompart
     Compartments <- InPutDataFrames[["Compartments"]]
     TheCompartment <- names(Compartments)[names(Compartments) %in% names(SubCompartSheet)]
     stopifnot(length(TheCompartment) == 1)
-    SubCompartSheet <- left_join(SubCompartSheet, Compartments, by = "Compartment")
+    SubCompartSheet <- left_join(SubCompartSheet, Compartments)
     #store the result back into InPutDataFrames
     InPutDataFrames[["SubCompartSheet"]] <- SubCompartSheet
     
