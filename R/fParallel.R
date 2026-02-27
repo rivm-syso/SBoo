@@ -243,8 +243,8 @@ solveInParallelDynamic <- function(max_runs_per_batch,
   ###################### Step 3: Solve in parallel
   nSlices <- length(emis_slices)
   
-  cl <- makeCluster(nCores)
-  registerDoParallel(cl)
+  cl <- parallel::makeCluster(nCores)
+  doParallel::registerDoParallel(cl)
   
   processSlice <- function(i) {
     # Source required scripts
