@@ -59,7 +59,8 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       SubCompartName, 
                                       ScaleName,
                                       Longest_side, Intermediate_side, Shortest_side, 
-                                      DragMethod){
+                                      DragMethod, 
+                                      Test_surface_water){
   
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & 
       (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
