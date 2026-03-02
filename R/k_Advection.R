@@ -17,7 +17,7 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
   else if (
     (
       (ScaleName == "Regional" & (SubCompartName == "sea" | SubCompartName == "deepocean")) |
-      (ScaleName == "Continental" & SubCompartName == "river")
+      (ScaleName == "Continental" & SubCompartName == "river" & to.SubCompartName == "river")
     ) &
     (!is.na(Test_surface_water) && (isTRUE(Test_surface_water) || Test_surface_water == "TRUE"))
   ) {
@@ -31,4 +31,5 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
     }
   
     return(flow/Volume) #not compartment "air"; not a valid airflow 
-    } }
+  } 
+}
