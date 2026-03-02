@@ -16,23 +16,29 @@
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard, rhoMatrix, Matrix,
                             VertDistance, from.RhoCP, from.RadCP, RadS,
                             SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test, Test_surface_water){
+  
+  # Sedimentation at global scales goes from sea to deeopocean to marinesediment
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
     return(NA)
   }
   
-  #if Test_surface_water is TRUE, then compute a ksed for deepocean and sea at regional and continental scale
+  # If Test_surface_water is TRUE, the sedimentation rate from sea to deepocean and deepocean to marinesediment
+  # at Regional and Continental scale should be NA, because the sedimentation rate goes directly from sea to marinesediment
+  # at these scales.  
   if ((ScaleName %in% c("Regional", "Continental")) &&
-      (SubCompartName == "deepocean") &&
-      (isFALSE(Test_surface_water) || is.na(Test_surface_water))) {
+      ((SubCompartName == "deepocean" && to.SubCompartName == "marinesediment") || (SubCompartName == "sea" && to.SubCompartName == "deepocean")) &&
+      (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
     return(NA)
   }
   
-  #if Test_surface_water is TRUE, remove sea -> marinesediment (replaced by sea -> deepocean -> marinsediment)
+  # If Test_surface_water is TRUE, remove the sedimentation rate from sea to marinesediment at Regional and Continental scale
+  # because deepocean is added between sea and deeopocean.
   if ((ScaleName %in% c("Regional", "Continental")) && SubCompartName == "sea" && to.SubCompartName == "marinesediment" &&
-      (Test_surface_water %in% c(TRUE, "TRUE"))) {
+      (Test_surface_water == "TRUE" || isTRUE(Test_surface_water))) {
     return(NA)
   }
   
+  # No lake and river present at global scales
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
     return(NA)
   }
