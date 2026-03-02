@@ -29,7 +29,7 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
   }
     
   #if Test_surface_water is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
-  else if ((!is.null(ScaleName) && ScaleName %in% c("Regional", "Continental")) &&
+  else if ((ScaleName %in% c("Regional", "Continental")) &&
       (SubCompartName == "deepocean") &&
       (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
     return(NA)
