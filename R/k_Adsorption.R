@@ -25,8 +25,11 @@ k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
                           to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, to.FRorig, Kacompw, 
                           to.Kscompw, to.Matrix, VertDistance, 
                           AreaLand, AreaSea, to.Area, all.FRorig, all.FRorig_spw,
-                          from.SubCompartName, to.SubCompartName, ScaleName, Test) {
+                          from.SubCompartName, to.SubCompartName, ScaleName, Test, Test_surface_water) {
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompartName == "sea") {
+    return(NA)
+  }
+  if ((isFALSE(Test_surface_water) || is.na(Test_surface_water)) || Test_surface_water == "FALSE" & (Scale %in% c("Regional", "Continental") & from.SubCompartName == "deepocean"))){
     return(NA)
   }
   switch(to.Matrix,

@@ -15,7 +15,7 @@ k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, Test_surface_wate
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) ){
     return(NA)
-  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(Test_surface_water) || isFALSE(Test_surface_water))){
+  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(Test_surface_water) || isFALSE(Test_surface_water || Test_surface_water == "FALSE"))){
     return(NA)
   } else {
     return(kfrag)

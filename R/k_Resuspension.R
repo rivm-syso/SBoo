@@ -25,7 +25,12 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                            to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, 
                            to.Matrix,
                            SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test) {
-  if (SpeciesName == "Molecular") {
+  if ((ScaleName %in% c("Regional", "Continental")) &&
+           (to.SubCompartName == "deepocean") &&
+           (isFALSE(Test_surface_water) || is.na(Test_surface_water || Test_surface_water == "FALSE"))) {
+    return(NA)
+  }
+  else if (SpeciesName == "Molecular") {
     if (as.character(Test) == "TRUE") {
       SettlingVelocitySPM <- 2.5 / (24 * 3600)
     } else {

@@ -65,6 +65,13 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
       (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
     return(NA)
   }
+  
+  else if ((ScaleName %in% c("Regional", "Continental")) &&
+           (SubCompartName == "deepocean") &&
+           (isFALSE(Test_surface_water) || is.na(Test_surface_water || Test_surface_water == "FALSE"))) {
+    return(NA)
+  }
+  
   rhoWater = 998 # easyfix could be done more elegantly
   kboltz <- constants::syms$k
   GN <- constants::syms$gn
