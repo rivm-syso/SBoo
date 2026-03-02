@@ -12,13 +12,13 @@
 k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Test_surface_water, AdvInput) { 
   if (ScaleName %in% c("Tropic", "Moderate", "Arctic") & (!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
     return(NA) }
-  else if (ScaleName == "Regional" & (!is.na(Test_surface_water) && (isTRUE(Test_surface_water) || Test_surface_water == "TRUE"))) ){
+  
+  # This was done in ScaleSubcompartData before, but why would we want to remove the advection flows from sea and deepocean at Regional scale to Continental scale?
+  else if (ScaleName == "Regional" & (!is.na(Test_surface_water) && (isTRUE(Test_surface_water) || Test_surface_water == "TRUE")) ){
     return(0)
-  } else { 
-    #if (ScaleName %in% c("Regional") 
-    #    & (!is.na(Test_surface_water) && (isTRUE(Test_surface_water) || Test_surface_water == "TRUE"))) { #Use the k_advection provided by default - Hajjar et al. 2025
-   # }
     
+  } else { 
+
     #if a certain value is input to replace the default, then use it
     if (!is.null(AdvInput) && !is.na(AdvInput) && !is.nan(AdvInput)) {
       return(AdvInput)
