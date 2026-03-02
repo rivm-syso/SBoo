@@ -69,7 +69,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
   
   else if ((ScaleName %in% c("Regional", "Continental")) &&
            (SubCompartName == "deepocean") &&
-           (isFALSE(Test_surface_water) || is.na(Test_surface_water || Test_surface_water == "FALSE"))) {
+           (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
     return(NA)
   }
   

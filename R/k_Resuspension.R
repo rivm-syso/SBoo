@@ -27,7 +27,7 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                            SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test, Test_surface_water) {
   if ((ScaleName %in% c("Regional", "Continental")) &&
            (to.SubCompartName == "deepocean") &&
-           (isFALSE(Test_surface_water) || is.na(Test_surface_water || Test_surface_water == "FALSE"))) {
+           (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
     return(NA)
   }
   else if (SpeciesName == "Molecular") {
