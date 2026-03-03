@@ -15,26 +15,26 @@
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard, rhoMatrix, Matrix,
                             VertDistance, from.RhoCP, from.RadCP, RadS,
-                            SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test, Test_surface_water){
+                            SpeciesName, SubCompartName, to.SubCompartName, ScaleName, Test, Regional_and_Continental_deepocean){
   
   # Sedimentation at global scales goes from sea to deeopocean to marinesediment
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName == "sea" & to.SubCompartName == "marinesediment") {
     return(NA)
   }
   
-  # If Test_surface_water is TRUE, the sedimentation rate from sea to deepocean and deepocean to marinesediment
+  # If Regional_and_Continental_deepocean is TRUE, the sedimentation rate from sea to deepocean and deepocean to marinesediment
   # at Regional and Continental scale should be NA, because the sedimentation rate goes directly from sea to marinesediment
   # at these scales.  
   if ((ScaleName %in% c("Regional", "Continental")) &&
       ((SubCompartName == "deepocean" && to.SubCompartName == "marinesediment") || (SubCompartName == "sea" && to.SubCompartName == "deepocean")) &&
-      (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
+      (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
     return(NA)
   }
   
-  # If Test_surface_water is TRUE, remove the sedimentation rate from sea to marinesediment at Regional and Continental scale
+  # If Regional_and_Continental_deepocean is TRUE, remove the sedimentation rate from sea to marinesediment at Regional and Continental scale
   # because deepocean is added between sea and deeopocean.
   if ((ScaleName %in% c("Regional", "Continental")) && SubCompartName == "sea" && to.SubCompartName == "marinesediment" &&
-      (Test_surface_water == "TRUE" || isTRUE(Test_surface_water))) {
+      (Regional_and_Continental_deepocean == "TRUE" || isTRUE(Regional_and_Continental_deepocean))) {
     return(NA)
   }
   

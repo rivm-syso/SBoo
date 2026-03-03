@@ -60,7 +60,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       ScaleName,
                                       Longest_side, Intermediate_side, Shortest_side, 
                                       DragMethod, 
-                                      Test_surface_water){
+                                      Regional_and_Continental_deepocean){
   
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & 
       (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
@@ -69,7 +69,7 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
   
   else if ((ScaleName %in% c("Regional", "Continental")) &&
            (SubCompartName == "deepocean") &&
-           (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
+           (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
     return(NA)
   }
   

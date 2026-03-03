@@ -20,7 +20,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
                         RadCOL, RadCP, RadNuc,
                         RadS, NumConcNuc, NumConcAcc,
                         Shortest_side, Intermediate_side,
-                        Longest_side, Shape, Test_surface_water) {
+                        Longest_side, Shape, Regional_and_Continental_deepocean) {
   
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                              SubCompartName == "lakesediment" |
@@ -29,7 +29,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) | 
       ((ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" ) &&
-       (isFALSE(Test_surface_water) || is.na(Test_surface_water)))) {
+       (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean)))) {
     return(NA)
   }
   if (is.na(Shape) || is.null(Shape)) {

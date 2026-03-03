@@ -9,7 +9,7 @@
 #' 
 #' 
 
-k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Test_surface_water, AdvInput) { 
+k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Regional_and_Continental_deepocean, AdvInput) { 
   if (ScaleName %in% c("Tropic", "Moderate", "Arctic") & (!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
     return(NA) }
   
@@ -19,7 +19,7 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
       (ScaleName == "Regional" & (SubCompartName == "sea" | SubCompartName == "deepocean")) |
       (ScaleName == "Continental" & SubCompartName == "river" & to.SubCompartName == "river")
     ) &
-    (!is.na(Test_surface_water) && (isTRUE(Test_surface_water) || Test_surface_water == "TRUE"))
+    (!is.na(Regional_and_Continental_deepocean) && (isTRUE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "TRUE"))
   ) {
     return(0)
     

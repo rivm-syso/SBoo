@@ -24,12 +24,12 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                            to.NETsedrate,
                            to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, 
                            to.Matrix,
-                           SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test, Test_surface_water) {
+                           SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test, Regional_and_Continental_deepocean) {
   
-  # If Test_surface_water is FALSE, no resuspension from marinesediment to deepocean
+  # If Regional_and_Continental_deepocean is FALSE, no resuspension from marinesediment to deepocean
   if ((ScaleName %in% c("Regional", "Continental")) &&
            (to.SubCompartName == "deepocean") &&
-           (isFALSE(Test_surface_water) || is.na(Test_surface_water) || Test_surface_water == "FALSE")) {
+           (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
     return(NA)
   }
   
