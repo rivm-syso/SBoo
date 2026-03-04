@@ -29,7 +29,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) | 
       ((ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" ) &&
-       (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean)))) {
+       (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE"|))) {
     return(NA)
   }
   if (is.na(Shape) || is.null(Shape)) {
