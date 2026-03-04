@@ -16,8 +16,7 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
   # Ensure no flows from regional sea and deepocen to continental deepocean, and no continental river to regional river. 
   else if (
     ((ScaleName == "Regional" & (SubCompartName == "sea" | SubCompartName == "deepocean")) |
-      (ScaleName == "Continental" & SubCompartName == "river" & to.SubCompartName == "river")
-    ) &
+      ((ScaleName == "Continental" & SubCompartName == "river")) & (to.ScaleName == "Regional" & to.SubCompart == "river")) &
     (!is.na(Regional_and_Continental_deepocean) && (isTRUE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "TRUE"))
   ) {
     return(0)
