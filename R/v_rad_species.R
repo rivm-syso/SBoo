@@ -22,16 +22,19 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
                         Shortest_side, Intermediate_side,
                         Longest_side, Shape, Regional_and_Continental_deepocean) {
   
-  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
-                                                             SubCompartName == "lakesediment" |
-                                                             SubCompartName == "lake" |
-                                                             SubCompartName == "river" |
-                                                             SubCompartName == "agriculturalsoil"|
-                                                             SubCompartName == "othersoil")) | 
-      ((ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" ) &&
-       (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE"|))) {
+  if (
+    (ScaleName %in% c("Tropic", "Moderate", "Arctic") & 
+     SubCompartName %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil")
+    ) | 
+    (
+      ScaleName %in% c("Regional", "Continental") & 
+      SubCompartName == "deepocean" & 
+      (isFALSE(Regional_and_Continental_deepocean) | is.na(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE")
+    )
+  ) {
     return(NA)
   }
+  
   if (is.na(Shape) || is.null(Shape)) {
     Shape <- "Default"
   }
