@@ -70,7 +70,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard, rhoMa
            return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
          },
          { 
-           if (SettlingVelocity <= 0) {
+           if (SettlingVelocity <= 0 | is.na(SettlingVelocity)) {
              return(0)
            }
            return(SettlingVelocity/VertDistance)
