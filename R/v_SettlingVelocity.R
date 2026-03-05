@@ -23,6 +23,7 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              Shape,Longest_side,
                              Intermediate_side, Shortest_side, DragMethod,
                              MinSettVel, Regional_and_Continental_deepocean, VelInput) {
+  
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
@@ -53,6 +54,10 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   
   if(Matrix == "soil" | Matrix == "sediment") return(NA)
   if(SubCompartName == "cloudwater") return(NA)
+  
+  if (is.na(MinSettVel) || is.null(MinSettVel)) {
+    MinSettVel <- 0
+  }
   
   if(DragMethod == "Original" & Matrix =="water"){
     sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
