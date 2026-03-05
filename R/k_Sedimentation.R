@@ -70,7 +70,7 @@ k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard, rhoMa
            return(SetlingVelocityCP*(1 - FRinw) / VertDistance)
          },
          { 
-           if (SettlingVelocity <= 0 | is.na(SettlingVelocity)) {
+           if (SettlingVelocity <= 0 | is.na(SettlingVelocity)) { # The is.na part was added because for some particles when MinSettVel is na the setvel is not recalculated for some reason which results in an NA value and thus an error in the if statement. 
              return(0)
            }
            return(SettlingVelocity/VertDistance)
