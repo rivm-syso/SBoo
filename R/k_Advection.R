@@ -9,7 +9,7 @@
 #' 
 #' 
 
-k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Regional_and_Continental_deepocean, AdvInput) { 
+k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName,to.ScaleName, Remove_global, Regional_and_Continental_deepocean, AdvInput) { 
   if (ScaleName %in% c("Tropic", "Moderate", "Arctic") & (!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
     return(NA) }
   
