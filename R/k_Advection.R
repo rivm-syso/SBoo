@@ -6,28 +6,31 @@
 #' @return Rate constant for 1st order process associated with fluxes
 #' @export
 #' 
-#' 
-#' 
 
-k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName,to.ScaleName, Remove_global, Regional_and_Continental_deepocean, AdvInput) { 
-  if (ScaleName %in% c("Tropic", "Moderate", "Arctic") & (!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
-    return(NA) }
+k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartName, Remove_global, Regional_and_Continental_deepocean, AdvInput) { 
+  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) && 
+      (!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
+    return(NA)
+  }
   
   # Ensure no flows from regional sea and deepocen to continental deepocean, and no continental river to regional river. 
   else if (
-    ((ScaleName == "Regional" & (SubCompartName == "sea" | SubCompartName == "deepocean")) |
-      ((ScaleName == "Continental" & SubCompartName == "river")) & (to.ScaleName == "Regional" & to.SubCompart == "river")) &
+    (
+      (ScaleName == "Regional" && (SubCompartName %in% c("sea", "deepocean")) && to.SubCompartName == "deepocean") ||
+      (ScaleName == "Continental" && SubCompartName == "river" && to.SubCompartName == "river")
+    ) &&
     (!is.na(Regional_and_Continental_deepocean) && (isTRUE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "TRUE"))
   ) {
     return(0)
+  } 
+  
+  else { 
     
-  } else { 
-
     #if a certain value is input to replace the default, then use it
     if (!is.null(AdvInput) && !is.na(AdvInput) && !is.nan(AdvInput)) {
       return(AdvInput)
     }
-  
+    
     return(flow/Volume) #not compartment "air"; not a valid airflow 
   } 
 }
