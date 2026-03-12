@@ -18,6 +18,5 @@ Ksw.alt <- function (Kow, pKa, CorgStandard, ChemClass, a, b, all.rhoMatrix, Ksw
         b=b, 
         ChemClass=ChemClass, 
         RHOsolid=RHOsolid, 
-        alt_form=TRUE, 
-        Ksw_orig=KswDorC)
+        alt_form=TRUE)
 }

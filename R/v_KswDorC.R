@@ -16,9 +16,10 @@ KswDorC <- function (Kow, pKa, CorgStandard, ChemClass, a, b, all.rhoMatrix, Ksw
   if (is.na(Ksw) || Ksw == "NA") { 
     if (is.na(pKa) || pKa == "NA"){
       pKa <- 7
-      warning("pKa is needed but missing, setting pKa=7")
+      warning("KswDorC: pKa is needed but missing, setting pKa=7", call. = FALSE)
     }
-    f_Ksw(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, FALSE, Ksw)
+    f_Ksw(Kow=Kow, pKa=pKa, CorgStandard=CorgStandard , 
+          a=a, b=b, ChemClass=ChemClass, RHOsolid=RHOsolid, alt_form=FALSE)
     
   } else return(Ksw)
   

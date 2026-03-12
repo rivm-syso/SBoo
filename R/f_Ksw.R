@@ -11,7 +11,7 @@
 #'@param Ksw_orig soil water partitioning coefficient as present in the data [-]
 #'@return Ksw
 #'@export
-f_Ksw <- function(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, alt_form, Ksw_orig){
+f_Ksw <- function(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, alt_form){
 
   ifelse(alt_form,
          # TRUE, so the alt_form
