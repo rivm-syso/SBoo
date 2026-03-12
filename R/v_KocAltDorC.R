@@ -7,11 +7,11 @@
 #' @param pKa Dissociation constant of (conjugated) acid (default = 70
 #' @param Ksw soil water partitioning coefficient in data
 #' @export
-KocDorC <- function (Kow, a, b, Koc){
+KocAltDorC <- function (Kow, a, b, KocAlt){
 
-    if (is.na(Koc) || Koc == "NA") { 
+    if (is.na(KocAlt) || Koc == "NA") { 
     return(a * Kow^b)
     
-  } else return(Koc)
+  } else return(KocAlt)
   
 }
