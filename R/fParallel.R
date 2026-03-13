@@ -75,7 +75,7 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   registerDoParallel(cl)
   
   # Define the worker function for each slice
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Source the fakeLib inside each worker to ensure all functions are available
     source(paste0(SBooDataLocation,"baseScripts/fakeLib.R"))
     
@@ -108,8 +108,8 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   }
   
   # Execute in parallel using foreach
-  combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+  combinedResults <- foreach(i = seq_len(nSlices), .export = c("SBooDataLocation")) %dopar% {
+    processSlice(i, SBooDataLocation)
   }
   
   # Stop the cluster
@@ -217,7 +217,7 @@ solveInParallelDynamic <- function(max_runs_per_batch,
   cl <- makeCluster(nCores)
   registerDoParallel(cl)
   
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Source required scripts
     source(paste0(SBooDataLocation,"baseScripts/fakeLib.R"))
     
@@ -257,8 +257,8 @@ solveInParallelDynamic <- function(max_runs_per_batch,
   }
   
   # Define parallel execution and combine results with `foreach`
-  combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+  combinedResults <- foreach(i = seq_len(nSlices), .export = c("SBooDataLocation")) %dopar% {
+    processSlice(i, SBooDataLocation)
   }
   
   stopCluster(cl)
