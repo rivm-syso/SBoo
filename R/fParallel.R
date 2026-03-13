@@ -3,9 +3,11 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
                             emissions_data,
                             correlations = NULL, 
                             LHSsamples_path = "data/scaledLHSsamples.RDS",
-                            world_path = "data/World.RDS"
+                            world_path = "data/World.RDS",
+                            SBooDataLocation = "SimpleBox/SBooScripts"
                             ) {
-  
+  library(parallel)
+  library(doParallel)
   ###################### Input Validation
   if (is.null(max_runs_per_batch)) {
     stop("Error: max_runs_per_batch cannot be NULL. Please provide a valid value.")
@@ -75,7 +77,7 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   # Define the worker function for each slice
   processSlice <- function(i) {
     # Source the fakeLib inside each worker to ensure all functions are available
-    source("baseScripts/fakeLib.R")
+    source(paste0(SBooDataLocation,"baseScripts/fakeLib.R"))
     
     # Load a fresh instance of World to avoid mutability issues
     localWorld <- readRDS(world_path)
@@ -139,9 +141,11 @@ solveInParallelDynamic <- function(max_runs_per_batch,
                                    nTIMES,
                                    correlations = NULL,
                                    LHSsamples_path = "data/scaledLHSsamples.RDS", 
-                                   world_path = "data/World.RDS"
+                                   world_path = "data/World.RDS",
+                                   SBooDataLocation = "SimpleBox/SBooScripts"
                                    ) {
-
+  library(parallel)
+  library(doParallel)
   ###################### Input Validation
   if (is.null(max_runs_per_batch)) {
     stop("Error: max_runs_per_batch cannot be NULL. Please provide a valid value.")
@@ -215,7 +219,7 @@ solveInParallelDynamic <- function(max_runs_per_batch,
   
   processSlice <- function(i) {
     # Source required scripts
-    source("baseScripts/fakeLib.R")
+    source(paste0(SBooDataLocation,"baseScripts/fakeLib.R"))
     
     # Load World object
     localWorld <- readRDS(world_path)
