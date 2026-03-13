@@ -14,9 +14,18 @@ KswDorC <- function (KocDorC, CorgStandard, all.rhoMatrix, Ksw){
   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
   
   if (is.na(Ksw) || Ksw == "NA") { 
-
-    KocDorC*CorgStandard * RHOsolid / 1000
+    switch(ChemClass,
+    #        "acid" = 10^(0.54*log10(Kow)+1.11) ,
+    #        "base" = 10^(0.37*log10(Kow)+1.7) ,
+           "metal" = stop("Ksw Should be in the data"),
+           #"particle" = stop("Ksw Should be in the data"),
+           "particle" = NA,
+           #else
+           { KocDorC*CorgStandard * RHOsolid / 1000})
     
-  } else return(Ksw)
+  }
+   
+    
+ else return(Ksw)
   
 }
