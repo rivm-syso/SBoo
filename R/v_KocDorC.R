@@ -13,7 +13,7 @@ KocDorC <- function (Kow, a, b, Koc){
       switch(ChemClass,
              "acid" = 10^(0.54*log10(Kow)+1.11) ,
              "base" = 10^(0.37*log10(Kow)+1.7) ,
-             "metal" = stop("Ksw Should be in the data"),
+             "metal" = NA,
              #"particle" = stop("Ksw Should be in the data"),
              "particle" = NA,
              #else
