@@ -73,9 +73,9 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   registerDoParallel(cl)
   
   # Define the worker function for each slice
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Source the fakeLib inside each worker to ensure all functions are available
-    source("baseScripts/fakeLib.R")
+    source(file.path(SBooDataLocation, "baseScripts/fakeLib.R"))
     
     # Load a fresh instance of World to avoid mutability issues
     localWorld <- readRDS(world_path)
@@ -83,8 +83,8 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
     if(is.null(correlations)){
       # Perform computations using `Solve`
       localWorld$Solve(emissions = emis_slices[[i]], 
-                     LHSmatrix = LHS_slices[[i]], 
-                     nRUNs = length(unique(emis_slices[[i]]$RUN)))
+                       LHSmatrix = LHS_slices[[i]], 
+                       nRUNs = length(unique(emis_slices[[i]]$RUN)))
     } else {
       # Perform computations using `Solve`
       localWorld$Solve(emissions = emis_slices[[i]], 
@@ -106,8 +106,8 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
   }
   
   # Execute in parallel using foreach
-  combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+  combinedResults <- foreach(i = seq_len(nSlices), .export= c("SBooDataLocation")) %dopar% {
+    processSlice(i, SBooDataLocation)
   }
   
   # Stop the cluster
@@ -213,9 +213,9 @@ solveInParallelDynamic <- function(max_runs_per_batch,
   cl <- makeCluster(nCores)
   registerDoParallel(cl)
   
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Source required scripts
-    source("baseScripts/fakeLib.R")
+    source(file.path(SBooDataLocation,"baseScripts/fakeLib.R"))
     
     # Load World object
     localWorld <- readRDS(world_path)
@@ -251,10 +251,10 @@ solveInParallelDynamic <- function(max_runs_per_batch,
     )
     return(result_list)
   }
-  
+  # browser()
   # Define parallel execution and combine results with `foreach`
-  combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+  combinedResults <- foreach(i = seq_len(nSlices), .export = c("SBooDataLocation")) %dopar% {
+    processSlice(i, SBooDataLocation)
   }
   
   stopCluster(cl)
