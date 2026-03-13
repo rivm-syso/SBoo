@@ -10,8 +10,15 @@
 KocDorC <- function (Kow, a, b, Koc){
 
     if (is.na(Koc) || Koc == "NA") { 
-    return(a * Kow^b)
-    
+      switch(ChemClass,
+             "acid" = 10^(0.54*log10(Kow)+1.11) ,
+             "base" = 10^(0.37*log10(Kow)+1.7) ,
+             "metal" = stop("Ksw Should be in the data"),
+             #"particle" = stop("Ksw Should be in the data"),
+             "particle" = NA,
+             #else
+             {a * Kow^b})
+
   } else return(Koc)
   
 }
