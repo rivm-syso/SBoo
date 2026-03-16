@@ -3,9 +3,11 @@ solveInParallelSteadyState <- function(max_runs_per_batch,
                             emissions_data,
                             correlations = NULL, 
                             LHSsamples_path = "data/scaledLHSsamples.RDS",
-                            world_path = "data/World.RDS"
+                            world_path = "data/World.RDS",
+                            SBooDataLocation = "SimpleBox/SBooScripts"
                             ) {
-  
+  library(parallel)
+  library(doParallel)
   ###################### Input Validation
   if (is.null(max_runs_per_batch)) {
     stop("Error: max_runs_per_batch cannot be NULL. Please provide a valid value.")
@@ -139,9 +141,11 @@ solveInParallelDynamic <- function(max_runs_per_batch,
                                    nTIMES,
                                    correlations = NULL,
                                    LHSsamples_path = "data/scaledLHSsamples.RDS", 
-                                   world_path = "data/World.RDS"
+                                   world_path = "data/World.RDS",
+                                   SBooDataLocation = "SimpleBox/SBooScripts"
                                    ) {
-
+  library(parallel)
+  library(doParallel)
   ###################### Input Validation
   if (is.null(max_runs_per_batch)) {
     stop("Error: max_runs_per_batch cannot be NULL. Please provide a valid value.")
