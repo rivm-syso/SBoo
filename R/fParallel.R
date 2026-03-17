@@ -41,8 +41,8 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   if (remaining > 0) {
     runs_distribution[1:remaining] <- runs_distribution[1:remaining] + 1
   }
-  
-  # Split emissions data into chunks using the runs_distribution
+
+  # Split emissions data into slices using the runs_distribution
   emis_slices <- list()
   start_index <- 1
   for (runs in runs_distribution) {
@@ -51,7 +51,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
     start_index <- end_index + 1
   }
   
-  # Slice the LHS samples into chunks, matching the slice distribution
+  # Split the LHS samples into slices using the runs_distribution
   LHS_slices <- list()
   start_index <- 1
   for (run in runs_distribution) {
@@ -182,12 +182,12 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   runs_distribution <- rep(floor(total_runs / nslices), nslices)
   remaining <- total_runs - sum(runs_distribution)
   
-  # Verdeel de overgebleven runs over de eerste slicees
+  # Redistribute the runs which remain over runs_distribution
   if (remaining > 0) {
     runs_distribution[1:remaining] <- runs_distribution[1:remaining] + 1
   }
 
-  # Split emissions data into chunks using the runs_distribution
+  # Split emissions data into slices using the runs_distribution
   emis_slices <- list()
   start_index <- 1
   for (runs in runs_distribution) {
@@ -196,7 +196,7 @@ solveInParallelDynamic <- function(max_runs_per_slice,
     start_index <- end_index + 1
   }
   
-  # Slice the LHS samples into chunks, matching the slice distribution
+  # Split LHS samples into slices using the runs_distribution
   LHS_slices <- list()
   start_index <- 1
   for (run in runs_distribution) {
