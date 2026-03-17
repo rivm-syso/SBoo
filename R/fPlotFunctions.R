@@ -1,618 +1,422 @@
-#################### Functions for solution plots
+#####################
+# Plotting functions
+#####################
 
-# Masses plot for deterministic steady state output
-DetSSPlot <- function(scale = NULL, subcompart = NULL){
+# Lookup table for legend labels
+subcompart_labels <- c(
+  agriculturalsoil    = "Agricultural soil",
+  air                 = "Air",
+  cloudwater          = "Cloud water",
+  freshwatersediment  = "Freshwater sediment",
+  lake                = "Lake",
+  marinesediment      = "Marine sediment",
+  naturalsoil         = "Natural soil",
+  othersoil           = "Other soil",
+  river               = "River",
+  sea                 = "Sea",
+  deepocean           = "Deep ocean",
+  lakesediment        = "Lake sediment"
+)
+
+
+subcompart_colors <- c(
+  # Waters
+  "Sea"                 = "#1f78b4",   # blue
+  "River"               = "#a6cee3",   # light blue
+  "Lake"                = "#3690c0",   # medium blue
+  "Deep ocean"          = "#08306b",   # dark blue
   
-  # Get the solution
+  # Atmosphere
+  "Air"                 = "#b2df8a",   # light green
+  "Cloud water"         = "#33a02c",   # medium green
+  
+  # Soils
+  "Agricultural soil"   = "#c18750",   # light brown
+  "Natural soil"        = "#8b5a2b",   # medium brown
+  "Other soil"          = "#5c3317",   # dark brown
+  
+  # Sediments
+  "Freshwater sediment" = "#ffffb2",   # pale yellow
+  "Marine sediment"     = "#fecc5c",   # medium yellow
+  "Lake sediment"       = "#fd8d3c"    # darker yellow/orange
+)
+
+
+
+############################################################################################################################################################
+############################################################################################################################################################
+# Functions for solution plots 
+############################################################################################################################################################
+############################################################################################################################################################
+
+# Deterministic & steady state
+DetSSPlot <- function(scale = NULL, subcompart = NULL){
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'Mass_kg')]
   
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
-  
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(solution$Scale)){
-    stop("Selected scale does not exist")
-  }
-  
-  # Make sure the selected subcompartments exist
-  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) {
-    stop("One or more selected subcomparts do not exist")
-  }
+  if(length(scale) != 1) stop("Please select 1 scale")
+  if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
+  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) stop("One or more selected subcomparts do not exist")
   
   # Aggregate over species
-  cnames <- names(solution)
-  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
-  solution <- aggregate(formula, data = solution, sum)
+  cnames <- setdiff(names(solution), c("Species", "Mass_kg"))
+  solution <- aggregate(as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + "))), data = solution, sum)
   
-  if (!is.null(scale)) {
-    solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    solution <- solution
-  }
+  solution <- solution[solution$Scale == scale, ]
+  if (!is.null(subcompart)) solution <- solution[solution$SubCompart %in% subcompart, ]
   
-  if (!is.null(subcompart)) {
-    
-    solution <- solution[solution$SubCompart %in% subcompart, ]
-  } else {
-    solution <- solution
-  }
+  # Map labels
+  solution$SubCompartLabel <- subcompart_labels[solution$SubCompart]
   
-  plot <- ggplot(solution, aes(x = SubCompart, y = Mass_kg, fill = SubCompart)) + 
-    theme_bw() + 
-    geom_col() +  # Use geom_col() to plot the actual values of Mass_kg
+  ggplot(solution, aes(x = SubCompartLabel, y = Mass_kg, fill = SubCompartLabel)) +
+    geom_col() +
+    theme_bw() +
     labs(title = paste0("Steady state mass at ", scale, " scale"),
-         x = "",
-         y = paste0("Mass of ", World$substance, " [kg]")) +
+         x = "", y = paste0("Mass of ", World$substance, " [kg]")) +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
-      labels = scales::trans_format("log10", scales::math_format(10^.x))) +
-    theme(legend.position = "none",
-          axis.text.x = element_text(angle = 45, hjust = 1)) 
+      labels = scales::trans_format("log10", scales::math_format(10^.x))
+    ) +
+    scale_fill_manual(values = subcompart_colors) +
+    theme(legend.position = "right",
+          axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
-# Masses plot for deterministic dynamic output
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Deterministic & dynamic
 DetDynSolPlot <- function(scale = NULL, subcompart = NULL){
-  
-  # Get the solution
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'Mass_kg')]
   
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
+  if(length(scale) != 1) stop("Please select 1 scale")
+  if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
+  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) stop("One or more selected subcomparts do not exist")
   
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(solution$Scale)){
-    stop("Selected scale does not exist")
-  }
+  cnames <- setdiff(names(solution), c("Species", "Mass_kg"))
+  solution <- aggregate(as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + "))), data = solution, sum)
   
-  # Make sure the selected subcompartments exist
-  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) {
-    stop("One or more selected subcomparts do not exist")
-  }
+  solution <- solution[solution$Scale == scale, ]
+  if (!is.null(subcompart)) solution <- solution[solution$SubCompart %in% subcompart, ]
   
-  # Aggregate over species
-  cnames <- names(solution)
-  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
-  solution <- aggregate(formula, data = solution, sum)
+  # Convert time
+  solution$Year <- solution$time / (365.25*24*3600)
   
-  if (!is.null(scale)) {
-    solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    solution <- solution
-  }
+  # Map labels
+  solution$SubCompartLabel <- subcompart_labels[solution$SubCompart]
   
-  if (!is.null(subcompart)) {
-    solution <- solution[solution$SubCompart %in% subcompart, ]
-  } else {
-    solution <- solution
-  }
-  
-  # Convert time from seconds to years
-  solution$time <- as.numeric(solution$time)
-  solution$Year <- solution$time / (365.25 * 24 * 3600)
-  
-  plot <- ggplot(solution, aes(x = Year, y = Mass_kg, group = SubCompart, color = SubCompart)) + 
-    theme_bw() + 
+  ggplot(solution, aes(x = Year, y = Mass_kg, group = SubCompartLabel, color = SubCompartLabel)) +
     geom_line() +
+    theme_bw() +
     labs(title = paste0("Dynamic mass at ", scale, " scale"),
-         x = "Year",
-         y = paste0("Mass of ", World$substance, " [kg]")) +
+         x = "Year", y = paste0("Mass of ", World$substance, " [kg]")) +
     scale_y_continuous(labels = scales::label_scientific()) +
-    guides(color = guide_legend(title = NULL))
-}
-
-# Masses plot for probabilistic dynamic output
-
-ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
-  
-  # Get the solution
-  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
-  solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Mass_kg')]
-  
-  # Check selected scale
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
-  
-  if(!scale %in% unique(solution$Scale)){
-    stop("Selected scale does not exist")
-  }
-  
-  # Check selected subcompartment(s)
-  if(!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) {
-    stop("One or more selected subcompartments do not exist")
-  }
-  
-  # Aggregate over species
-  cnames   <- names(solution)
-  cnames   <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula  <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
-  solution <- aggregate(formula, data = solution, sum)
-  
-  if (!is.null(scale)) {
-    solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    solution <- solution
-  }
-  
-  if (!is.null(subcompart)) {
-    solution <- solution[solution$SubCompart %in% subcompart, ]
-  } else {
-    solution <- solution
-  }
-  
-  # Convert time from seconds to years
-  solution$time <- as.numeric(solution$time)
-  solution$Year <- solution$time / (365.25 * 24 * 3600)
-  
-  # Summary statistics per subcompartment
-  summary_stats <- solution |>
-    group_by(Year, SubCompart) |>  # added SubCompart here
-    summarise(
-      Mean_Value = mean(Mass_kg, na.rm = TRUE),
-      SD_Value = sd(Mass_kg, na.rm = TRUE),
-      Lower_CI = Mean_Value - 1.96 * SD_Value / sqrt(n()),
-      Upper_CI = Mean_Value + 1.96 * SD_Value / sqrt(n())
-    ) |>
-    ungroup()
-  
-  ggplot(summary_stats, aes(x = Year, y = Mean_Value, color = SubCompart)) +
-    geom_line(size = 1) +
-    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI, fill = SubCompart), alpha = 0.2, show.legend = FALSE) +
-    labs(
-      title = paste0("Dynamic mean mass in ", paste(subcompart, collapse = ", "), " at ", scale, " scale"),
-      subtitle = "with uncertainty bands over time",
-      x = "Year",
-      y = paste0("Mass of ", World$substance, " [kg]")
-    ) +
-    theme_minimal() +
+    scale_color_manual(values = subcompart_colors) +
     guides(color = guide_legend(title = "Subcompartment"))
 }
 
-
-# Masses plot for probabilistic steady state output
-ProbSSSolPlot <- function(scale = NULL){
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Probabilistic & dynamic
+ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
+  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
+  solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Mass_kg')]
   
-  # Get the solution
+  if(length(scale) != 1) stop("Please select 1 scale")
+  if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
+  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) stop("One or more selected subcomparts do not exist")
+  
+  cnames <- setdiff(names(solution), c("Species", "Mass_kg"))
+  solution <- aggregate(as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + "))), data = solution, sum)
+  
+  solution <- solution[solution$Scale == scale, ]
+  if (!is.null(subcompart)) solution <- solution[solution$SubCompart %in% subcompart, ]
+  
+  # Convert time
+  solution$Year <- solution$time / (365.25*24*3600)
+  
+  # Summary stats
+  summary_stats <- solution |>
+    group_by(Year, SubCompart) |>
+    summarise(Mean_Value = mean(Mass_kg), SD_Value = sd(Mass_kg)) |>
+    ungroup() |>
+    mutate(Lower_CI = Mean_Value - 1.96*SD_Value/sqrt(n()),
+           Upper_CI = Mean_Value + 1.96*SD_Value/sqrt(n()))
+  
+  summary_stats$SubCompartLabel <- subcompart_labels[summary_stats$SubCompart]
+  
+  ggplot(summary_stats, aes(x = Year, y = Mean_Value, color = SubCompartLabel)) +
+    geom_line(size = 1) +
+    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI, fill = SubCompartLabel), alpha = 0.2, show.legend = FALSE) +
+    theme_minimal() +
+    labs(title = paste0("Dynamic mean mass in ", paste(subcompart, collapse=", "), " at ", scale, " scale"),
+         subtitle = "with uncertainty bands over time",
+         x = "Year", y = paste0("Mass of ", World$substance, " [kg]")) +
+    scale_color_manual(values = subcompart_colors) +
+    guides(color = guide_legend(title = "Subcompartment"))
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Probabilistic & steady state
+ProbSSSolPlot <- function(scale = NULL){
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
   
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
+  if(length(scale) != 1) stop("Please select 1 scale")
+  if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
   
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(solution$Scale)){
-    stop("Selected scale does not exist")
-  }
+  nRUNs <- length(unique(solution$RUNs))
   
-  # Aggregate over species
-  cnames <- names(solution)
-  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
-  solution <- aggregate(formula, data = solution, sum)
-  
-  if (!is.null(scale)) {
-    solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    solution <- solution
-  }
-  
-  ggplot(solution, aes(x = SubCompart, y = Mass_kg, fill = SubCompart)) +
-    geom_violin()+
-    theme_bw() +
-    labs(title = paste0("Steady state mass at ", scale, "scale"),
-         x = "",
-         y = paste0("Mass of ", World$substance, " [kg]")) +
-    scale_y_log10(
-      breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
-      labels = scales::trans_format("log10", scales::math_format(10^.x))) +
-    scale_fill_discrete() +
-    theme(legend.position = "none",
-          axis.text.x = element_text(angle = 45, hjust = 1))
-}
-
-#################### Functions for concentration plots
-
-# Concentration plot for deterministic dynamic output
-DetSSConcPlot <- function(scale = NULL, subcompart = NULL){
-  
-  # Get the solution
-  concentration <- merge(World$Concentration(), World$states$asDataFrame, by = "Abbr")
-  concentration <- concentration[c('SubCompart', 'Scale', 'Species', 'Concentration', 'Unit')]
-  
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
-  
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(concentration$Scale)){
-    stop("Selected scale does not exist")
-  }
-  
-  # Make sure the selected subcompartments exist
-  if (!is.null(subcompart) && !all(subcompart %in% unique(concentration$SubCompart))) {
-    stop("One or more selected subcomparts do not exist")
-  }
-  
-  # Aggregate over species
-  cnames <- names(concentration)
-  cnames <- cnames[!cnames %in% c("Species", "Concentration")]
-  formula <- as.formula(paste("Concentration ~", paste(cnames, collapse = " + ")))
-  concentration <- aggregate(formula, data = concentration, sum)
-  
-  if (!is.null(scale)) {
-    concentration <- concentration[concentration$Scale %in% scale, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  if (!is.null(subcompart)) {
-    concentration <- concentration[concentration$SubCompart %in% subcompart, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  concentration$SubCompartUnit <- paste0(concentration$SubCompart, " (", concentration$Unit, ")")
-  
-  plot <- ggplot(concentration, aes(x = SubCompartUnit, y = Concentration, fill = SubCompartUnit)) + 
-    theme_bw() + 
-    geom_col() +  
-    labs(title = paste0("Steady state concentration at ", scale, " scale"),
-         x = "",
-         y = paste0("Concentration of ", World$substance)) +
-    # scale_y_log10(
-    #   breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
-    #   labels = scales::trans_format("log10", scales::math_format(10^.x))) +
-    theme(legend.position = "none",
-          axis.text.x = element_text(angle = 45, hjust = 1)) 
-}
-
-# Concentration plot for deterministic dynamic output
-DetDynConcPlot <- function(scale = NULL, subcompart = NULL){
-  
-  # Get the solution
-  concentration <- merge(World$Concentration(), World$states$asDataFrame, by = "Abbr")
-  concentration <- concentration[c('SubCompart', 'Scale', 'Species', 'time', 'Concentration', 'Unit')]
-  
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
-  
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(concentration$Scale)){
-    stop("Selected scale does not exist")
-  }
-  
-  # Make sure the selected subcompartments exist
-  if (!is.null(subcompart) && !all(subcompart %in% unique(concentration$SubCompart))) {
-    stop("One or more selected subcomparts do not exist")
-  }
-  
-  # Aggregate over species
-  cnames <- names(concentration)
-  cnames <- cnames[!cnames %in% c("Species", "Concentration")]
-  formula <- as.formula(paste("Concentration ~", paste(cnames, collapse = " + ")))
-  concentration <- aggregate(formula, data = concentration, sum)
-  
-  if (!is.null(scale)) {
-    concentration <- concentration[concentration$Scale %in% scale, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  if (!is.null(subcompart)) {
-    concentration <- concentration[concentration$SubCompart %in% subcompart, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  concentration$SubCompartUnit <- paste0(concentration$SubCompart, " (", concentration$Unit, ")")
-  
-  # Convert time from seconds to years
-  concentration$time <- as.numeric(concentration$time)
-  concentration$Year <- concentration$time / (365.25 * 24 * 3600)
-  
-  plot <- ggplot(concentration, aes(x = Year, y = Concentration, group = SubCompartUnit, color = SubCompartUnit)) + 
-    theme_bw() + 
-    geom_line() +
-    labs(title = paste0("Dynamic concentration at ", scale, " scale"),
-         x = "Year",
-         y = paste0("Concentration of ", World$substance)) +
-    scale_y_continuous(labels = scales::label_scientific()) +
-    guides(color = guide_legend(title = NULL))
-}
-
-# Concentration plot for probabilistic dynamic output
-ProbDynConcPlot <- function(scale = NULL, subcompart = NULL){
-  
-  # Get the concentration
-  concentration <- merge(World$Concentration(), World$states$asDataFrame, by = "Abbr")
-  concentration <- concentration[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Concentration', 'Unit')]
-  
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
-  
-  if(length(subcompart) != 1){
-    stop("Please select 1 subcompartment")
-  }
-  
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(concentration$Scale)){
-    stop("Selected scale does not exist")
-  }
-  
-  # Make sure the selected subcompartments exist
-  if (!is.null(subcompart) && !all(subcompart %in% unique(concentration$SubCompart))) {
-    stop("One or more selected subcomparts do not exist")
-  }
-  
-  # Aggregate over species
-  cnames <- names(concentration)
-  cnames <- cnames[!cnames %in% c("Species", "Concentration")]
-  formula <- as.formula(paste("Concentration ~", paste(cnames, collapse = " + ")))
-  concentration <- aggregate(formula, data = concentration, sum)
-  
-  if (!is.null(scale)) {
-    concentration <- concentration[concentration$Scale %in% scale, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  if (!is.null(subcompart)) {
-    concentration <- concentration[concentration$SubCompart %in% subcompart, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  unit <- unique(concentration$Unit)
-  
-  # Convert time from seconds to years
-  concentration$time <- as.numeric(concentration$time)
-  concentration$Year <- concentration$time / (365.25 * 24 * 3600)
-  
-  summary_stats <- concentration |>
-    group_by(Year) |>
-    summarise(
-      Mean_Value = mean(Concentration, na.rm = TRUE),
-      SD_Value = sd(Concentration, na.rm = TRUE),
-      Lower_CI = Mean_Value - 1.96 * SD_Value / sqrt(n()),
-      Upper_CI = Mean_Value + 1.96 * SD_Value / sqrt(n())
-    ) |>
+  solution <- solution |>
+    group_by(SubCompart, Scale, RUNs) |>
+    summarise(Mass_kg = sum(Mass_kg)) |>
+    ungroup() |>
+    group_by(SubCompart, Scale) |>
+    summarise(Mass_kg = mean(Mass_kg), n = n()) |>
     ungroup()
   
-  ggplot(summary_stats, aes(x = Year, y = Mean_Value)) +
-    geom_line(color = "green", size = 1) +
-    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2, fill = "green") +
-    labs(title = paste0("Dynamic mean concentration in ", subcompart, " at ", scale, " scale"),
-         subtitle = "with uncertainty bands over time",
-         x = "Year",
-         y = paste0("Concentration of ", World$substance," [", unit, "]")) +
-    theme_minimal()+
-    guides(color = guide_legend(title = NULL))
+  if(nRUNs != unique(solution$n)) stop("nRUNs not equal to n in summarise")
+  
+  solution$SubCompartLabel <- subcompart_labels[solution$SubCompart]
+  
+  ggplot(solution[solution$Scale==scale,], aes(area = Mass_kg, fill = SubCompartLabel,
+                                               label = paste(SubCompartLabel, round(Mass_kg/sum(Mass_kg)*100,2), "%", sep="\n"))) +
+    geom_treemap() +
+    geom_treemap_text(colour="white", place="centre", size=15) +
+    scale_fill_manual(values=subcompart_colors) +
+    labs(title = paste0("Distribution of average steady state masses at ", scale, " scale")) +
+    theme(legend.position="right")
 }
 
-# Concentration plot for probabilistic steady state output
-ProbSSConcPlot <- function(scale = NULL){
+
+
+############################################################################################################################################################
+############################################################################################################################################################
+# Functions for concentration plots
+############################################################################################################################################################
+############################################################################################################################################################
+
+# Deterministic & steady state
+DetSSConcPlot <- function(scale = NULL, subcompart = NULL){
+  conc <- merge(World$Concentration(), World$states$asDataFrame, by="Abbr")
+  conc <- conc[c('SubCompart','Scale','Species','Concentration','Unit')]
   
-  # Get the concentrations
-  concentration <- merge(World$Concentration(), World$states$asDataFrame, by = "Abbr")
-  concentration <- concentration[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Concentration', 'Unit')]
+  if(length(scale) != 1) stop("Please select 1 scale")
+  if(!scale %in% unique(conc$Scale)) stop("Selected scale does not exist")
+  if(!is.null(subcompart) && !all(subcompart %in% unique(conc$SubCompart))) stop("One or more selected subcomparts do not exist")
   
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
+  cnames <- setdiff(names(conc), c("Species","Concentration"))
+  conc <- aggregate(as.formula(paste("Concentration ~", paste(cnames, collapse=" + "))), data=conc, sum)
   
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(concentration$Scale)){
-    stop("Selected scale does not exist")
-  }
+  conc <- conc[conc$Scale == scale, ]
+  if(!is.null(subcompart)) conc <- conc[conc$SubCompart %in% subcompart, ]
   
-  # Aggregate over species
-  cnames <- names(concentration)
-  cnames <- cnames[!cnames %in% c("Species", "Concentration")]
-  formula <- as.formula(paste("Concentration ~", paste(cnames, collapse = " + ")))
-  concentration <- aggregate(formula, data = concentration, sum)
+  conc$SubCompartLabel <- subcompart_labels[conc$SubCompart]
   
-  if (!is.null(scale)) {
-    concentration <- concentration[concentration$Scale %in% scale, ]
-  } else {
-    concentration <- concentration
-  }
-  
-  concentration$SubCompartUnit <- paste0(concentration$SubCompart, " (", concentration$Unit, ")")
-  
-  ggplot(concentration, aes(x = SubCompartUnit, y = Concentration, fill = SubCompart)) +
-    geom_violin()+
+  ggplot(conc, aes(x=SubCompartLabel, y=Concentration, fill=SubCompartLabel)) +
+    geom_col() +
     theme_bw() +
-    labs(title = paste0("Steady state concentration at ", scale, " scale"),
-         x = "",
-         y = paste0("Concentration of ", World$substance)) +
+    labs(title=paste0("Steady state concentration at ", scale, " scale"),
+         x="", y=paste0("Concentration of ", World$substance)) +
+    scale_fill_manual(values=subcompart_colors) +
+    theme(legend.position="right",
+          axis.text.x=element_text(angle=45, hjust=1))
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Deterministic & dynamic
+DetDynConcPlot <- function(scale=NULL, subcompart=NULL){
+  conc <- merge(World$Concentration(), World$states$asDataFrame, by="Abbr")
+  conc <- conc[c('SubCompart','Scale','Species','time','Concentration','Unit')]
+  
+  if(length(scale)!=1) stop("Please select 1 scale")
+  if(!scale %in% unique(conc$Scale)) stop("Selected scale does not exist")
+  if(!is.null(subcompart) && !all(subcompart %in% unique(conc$SubCompart))) stop("One or more selected subcomparts do not exist")
+  
+  cnames <- setdiff(names(conc), c("Species","Concentration"))
+  conc <- aggregate(as.formula(paste("Concentration ~", paste(cnames, collapse=" + "))), data=conc, sum)
+  
+  conc <- conc[conc$Scale==scale, ]
+  if(!is.null(subcompart)) conc <- conc[conc$SubCompart %in% subcompart, ]
+  
+  conc$Year <- conc$time / (365.25*24*3600)
+  conc$SubCompartLabel <- subcompart_labels[conc$SubCompart]
+  
+  ggplot(conc, aes(x=Year, y=Concentration, group=SubCompartLabel, color=SubCompartLabel)) +
+    geom_line() +
+    theme_bw() +
+    labs(title=paste0("Dynamic concentration at ", scale, " scale"),
+         x="Year", y=paste0("Concentration of ", World$substance)) +
+    scale_y_continuous(labels=scales::label_scientific()) +
+    scale_color_manual(values=subcompart_colors) +
+    guides(color=guide_legend(title="Subcompartment"))
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Probabilistic & dynamic
+ProbDynConcPlot <- function(scale=NULL, subcompart=NULL){
+  conc <- merge(World$Concentration(), World$states$asDataFrame, by="Abbr")
+  conc <- conc[c('SubCompart','Scale','Species','time','RUNs','Concentration','Unit')]
+  
+  if(length(scale)!=1) stop("Please select 1 scale")
+  if(length(subcompart)!=1) stop("Please select 1 subcompartment")
+  if(!scale %in% unique(conc$Scale)) stop("Selected scale does not exist")
+  if(!is.null(subcompart) && !all(subcompart %in% unique(conc$SubCompart))) stop("One or more selected subcomparts do not exist")
+  
+  cnames <- setdiff(names(conc), c("Species","Concentration"))
+  conc <- aggregate(as.formula(paste("Concentration ~", paste(cnames, collapse=" + "))), data=conc, sum)
+  
+  conc <- conc[conc$Scale==scale, ]
+  if(!is.null(subcompart)) conc <- conc[conc$SubCompart %in% subcompart, ]
+  
+  conc$Year <- conc$time / (365.25*24*3600)
+  conc$SubCompartLabel <- subcompart_labels[conc$SubCompart]
+  
+  summary_stats <- conc |>
+    group_by(Year, SubCompartLabel) |>
+    summarise(
+      Mean_Value = mean(Concentration, na.rm=TRUE),
+      SD_Value = sd(Concentration, na.rm=TRUE),
+      .groups="drop"
+    ) |>
+    mutate(Lower_CI = Mean_Value - 1.96*SD_Value/sqrt(n()),
+           Upper_CI = Mean_Value + 1.96*SD_Value/sqrt(n()))
+  
+  ggplot(summary_stats, aes(x=Year, y=Mean_Value, color=SubCompartLabel)) +
+    geom_line(size=1) +
+    geom_ribbon(aes(ymin=Lower_CI, ymax=Upper_CI, fill=SubCompartLabel), alpha=0.2, show.legend=FALSE) +
+    theme_minimal() +
+    labs(title=paste0("Dynamic mean concentration in ", subcompart, " at ", scale, " scale"),
+         subtitle="with uncertainty bands over time",
+         x="Year", y=paste0("Concentration of ", World$substance)) +
+    scale_color_manual(values=subcompart_colors) +
+    guides(color=guide_legend(title="Subcompartment"))
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Probabilistic & steady state 
+ProbSSConcPlot <- function(scale=NULL){
+  conc <- merge(World$Concentration(), World$states$asDataFrame, by="Abbr")
+  conc <- conc[c('SubCompart','Scale','Species','RUNs','Concentration','Unit')]
+  
+  if(length(scale)!=1) stop("Please select 1 scale")
+  
+  cnames <- setdiff(names(conc), c("Species","Concentration"))
+  conc <- aggregate(as.formula(paste("Concentration ~", paste(cnames, collapse=" + "))), data=conc, sum)
+  
+  conc$SubCompartLabel <- subcompart_labels[conc$SubCompart]
+  
+  ggplot(conc[conc$Scale==scale,], aes(x=SubCompartLabel, y=Concentration, fill=SubCompartLabel,
+                                       label=paste0(SubCompartLabel, " (", round(Concentration/sum(Concentration)*100,2),"%)"))) +
+    geom_violin() +
+    theme_bw() +
+    labs(title=paste0("Steady state concentration at ", scale, " scale"),
+         x="", y=paste0("Concentration of ", World$substance)) +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10),
-      labels = scales::trans_format("log10", scales::math_format(10^.x))) +
-    scale_fill_discrete() +
-    theme(legend.position = "none",
-          axis.text.x = element_text(angle = 45, hjust = 1))
+      labels = scales::trans_format("log10", scales::math_format(10^.x))
+    ) +
+    scale_fill_manual(values=subcompart_colors) +
+    theme(legend.position="right",
+          axis.text.x=element_text(angle=45, hjust=1))
 }
 
-######################## Mass distribution plot functions ######################
 
-# For deterministic steady state masses
+
+############################################################################################################################################################
+############################################################################################################################################################
+# Functions for mass distribution plots
+############################################################################################################################################################
+############################################################################################################################################################
+
+# Deterministic & steady state
 DetSSMassDist <- function(scale = NULL){
   
-  # Get the solution and join to states df
-  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
-  solution <- solution[c('SubCompart', 'Scale', 'Species', 'Mass_kg')]
+  solution <- merge(World$Masses(), World$states$asDataFrame, by="Abbr")
+  solution <- solution[c("SubCompart","Scale","Species","Mass_kg")]
   
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
-  
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(solution$Scale)){
-    stop("Selected scale does not exist")
-  }
+  if(length(scale)!=1) stop("Please select 1 scale")
+  if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
   
   # Aggregate over species
-  cnames <- names(solution)
-  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
-  solution <- aggregate(formula, data = solution, sum)
+  cnames <- setdiff(names(solution), c("Species","Mass_kg"))
+  solution <- aggregate(as.formula(paste("Mass_kg ~", paste(cnames, collapse=" + "))), data=solution, sum)
   
-  # Aggregate over scales
+  # Aggregate over scales for top-level treemap
   scale_solution <- solution |>
     group_by(Scale) |>
-    summarise(Mass_kg = sum(Mass_kg))
+    summarise(Mass_kg = sum(Mass_kg), .groups="drop") |>
+    mutate(Mass_percent = round((Mass_kg/sum(Mass_kg))*100,2),
+           Mass_percent_label = paste0(Mass_percent,"%"))
   
-  # Calculate percentages from masses
-  mass_sum <- sum(scale_solution$Mass_kg)
-  scale_solution <- scale_solution |>
-    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
-    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
-  
-  scale_plot <- ggplot(scale_solution, aes(area = Mass_kg, fill = Scale, 
-                                                     label = paste(Scale, Mass_percent_label, sep = "\n"))) +
+  scale_plot <- ggplot(scale_solution, aes(area=Mass_kg, fill=Scale,
+                                           label=paste(Scale, Mass_percent_label, sep="\n"))) +
     geom_treemap() +
-    geom_treemap_text(colour = "white", place = "centre", size = 15) +
-    scale_fill_discrete()+
-    labs(title = paste0("Distribution of steady state masses over scales")) +
-    theme(legend.position = "none")  
+    geom_treemap_text(colour="white", place="centre", size=15) +
+    scale_fill_discrete() +
+    labs(title="Distribution of steady state masses over scales") +
+    theme(legend.position="none")
   
-  # Filter for the chosen scale
-  if (!is.null(scale)) {
-    subcompart_solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    subcompart_solution <- solution
-  }
+  # Filter for selected scale
+  subcompart_solution <- solution[solution$Scale==scale, ] |>
+    mutate(Mass_percent = round((Mass_kg/sum(Mass_kg))*100,2),
+           Mass_percent_label = paste0(Mass_percent,"%"),
+           SubCompartLabel = subcompart_labels[SubCompart])
   
-  # Calculate percentages from masses
-  mass_sum <- sum(subcompart_solution$Mass_kg)
-  subcompart_solution <- subcompart_solution |>
-    mutate(Mass_percent = round(((Mass_kg/mass_sum)*100), 2)) |>
-    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
+  subcompart_plot <- ggplot(subcompart_solution, aes(area=Mass_kg, fill=SubCompartLabel,
+                                                     label=paste(SubCompartLabel, Mass_percent_label, sep="\n"))) +
+    geom_treemap() +
+    geom_treemap_text(colour="white", place="centre", size=15) +
+    scale_fill_manual(values=subcompart_colors) +
+    labs(title=paste0("Distribution of steady state masses at ", scale, " scale")) +
+    theme(legend.position="right")
   
- subcompart_plot <- ggplot(subcompart_solution, aes(area = Mass_kg, fill = SubCompart, 
-                     label = paste(SubCompart, Mass_percent_label, sep = "\n"))) +
-  geom_treemap() +
-  geom_treemap_text(colour = "white", place = "centre", size = 15) +
-  scale_fill_manual(values = subcompart_colors) +  
-  labs(title = paste0("Distribution of steady state masses at ", scale, " scale")) +
-  theme(legend.position = "none")  
-
- grid.arrange(scale_plot, subcompart_plot, ncol = 1)
+  grid.arrange(scale_plot, subcompart_plot, ncol=1)
 }
 
-# For probabilistic steady state masses
+
+# Probabilistic & steady state
 ProbSSMassDist <- function(scale = NULL){
-
-  # Get the solution and join to states df
-  solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
-  # solution <- solution[c('SubCompart', 'Scale', 'Species', 'RUNs', 'Mass_kg')]
   
-  # Make sure 1 scale is selected
-  if(length(scale) != 1){
-    stop("Please select 1 scale")
-  }
+  solution <- merge(World$Masses(), World$states$asDataFrame, by="Abbr")
+  if(length(scale)!=1) stop("Please select 1 scale")
+  if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
   
-  # Make sure the selected scale and subcompartments exist
-  if(!scale %in% unique(solution$Scale)){
-    stop("Selected scale does not exist")
-  }
-  
-  # Aggregate over species and take average
-
-  nRUNs = length(unique(solution$RUNs))
-  
-  solution <- 
-    solution |>
-    ungroup() |> 
+  # Aggregate over species and average over runs
+  nRUNs <- length(unique(solution$RUNs))
+  solution <- solution |>
     group_by(SubCompart, Scale, RUNs) |>
-    summarise(Mass_kg = sum(Mass_kg)) |> 
-    ungroup() |> 
-    group_by(SubCompart, Scale) |> 
-    summarise(Mass_kg = mean(Mass_kg),
-              n=n()) |>
-    ungroup()
+    summarise(Mass_kg = sum(Mass_kg), .groups="drop") |>
+    group_by(SubCompart, Scale) |>
+    summarise(Mass_kg = mean(Mass_kg), n=n(), .groups="drop")
   
-  if(nRUNs != unique(solution$n)){
-    stop("nRUNs not equal to n in summarise")
-  }
+  if(nRUNs != unique(solution$n)) stop("nRUNs not equal to n in summarise")
   
-  # Aggregate over scales
+  # Top-level treemap over scales
   scale_solution <- solution |>
     group_by(Scale) |>
-    summarise(Mass_kg = sum(Mass_kg))
-
-  # Calculate percentages from masses
-  scale_solution <- scale_solution |>
-    mutate(TotalMass = sum(Mass_kg)) |> 
-    mutate(Mass_percent = round(((Mass_kg/TotalMass)*100), 2)) |>
-    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
+    summarise(Mass_kg = sum(Mass_kg), .groups="drop") |>
+    mutate(Mass_percent = round((Mass_kg/sum(Mass_kg))*100,2),
+           Mass_percent_label = paste0(Mass_percent,"%"))
   
-  scale_plot <- ggplot(scale_solution, aes(area = Mass_kg, fill = Scale, 
-                                           label = paste(Scale, Mass_percent_label, sep = "\n"))) +
+  scale_plot <- ggplot(scale_solution, aes(area=Mass_kg, fill=Scale,
+                                           label=paste(Scale, Mass_percent_label, sep="\n"))) +
     geom_treemap() +
-    geom_treemap_text(colour = "white", place = "centre", size = 15) +
-    scale_fill_discrete()+
-    labs(title = paste0("Distribution of average steady state masses over scales")) +
-    theme(legend.position = "none")  
+    geom_treemap_text(colour="white", place="centre", size=15) +
+    scale_fill_discrete() +
+    labs(title="Distribution of average steady state masses over scales") +
+    theme(legend.position="none")
   
-  if (!is.null(scale)) {
-    subcompart_solution <- solution[solution$Scale %in% scale, ]
-  } else {
-    subcompart_solution <- solution
-  }
+  # Filter for selected scale and prepare subcompartment treemap
+  subcompart_solution <- solution[solution$Scale==scale, ] |>
+    mutate(Mass_percent = round((Mass_kg/sum(Mass_kg))*100,2),
+           Mass_percent_label = paste0(Mass_percent,"%"),
+           SubCompartLabel = subcompart_labels[SubCompart])
   
-  # Calculate percentages from masses
-  subcompart_solution <- subcompart_solution |>
-    mutate(TotalMass = sum(Mass_kg)) |> 
-    mutate(Mass_percent = round(((Mass_kg/TotalMass)*100), 2)) |>
-    mutate(Mass_percent_label = paste0(as.character(Mass_percent), "%"))
-  
-  subcompart_plot <- ggplot(subcompart_solution, aes(area = Mass_kg, fill = SubCompart, 
-                                                     label = paste(SubCompart, Mass_percent_label, sep = "\n"))) +
+  subcompart_plot <- ggplot(subcompart_solution, aes(area=Mass_kg, fill=SubCompartLabel,
+                                                     label=paste(SubCompartLabel, Mass_percent_label, sep="\n"))) +
     geom_treemap() +
-    geom_treemap_text(colour = "white", place = "centre", size = 15) +
-    scale_fill_manual(values = subcompart_colors) 
-    if (!is.null(scale)) {
-      subcompart_plot <-subcompart_plot +
-      labs(title = paste0("Distribution of average steady state masses at ", scale, " scale"))
-    } else {
-      subcompart_plot <-subcompart_plot + 
-      labs(title = paste0("Distribution of average steady state masses at all scales"))
-    }
-  subcompart_plot <-  subcompart_plot+theme(legend.position = "none")  
+    geom_treemap_text(colour="white", place="centre", size=15) +
+    scale_fill_manual(values=subcompart_colors) +
+    labs(title=paste0("Distribution of average steady state masses at ", scale, " scale")) +
+    theme(legend.position="right")
   
-  grid.arrange(scale_plot, subcompart_plot, ncol = 1)
+  grid.arrange(scale_plot, subcompart_plot, ncol=1)
 }
-
-subcompart_colors <- c(
-  "sea" = "dodgerblue4",
-  "river" = "dodgerblue4",
-  "lake" = "dodgerblue4",
-  "deepocean" = "dodgerblue4",
-  "cloudwater" = "slategray3",
-  "air" = "slategray3",
-  "agriculturalsoil" = "darkgoldenrod",
-  "naturalsoil" = "darkgoldenrod",
-  "othersoil" = "darkgoldenrod",
-  "freshwatersediment" = "burlywood4",
-  "marinesediment" = "burlywood4",
-  "lakesediment" = "burlywood4" 
-)
 
