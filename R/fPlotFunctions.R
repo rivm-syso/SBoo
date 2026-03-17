@@ -117,39 +117,56 @@ DetDynSolPlot <- function(scale = NULL, subcompart = NULL){
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Probabilistic & dynamic
 ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
+  
+  # Merge solution with state info
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Mass_kg')]
   
+  # Validation
   if(length(scale) != 1) stop("Please select 1 scale")
   if(!scale %in% unique(solution$Scale)) stop("Selected scale does not exist")
-  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) stop("One or more selected subcomparts do not exist")
+  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) 
+    stop("One or more selected subcomparts do not exist")
   
+  # Aggregate over species
   cnames <- setdiff(names(solution), c("Species", "Mass_kg"))
-  solution <- aggregate(as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + "))), data = solution, sum)
+  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
+  solution <- aggregate(formula, data = solution, sum)
   
+  # Filter for scale and subcompartments
   solution <- solution[solution$Scale == scale, ]
-  if (!is.null(subcompart)) solution <- solution[solution$SubCompart %in% subcompart, ]
+  if(!is.null(subcompart)) solution <- solution[solution$SubCompart %in% subcompart, ]
   
-  # Convert time
-  solution$Year <- solution$time / (365.25*24*3600)
+  # Convert time to numeric & years
+  solution$time <- as.numeric(as.character(solution$time))
+  solution$Year <- solution$time / (365.25 * 24 * 3600)
   
-  # Summary stats
+  # Summary statistics for uncertainty
   summary_stats <- solution |>
     group_by(Year, SubCompart) |>
-    summarise(Mean_Value = mean(Mass_kg), SD_Value = sd(Mass_kg)) |>
+    summarise(
+      Mean_Value = mean(Mass_kg, na.rm = TRUE),
+      SD_Value   = sd(Mass_kg, na.rm = TRUE)
+    ) |>
     ungroup() |>
-    mutate(Lower_CI = Mean_Value - 1.96*SD_Value/sqrt(n()),
-           Upper_CI = Mean_Value + 1.96*SD_Value/sqrt(n()))
+    mutate(
+      Lower_CI = Mean_Value - 1.96*SD_Value/sqrt(n()),
+      Upper_CI = Mean_Value + 1.96*SD_Value/sqrt(n())
+    )
   
   summary_stats$SubCompartLabel <- subcompart_labels[summary_stats$SubCompart]
   
   ggplot(summary_stats, aes(x = Year, y = Mean_Value, color = SubCompartLabel)) +
     geom_line(size = 1) +
-    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI, fill = SubCompartLabel), alpha = 0.2, show.legend = FALSE) +
+    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI, fill = SubCompartLabel),
+                alpha = 0.2, show.legend = FALSE) +
     theme_minimal() +
-    labs(title = paste0("Dynamic mean mass in ", paste(subcompart, collapse=", "), " at ", scale, " scale"),
-         subtitle = "with uncertainty bands over time",
-         x = "Year", y = paste0("Mass of ", World$substance, " [kg]")) +
+    labs(
+      title = paste0("Dynamic mean mass at ", scale, " scale"),
+      subtitle = "with uncertainty bands over time",
+      x = "Year",
+      y = paste0("Mass of ", World$substance, " [kg]")
+    ) +
     scale_color_manual(values = subcompart_colors) +
     guides(color = guide_legend(title = "Subcompartment"))
 }
@@ -251,44 +268,58 @@ DetDynConcPlot <- function(scale=NULL, subcompart=NULL){
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Probabilistic & dynamic
-ProbDynConcPlot <- function(scale=NULL, subcompart=NULL){
-  conc <- merge(World$Concentration(), World$states$asDataFrame, by="Abbr")
-  conc <- conc[c('SubCompart','Scale','Species','time','RUNs','Concentration','Unit')]
+ProbDynConcPlot <- function(scale = NULL, subcompart = NULL){
   
-  if(length(scale)!=1) stop("Please select 1 scale")
-  if(length(subcompart)!=1) stop("Please select 1 subcompartment")
-  if(!scale %in% unique(conc$Scale)) stop("Selected scale does not exist")
-  if(!is.null(subcompart) && !all(subcompart %in% unique(conc$SubCompart))) stop("One or more selected subcomparts do not exist")
+  # Merge solution with state info
+  concentration <- merge(World$Concentration(), World$states$asDataFrame, by = "Abbr")
+  concentration <- concentration[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Concentration', 'Unit')]
   
-  cnames <- setdiff(names(conc), c("Species","Concentration"))
-  conc <- aggregate(as.formula(paste("Concentration ~", paste(cnames, collapse=" + "))), data=conc, sum)
+  # Validation
+  if(length(scale) != 1) stop("Please select 1 scale")
+  if(length(subcompart) != 1) stop("Please select 1 subcompartment")
+  if(!scale %in% unique(concentration$Scale)) stop("Selected scale does not exist")
+  if(!subcompart %in% unique(concentration$SubCompart)) stop("Selected subcompartment does not exist")
   
-  conc <- conc[conc$Scale==scale, ]
-  if(!is.null(subcompart)) conc <- conc[conc$SubCompart %in% subcompart, ]
+  # Aggregate over species
+  cnames <- setdiff(names(concentration), c("Species", "Concentration"))
+  formula <- as.formula(paste("Concentration ~", paste(cnames, collapse = " + ")))
+  concentration <- aggregate(formula, data = concentration, sum)
   
-  conc$Year <- conc$time / (365.25*24*3600)
-  conc$SubCompartLabel <- subcompart_labels[conc$SubCompart]
+  # Filter for scale and subcompartment
+  concentration <- concentration[concentration$Scale == scale & concentration$SubCompart == subcompart, ]
   
-  summary_stats <- conc |>
-    group_by(Year, SubCompartLabel) |>
+  # Convert time to numeric & years
+  concentration$time <- as.numeric(as.character(concentration$time))
+  concentration$Year <- concentration$time / (365.25 * 24 * 3600)
+  
+  # Summary statistics
+  summary_stats <- concentration |>
+    group_by(Year) |>
     summarise(
-      Mean_Value = mean(Concentration, na.rm=TRUE),
-      SD_Value = sd(Concentration, na.rm=TRUE),
-      .groups="drop"
+      Mean_Value = mean(Concentration, na.rm = TRUE),
+      SD_Value   = sd(Concentration, na.rm = TRUE)
     ) |>
-    mutate(Lower_CI = Mean_Value - 1.96*SD_Value/sqrt(n()),
-           Upper_CI = Mean_Value + 1.96*SD_Value/sqrt(n()))
+    ungroup() |>
+    mutate(
+      Lower_CI = Mean_Value - 1.96*SD_Value/sqrt(n()),
+      Upper_CI = Mean_Value + 1.96*SD_Value/sqrt(n())
+    )
   
-  ggplot(summary_stats, aes(x=Year, y=Mean_Value, color=SubCompartLabel)) +
-    geom_line(size=1) +
-    geom_ribbon(aes(ymin=Lower_CI, ymax=Upper_CI, fill=SubCompartLabel), alpha=0.2, show.legend=FALSE) +
+  unit <- unique(concentration$Unit)
+  
+  ggplot(summary_stats, aes(x = Year, y = Mean_Value)) +
+    geom_line(color = subcompart_colors[subcompart_labels[subcompart]], size = 1) +
+    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI),
+                alpha = 0.2, fill = subcompart_colors[subcompart_labels[subcompart]]) +
     theme_minimal() +
-    labs(title=paste0("Dynamic mean concentration in ", subcompart, " at ", scale, " scale"),
-         subtitle="with uncertainty bands over time",
-         x="Year", y=paste0("Concentration of ", World$substance)) +
-    scale_color_manual(values=subcompart_colors) +
-    guides(color=guide_legend(title="Subcompartment"))
+    labs(
+      title = paste0("Dynamic mean concentration in ", subcompart_labels[subcompart], " at ", scale, " scale"),
+      subtitle = "with uncertainty bands over time",
+      x = "Year",
+      y = paste0("Concentration of ", World$substance, " [", unit, "]")
+    )
 }
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Probabilistic & steady state 
 ProbSSConcPlot <- function(scale=NULL){
