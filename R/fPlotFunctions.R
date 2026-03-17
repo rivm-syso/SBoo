@@ -163,15 +163,17 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
     ) |>
     ungroup()
   
-  ggplot(summary_stats, aes(x = Year, y = Mean_Value, color = SubCompart, fill = SubCompart)) +
+  ggplot(summary_stats, aes(x = Year, y = Mean_Value, color = SubCompart)) +
     geom_line(size = 1) +
-    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2) +
-    labs(title = paste0("Dynamic mean mass in ", paste(subcompart, collapse = ", "), " at ", scale, " scale"),
-         subtitle = "with uncertainty bands over time",
-         x = "Year",
-         y = paste0("Mass of ", World$substance, " [kg]")) +
+    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI, fill = SubCompart), alpha = 0.2, show.legend = FALSE) +
+    labs(
+      title = paste0("Dynamic mean mass in ", paste(subcompart, collapse = ", "), " at ", scale, " scale"),
+      subtitle = "with uncertainty bands over time",
+      x = "Year",
+      y = paste0("Mass of ", World$substance, " [kg]")
+    ) +
     theme_minimal() +
-    guides(color = guide_legend(title = NULL))
+    guides(color = guide_legend(title = "Subcompartment"))
 }
 
 
