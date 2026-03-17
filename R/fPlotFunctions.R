@@ -116,29 +116,24 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
   solution <- merge(World$Masses(), World$states$asDataFrame, by = "Abbr")
   solution <- solution[c('SubCompart', 'Scale', 'Species', 'time', 'RUNs', 'Mass_kg')]
   
-  # Make sure 1 scale is selected
+  # Check selected scale
   if(length(scale) != 1){
     stop("Please select 1 scale")
   }
   
-  if(length(subcompart) != 1){
-    stop("Please select 1 subcompartment")
-  }
-  
-  # Make sure the selected scale and subcompartments exist
   if(!scale %in% unique(solution$Scale)){
     stop("Selected scale does not exist")
   }
   
-  # Make sure the selected subcompartments exist
-  if (!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) {
-    stop("One or more selected subcomparts do not exist")
+  # Check selected subcompartment(s)
+  if(!is.null(subcompart) && !all(subcompart %in% unique(solution$SubCompart))) {
+    stop("One or more selected subcompartments do not exist")
   }
   
   # Aggregate over species
-  cnames <- names(solution)
-  cnames <- cnames[!cnames %in% c("Species", "Mass_kg")]
-  formula <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
+  cnames   <- names(solution)
+  cnames   <- cnames[!cnames %in% c("Species", "Mass_kg")]
+  formula  <- as.formula(paste("Mass_kg ~", paste(cnames, collapse = " + ")))
   solution <- aggregate(formula, data = solution, sum)
   
   if (!is.null(scale)) {
@@ -157,8 +152,9 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
   solution$time <- as.numeric(solution$time)
   solution$Year <- solution$time / (365.25 * 24 * 3600)
   
+  # Summary statistics per subcompartment
   summary_stats <- solution |>
-    group_by(Year) |>
+    group_by(Year, SubCompart) |>  # added SubCompart here
     summarise(
       Mean_Value = mean(Mass_kg, na.rm = TRUE),
       SD_Value = sd(Mass_kg, na.rm = TRUE),
@@ -167,16 +163,17 @@ ProbDynSolPlot <- function(scale = NULL, subcompart = NULL){
     ) |>
     ungroup()
   
-  ggplot(summary_stats, aes(x = Year, y = Mean_Value)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2, fill = "blue") +
-    labs(title = paste0("Dynamic mean mass in ", subcompart, " at ", scale, " scale"),
+  ggplot(summary_stats, aes(x = Year, y = Mean_Value, color = SubCompart, fill = SubCompart)) +
+    geom_line(size = 1) +
+    geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2) +
+    labs(title = paste0("Dynamic mean mass in ", paste(subcompart, collapse = ", "), " at ", scale, " scale"),
          subtitle = "with uncertainty bands over time",
          x = "Year",
          y = paste0("Mass of ", World$substance, " [kg]")) +
-    theme_minimal()+
+    theme_minimal() +
     guides(color = guide_legend(title = NULL))
 }
+
 
 # Masses plot for probabilistic steady state output
 ProbSSSolPlot <- function(scale = NULL){
