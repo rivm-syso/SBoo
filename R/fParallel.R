@@ -67,9 +67,12 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   # Number of slices
   nSlices <- length(emis_slices)
   
+  # Load required library
+  library("doParallel")
+  
   # Create a parallel cluster
-  cl <- parallel::makeCluster(nCores)
-  doParallel::registerDoParallel(cl)
+  cl <- makeCluster(nCores)
+  registerDoParallel(cl)
   
   # Define the worker function for each slice
   processSlice <- function(i) {
