@@ -2,10 +2,6 @@
 # Plotting functions
 #####################
 
-#####################
-# Plotting functions
-#####################
-
 # Lookup table for legend labels
 subcompart_labels <- c(
   agriculturalsoil    = "Agricultural soil",
