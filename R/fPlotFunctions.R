@@ -24,25 +24,27 @@ subcompart_labels <- c(
 
 # Subcompartment colors
 subcompart_colors <- c(
-  # Waters
-  "Sea"                 = "#1f78b4",
-  "River"               = "#a6cee3",
-  "Lake"                = "#3690c0",
-  "Deep ocean"          = "#08306b",
+  # Marine waters
+  "Sea"        = "#FF69B4",  
+  "Deep ocean" = "#8A2BE2",  
+  
+  # Freshwaters
+  "River"      = "#87CEEB",
+  "Lake"       = "#4A90E2",  
   
   # Atmosphere
   "Air"                 = "#b2df8a",
-  "Cloud water"         = "#33a02c",
+  "Cloud water"         = "#006400",
   
   # Soils
-  "Agricultural soil"   = "#c18750",
-  "Natural soil"        = "#8b5a2b",
-  "Other soil"          = "#5c3317",
+  "Agricultural soil"   = "#d9a066",
+  "Natural soil"        = "#8c510a",
+  "Other soil"          = "#3b2a1a",
   
   # Sediments
-  "Freshwater sediment" = "#ffffb2",
-  "Marine sediment"     = "#fecc5c",
-  "Lake sediment"       = "#fd8d3c"
+  "Freshwater sediment" = "#ffe066",
+  "Marine sediment"     = "#fd8d3c",
+  "Lake sediment"       = "#CC0000"
 )
 
 
