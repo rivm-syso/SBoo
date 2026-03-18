@@ -122,6 +122,9 @@ SolverModule <-
             used_runs <- 1:nRUNs
             
             if("data.frame" %in% class(emissions)){
+              if(!("RUN" %in% colnames(emissions))) {
+                stop("No RUN column found, but probabilistic solver use detected. Please add a RUN column to emission dataframe.")
+              }
               solver_runs <- unique(emissions$RUN)
             } else if(class(emissions) == "list"){
               solver_runs <- used_runs
@@ -132,6 +135,15 @@ SolverModule <-
             
             if(!"list" %in% class(emissions)){
               
+              if(length(solver_runs) == 1 & length(used_runs) > 1){
+                # copy emission df for each run
+                emissions <- do.call("rbind", lapply(used_runs, function(run_num) {
+                  temp <- emissions
+                  temp$RUN <- run_num
+                  temp
+                }))
+                private$run_df$solver_runs <- used_runs # overwrite run_df$solver_runs to avoid RUN in emission dataframe being reverted back to 1 or NA in the next line
+              }
               emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)] 
             }
             
