@@ -11,7 +11,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
     stop("Error: max_runs_per_slice cannot be NULL. Please provide a valid value.")
   }
   if (max_runs_per_slice < 2) {
-    stop("solveInParallelSteadyState: runs per slice (max_runs_per_slice) cannot be smaller dan 2")
+    stop("solveInParallelSteadyState: runs per slice (max_runs_per_slice) cannot be smaller then 2")
   }
   if (is.null(nCores)) {
     stop("Error: nCores cannot be NULL. Please provide a valid number of cores.")
@@ -148,8 +148,6 @@ solveInParallelDynamic <- function(max_runs_per_slice,
                                    world_path = "data/World.RDS",
                                    SBooDataLocation = "SimpleBox/SBooScripts"
                                    ) {
-  library(parallel)
-  library(doParallel)
   ###################### Input Validation
   if (is.null(max_runs_per_slice)) {
     stop("Error: max_runs_per_slice cannot be NULL. Please provide a valid value.")
@@ -218,6 +216,8 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   
   ###################### Step 3: Solve in parallel
   nSlices <- length(emis_slices)
+  
+  library("doParallel")
   
   cl <- parallel::makeCluster(nCores)
   doParallel::registerDoParallel(cl)
