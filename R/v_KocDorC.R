@@ -1,11 +1,12 @@
-#' @title Ksw
+#' @title Input or calculated organic carbon partitioning coefficient for the original form..
 #' @name KocDorC
-#' @description soil-water partitioning coefficient for organic colloids
+#' @description Function that either calculates the Organic Carbon partitioning coefficient from established QSARs based on Kow and pKa
+#' Or uses input data for Koc.
+#' @param Kow Octanol water partitioning coefficient in data
 #' @param a see QSAR table 
 #' @param b see QSAR table 
-#' @param rhoMatrix density of the matrix [kg/m3]
-#' @param pKa Dissociation constant of (conjugated) acid (default = 70
-#' @param Ksw soil water partitioning coefficient in data
+#' @param Koc Organic Carbon partitioning coefficient in
+#' @param pKa Dissociation constant of (conjugated) acid (default = 7)
 #' @export
 KocDorC <- function (Kow, a, b, Koc){
 
@@ -14,7 +15,6 @@ KocDorC <- function (Kow, a, b, Koc){
              "acid" = 10^(0.54*log10(Kow)+1.11) ,
              "base" = 10^(0.37*log10(Kow)+1.7) ,
              "metal" = NA,
-             #"particle" = stop("Ksw Should be in the data"),
              "particle" = NA,
              #else
              {a * Kow^b})
