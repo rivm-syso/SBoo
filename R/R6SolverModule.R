@@ -55,7 +55,7 @@ SolverModule <-
                          var_box_df = data.frame(), var_invFun = list(), nRUNs = NULL, 
                          ParallelPreparation=F, LHSmatrix = NULL, correlations = NULL, 
                          ...) {
-
+        
         
         lhsRUNS <- 0 #unless overwritten:
         nVars <- length(var_invFun)
@@ -81,7 +81,7 @@ SolverModule <-
               # create the RUNs for variables and possibly emissions
               # NB PrepLHS sets private$input_variables to var_box_df
               lhsRUNS <- self$PrepLHS(var_box_df, var_invFun, emis_invFun = NULL, nRUNs)
-
+              
               scaled_samples <- self$ScaleLHS(lhsRUNS, var_invFun, correlations)
               
               private$LHSruns <- t(scaled_samples)
@@ -92,14 +92,14 @@ SolverModule <-
               
               # Rename the rows
               rownames(private$LHSruns) <- new_names
-
+              
               saveRDS(private$LHSruns, "data/scaledLHSsamples.RDS")
             }
           }
-            # Export World
-            saveRDS(World, file = "data/World.RDS")
-        
-        # If ParallelPreparation is FALSE, regular solver use.
+          # Export World
+          saveRDS(World, file = "data/World.RDS")
+          
+          # If ParallelPreparation is FALSE, regular solver use.
         } else {
           #browser()
           if (is.null(private$SB.K)) {
@@ -117,21 +117,33 @@ SolverModule <-
             tmin <- 0
           }
           if (nRUNs > 1) {
-            #browser()
+            # browser()
             # Create a matrix with original_runs and solver_runs
             used_runs <- 1:nRUNs
             
             if("data.frame" %in% class(emissions)){
+              if(!("RUN" %in% colnames(emissions))) {
+                stop("No RUN column found, but probabilistic solver use detected. Please add a RUN column to emission dataframe.")
+              }
               solver_runs <- unique(emissions$RUN)
             } else if(class(emissions) == "list"){
               solver_runs <- used_runs
             }
-
+            
             run_matrix <- cbind(used_runs, solver_runs)
             private$run_df <- as.data.frame(run_matrix)
             
             if(!"list" %in% class(emissions)){
-
+              
+              if(length(solver_runs) == 1 & length(used_runs) > 1){
+                # copy emission df for each run
+                emissions <- do.call("rbind", lapply(used_runs, function(run_num) {
+                  temp <- emissions
+                  temp$RUN <- run_num
+                  temp
+                }))
+                private$run_df$solver_runs <- used_runs # overwrite run_df$solver_runs to avoid RUN in emission dataframe being reverted back to 1 or NA in the next line
+              }
               emissions$RUN <- private$run_df$used_runs[match(emissions$RUN, private$run_df$solver_runs)] 
             }
             
@@ -204,13 +216,13 @@ SolverModule <-
               inputvars <- private$input_variables
               private$LHSruns <- t(scaled_samples)
               rownames(private$LHSruns) <- gsub("_", " ", rownames(private$LHSruns))
-
+              
             } else {
               nVars = 1
             }
-          # If LHS samples are already prepared, assign LHSmatrix to private$LHSruns  
+            # If LHS samples are already prepared, assign LHSmatrix to private$LHSruns  
           } else {
-
+            
             private$LHSruns <- LHSmatrix
             
             # Get the number of runs
@@ -273,7 +285,7 @@ SolverModule <-
             for (i in 1:nRUNs){
               
               # If there is one set of emissions: 
-              if(!"RUN" %in% colnames(emissions) && emisFuns == 0){
+              if((!"RUN" %in% colnames(emissions)|length(unique(emissions$RUN)) == 1 ) && emisFuns == 0){
                 emis <- self$emissions()
                 # If there are nRUNs sets of emissions or distribution functions for emissions:
               } else if(length(unique(emissions$RUN)) == nRUNs || (emisFuns != 0)){
@@ -291,7 +303,7 @@ SolverModule <-
                 
                 inputvars <- private$input_variables
                 inputvars$RUN <- i
-
+                
                 #update core and solve
                 private$MyCore$UpdateDirty(unique(private$input_variables$varName))
                 self$PrepKaasM()
@@ -343,19 +355,19 @@ SolverModule <-
       
       # ` Function that returns the solution
       GetMasses = function() {
-
-                # Prep and return the solution
+        
+        # Prep and return the solution
         if (is.null(private$Masses)) {
           stop("first solve, then ask again")
         }
         SolDF <- array2DF(private$Masses)
         names(SolDF)[names(SolDF) == "Var2"] <- "Abbr"
         names(SolDF)[names(SolDF) == "Value"] <- "Mass_kg"
-                
+        
         SolDF$RUNs <- private$run_df$solver_runs[match(SolDF$RUNs, private$run_df$used_runs)]
         
         SolDF <- self$RemoveUnusedCols(SolDF)
-
+        
         return(SolDF)
       },
       
@@ -374,7 +386,7 @@ SolverModule <-
       
       GetEmissions = function() {
         
-
+        
         if (is.null(private$UsedEmissions)) {
           stop("first solve, then ask again")
         }
@@ -402,7 +414,7 @@ SolverModule <-
       
       #' @description Function that returns the concentration calculated from masses
       GetConcentrations = function() {
-  
+        
         #prep and call Mass2ConcFun (Volume, Matrix, all.rhoMatrix, Fracs, Fracw)
         
         if (is.null(private$Masses)) {
@@ -416,7 +428,7 @@ SolverModule <-
             stop("concentration calculation depends on at least one of the uncertain parameters, this not implemented yet")
           }
         }
-
+        
         divide <- private$Mass2ConcFun$execute()
         divide <- dplyr::left_join(private$SolveStates$asDataFrame, divide)
         solution_df <- array2DF(private$Masses)
@@ -661,13 +673,13 @@ SolverModule <-
         k <- length(var_invFun) + ifelse(is.null(emis_invFun), 0, length(emis_invFun))
         lhs_samples <- lhs::randomLHS(n = nRUNs, k = k)        
         # only now:
-      #  stopifnot(length(var_invFun) == nrow(var_box_df))
+        #  stopifnot(length(var_invFun) == nrow(var_box_df))
         
-       # private$input_variables <- var_box_df
-       # return(lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun)))
-      #},
-      #ScaleLHS = function(lhsRUNs, var_invfun) {
-
+        # private$input_variables <- var_box_df
+        # return(lhs::optimumLHS(n = nRUNs, k = length(var_invFun) + length(emis_invFun)))
+        #},
+        #ScaleLHS = function(lhsRUNs, var_invfun) {
+        
         # Check if lhsRUNs is a vector and convert it to a matrix with one column if necessary
         if (is.vector(lhs_samples)) {
           lhs_samples <- matrix(lhs_samples, ncol = 1)
@@ -732,7 +744,7 @@ SolverModule <-
       #' @description Function that transforms LHS samples for correlated variables
       #' @param 
       TransformCorrelatedLHS = function(lhsRUNs, correlations, var_invfun) {
-
+        
         # Filter and prepare correlations 
         correlations <- data.frame(varName_1 = paste0(correlations$varName_1, "_", correlations$Scale_1, "_", correlations$SubCompart_1, "_", correlations$Species_1),
                                    varName_2 = paste0(correlations$varName_2, "_", correlations$Scale_2, "_", correlations$SubCompart_2, "_", correlations$Species_2),

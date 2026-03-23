@@ -1,17 +1,18 @@
 solveInParallelSteadyState <- function(max_runs_per_slice,
-                            nCores,
-                            emissions_data,
-                            correlations = NULL, 
-                            LHSsamples_path = "data/scaledLHSsamples.RDS",
-                            world_path = "data/World.RDS"
-                            ) {
+                                       nCores,
+                                       emissions_data,
+                                       correlations = NULL, 
+                                       LHSsamples_path = "data/scaledLHSsamples.RDS",
+                                       world_path = "data/World.RDS",
+                                       SBooDataLocation = "SimpleBox/SBooScripts"
+) {
   ###################### Input Validation
   if (is.null(max_runs_per_slice)) {
     stop("Error: max_runs_per_slice cannot be NULL. Please provide a valid value.")
   }
   if (max_runs_per_slice < 2) {
-    stop("solveInParallelSteadyState: runs per slice (max_runs_per_slice) cannot be smaller than 2")
-    }
+    stop("solveInParallelSteadyState: runs per slice (max_runs_per_slice) cannot be smaller then 2")
+  }
   if (is.null(nCores)) {
     stop("Error: nCores cannot be NULL. Please provide a valid number of cores.")
   }
@@ -30,7 +31,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   # Minimum runs per slice
   min_runs_per_slice <- 2
   
-  # Estimate minimal amount of slices baed on max_runs_per_slice
+  # Estimate minimal amount of slices based on max_runs_per_slice
   nslices <- ceiling(total_runs / max_runs_per_slice)
   
   # Create runs_distribution with amount of runs per slice
@@ -41,7 +42,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   if (remaining > 0) {
     runs_distribution[1:remaining] <- runs_distribution[1:remaining] + 1
   }
-
+  
   # Split emissions data into slices using the runs_distribution
   emis_slices <- list()
   start_index <- 1
@@ -76,8 +77,11 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   
   # Define the worker function for each slice
   processSlice <- function(i) {
-    # Source the fakeLib inside each worker to ensure all functions are available
-    source("baseScripts/fakeLib.R")
+    # Load fakelib
+    if (!is.null(SBooDataLocation) && !is.na(SBooDataLocation) && SBooDataLocation != "") {
+      source(file.path(SBooDataLocation, "baseScripts/fakeLib.R"))
+    } else {
+      source("baseScripts/fakeLib.R")}
     
     # Load a fresh instance of World to avoid mutability issues
     localWorld <- readRDS(world_path)
@@ -85,8 +89,8 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
     if(is.null(correlations)){
       # Perform computations using `Solve`
       localWorld$Solve(emissions = emis_slices[[i]], 
-                     LHSmatrix = LHS_slices[[i]], 
-                     nRUNs = length(unique(emis_slices[[i]]$RUN)))
+                       LHSmatrix = LHS_slices[[i]], 
+                       nRUNs = length(unique(emis_slices[[i]]$RUN)))
     } else {
       # Perform computations using `Solve`
       localWorld$Solve(emissions = emis_slices[[i]], 
@@ -141,9 +145,9 @@ solveInParallelDynamic <- function(max_runs_per_slice,
                                    nTIMES,
                                    correlations = NULL,
                                    LHSsamples_path = "data/scaledLHSsamples.RDS", 
-                                   world_path = "data/World.RDS"
+                                   world_path = "data/World.RDS",
+                                   SBooDataLocation = "SimpleBox/SBooScripts"
                                    ) {
-
   ###################### Input Validation
   if (is.null(max_runs_per_slice)) {
     stop("Error: max_runs_per_slice cannot be NULL. Please provide a valid value.")
@@ -213,12 +217,17 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   ###################### Step 3: Solve in parallel
   nSlices <- length(emis_slices)
   
+  library("doParallel")
+  
   cl <- parallel::makeCluster(nCores)
   doParallel::registerDoParallel(cl)
   
   processSlice <- function(i) {
-    # Source required scripts
-    source("baseScripts/fakeLib.R")
+    # Load fakelib
+    if (!is.null(SBooDataLocation) && !is.na(SBooDataLocation) && SBooDataLocation != "") {
+      source(file.path(SBooDataLocation, "baseScripts/fakeLib.R"))
+    } else {
+      source("baseScripts/fakeLib.R")}
     
     # Load World object
     localWorld <- readRDS(world_path)
@@ -254,7 +263,7 @@ solveInParallelDynamic <- function(max_runs_per_slice,
     )
     return(result_list)
   }
-  
+  # browser()
   # Define parallel execution and combine results with `foreach`
   combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
     processSlice(i)

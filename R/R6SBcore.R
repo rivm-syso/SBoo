@@ -1217,7 +1217,7 @@ SBcore <- R6::R6Class("SBcore",
           CalcMod <- private$ModuleList[[postNames]]
           if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             succes <- private$UpdateDL(postNames)
-            if (nrow(succes) < 1) warning(paste("R6SBcore: For ",postNames,"no rows calculated. Check."), call. = FALSE)
+            if (nrow(succes) < 1) warning(paste("R6SBcore: For ",postNames,"; no rows calculated"))
           } else { # a process; add kaas to the list
             postKaas <- CalcMod$execute()
             if (!any(is.na(postKaas))) {
