@@ -37,10 +37,34 @@ SteadyStateSolver <- function(k, e, parms){
   tmax=1e20 # solution for >1e12 year horizon
   dm <- rootSolve::runsteady(
     y = rep(0,nrow(k)),
-    times = c(0,tmax),
+    times = c(0, tmax),
     func = SimpleBoxODE,
     parms = list(K = k, 
-                 e = e)
+                 e = e),
+    stol = 1e-20
+  )
+
+  return(dm)
+  
+}
+
+#' @title Steady state solver function
+#' @description Using the SimpleBoxODE function to solve the k matrix with emission (e) for steady state.
+#' This uses the steady function from the rootSolve package with possitive = TRUE.
+#' @param k the first order rate constant matrix [s-1]
+#' @param m emission vector [kg.s-1]
+#' @param parms = empty list (needed so that the SteadyStateSolver and DynamicSolver can be called in the same manner from the SolverModule)
+#' @returns dm (i) = change in mass as list
+SteadyStateSolver2 <- function(k, e, parms){
+  SBNames = colnames(k)
+  tmax=1e20 # solution for >1e12 year horizon
+  dm <- rootSolve::steady(
+    y = rep(0,nrow(k)),
+    # times = c(0, tmax),
+    func = SimpleBoxODE,
+    parms = list(K = k, 
+                 e = e),
+    positive = TRUE
   )
   return(dm)
 }
@@ -69,7 +93,7 @@ DynamicSolver <- function(k, e, parms) {
   
   out <- deSolve::ode(
     y = as.numeric(SB.m0),
-    times = SBtime,
+    t = SBtime,
     func = SimpleBoxODEapprox,
     parms = list(K = SB.K, 
                  SBNames=SBNames,
@@ -190,13 +214,13 @@ triangular_cdf_inv = function(u, # LH scaling factor
 
 #create a function for transformation of lhs range (0-1) to actual variable range (inverse of the 0-1 cdf)
 Make_inv_unif01 = function(fun_type = "triangular", pars) {
-  if (!fun_type %in% c("triangular", "normal", "uniform")) {
-    stop("! fun_type %in% c('triangular', 'normal', 'uniform')")
+  if (!fun_type %in% c("triangular", "normal", "uniform", "log uniform", "log normal", "weibull", "trapezoidal", "power law", "Triangular", "Normal", "Uniform", "Log uniform", "TRWP_size", "Log normal", "Weibull", "Power law", "Trapezoidal")) {
+    stop("! fun_type %in% c('triangular', 'normal', 'uniform', 'log uniform', 'TRWP_size', 'log normal', 'trapezoidal', 'power law')")
   }
-  if (fun_type == "triangular") {
+  if (fun_type == "triangular" || fun_type == "Triangular") {
     if (!(inherits(pars, "list") && length(pars) == 3)) {
       stop(
-        "the triangular is created using a list of three parameters, a = minimum, b = maximum, c = peak")
+        "the triangular distribution is created using a list of three parameters, a = minimum, b = maximum, c = peak")
     }
     a <- pars[["a"]]
     b <- pars[["b"]]
@@ -205,19 +229,82 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       triangular_cdf_inv(x, a, b, c)
     })
   }
-  if (fun_type == "normal") {
+  if (fun_type == "normal" || fun_type == "Normal") {
     if (!(inherits(pars, "list")) && length(pars) == 2) {
-      stop("the normal is created using a list of two parameters, a = mean, b = sigma, c = peak")
+      stop("the normal distribution is created using a list of two parameters, a = sigma, b = mean")
     }
-    mu <- pars[["a"]]
-    sig <- pars[["b"]]
+    sig <- pars[["a"]]
+    mu <- pars[["b"]]
     return(function(x) {
-      qnorm(p = x, mean = mu, sd = sig)
+      EnvStats::qnormTrunc(p=x, mean = mu, sd = sig, min = 0) 
     })
   }
-  if (fun_type == "uniform") {
+  if (fun_type == "weibull" || fun_type == "Weibull") {
+    if (!(inherits(pars, "list")) && length(pars) == 3) {
+      stop("the weibull distribution is created using a list of three parameters, a = location, b = shape, c = scale")
+    }
+    location <- pars[["a"]]
+    shape <- pars[["b"]]
+    scale <- pars[["c"]]
+    return(function(x) {
+      weibull_samples <- qweibull(x, shape=shape, scale=scale) + location
+    })
+  }
+  if (fun_type == "log normal" || fun_type == "Log normal") {
+    if (!(inherits(pars, "list")) && length(pars) == 3) {
+      stop("the log normal distribution is created using a list of three parameters, a = minimum, b = sigma, c = mean")
+    }
+    min <- pars[["a"]]
+    sig <- pars[["b"]]
+    mu <- pars[["c"]]
+    return(function(x) {
+      log(EnvStats::qlnormTrunc(p=x, meanlog = mu, sdlog = sig, min = min))
+    })
+  }
+  if (fun_type == "power law" || fun_type == "Power law") {
+    if (!(inherits(pars, "list")) && length(pars) == 3) {
+      stop("the powerlaw distribution is created using a list of three parameters, a = minimum, b = maximum, c = alpha")
+    }
+    min <- pars[["a"]]
+    max <- pars[["b"]]
+    alpha <- pars[["c"]]
+    return(function(x) {
+      x_scaled <- x^alpha
+      x_out <- x_scaled * (max - min) + min
+      
+      return(x_out)
+    })
+  }
+  if (fun_type == "trapezoidal" || fun_type == "Trapezoidal") {
+    if (!(inherits(pars, "list")) && length(pars) == 4) {
+      stop("the powerlaw distribution is created using a list of four parameters, a = minimum, b = peak1, c = peak2, d = maximum")
+    }
+    min <- pars[["a"]]
+    peak1 <- pars[["b"]]
+    peak2 <- pars[["c"]]
+    max <- pars[["d"]]
+    return(function(x) {
+      # Total width of the trapezoid
+      width_total <- max - min
+      base1 <- peak1 - min    # Width of the left base
+      base2 <- max - peak2    # Width of the right base
+      
+      # Calculate the CDF segments
+      CDF_left <- base1 / width_total         # Area under the left triangle
+      CDF_flat <- 1 - base2 / width_total     # Area under the flat top
+      
+      ifelse(x < (base1 / width_total), 
+             min + sqrt(x * (base1) * width_total),  # Left triangle
+             ifelse(x <= (CDF_flat + base1 / width_total), 
+                    peak1 + (x - base1 / width_total) * (max - peak1),  # Flat top
+                    max - sqrt((1 - x) * (base2) * width_total)  # Right triangle
+             )
+      )
+    })
+  }
+  if (fun_type == "uniform" || fun_type == "Uniform") {
     if (!(inherits(pars, "list")) && length(pars) == 2) {
-      stop("the uniform is created using a list of two parameters, a = minimum, b = maximum")
+      stop("the uniform distribution is created using a list of two parameters, a = minimum, b = maximum")
     }
     minx <- pars[["a"]]
     maxx <- pars[["b"]]
@@ -225,5 +312,37 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       minx + x * (maxx - minx)
     })
   }
-  
+  if (fun_type == "log uniform" || fun_type == "Log uniform") {
+    if (!(inherits(pars, "list")) && length(pars) == 2) {
+      stop("the log uniform is created using a list of two parameters, a = minimum, b = maximum")
+    }
+    minx <- pars[["a"]]
+    maxx <- pars[["b"]]
+    return(function(x) {
+      log_scaled <- -log(1 - x)
+      minx + (maxx - minx) * (log_scaled / max(log_scaled))
+    })
+  }
+  if (fun_type == "TRWP_size") {
+    if (!(inherits(pars, "list")) && length(pars) == 1) {
+      stop("")
+    }
+    path <- pars[["d"]]
+    return(function(x) {
+      # Read the data and process it
+      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data") |>
+        separate(`Size Fraction (µm)`,
+                 into = c("Size_um","max_size_um"), sep = "-") |> 
+        mutate(Size_um = as.numeric(gsub("400", "1000", Size_um))) |>  # Change "400" to "1000"
+        mutate(Size_nm = Size_um*1000) |> # convert sizes to nanometer
+        mutate(PSD_um = as.numeric(PSD_um)) |> # Assuming PSD_um is the particle size distribution (weights)
+        mutate(cdf = cumsum(PSD_um)) |>
+        mutate(cdf = cdf / max(cdf))  # Normalize the CDF
+      
+      # Use the approx function to interpolate Size_um based on the CDF
+      approx(x = TRWP_data$cdf, y = TRWP_data$Size_nm, xout = x, rule = 2)$y
+    })
+  }
 }
+
+

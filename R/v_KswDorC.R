@@ -10,16 +10,22 @@
 #' @param pKa Dissociation constant of (conjugated) acid (default = 70
 #' @param Ksw soil water partitioning coefficient in data
 #' @export
-KswDorC <- function (Kow, pKa, CorgStandard, ChemClass, a, b, all.rhoMatrix, Ksw){
+KswDorC <- function (KocDorC, CorgStandard, all.rhoMatrix, Ksw){
   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
   
   if (is.na(Ksw) || Ksw == "NA") { 
-    if (is.na(pKa) || pKa == "NA"){
-      pKa <- 7
-      warning("pKa is needed but missing, setting pKa=7")
-    }
-    f_Ksw(Kow, pKa, CorgStandard , a, b, ChemClass, RHOsolid, FALSE, Ksw)
+    switch(ChemClass,
+    #        "acid" = 10^(0.54*log10(Kow)+1.11) ,
+    #        "base" = 10^(0.37*log10(Kow)+1.7) ,
+           "metal" = stop("Ksw Should be in the data"),
+           #"particle" = stop("Ksw Should be in the data"),
+           "particle" = NA,
+           #else
+           { KocDorC*CorgStandard * RHOsolid / 1000})
     
-  } else return(Ksw)
+  }
+   
+    
+ else return(Ksw)
   
 }

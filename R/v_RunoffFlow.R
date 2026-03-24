@@ -10,7 +10,7 @@
 #' @param Compartment Only runoff for Compartment == "soil" 
 #' @return Rain water runoff from soils [m3/s]
 #' @export
-Runoff <- function (FRACrun, Area, RAINrate, Compartment){
+RunoffFlow <- function (FRACrun, Area, RAINrate, Compartment){
   if (Compartment == "soil") {
     return(FRACrun * Area * RAINrate)
   } else {

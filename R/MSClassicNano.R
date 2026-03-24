@@ -215,6 +215,7 @@ ClassicNanoWorld <- R6::R6Class(
     } 
     #  Substance properties to be pasted to CONSTANTS later
     ThisSubstance <- InPutDataFrames[["Substances"]][InPutDataFrames[["Substances"]]$Substance == self$substance,]
+    if(length(ThisSubstance[,1])==0){    stop("MSClassicNano: No substance data found, add to substance.csv or init with other substance.") }
     # except:  
     ThisSubstance$Substance <- NULL
     
@@ -224,13 +225,13 @@ ClassicNanoWorld <- R6::R6Class(
     #check for common field .. can only be matrix
     theMatrix <- names(MatrixSheet)[names(MatrixSheet) %in% names(SubCompartSheet)]
     stopifnot(length(theMatrix) == 1)
-    SubCompartSheet <- left_join(SubCompartSheet, MatrixSheet)
+    SubCompartSheet <- left_join(SubCompartSheet, MatrixSheet, by = "Matrix")
 
     #"inherit" Compartments to SubCompart
     Compartments <- InPutDataFrames[["Compartments"]]
     TheCompartment <- names(Compartments)[names(Compartments) %in% names(SubCompartSheet)]
     stopifnot(length(TheCompartment) == 1)
-    SubCompartSheet <- left_join(SubCompartSheet, Compartments)
+    SubCompartSheet <- left_join(SubCompartSheet, Compartments, by = "Compartment")
     #store the result back into InPutDataFrames
     InPutDataFrames[["SubCompartSheet"]] <- SubCompartSheet
     

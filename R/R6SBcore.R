@@ -188,15 +188,33 @@ SBcore <- R6::R6Class("SBcore",
       varFuns <- apply(paramdf, 1, function(aRow) {
         dist_type <- aRow["Distribution"]
         
-        if (dist_type == "triangular") {
+        if (dist_type == "triangular" || dist_type == "Triangular") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
           names(prepArgs) <- c("a", "b", "c")
-        } else if (dist_type == "normal") {
+        } else if (dist_type == "normal" || dist_type == "Normal") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
           names(prepArgs) <- c("a", "b")
-        } else if (dist_type == "uniform") {
+        } else if (dist_type == "uniform" || dist_type == "Uniform") {
           prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
           names(prepArgs) <- c("a", "b")
+        } else if (dist_type == "log uniform" || dist_type == "Log uniform") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b")]))
+          names(prepArgs) <- c("a", "b")
+        } else if (dist_type == "TRWP_size") {
+          prepArgs <- as.list(as.character(aRow[c("d")]))
+          names(prepArgs) <- c("d")
+        } else if (dist_type == "weibull" || dist_type == "Weibull") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
+        } else if (dist_type == "log normal" || dist_type == "Log normal") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
+        } else if (dist_type == "power law" || dist_type == "Power law") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c")]))
+          names(prepArgs) <- c("a", "b", "c")
+        } else if (dist_type == "trapezoidal" || dist_type == "Trapezoidal") {
+          prepArgs <- as.list(as.numeric(aRow[c("a", "b", "c", "d")]))
+          names(prepArgs) <- c("a", "b", "c", "d")
         } else {
           stop("Unsupported distribution type")
         }
@@ -225,6 +243,15 @@ SBcore <- R6::R6Class("SBcore",
         return(NULL)
       }
       private$solver$PrepKaasM()
+    },
+    
+    #'@description Save the last calculated masses in the core
+    K_matrix = function(){
+      #browser()
+      if (is.null(private$solver)) {
+        stop("No active solver")
+      }
+      private$solver$GetK_matrix()
     },
     
     #'@description Save the last calculated masses in the core
@@ -461,7 +488,9 @@ SBcore <- R6::R6Class("SBcore",
       
       #Loop until all vars are known
       totVarsToGet <- NULL
+      # browser()
       while (nrow(TestTree)>0) {
+        # browser()
         VarsToGet <- unique(TestTree$Params)
         totVarsToGet <- c(totVarsToGet, unique(TestTree$Params))
         #test if all totVarsToGet are known
@@ -471,7 +500,8 @@ SBcore <- R6::R6Class("SBcore",
         })
         known <- knownFun | knownData
         if (!all(known)) {
-          stop(paste("unknown function", totVarsToGet[!known], "\n"))
+          
+          stop(paste("R6SBcore: unknown function or unavailable data", totVarsToGet[!known], "\n"))
         }
         sapply(VarsToGet, self$NewCalcVariable)
         TestTree <- private$nodeList[private$nodeList$Calc %in% VarsToGet,]
@@ -1187,7 +1217,7 @@ SBcore <- R6::R6Class("SBcore",
           CalcMod <- private$ModuleList[[postNames]]
           if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
             succes <- private$UpdateDL(postNames)
-            if (nrow(succes) < 1) warning(paste(postNames,"; no rows calculated"))
+            if (nrow(succes) < 1) warning(paste("R6SBcore: For ",postNames,"; no rows calculated"))
           } else { # a process; add kaas to the list
             postKaas <- CalcMod$execute()
             if (!any(is.na(postKaas))) {
@@ -1375,7 +1405,7 @@ SBcore <- R6::R6Class("SBcore",
             cat(paste(VarFunName, nrow(NewData), "rows\n"))
           }
           if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
-            warning(paste(VarFunName,"; no rows calculated"))
+            warning(paste("R6SBcore: For",VarFunName,"no rows calculated. Check, but probably not needed."), call. = FALSE)
             #force the result, see below
             NewData <- data.frame(NA)
             names(NewData) <- VarFunName #for the flow that returns NA
