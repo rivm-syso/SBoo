@@ -76,7 +76,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   registerDoParallel(cl)
   
   # Define the worker function for each slice
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Load fakelib
     if (!is.null(SBooDataLocation) && !is.na(SBooDataLocation) && SBooDataLocation != "") {
       # code take from fakeLib.R in SBooScripts/basescripts
@@ -132,7 +132,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   
   # Execute in parallel using foreach
   combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+    processSlice(i, SBooDataLocation)
   }
   
   # Stop the cluster
@@ -241,7 +241,7 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   cl <- parallel::makeCluster(nCores)
   doParallel::registerDoParallel(cl)
   
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Load fakelib
     if (!is.null(SBooDataLocation) && !is.na(SBooDataLocation) && SBooDataLocation != "") {
       # code take from fakeLib.R in SBooScripts/basescripts
@@ -304,7 +304,7 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   # browser()
   # Define parallel execution and combine results with `foreach`
   combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+    processSlice(i, SBooDataLocation)
   }
   
   stopCluster(cl)
