@@ -9,7 +9,7 @@
 D <- function(FRorig, pKa, Kow, ChemClass){
   
   if (is.na(Kow) || Kow == "NA") {
-    Kow = 18
+    Kow = 18 
     warning("v_D: Kow is NA, to continue Kow set to 18 by default.", call. = FALSE)
   }
   
