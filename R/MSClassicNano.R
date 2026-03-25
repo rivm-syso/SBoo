@@ -215,6 +215,7 @@ ClassicNanoWorld <- R6::R6Class(
     } 
     #  Substance properties to be pasted to CONSTANTS later
     ThisSubstance <- InPutDataFrames[["Substances"]][InPutDataFrames[["Substances"]]$Substance == self$substance,]
+    if(length(ThisSubstance[,1])==0){    stop("MSClassicNano: No substance data found, add to substance.csv or init with other substance.") }
     # except:  
     ThisSubstance$Substance <- NULL
     
