@@ -8,7 +8,7 @@
 #' @param Koc Organic Carbon partitioning coefficient in
 #' @param pKa Dissociation constant of (conjugated) acid (default = 7)
 #' @export
-KocDorC <- function (Kow, a, b, Koc){
+KocDorC <- function (Kow, a, b, Koc, ChemClass){
 
     if (is.na(Koc) || Koc == "NA") { 
       switch(ChemClass,
