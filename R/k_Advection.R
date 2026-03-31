@@ -16,7 +16,8 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
   # Ensure no flows from regional sea and deepocen to continental deepocean, and no continental river to regional river. 
   else if (
     (
-      (ScaleName == "Regional" && (SubCompartName %in% c("sea", "deepocean")) && to.SubCompartName == "deepocean") ||
+      #(ScaleName == "Regional" && (SubCompartName %in% c("sea", "deepocean")) && to.SubCompartName == "deepocean") ||
+      (ScaleName == "Regional" && (SubCompartName %in% c("sea")) && to.SubCompartName == "deepocean") || #there could transfer from deepocean to deepocean
       (ScaleName == "Continental" && SubCompartName == "river" && to.SubCompartName == "river")
     ) &&
     (!is.na(Regional_and_Continental_deepocean) && (isTRUE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "TRUE"))
@@ -26,7 +27,7 @@ k_Advection <- function(flow, Volume, ScaleName, SubCompartName, to.SubCompartNa
   
   else { 
     
-    #if a certain value is input to replace the default, then use it
+    #if a certain value is input to replace the default, then use it even if it =0
     if (!is.null(AdvInput) && !is.na(AdvInput) && !is.nan(AdvInput)) {
       return(AdvInput)
     }
