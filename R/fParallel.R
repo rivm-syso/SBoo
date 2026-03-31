@@ -295,7 +295,7 @@ solveInParallelDynamic <- function(max_runs_per_slice,
     result_list <- list(
       SliceID = i,
       Masses = localWorld$Masses(),
-      Concentrations = localWorld$Concentration(),
+      # Concentrations = localWorld$Concentration(),
       Emissions = localWorld$Emissions(),
       Variables = localWorld$VariableValues()
     )
@@ -311,13 +311,13 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   
   ###################### Step 4: Combine the outcomes into one list
   massesCombined <- do.call(rbind, lapply(combinedResults, `[[`, "Masses"))
-  concentrationsCombined <- do.call(rbind, lapply(combinedResults, `[[`, "Concentrations"))
+  # concentrationsCombined <- do.call(rbind, lapply(combinedResults, `[[`, "Concentrations"))
   emissionsCombined <- do.call(rbind, lapply(combinedResults, `[[`, "Emissions"))
   variablesCombined <- do.call(rbind, lapply(combinedResults, `[[`, "Variables"))
   
   Solution <- list(
     Masses = massesCombined,
-    Concentrations = concentrationsCombined,
+    # Concentrations = concentrationsCombined,
     Emissions = emissionsCombined,
     Variables = variablesCombined
   )
