@@ -9,7 +9,7 @@
 #' @param pKa Dissociation constant of (conjugated) acid (default = 7)
 
 #' @export
-KocAltDorC <- function (Kow, a, b, pKa, KocAlt){
+KocAltDorC <- function (Kow, a, b, pKa, KocAlt, ChemClass){
 
     if (is.na(KocAlt) || KocAlt == "NA") { 
       if (is.na(pKa) || pKa == "NA"){

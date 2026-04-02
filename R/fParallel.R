@@ -76,10 +76,29 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   registerDoParallel(cl)
   
   # Define the worker function for each slice
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Load fakelib
     if (!is.null(SBooDataLocation) && !is.na(SBooDataLocation) && SBooDataLocation != "") {
-      source(file.path(SBooDataLocation, "baseScripts/fakeLib.R"))
+      # code take from fakeLib.R in SBooScripts/basescripts
+      library(tidyverse)
+      library(ggdag) #for plotting DAG graphs
+      library(R6)
+      library(rlang)
+      #path to the SBoo package
+      Path2PackageSource <- file.path(SBooDataLocation,"../SBoo")
+      #source all R files and load data from the package
+      Dfiles <- list.files(paste(Path2PackageSource, "data", sep = "/"), pattern = "\\.rda$")
+      Rded <- lapply(Dfiles, function(x) {
+        Dfilename <- paste(Path2PackageSource, "data", x, sep = "/")
+        if (exists("verbose") && verbose) cat(Dfilename, "\n")
+        load(Dfilename, envir = global_env())
+      })
+      Rfiles <- list.files(paste(Path2PackageSource, "R", sep = "/"), pattern = "\\.R$")
+      sourced <- lapply(Rfiles, function(x) {
+        Rfilename <- paste(Path2PackageSource, "R", x, sep = "/")
+        if (exists("verbose") && verbose) cat(Rfilename, "\n")
+        source(Rfilename)
+      })
     } else {
       source("baseScripts/fakeLib.R")}
     
@@ -113,7 +132,7 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
   
   # Execute in parallel using foreach
   combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+    processSlice(i, SBooDataLocation)
   }
   
   # Stop the cluster
@@ -222,10 +241,29 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   cl <- parallel::makeCluster(nCores)
   doParallel::registerDoParallel(cl)
   
-  processSlice <- function(i) {
+  processSlice <- function(i, SBooDataLocation) {
     # Load fakelib
     if (!is.null(SBooDataLocation) && !is.na(SBooDataLocation) && SBooDataLocation != "") {
-      source(file.path(SBooDataLocation, "baseScripts/fakeLib.R"))
+      # code take from fakeLib.R in SBooScripts/basescripts
+      library(tidyverse)
+      library(ggdag) #for plotting DAG graphs
+      library(R6)
+      library(rlang)
+      #path to the SBoo package
+      Path2PackageSource <- file.path(SBooDataLocation,"../SBoo")
+      #source all R files and load data from the package
+      Dfiles <- list.files(paste(Path2PackageSource, "data", sep = "/"), pattern = "\\.rda$")
+      Rded <- lapply(Dfiles, function(x) {
+        Dfilename <- paste(Path2PackageSource, "data", x, sep = "/")
+        if (exists("verbose") && verbose) cat(Dfilename, "\n")
+        load(Dfilename, envir = global_env())
+      })
+      Rfiles <- list.files(paste(Path2PackageSource, "R", sep = "/"), pattern = "\\.R$")
+      sourced <- lapply(Rfiles, function(x) {
+        Rfilename <- paste(Path2PackageSource, "R", x, sep = "/")
+        if (exists("verbose") && verbose) cat(Rfilename, "\n")
+        source(Rfilename)
+      })
     } else {
       source("baseScripts/fakeLib.R")}
     
@@ -266,7 +304,7 @@ solveInParallelDynamic <- function(max_runs_per_slice,
   # browser()
   # Define parallel execution and combine results with `foreach`
   combinedResults <- foreach(i = seq_len(nSlices)) %dopar% {
-    processSlice(i)
+    processSlice(i, SBooDataLocation)
   }
   
   stopCluster(cl)
