@@ -7,7 +7,7 @@
 #' @export
 
 
-k_Fragmentation <- function (kfrag, SubCompartName, ScaleName){
+k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, 	Regional_and_Continental_deepocean){
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                              SubCompartName == "lakesediment" |
                                                              SubCompartName == "lake" |
@@ -15,7 +15,7 @@ k_Fragmentation <- function (kfrag, SubCompartName, ScaleName){
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) ){
     return(NA)
-  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean")){
+  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(	Regional_and_Continental_deepocean) || isFALSE(	Regional_and_Continental_deepocean) || 	Regional_and_Continental_deepocean == "FALSE")){
     return(NA)
   } else {
     return(kfrag)

@@ -19,14 +19,15 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                          RhoNuc, RadNuc, 
                          NumConcNuc, NumConcAcc,
                          Shortest_side, Intermediate_side,
-                         Longest_side, Shape){
+                         Longest_side, Shape, Regional_and_Continental_deepocean){
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                              SubCompartName == "lakesediment" |
                                                              SubCompartName == "lake" |
                                                              SubCompartName == "river" |
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) | 
-      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+      ((ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" ) &&
+       (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE"))) {
     return(NA)
   }
   if (is.na(Shape) || is.null(Shape)) {
