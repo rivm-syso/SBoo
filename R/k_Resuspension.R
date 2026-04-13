@@ -33,6 +33,14 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
     return(NA)
   }
   
+  #If Regional_and_Continental_deepocean is TRUE, no resuspension from marinesediment to sea
+  if ((ScaleName %in% c("Regional", "Continental")) &&
+      (to.SubCompartName == "sea") &&
+      (!is.na(Regional_and_Continental_deepocean) && (isTRUE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "TRUE"))
+  ) {
+    return(NA)
+  } 
+  
   else if (SpeciesName == "Molecular") {
     if (as.character(Test) == "TRUE") {
       SettlingVelocitySPM <- 2.5 / (24 * 3600)
