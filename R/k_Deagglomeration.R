@@ -6,7 +6,7 @@
 #' @export
 
 
-k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName){
+k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName, Regional_and_Continental_deepocean){
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                              SubCompartName == "lakesediment" |
                                                              SubCompartName == "lake" |
@@ -14,7 +14,7 @@ k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName){
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) ){
     return(NA)
-  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean")){
+  } else if (!is.null(ScaleName) && ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(Regional_and_Continental_deepocean) || isFALSE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")){
     return(NA)
   } else {
     return(kdeag)

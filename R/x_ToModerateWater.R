@@ -11,7 +11,7 @@
 #' @export
 #' 
 x_ToModerateWater <- function (Volume, TAUsea, 
-                             all.x_RegSea2Cont, OceanCurrent, SubCompartName, ScaleName) {
+                             all.x_RegSea2Cont, OceanCurrent, SubCompartName, ScaleName, Remove_global) {
   switch(ScaleName,
          "Tropic" = {
            switch (SubCompartName,
@@ -28,6 +28,8 @@ x_ToModerateWater <- function (Volume, TAUsea,
          "Continental" = {
            switch (SubCompartName,
                    "sea" = {
+                     if ((!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
+                       return(NA) } 
                      RegSea2Cont <- all.x_RegSea2Cont$flow[all.x_RegSea2Cont$fromSubCompart == "sea" & 
                                                              all.x_RegSea2Cont$fromScale == "Regional"]
                      return((Volume/TAUsea)-RegSea2Cont)}, 
