@@ -15,6 +15,7 @@
 #' @param SubCompartName subcompartment considered
 #' @param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #' @param SettlingVelocitySPM settling velocity of suspended matter particles
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return k_Resuspension Resuspension flow from sediment #[s-1]
 #' @export
 

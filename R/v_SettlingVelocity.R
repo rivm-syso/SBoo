@@ -14,6 +14,7 @@
 #' @param Intermediate_side the intermediate side of the particle as defined by user [m]
 #' @param Shortest_side the shortst side of the particle as identified by user [m]
 #' @param DragMethod The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return Settling velocity [m.s-1]
 #' @export
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 

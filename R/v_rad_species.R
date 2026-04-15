@@ -14,6 +14,7 @@
 #' @param RadCP coarse particulate mode aerosol particle radius [m]
 #' @param NumConcNuc Number concentration of Nucleation mode aerosol particles [#/m3]
 #' @param NumConcAcc Number concentration of Accumulation mode aerosol particles [#/m3]
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return rad_species, Approach to calculate the radius of small heteroagglomerates in air/water [m]
 #' @export
 rad_species <- function(SpeciesName, SubCompartName,ScaleName,

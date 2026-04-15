@@ -12,6 +12,7 @@
 #' @param SpeciesName name of the considered species 
 #' @param SubCompartName name of the subcompartment 
 #' @param ScaleName name of the considered scale
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return Degradation rate constant for molecular species
 #' @export
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
