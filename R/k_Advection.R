@@ -3,6 +3,7 @@
 #' @description Calculation of k, given a Flow
 #' @param flow advection rate [m/s]
 #' @param Volume volume of compartment [m3]
+#' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return Rate constant for 1st order process associated with fluxes
 #' @export
