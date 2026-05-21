@@ -19,6 +19,7 @@
 #'@param SubCompartName name of the subcompartname that is from/to 
 #'@param ScaleName name of scale
 #'@param Test Test = TRUE or FALSE, depending on if SBExcel version should be copied
+#'@param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export
 k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,

@@ -33,6 +33,7 @@
 #' @param Intermediate_side description
 #' @param Shortest_side description
 #' @param DragMethod Drag method [character string]
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export

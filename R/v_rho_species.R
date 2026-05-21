@@ -11,6 +11,7 @@
 #' @param RhoAcc Accumulation mode aerosol particle  [kg/m3]
 #' @param NumConcNuc Number concentration of Nucleation mode aerosol particles [#/m3]
 #' @param NumConcAcc Number concentration of Accumulation mode aerosol particles [#/m3]
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return rho_species, approach to calculate density of species in air or water [kg.m-3]
 #' @export
 rho_species <- function (SpeciesName, SubCompartName,ScaleName,
