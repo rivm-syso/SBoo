@@ -14,6 +14,7 @@
 #' @param Intermediate_side the intermediate side of the particle as defined by user [m]
 #' @param Shortest_side the shortst side of the particle as identified by user [m]
 #' @param DragMethod The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return Settling velocity [m.s-1]
 #' @export
 SettlingVelocity <- function(rad_species, rho_species, rhoMatrix, 
@@ -21,14 +22,16 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              DynViscAirStandard,
                              Matrix,SubCompartName, ScaleName,
                              Shape,Longest_side,
-                             Intermediate_side, DragMethod,
-                             MinSettVel) {
+                             Intermediate_side, Shortest_side, DragMethod,
+                             MinSettVel, Regional_and_Continental_deepocean, VelInput) {
+  
   if (anyNA(c(rho_species,rhoMatrix))){
     return(NA)
   }
-  if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean") {
-    return(NA)
-  }
+  # if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean" &&
+  #     (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+  #   return(NA)
+  # }
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
     return(NA)
   }
@@ -37,6 +40,11 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   #   Shortest_side <- rad_particle * 2
   # }
   # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+  
+  #return VelInput for that compartment, if it is defined and input
+  if (!is.null(VelInput) && !is.na(VelInput) && !is.nan(VelInput) && VelInput != 0) {
+    return(VelInput)
+  }
 
   
   if (is.na(Shape) || is.null(Shape)){
@@ -47,6 +55,10 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   
   if(Matrix == "soil" | Matrix == "sediment") return(NA)
   if(SubCompartName == "cloudwater") return(NA)
+  
+  if (is.na(MinSettVel) || is.null(MinSettVel)) {
+    MinSettVel <- 0
+  }
   
   if(DragMethod == "Original" & Matrix =="water"){
     sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
@@ -103,6 +115,9 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   kS <- 1/2*(FS^(1/3)+FS^(-1/3))
   kN <- 10^(alpha*(-log10(FN))^beta)
   
+  if (rho_species <= rhoMatrix) {
+    return(MinSettVel)
+  } else {
   switch (Matrix,
           "water" = { 
             v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
@@ -124,12 +139,9 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
           },
           NA
   )
-  if (v_s <= MinSettVel) {
-    return(MinSettVel)
-  } 
   
-  else {
-    return(v_s)
+  
+  return(v_s)
   }
 }
 

@@ -11,6 +11,7 @@
 #' @param RhoAcc Accumulation mode aerosol particle  [kg/m3]
 #' @param NumConcNuc Number concentration of Nucleation mode aerosol particles [#/m3]
 #' @param NumConcAcc Number concentration of Accumulation mode aerosol particles [#/m3]
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return rho_species, approach to calculate density of species in air or water [kg.m-3]
 #' @export
 rho_species <- function (SpeciesName, SubCompartName,ScaleName,
@@ -19,14 +20,15 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                          RhoNuc, RadNuc, 
                          NumConcNuc, NumConcAcc,
                          Shortest_side, Intermediate_side,
-                         Longest_side, Shape){
+                         Longest_side, Shape, Regional_and_Continental_deepocean){
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                              SubCompartName == "lakesediment" |
                                                              SubCompartName == "lake" |
                                                              SubCompartName == "river" |
                                                              SubCompartName == "agriculturalsoil"|
                                                              SubCompartName == "othersoil")) | 
-      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+      ((ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" ) &&
+       (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE"))) {
     return(NA)
   }
   if (is.na(Shape) || is.null(Shape)) {

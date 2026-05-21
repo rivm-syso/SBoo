@@ -7,11 +7,12 @@
 #' @param OceanCurrent Global ocean circulation current [m3.s-1] 
 #' @param SubCompartName Name of the subcompartment of the box at hand
 #' @param ScaleName Name of the scale of the box at hand
+#' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @return Water flow to Moderate scale surface and deepocean waters [m3 s-1]
 #' @export
 #' 
 x_ToModerateWater <- function (Volume, TAUsea, 
-                             all.x_RegSea2Cont, OceanCurrent, SubCompartName, ScaleName) {
+                             all.x_RegSea2Cont, OceanCurrent, SubCompartName, ScaleName, Remove_global) {
   switch(ScaleName,
          "Tropic" = {
            switch (SubCompartName,
@@ -28,6 +29,8 @@ x_ToModerateWater <- function (Volume, TAUsea,
          "Continental" = {
            switch (SubCompartName,
                    "sea" = {
+                     if ((!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
+                       return(NA) } 
                      RegSea2Cont <- all.x_RegSea2Cont$flow[all.x_RegSea2Cont$fromSubCompart == "sea" & 
                                                              all.x_RegSea2Cont$fromScale == "Regional"]
                      return((Volume/TAUsea)-RegSea2Cont)}, 

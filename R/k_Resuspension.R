@@ -15,6 +15,7 @@
 #' @param SubCompartName subcompartment considered
 #' @param Test determines if SB4-Excel approach is taken or enhanced method from R version [boolean]
 #' @param SettlingVelocitySPM settling velocity of suspended matter particles
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return k_Resuspension Resuspension flow from sediment #[s-1]
 #' @export
 
@@ -24,8 +25,24 @@ k_Resuspension <- function(VertDistance, # SettlVelocitywater
                            to.NETsedrate,
                            to.RadCP, to.RhoCP, from.RhoCP, FRACs, to.SUSP, 
                            to.Matrix,
-                           SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test) {
-  if (SpeciesName == "Molecular") {
+                           SpeciesName, ScaleName, to.SubCompartName, from.SubCompartName, Test, Regional_and_Continental_deepocean) {
+  
+  # If Regional_and_Continental_deepocean is FALSE, no resuspension from marinesediment to deepocean
+  if ((ScaleName %in% c("Regional", "Continental")) &&
+           (to.SubCompartName == "deepocean") &&
+           (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+    return(NA)
+  }
+  
+  #If Regional_and_Continental_deepocean is TRUE, no resuspension from marinesediment to sea
+  if ((ScaleName %in% c("Regional", "Continental")) &&
+      (to.SubCompartName == "sea") &&
+      (!is.na(Regional_and_Continental_deepocean) && (isTRUE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "TRUE"))
+  ) {
+    return(NA)
+  } 
+  
+  else if (SpeciesName == "Molecular") {
     if (as.character(Test) == "TRUE") {
       SettlingVelocitySPM <- 2.5 / (24 * 3600)
     } else {

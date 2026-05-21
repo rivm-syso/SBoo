@@ -33,6 +33,7 @@
 #' @param Intermediate_side description
 #' @param Shortest_side description
 #' @param DragMethod Drag method [character string]
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
@@ -59,12 +60,20 @@ k_HeteroAgglomeration.wsd <- function(to.alpha,
                                       SubCompartName, 
                                       ScaleName,
                                       Longest_side, Intermediate_side, Shortest_side, 
-                                      DragMethod){
+                                      DragMethod, 
+                                      Regional_and_Continental_deepocean){
   
   if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & 
       (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
     return(NA)
   }
+  
+  else if ((ScaleName %in% c("Regional", "Continental")) &&
+           (SubCompartName == "deepocean") &&
+           (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+    return(NA)
+  }
+  
   rhoWater = 998 # easyfix could be done more elegantly
   kboltz <- constants::syms$k
   GN <- constants::syms$gn

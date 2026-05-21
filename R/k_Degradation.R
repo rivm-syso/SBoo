@@ -12,24 +12,31 @@
 #' @param SpeciesName name of the considered species 
 #' @param SubCompartName name of the subcompartment 
 #' @param ScaleName name of the considered scale
+#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return Degradation rate constant for molecular species
 #' @export
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = 0) {
+                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Regional_and_Continental_deepocean) {
   # exclusions of process:
   if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
                                                             SubCompartName == "lakesediment" |
                                                             SubCompartName == "lake" |
                                                             SubCompartName == "river" |
                                                             SubCompartName == "agriculturalsoil"|
-                                                            SubCompartName == "othersoil")) | 
-      (ScaleName %in% c("Regional", "Continental")) & (SubCompartName == "deepocean" )) {
+                                                            SubCompartName == "othersoil"))) {
     return(NA)
   }
     
-  if (SpeciesName %in% c("Molecular")) {
+  #if Regional_and_Continental_deepocean is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
+  else if ((ScaleName %in% c("Regional", "Continental")) &&
+      (SubCompartName == "deepocean") &&
+      (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+    return(NA)
+  }
+  
+  else if (SpeciesName %in% c("Molecular")) {
     
     switch(Matrix,
            "air" =   {

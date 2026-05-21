@@ -4,9 +4,10 @@
 #' @param all.AirFlow to pick for the "from" scale 
 #' @param from.ScaleName name of the scale of the source of the process
 #' @param to.ScaleName name of the scale of the destination of the process
+#' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @return x.Advection_Air, the flow
 #' @export
-x_Advection_Air <- function(all.AirFlow, from.ScaleName, to.ScaleName){
+x_Advection_Air <- function(all.AirFlow, from.ScaleName, to.ScaleName, Remove_global){
   # The airflow was step 1; now the corrections for the mass balance to add up..
   # "normal" k is 1/Tau ;  Airflow = Volume/Tau
   
@@ -23,6 +24,8 @@ x_Advection_Air <- function(all.AirFlow, from.ScaleName, to.ScaleName){
   
   if(from.ScaleName == "Continental" & to.ScaleName == "Moderate"){
     #the actual Airflow needs correcting 
+    if ((!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
+      return(NA) } 
     return(all.AirFlow$AirFlow[all.AirFlow$Scale == from.ScaleName] - Cont2Regional.Airflow())
   } 
   

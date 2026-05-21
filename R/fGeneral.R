@@ -258,7 +258,7 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
     sig <- pars[["b"]]
     mu <- pars[["c"]]
     return(function(x) {
-      log(EnvStats::qlnormTrunc(p=x, meanlog = mu, sdlog = sig, min = min))
+      EnvStats::qlnormTrunc(p=x, meanlog = mu, sdlog = sig, min = min)
     })
   }
   if (fun_type == "power law" || fun_type == "Power law") {

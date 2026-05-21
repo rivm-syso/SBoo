@@ -612,12 +612,15 @@ SolverModule <-
             sumkaas$fromIndex[SBi]
           ] <- sumkaas$k[SBi]
         }
+        
         # Add the from quantities(i) to the to-states by
         # substracting the (negative) factors(i) to the diagonal
         # store the diag (== degradation and other removal processes)
+        
         degrdiag <- diag(SB.K)
         diag(SB.K) <- 0.0 # yes, irt colSums!
         diag(SB.K) <- -degrdiag - colSums(SB.K)
+        
         rownames(SB.K) <- newStates$Abbr
         colnames(SB.K) <- newStates$Abbr
         private$SB.K <- SB.K
