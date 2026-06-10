@@ -23,8 +23,6 @@ k_Advection <- function(flow,
        (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
     return(NA)
   }
-  if(SpeciesName == "Macro"){return(NA)}
-  
   # Ensure no flows from regional sea and deepocen to continental deepocean, and no continental river to regional river.
   else if ((
     #(ScaleName == "Regional" && (SubCompartName %in% c("sea", "deepocean")) && to.SubCompartName == "deepocean") ||
@@ -54,6 +52,9 @@ k_Advection <- function(flow,
         !is.na(AdvInput) && !is.nan(AdvInput)) {
       return(AdvInput)
     }
+    # No air advection for large items, macroplastics.
+    if(SpeciesName == "Macro" && SubCompartName %in% c("air")){
+      return(NA)}
     
     return(flow / Volume) #not compartment "air"; not a valid airflow
   }
