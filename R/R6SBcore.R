@@ -1109,7 +1109,7 @@ SBcore <- R6::R6Class("SBcore",
         ModName <- ToCalculate[i]
         CalcMod <- private$ModuleList[[ModName]]
         clcm <- class(CalcMod)
-        if (exists("verbose") && verbose){
+        if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose){
             cat(paste("calculating", ModName), "\n")
         }
         if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
@@ -1153,7 +1153,7 @@ SBcore <- R6::R6Class("SBcore",
           if (length(CanDo > 0)){
             for (i in 1:length(CanDo)){
               CalcMod <- private$ModuleList[[CanDo[i]]]
-              if (exists("verbose") && verbose){
+              if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose){
                 cat(paste("calculating", CanDo[i]), "\n")
               }
               if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
@@ -1171,7 +1171,7 @@ SBcore <- R6::R6Class("SBcore",
             #anything left; enough?
             if (length(CantDo)>0){
               NotToDo <- names(private$ModuleList[CantDo])
-              if (exists("verbose") && verbose) {
+              if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) {
                 NotToDoString <- do.call(paste, as.list(NotToDo))
                 cat (paste("Can't calculate", NotToDoString, "\n"))
                 lapply(private$ModuleList[CantDo], function(aModule){
@@ -1401,7 +1401,7 @@ SBcore <- R6::R6Class("SBcore",
           if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
           VarFun <- private$ModuleList[[VarFunName]]
           NewData <- VarFun$execute()
-          if (exists("verbose") && verbose){
+          if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose){
             cat(paste(VarFunName, nrow(NewData), "rows\n"))
           }
           if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
