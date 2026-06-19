@@ -5,7 +5,7 @@
 \title{Calculate volume of sphere or other shape}
 \usage{
 fVol(
-  rad_particle,
+  rad_particle = NULL,
   Shape = NULL,
   Longest_side = NULL,
   Intermediate_side = NULL,

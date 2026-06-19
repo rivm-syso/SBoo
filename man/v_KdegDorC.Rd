@@ -6,6 +6,7 @@
 \title{Degradation rate constant measured or calculated}
 \usage{
 KdegDorC(
+  DegApproach,
   kdeg,
   C.OHrad.n,
   k0.OHrad,
@@ -17,11 +18,27 @@ KdegDorC(
   CorgStandard,
   rhoMatrix,
   Matrix,
-  SpeciesName
+  SpeciesName,
+  Shortest_side,
+  Intermediate_side,
+  Longest_side,
+  Kssdr,
+  Shape,
+  CorFacSSA,
+  RadS,
+  degx,
+  degtau,
+  degy,
+  degtheta,
+  degz,
+  degeta,
+  UVintensity,
+  MICROBconc,
+  Degrading_enzyme
 )
 }
 \arguments{
-\item{kdeg}{degradation rate (as input) [s-1]}
+\item{kdeg}{degradation rate (as input, e.g. based on half life) [s-1]}
 
 \item{C.OHrad.n}{general OH radical concentration, based on Wania & Daly (2002) [mol m-3]}
 

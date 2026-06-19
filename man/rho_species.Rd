@@ -7,6 +7,7 @@
 rho_species(
   SpeciesName,
   SubCompartName,
+  ScaleName,
   RhoS,
   RadS,
   RadCOL,
@@ -17,7 +18,11 @@ rho_species(
   RadNuc,
   NumConcNuc,
   NumConcAcc,
-  Df
+  Shortest_side,
+  Intermediate_side,
+  Longest_side,
+  Shape,
+  Regional_and_Continental_deepocean
 )
 }
 \arguments{
@@ -36,6 +41,8 @@ rho_species(
 \item{NumConcNuc}{Number concentration of Nucleation mode aerosol particles [#/m3]}
 
 \item{NumConcAcc}{Number concentration of Accumulation mode aerosol particles [#/m3]}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 
 \item{Df}{fractal dimension of combined heteroagglomerate [-]}
 

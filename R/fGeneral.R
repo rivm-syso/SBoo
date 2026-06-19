@@ -330,8 +330,10 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
     path <- pars[["d"]]
     return(function(x) {
       # Read the data and process it
-      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data") |>
-        separate(`Size Fraction (µm)`,
+      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data")
+      stopifnot("Size Fraction (um)" %in% colnames(TRWP_data))
+      TRWP_data <- TRWP_data |>
+        separate(`Size Fraction (um)`,
                  into = c("Size_um","max_size_um"), sep = "-") |> 
         mutate(Size_um = as.numeric(gsub("400", "1000", Size_um))) |>  # Change "400" to "1000"
         mutate(Size_nm = Size_um*1000) |> # convert sizes to nanometer

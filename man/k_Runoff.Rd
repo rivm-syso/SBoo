@@ -5,7 +5,7 @@
 \title{Run-off of particles}
 \usage{
 k_Runoff(
-  Runoff,
+  RunoffFlow,
   VertDistance,
   to.FracROWatComp,
   Volume,
@@ -17,11 +17,12 @@ k_Runoff(
   to.ScaleName,
   SpeciesName,
   Matrix,
-  all.Matrix
+  all.Matrix,
+  IntrcptFrac
 )
 }
 \arguments{
-\item{Runoff}{Runoff, as computed by v_Runoff [s-1]}
+\item{RunoffFlow}{RunoffFlow, as computed by v_RunoffFlow [s-1]}
 
 \item{VertDistance}{Mixing depth soil #[m]}
 
@@ -46,6 +47,8 @@ k_Runoff(
 \item{FRACrun}{Fraction of precipation of run-off #[-]}
 
 \item{RAINrate}{Average precipitation #[m/s]}
+
+\item{kinterception}{Fraction of particles that stays in soil - defined only for microplastics for now}
 }
 \value{
 k_Run-off Run-off of particles from soil to water #[s-1]

@@ -45,7 +45,7 @@ k_CWscavenging(
 
 \item{DynViscWaterStandard}{dynamic viscosity of (cloud) water [kg m-3 s-1]}
 
-\item{SettlingVelocity}{settling velocity as computed by the SB variable f_SetVelWater [m/s]}
+\item{SettlingVelocity}{settling velocity for particle species in air [m/s]}
 
 \item{Temp}{temperature [K]}
 

@@ -18,5 +18,5 @@ waterflow of rain directly on lake/river
 and continental being a part of Moderate (/ Tropic)
 }
 \description{
-RainOnFreshwater
+The fraction of rain falling on lake or river water.
 }

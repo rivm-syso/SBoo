@@ -26,7 +26,8 @@ k_Adsorption(
   from.SubCompartName,
   to.SubCompartName,
   ScaleName,
-  Test
+  Test,
+  Regional_and_Continental_deepocean
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ k_Adsorption(
 \item{ScaleName}{name of scale}
 
 \item{Test}{Test = TRUE or FALSE, depending on if SBExcel version should be copied}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 
 \item{MTC_2sd}{mass transfer coefficient to sediment, see MTC_2sd()}
 

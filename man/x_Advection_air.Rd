@@ -5,7 +5,7 @@
 \alias{x_Advection_Air}
 \title{Advection of fluxes of air between scales}
 \usage{
-x_Advection_Air(all.AirFlow, from.ScaleName, to.ScaleName)
+x_Advection_Air(all.AirFlow, from.ScaleName, to.ScaleName, Remove_global)
 }
 \arguments{
 \item{all.AirFlow}{to pick for the "from" scale}
@@ -13,6 +13,8 @@ x_Advection_Air(all.AirFlow, from.ScaleName, to.ScaleName)
 \item{from.ScaleName}{name of the scale of the source of the process}
 
 \item{to.ScaleName}{name of the scale of the destination of the process}
+
+\item{Remove_global}{If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed}
 }
 \value{
 x.Advection_Air, the flow
