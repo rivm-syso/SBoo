@@ -10,11 +10,12 @@ ClassicNanoWorld <- R6::R6Class(
     #' @param MlikeFile location for standard input data
     #' @param Substance The substance for which all calculation are. 
     initialize = function(MlikeFile, Substance = "default substance") {
-      #TODO private$Defs should be read from data/Defs.csv
+      #Devs is data of the package
       if (is.list(MlikeFile)) {
-        if (!All(names(MlikeFile)) %in% private$Defs)
+        if (!all(names(MlikeFile) %in% Defs))
             stop("not all needed sheets in MlikeFile", call. = FALSE)
-        
+        MlikeWorkBook <- MlikeFile
+        private$VarOrigine <- attr(MlikeFile, which = "VarOrigine") 
       }  else {#it must be a path to an excelfile with required sheets
         if (dir.exists(MlikeFile)) {
           MlikeWorkBook <- private$readMasCsvs(MlikeFile)
@@ -27,18 +28,85 @@ ClassicNanoWorld <- R6::R6Class(
                                 startRow = 3)
           })
         }
-        if (length(MlikeWorkBook) != length(private$Defs))
+        if (length(MlikeWorkBook) != length(Defs))
             stop("data is incomplete; check the tables", call. = FALSE)
-        names(MlikeWorkBook) <- private$Defs
+        names(MlikeWorkBook) <- Defs
         
       }
-      self$substance <- Substance
+      
+      if (is.list(Substance)){
+        #replace the values from MlikeWorkBook to those in the list for "default substance"
+        for (eachDF in names(Substance)) {
+          df2update <- Substance[[eachDF]]
+          wb <- MlikeWorkBook[[eachDF]]
+          
+          if ("VarName" %in% colnames(df2update)){ #long format
+            MlikeWorkBook[[eachDF]] <- wb %>%
+              filter(Substance == df2update$Substance[1]) %>% # should be the unique one
+              left_join(
+                df2update %>% rename(Waarde_new = Waarde)
+              ) %>%
+              mutate(Waarde = coalesce(Waarde_new, Waarde)) %>%
+              select(-Waarde_new)
+          } else { #just the columns the have in common
+            common_cols <- intersect(names(wb), names(df2update))
+            
+            MlikeWorkBook[[eachDF]] <- wb %>% 
+              filter(Substance == df2update$Substance[1]) %>% # there should be only 1
+              mutate(across(
+                all_of(common_cols),
+                ~ df2update[[cur_column()]]  # single value recycled to all rows
+              ))
+          }
+          
+        }
+        self$substance <- df2update$Substance[1]
+          
+      } else {
+        self$substance <- Substance 
+      }
 
       #sets states and SB4N data, after inheritance compart -> subcompart, etc.
       private$DeriveState(MlikeWorkBook)
       
+    },
+    readMasCsvs = function(MlikeFile){
+      RetList <- list()
+      VarOrigine = data.frame(
+        VarName = c(""),
+        table = c("")
+      )
+      AllDefs <- Defs
+      for (Def in AllDefs[AllDefs != "Units"]) {
+        tableName <- read.csv(
+          paste(MlikeFile, "/", Def, ".csv", sep = ""))
+        if("VarName" %in% names(tableName)) {
+          VarNames <- unique(tableName$VarName)
+        } else {
+          VarNames <- names(tableName)[!names(tableName) %in% RowIdentifyers]
+        }
+        if (length(VarNames) > 0) {
+          ToAdd <- data.frame(
+            VarName = VarNames,
+            table = Def
+          )
+          VarOrigine <- rbind(
+            VarOrigine[VarOrigine$VarName > "",], #was
+            ToAdd
+          )
+        }
+        RetList[[Def]] <- tableName
+      }
+      RetList[["Units"]] <- read.csv(
+        paste(MlikeFile, "/Units.csv", sep = ""))
+      if(exists("self")){
+        private$VarOrigine <- VarOrigine
+      } else {#store it with 
+        attr(RetList, which = "VarOrigine") <- VarOrigine
+      }
+      return(RetList)
     }
-
+    
   ),
   active = list(
     #' @field varOrigine getter for r.o. property
@@ -59,67 +127,6 @@ ClassicNanoWorld <- R6::R6Class(
       table = c("")
     ),
     
-    #initial dataframes from M 
-    Defs = c(
-      "ScaleSubCompartData",
-      "ScaleSpeciesData",
-      "SubCompartSpeciesData",
-      "ScaleSheet",
-      "SubCompartSheet",
-      "SpeciesSheet",
-      "ScaleProcesses",
-      "SubCompartProcesses",
-      "SpeciesProcesses",
-      "Compartments",
-      "Substances",
-      "SpeciesCompartments",
-      "SubstanceCompartments",
-      "SubstanceSubCompartSpeciesData",
-      "CONSTANTS",
-      "MatrixSheet",
-      "FlowIO",
-      "QSARtable",
-      "SomeFromTo",
-      "Units"
-    ),
-    RowIdentifyers = c(
-      The3D, "Species", 
-      "to.Scale", "to.SubCompart", "to.Species", 
-      "Substance", "process", "Matrix", "from", "to", "QSAR.ChemClass"
-    ),
-    readMasCsvs = function(MlikeFile){
-      RetList <- list()
-      VarOrigine = data.frame(
-        VarName = c(""),
-        table = c("")
-      )
-      AllDefs <- private$Defs
-      for (Def in AllDefs[AllDefs != "Units"]) {
-        tableName <- read.csv(
-          paste(MlikeFile, "/", Def, ".csv", sep = ""))
-        if("VarName" %in% names(tableName)) {
-          VarNames <- unique(tableName$VarName)
-        } else {
-          VarNames <- names(tableName)[!names(tableName) %in% private$RowIdentifyers]
-        }
-        if (length(VarNames) > 0) {
-          ToAdd <- data.frame(
-            VarName = VarNames,
-            table = Def
-          )
-          VarOrigine <- rbind(
-            VarOrigine[VarOrigine$VarName > "",], #was
-            ToAdd
-          )
-        }
-        RetList[[Def]] <- tableName
-      }
-      RetList[["Units"]] <- read.csv(
-        paste(MlikeFile, "/Units.csv", sep = ""))
-      private$VarOrigine <- VarOrigine
-      return(RetList)
-    },
-
   # worker functions #####
   
   #local functions
@@ -170,6 +177,19 @@ ClassicNanoWorld <- R6::R6Class(
     
     #actual method DeriveState #####
     #browser()
+    
+    #  Substance properties to be pasted to CONSTANTS later
+    ThisSubstance <- InPutDataFrames[["Substances"]][InPutDataFrames[["Substances"]]$Substance == self$substance,]
+    if(length(ThisSubstance[,1])==0){    stop("MSClassicNano: No substance data found, add to substance.csv or init with other substance.") }
+
+    if (ThisSubstance$ChemClass %in% c("acid","base","neutral","metal")){ #?Molecular? reduce species already!
+      InPutDataFrames[["SpeciesSheet"]] <- InPutDataFrames[["SpeciesSheet"]] |>
+        filter(Species %in% c("Dissolved", "Gas", "Unbound"))
+      # and no cloudwater
+      InPutDataFrames[["SubCompartSheet"]] <- InPutDataFrames[["SubCompartSheet"]] |>
+        filter(SubCompart != "cloudwater")
+    }
+        
     #expanding in The3D
     ToPermute <- lapply(The3D, function(TheD) {
       TheSheetName = paste0(TheD, "Sheet")
@@ -213,11 +233,6 @@ ClassicNanoWorld <- R6::R6Class(
         InPutDataFrames[["SubCompartSheet"]][,c("Compartment", "SubCompart")])
       InPutDataFrames[["SubstanceSubCompart"]] <- newDataFrame[newDataFrame$Substance %in% self$substance,  c("VarName", "Substance", "Waarde", "SubCompart")]
     } 
-    #  Substance properties to be pasted to CONSTANTS later
-    ThisSubstance <- InPutDataFrames[["Substances"]][InPutDataFrames[["Substances"]]$Substance == self$substance,]
-    if(length(ThisSubstance[,1])==0){    stop("MSClassicNano: No substance data found, add to substance.csv or init with other substance.") }
-    # except:  
-    ThisSubstance$Substance <- NULL
     
     #"inherit" Matrix to SubCompart
     SubCompartSheet <- InPutDataFrames[["SubCompartSheet"]] #NB also used in compartment inheritance
@@ -307,7 +322,7 @@ ClassicNanoWorld <- R6::R6Class(
         MergeT <- MergeT[is.na(MergeT$Abbr),]
         if (nrow(MergeT>1)) {
           MergeT
-          stop(paste(tble, "contains dimension(s) not in states"))
+          warning(paste(tble, "contains dimension(s) not in states"))
         }
       }
     }
