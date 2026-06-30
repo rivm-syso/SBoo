@@ -142,9 +142,11 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
              if (!is.na(Degrading_enzyme) &&
                  (Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) &&
                  (!is.na(UVintensity) && UVintensity == 0)) {
-                kdeg <- 0
+                kdegCalc <- 0
+                return(kdegCalc)
               } else {
-             kdeg <- degx * SAV^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60)
+                kdegCalc <- degx * SAV^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60)
+                return(kdegCalc)
              }
            },
            
@@ -153,18 +155,20 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
              if (!is.na(Degrading_enzyme) &&
                  (Degrading_enzyme == "FALSE" || Degrading_enzyme == FALSE) &&
                  (!is.na(UVintensity) && UVintensity == 0)) {
-               kdeg <- 0
+               kdegCalc <- 0
+               return(kdegCalc)
              } else {
-               kdeg <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
+               kdegCalc <- ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2)
+               return(kdegCalc)
              }
            },
            
            "Default" = {
              switch(Matrix, #particulate
-                    "air" = kdeg,
-                    "soil" = kdeg,
-                    "sediment" = kdeg,
-                    "water" = kdeg,
+                    "air" = return(kdeg),
+                    "soil" = return(kdeg),
+                    "sediment" = return(kdeg),
+                    "water" = return(kdeg),
                     NA)
            },
            NA
