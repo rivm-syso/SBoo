@@ -100,3 +100,4 @@ Backup of *.doc*
 
 *.Rproj
 .DS_Store
+.positai
