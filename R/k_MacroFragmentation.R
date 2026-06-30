@@ -1,13 +1,13 @@
 #' @title Fragmentation of macroplastics to microplastics
 #' @name k_MacroFragmentation
 #' @description To Be Completed
-#' @param kMfrag Falling appart or fragmenting rate constant [s-1]
+#' @param KfragDorC Falling appart or fragmenting rate constant as calcuated using PlasticFADE, Kssdr or input data [s-1]
 #' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return k_MacroFragmentation [s-1]
 #' @export
 
 
-k_MacroFragmentation <- function (kMfrag,
+k_MacroFragmentation <- function (KfragDorC,
                                   SubCompartName,
                                   ScaleName,
                                   Regional_and_Continental_deepocean) {
@@ -32,7 +32,7 @@ k_MacroFragmentation <- function (kMfrag,
              )) {
     return(NA)
   } else {
-    return(kMfrag)
+    return(KfragDorC)
   }
   
 }
