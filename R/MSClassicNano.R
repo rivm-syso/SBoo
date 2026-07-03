@@ -18,7 +18,7 @@ ClassicNanoWorld <- R6::R6Class(
         private$VarOrigine <- attr(MlikeFile, which = "VarOrigine") 
       }  else {#it must be a path to an excelfile with required sheets
         if (dir.exists(MlikeFile)) {
-          MlikeWorkBook <- private$readMasCsvs(MlikeFile)
+          MlikeWorkBook <- self$readMasCsvs(MlikeFile)
         } else {
           if (!file.exists(MlikeFile))
             stop("MlikeFile does not exist", call. = FALSE)
@@ -43,7 +43,7 @@ ClassicNanoWorld <- R6::R6Class(
           if ("VarName" %in% colnames(df2update)){ #long format
             MlikeWorkBook[[eachDF]] <- wb %>%
               filter(Substance == df2update$Substance[1]) %>% # should be the unique one
-              left_join(
+              dplyr::left_join(
                 df2update %>% rename(Waarde_new = Waarde)
               ) %>%
               mutate(Waarde = coalesce(Waarde_new, Waarde)) %>%
@@ -240,13 +240,13 @@ ClassicNanoWorld <- R6::R6Class(
     #check for common field .. can only be matrix
     theMatrix <- names(MatrixSheet)[names(MatrixSheet) %in% names(SubCompartSheet)]
     stopifnot(length(theMatrix) == 1)
-    SubCompartSheet <- left_join(SubCompartSheet, MatrixSheet, by = "Matrix")
+    SubCompartSheet <- dplyr::left_join(SubCompartSheet, MatrixSheet, by = "Matrix")
 
     #"inherit" Compartments to SubCompart
     Compartments <- InPutDataFrames[["Compartments"]]
     TheCompartment <- names(Compartments)[names(Compartments) %in% names(SubCompartSheet)]
     stopifnot(length(TheCompartment) == 1)
-    SubCompartSheet <- left_join(SubCompartSheet, Compartments, by = "Compartment")
+    SubCompartSheet <- dplyr::left_join(SubCompartSheet, Compartments, by = "Compartment")
     #store the result back into InPutDataFrames
     InPutDataFrames[["SubCompartSheet"]] <- SubCompartSheet
     
