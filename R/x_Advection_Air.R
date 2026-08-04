@@ -4,6 +4,7 @@
 #' @param all.AirFlow to pick for the "from" scale 
 #' @param from.ScaleName name of the scale of the source of the process
 #' @param to.ScaleName name of the scale of the destination of the process
+#' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @return x.Advection_Air, the flow
 #' @export
 x_Advection_Air <- function(all.AirFlow, from.ScaleName, to.ScaleName, Remove_global){

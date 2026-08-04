@@ -7,6 +7,7 @@
 #' @param OceanCurrent Global ocean circulation current [m3.s-1] 
 #' @param SubCompartName Name of the subcompartment of the box at hand
 #' @param ScaleName Name of the scale of the box at hand
+#' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @return Water flow to Moderate scale surface and deepocean waters [m3 s-1]
 #' @export
 #' 
