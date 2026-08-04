@@ -15,6 +15,7 @@ SolverModule <-
         NULL
       },
       K_matrix = list(),
+      K_processes = NULL,
       Masses = NULL,
       Concentration = NULL,
       UsedEmissions = NULL,
@@ -276,6 +277,8 @@ SolverModule <-
                                            RUNs = as.character(private$run_df$used_runs)
                                          ))
           
+          private$K_processes <- list()
+          
           if (needdebug) {
             debugonce(private$Function)
           }
@@ -316,6 +319,7 @@ SolverModule <-
               private$Masses[,,i] <- solvedFormat[[1]]
               private$UsedEmissions[,,i] <- solvedFormat[[2]]
               private$K_matrix[[i]] <- self$SB.k
+              private$K_processes[[i]] <- private$MyCore$kaas
               
               if(is.null(private$AllVars)){
                 private$AllVars <- inputvars
@@ -334,6 +338,7 @@ SolverModule <-
             private$Masses[,,1] <- solvedFormat[[1]]
             private$UsedEmissions[,,1] <- solvedFormat[[2]]
             private$K_matrix <- self$SB.k
+            private$K_processes <- self$myCore$kaas
           }
         }
       },
@@ -353,7 +358,7 @@ SolverModule <-
         return(df)
       },
       
-      # ` Function that returns the solution
+      #' @description Function that returns the solution
       GetMasses = function() {
         
         # Prep and return the solution
@@ -371,7 +376,7 @@ SolverModule <-
         return(SolDF)
       },
       
-      # ` Function that returns the K matrices
+      #' @description Function that returns the K matrices
       GetK_matrix = function() {
         
         # Prep and return the solution
@@ -384,8 +389,28 @@ SolverModule <-
         return(K_matrix)
       },
       
-      GetEmissions = function() {
+      #' @description Function that returns the process k's
+      GetK_processes = function() {
+ 
+        # Prep and return the solution
+        if (is.null(private$K_processes)) {
+          stop("first solve, then ask again")
+        }
         
+        if (class(private$K_processes) == "list"){
+          K_processes_merged <- data.table::rbindlist(private$K_processes, idcol = T)
+          names(K_processes_merged)[names(K_processes_merged) == ".id"] <- "RUNs"
+          rownames(K_processes_merged) <- NULL
+        } else {
+          K_processes_merged <- private$K_processes
+          rownames(K_processes_merged) <- NULL
+        }
+      
+        return(K_processes_merged)
+      },
+      
+      #' @description Function that returns the emissions per run
+      GetEmissions = function() {
         
         if (is.null(private$UsedEmissions)) {
           stop("first solve, then ask again")
