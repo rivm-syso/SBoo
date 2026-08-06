@@ -88,7 +88,7 @@ SolverModule <-
               t_samples <- private$LHSruns
               # Mind the transpose, for easy substituting the samples
               rnames <- colnames(scaled_samples)
-              new_names <- apply(as.data.frame(do.call(rbind, strsplit(rnames, "_"))), 1, paste, collapse = " ")
+              new_names <- apply(as.data.frame(do.call(rbind, strsplit(rnames, ","))), 1, paste, collapse = " ")
               
               # Rename the rows
               rownames(private$LHSruns) <- new_names
@@ -215,7 +215,7 @@ SolverModule <-
               scaled_samples <- self$ScaleLHS(varLHS, var_invFun, correlations)
               inputvars <- private$input_variables
               private$LHSruns <- t(scaled_samples)
-              rownames(private$LHSruns) <- gsub("_", " ", rownames(private$LHSruns))
+              rownames(private$LHSruns) <- gsub(",", " ", rownames(private$LHSruns))
               
             } else {
               nVars = 1
@@ -689,7 +689,7 @@ SolverModule <-
         }
         
         if(!is.null(private$input_variables)){
-          colnames_lhs <- paste0(private$input_variables$varName, "_", private$input_variables$Scale, "_", private$input_variables$SubCompart, "_", private$input_variables$Species)
+          colnames_lhs <- paste0(private$input_variables$varName, ",", private$input_variables$Scale, ",", private$input_variables$SubCompart, ",", private$input_variables$Species)
         } else{
           colnames_lhs <- c()
         }
@@ -749,8 +749,8 @@ SolverModule <-
       TransformCorrelatedLHS = function(lhsRUNs, correlations, var_invfun) {
         
         # Filter and prepare correlations 
-        correlations <- data.frame(varName_1 = paste0(correlations$varName_1, "_", correlations$Scale_1, "_", correlations$SubCompart_1, "_", correlations$Species_1),
-                                   varName_2 = paste0(correlations$varName_2, "_", correlations$Scale_2, "_", correlations$SubCompart_2, "_", correlations$Species_2),
+        correlations <- data.frame(varName_1 = paste0(correlations$varName_1, ",", correlations$Scale_1, ",", correlations$SubCompart_1, ",", correlations$Species_1),
+                                   varName_2 = paste0(correlations$varName_2, ",", correlations$Scale_2, ",", correlations$SubCompart_2, ",", correlations$Species_2),
                                    correlation = correlations$correlation)
         
         prepped_correlations <- correlations[
@@ -864,7 +864,7 @@ SolverModule <-
           lhs_col <- as.matrix(lhsRUNs[, i])
           
           # Extract varname, scale, subcompartment, and species from the column name
-          name_parts <- strsplit(cname, "_")[[1]]
+          name_parts <- strsplit(cname, ",")[[1]]
           varname <- name_parts[1]
           current_scale <- ifelse(length(name_parts) >= 2, name_parts[2], "NA")
           current_subcompart <- ifelse(length(name_parts) >= 3, name_parts[3], "NA")
@@ -884,7 +884,7 @@ SolverModule <-
             expanded_columns_species <- list()
             if ("Species" %in% needed_states && (current_species == "any" || current_species == "NA")) {
               for (species_type in species) {
-                col_name <- paste(varname, current_scale, current_subcompart, species_type, sep = "_")
+                col_name <- paste(varname, current_scale, current_subcompart, species_type, sep = ",")
                 expanded_columns_species[[col_name]] <- lhs_col
               }
             } else {
@@ -895,12 +895,12 @@ SolverModule <-
             expanded_columns_scale <- list()
             for (expanded_col_name in names(expanded_columns_species)) {
               expanded_col_data <- expanded_columns_species[[expanded_col_name]]
-              parts <- strsplit(expanded_col_name, "_")[[1]]
+              parts <- strsplit(expanded_col_name, ",")[[1]]
               scale <- parts[2]
               
               if ("Scale" %in% needed_states && (scale == "any" || scale == "NA")) {
                 for (scale_type in scales) {
-                  col_name <- paste(parts[1], scale_type, parts[3], parts[4], sep = "_")
+                  col_name <- paste(parts[1], scale_type, parts[3], parts[4], sep = ",")
                   expanded_columns_scale[[col_name]] <- expanded_col_data
                 }
               } else {
@@ -912,33 +912,33 @@ SolverModule <-
             expanded_columns_final <- list()
             for (expanded_col_name in names(expanded_columns_scale)) {
               expanded_col_data <- expanded_columns_scale[[expanded_col_name]]
-              parts <- strsplit(expanded_col_name, "_")[[1]]
+              parts <- strsplit(expanded_col_name, ",")[[1]]
               subcompart <- parts[3]
               
               if ("SubCompart" %in% needed_states) {
                 if (subcompart == "Soil") {
                   for (soil in soil_compartments) {
-                    col_name <- paste(parts[1], parts[2], soil, parts[4], sep = "_")
+                    col_name <- paste(parts[1], parts[2], soil, parts[4], sep = ",")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
                 } else if (subcompart == "Water") {
                   for (water in water_compartments) {
-                    col_name <- paste(parts[1], parts[2], water, parts[4], sep = "_")
+                    col_name <- paste(parts[1], parts[2], water, parts[4], sep = ",")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
                 } else if (subcompart == "Sediment") {
                   for (sediment in sediment_compartments) {
-                    col_name <- paste(parts[1], parts[2], sediment, parts[4], sep = "_")
+                    col_name <- paste(parts[1], parts[2], sediment, parts[4], sep = ",")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
                 } else if (subcompart == "SoilSediment") {
                   for (comp in soil_sediment_compartments) {
-                    col_name <- paste(parts[1], parts[2], comp, parts[4], sep = "_")
+                    col_name <- paste(parts[1], parts[2], comp, parts[4], sep = ",")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
                 } else if (subcompart == "NA") {
                   for (comp in all_compartments) {
-                    col_name <- paste(parts[1], parts[2], comp, parts[4], sep = "_")
+                    col_name <- paste(parts[1], parts[2], comp, parts[4], sep = ",")
                     expanded_columns_final[[col_name]] <- expanded_col_data
                   }
                 } else {
@@ -973,10 +973,10 @@ SolverModule <-
         # Update private$input_variables with the new column names
         cnames <- colnames(expanded_lhs_matrix)
         
-        vars <- sapply(strsplit(cnames, "_"), `[`, 1)
-        scales <- sapply(strsplit(cnames, "_"), `[`, 2)
-        subcomparts <- sapply(strsplit(cnames, "_"), `[`, 3)
-        species <- sapply(strsplit(cnames, "_"), `[`, 4)
+        vars <- sapply(strsplit(cnames, ","), `[`, 1)
+        scales <- sapply(strsplit(cnames, ","), `[`, 2)
+        subcomparts <- sapply(strsplit(cnames, ","), `[`, 3)
+        species <- sapply(strsplit(cnames, ","), `[`, 4)
         
         private$input_variables <- data.frame(varName = vars, Scale = scales, SubCompart = subcomparts, Species = species)
         private$input_variables[] <- sapply(private$input_variables, function(x) ifelse(x == "NA", NA, x))
