@@ -595,7 +595,7 @@ SolverModule <-
         stateInd <- sort(unique(c(kaas$fromIndex, kaas$toIndex)))
         newStates <- self$myCore$states$asDataFrame[stateInd, ]
         if (nrow(newStates) != self$myCore$states$nStates) {
-          if (exists("verbose") && verbose) {
+          if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) {
             removedStates <- do.call(paste, as.list(self$myCore$states$asDataFrame$Abbr[!self$myCore$states$asDataFrame$Abbr %in% newStates$Abbr]))
             warning(
               paste(

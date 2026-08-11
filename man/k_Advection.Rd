@@ -4,12 +4,25 @@
 \alias{k_Advection}
 \title{General Advection process}
 \usage{
-k_Advection(flow, Volume)
+k_Advection(
+  flow,
+  Volume,
+  ScaleName,
+  SubCompartName,
+  to.SubCompartName,
+  Remove_global,
+  Regional_and_Continental_deepocean,
+  AdvInput
+)
 }
 \arguments{
 \item{flow}{advection rate [m/s]}
 
 \item{Volume}{volume of compartment [m3]}
+
+\item{Remove_global}{If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 }
 \value{
 Rate constant for 1st order process associated with fluxes

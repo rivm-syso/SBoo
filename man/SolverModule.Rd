@@ -38,6 +38,7 @@ the general ODE for SimpleBox
 \item \href{#method-SolverModule-execute}{\code{SolverModule$execute()}}
 \item \href{#method-SolverModule-RemoveUnusedCols}{\code{SolverModule$RemoveUnusedCols()}}
 \item \href{#method-SolverModule-GetMasses}{\code{SolverModule$GetMasses()}}
+\item \href{#method-SolverModule-GetK_matrix}{\code{SolverModule$GetK_matrix()}}
 \item \href{#method-SolverModule-GetEmissions}{\code{SolverModule$GetEmissions()}}
 \item \href{#method-SolverModule-GetVarValues}{\code{SolverModule$GetVarValues()}}
 \item \href{#method-SolverModule-GetConcentrations}{\code{SolverModule$GetConcentrations()}}
@@ -49,6 +50,8 @@ the general ODE for SimpleBox
 \item \href{#method-SolverModule-emissions}{\code{SolverModule$emissions()}}
 \item \href{#method-SolverModule-PrepLHS}{\code{SolverModule$PrepLHS()}}
 \item \href{#method-SolverModule-ScaleLHS}{\code{SolverModule$ScaleLHS()}}
+\item \href{#method-SolverModule-TransformCorrelatedLHS}{\code{SolverModule$TransformCorrelatedLHS()}}
+\item \href{#method-SolverModule-ExpandLHS}{\code{SolverModule$ExpandLHS()}}
 \item \href{#method-SolverModule-DiffSB.K}{\code{SolverModule$DiffSB.K()}}
 \item \href{#method-SolverModule-ConcentrationToGrams}{\code{SolverModule$ConcentrationToGrams()}}
 \item \href{#method-SolverModule-MassesAsRelational}{\code{SolverModule$MassesAsRelational()}}
@@ -83,6 +86,9 @@ Solve matrix / emissions
   var_box_df = data.frame(),
   var_invFun = list(),
   nRUNs = NULL,
+  ParallelPreparation = F,
+  LHSmatrix = NULL,
+  correlations = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -97,6 +103,12 @@ Solve matrix / emissions
 \item{\code{var_invFun}}{= list(),}
 
 \item{\code{nRUNs}}{= NULL}
+
+\item{\code{ParallelPreparation}}{= F}
+
+\item{\code{LHSmatrix}}{= NULL}
+
+\item{\code{correlations}}{= NULL}
 
 \item{\code{emis_invFun}}{= list(),}
 }
@@ -120,6 +132,15 @@ only have one unique entry
 \subsection{Method \code{GetMasses()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetMasses()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SolverModule-GetK_matrix"></a>}}
+\if{latex}{\out{\hypertarget{method-SolverModule-GetK_matrix}{}}}
+\subsection{Method \code{GetK_matrix()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetK_matrix()}\if{html}{\out{</div>}}
 }
 
 }
@@ -246,7 +267,6 @@ Function that returns the emissions for a specific RUN
 }
 \subsection{Returns}{
 emissions for the given run
-DiffSB.K
 }
 }
 \if{html}{\out{<hr>}}
@@ -268,7 +288,28 @@ DiffSB.K
 \if{latex}{\out{\hypertarget{method-SolverModule-ScaleLHS}{}}}
 \subsection{Method \code{ScaleLHS()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$ScaleLHS(lhsRUNs, var_invfun)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$ScaleLHS(lhsRUNs, var_invfun, correlations)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SolverModule-TransformCorrelatedLHS"></a>}}
+\if{latex}{\out{\hypertarget{method-SolverModule-TransformCorrelatedLHS}{}}}
+\subsection{Method \code{TransformCorrelatedLHS()}}{
+Function that transforms LHS samples for correlated variables
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$TransformCorrelatedLHS(lhsRUNs, correlations, var_invfun)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SolverModule-ExpandLHS"></a>}}
+\if{latex}{\out{\hypertarget{method-SolverModule-ExpandLHS}{}}}
+\subsection{Method \code{ExpandLHS()}}{
+Function that copies LHS columns for variables when a SubCompart is Water, Sediment or Soil
+or when a variable that should be present is NA
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SolverModule$ExpandLHS(lhsRUNs)}\if{html}{\out{</div>}}
 }
 
 }

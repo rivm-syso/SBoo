@@ -330,17 +330,26 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
     path <- pars[["d"]]
     return(function(x) {
       # Read the data and process it
-      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data") |>
-        separate(`Size Fraction (µm)`,
-                 into = c("Size_um","max_size_um"), sep = "-") |> 
-        mutate(Size_um = as.numeric(gsub("400", "1000", Size_um))) |>  # Change "400" to "1000"
-        mutate(Size_nm = Size_um*1000) |> # convert sizes to nanometer
-        mutate(PSD_um = as.numeric(PSD_um)) |> # Assuming PSD_um is the particle size distribution (weights)
-        mutate(cdf = cumsum(PSD_um)) |>
-        mutate(cdf = cdf / max(cdf))  # Normalize the CDF
-      
+      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data")
+      stopifnot("Size Fraction (um)" %in% colnames(TRWP_data))
+      TRWP_data <- TRWP_data |>
+        tidyr::separate(`Size Fraction (um)`,
+                 into = c("Size_um","max_size_um"), 
+                 sep = "-"
+                 ) |> 
+        dplyr::mutate(Size_um = as.numeric(gsub("400", "1000", Size_um)), # Change "400" to "1000"
+               Size_nm = Size_um*1000, # convert sizes to nanometer
+               PSD_um = as.numeric(PSD_um) # Assuming PSD_um is the particle size distribution (weights)
+        )|>
+        dplyr::mutate(cdf = cumsum(PSD_um), 
+               cdf = cdf / max(cdf) # Normalize the CDF
+               ) 
+       
       # Use the approx function to interpolate Size_um based on the CDF
-      approx(x = TRWP_data$cdf, y = TRWP_data$Size_nm, xout = x, rule = 2)$y
+      approx(x = TRWP_data$cdf, 
+             y = TRWP_data$Size_nm, 
+             xout = x, 
+             rule = 2)$y
     })
   }
 }
