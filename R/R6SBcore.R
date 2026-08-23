@@ -9,9 +9,10 @@ SBcore <- R6::R6Class("SBcore",
     #' @param SuBmode Either string ("Molecular"|"Particle") or the filepath to 
     #' (substance)data for SB (overruling any default data).
     #'  SBmode will be set to "Molecular"|"Particle" accordingly
-    initialize = function(SBooDataLocation, SuBmode = "Molecular"){
+    initialize = function(SBooDataLocation, SuBmode = "Molecular", debugR = FALSE){
       
       private$myDataLocation <- SBooDataLocation
+      private$debugR <- debugR
       self$SuBmode <- SuBmode # also sets private$SBmode
 
       self$RawTables <- ReadRawData$new(private$myDataLocation)
@@ -29,9 +30,10 @@ SBcore <- R6::R6Class("SBcore",
       private$States$myCore <- self
 
       # init reactives
-      private$myReactiveDAG <- ReactiveDAG$new()
+      private$myReactiveDAG <- ReactiveDAG$new(debugR = private$debugR)
 
       # and fill it with the data from Defs
+      private$data2DAG(self$RawTables$CONST)
       for (DefTable in self$RawTables$VarsTables){
         private$data2DAG(DefTable, Table_type = "Vars")
       }
@@ -39,12 +41,20 @@ SBcore <- R6::R6Class("SBcore",
         private$data2DAG(DefTable, Table_type = "ToWiden")
       }
       
+      if (is.list(self$SuBmode)) {
+        # set substance properties from list/json, all but SBmode
+        SubstanceList <- self$SuBmode$Substance[!(names(self$SuBmode$Substance) == "SBmode")]
+        private$Block2DAG(SubstanceList)
+        NonSubstanceList <- self$SuBmode[!(names(self$SuBmode) == "Substance")]
+        private$Block2DAG(SubstanceList)
+      }
+      
       process_functions = read.csv(file.path(SBooDataLocation, "Processes4SpeciesTp.csv"))
       processes4Mode <- process_functions$Process[process_functions[, private$SBmode] == "X"]
+
       SBvars <- self$build_DAG(processes4Mode) 
       
-      browser()
-      
+      print(SBvars)
     },
     #' @description add a process to the calculations
     #' @param ProcessFunction The name (as character) of the process defining function 
@@ -429,21 +439,29 @@ SBcore <- R6::R6Class("SBcore",
     #' @description Obtain the data for a SBvariable or a flow
     #' @param varname the name of the variable. Returns a list of variables if varname == "all"
     fetchData = function(varname="all"){
-      private$FetchData(varname)
+      if (varname == "all") {
+        private$myReactiveDAG$knowns
+      }  else {
+        private$myReactiveDAG$get_value(varname)
+      }
+    },
+    
+    reactiveData = function(varname = "all"){
+      if (varname == "all") {
+        private$myReactiveDAG$dataNames
+      }  else {
+        if (varname %in% private$myReactiveDAG$dataNames){
+          private$myReactiveDAG$sources[[varname]]
+        } else {
+          message(paste("unknown:", varname)) 
+        }
+      }
     },
     
     #' @description fetch specific values from core
-    #' @param withoutValues data.frame-ish with columns `varname` and needed D 
+    #' @param aVar data.frame-ish as used 
     fetch_current = function(withoutValues) {
-      
-      pervar <- split(withoutValues, f = withoutValues$varName)
-      toJoin <- lapply(names(pervar), private$FetchData)
-      stillsplit <- lapply(1:length(pervar), function(i){
-        specvar <- left_join(pervar[[i]], toJoin[[i]]) 
-        names(specvar)[names(specvar) == names(pervar)[i]] <- "waarde"
-        specvar
-      })
-      bind_rows(stillsplit)
+      private$myReactiveDAG$trigger(withoutValues)
     },
     
     #' @description function to obtain the data for a variable or flow, including the units whenever present in the Units csv
@@ -565,58 +583,71 @@ SBcore <- R6::R6Class("SBcore",
       
       processnames <- paste("k", ModeProcesses, sep = "_")
       stopifnot(all(processnames %in% my_ls))
-      # add fluxes
-      function_names <- c(processnames,
-                          my_ls |> stringr::str_subset("x_"))
       
-      # Init with  argumenten van de procesfuncties
-      needvars <- lapply(mget(function_names, envir = ns), formalArgs) |>
-        unlist(use.names = FALSE) |>
-        unique() |>
-        gsub(pattern = "^(to|from|all)\\.", replacement = "", x = _) |>
+      function_names <- c(
+        processnames,
+        my_ls |> stringr::str_subset("x_")
+      )
+      
+      # Initial needvars (params of the initial functions)
+      needvars <- unlist(
+          lapply(function_names, function(fn) private$get_clean_args(fn, ns)),
+          use.names = FALSE
+        ) |>
         unique()
-      # as reactiveVal in DAG already
       needvars <- needvars[!needvars %in% private$myReactiveDAG$knowns]
       
-      NewVarList <- list() # for testing (order)
-      testorder <- 0
-      Failed <- character()
+      # complete SBvars
       repeat {
-        testorder <- testorder + 1
-        
-        # Add to DAG for known functions in SBoo
         SBoofunction2do <- needvars[needvars %in% my_ls]
         SBoofunction2do <- SBoofunction2do[!SBoofunction2do %in% private$myReactiveDAG$knowns]
-        Failed <- unique(c(Failed, 
-                           needvars[!needvars %in% my_ls & !needvars %in% private$myReactiveDAG$knowns]))
         
         if (length(SBoofunction2do) == 0) {
           break
         }
-        for (fun2do in SBoofunction2do){
-          private$myReactiveDAG$add_node_reactive(node_name = fun2do)
-        } 
         
-        # new params from these known function
-        needvars <- lapply(mget(SBoofunction2do, envir = ns), formalArgs) |>
-          unlist(use.names = FALSE) |>
-          unique() |>
-          gsub(pattern = "^(to|from|all)\\.", replacement = "", x = _) |>
-          unique()
+        for (fun2do in SBoofunction2do) {
+          private$myReactiveDAG$add_node_reactive(node_name = fun2do)
+        }
+        
+        needvars <- unique(unlist(
+          lapply(SBoofunction2do, function(fn) private$get_clean_args(fn, ns)$name),
+          use.names = FALSE
+          ))|>
+            unique()
         needvars <- needvars[!needvars %in% private$myReactiveDAG$knowns]
+        
+      }
+      
+      # ---- determine order / complete / incomplete functions ----
+      complete_nodes_piter <- list()
+      known <- private$myReactiveDAG$dataNames
+      
+      testorder <- 0  
+      repeat{
+        testorder <- testorder + 1
+        
+        incomplete_nodes <- setdiff(private$myReactiveDAG$knowns, known)
+        # which are now complete with known?
+        complete_nodes <- character(0)
+        for (fun in incomplete_nodes) {
+          args_df <- private$get_clean_args(fun, ns)
+          # optional_args <- args_df$name[args_df$has_default]
+          # function is complete if all args are already known
+          if (nrow(args_df) == 0 || all(args_df$name %in% known)) {
+            complete_nodes <- c(complete_nodes, fun)
+          }
+        }
+        if (length(complete_nodes) == 0){
+          break
+        }
 
-        # store to test
-        NewVarList[[testorder]] <- needvars
+        complete_nodes_piter[[testorder]] <- complete_nodes
+        known <- c(known, complete_nodes)
       }
       
-      if (length(Failed) > 0) {
-        FailedVec <- do.call(paste, as.list(Failed))
-        warning(paste("unresolved variable(s)", FailedVec))
-      }
-      
-      
-      rev(NewVarList) #testing order 
-    },
+      complete_nodes_piter
+    },  
     
     #' @description runs (or tries to) the calculation for a Variable and stores the results.
     #' After this, the SBvariable can be viewed with fetchData and this data will be used 
@@ -973,7 +1004,7 @@ SBcore <- R6::R6Class("SBcore",
       if (missing(value)){
         private$suBmode
       } else {
-        if (value %in% c("Molecular"|"Particle")){
+        if (value %in% c("Molecular", "Particle")){
           private$SBmode <- value
         } else {
           # should be a list or path to jsonfile containing
@@ -981,13 +1012,14 @@ SBcore <- R6::R6Class("SBcore",
             value
           } else {
             stopifnot(file.exists(value))
-            jsonlite::fromJSON(value)
+            jsonlite::fromJSON(value, simplifyDataFrame = FALSE)
           }
-        }
-        # extract needed SBmode
-        private$SBmode <- {
-          theList <- private$getBlock(private$suBmode)
-          private$set_sources(theList)
+          # extract needed SBmode
+          private$SBmode <- {
+            SubstanceList <- private$suBmode[["Substance"]]
+            SubstanceList$SBmode
+          }
+          
         }
       }
     },
@@ -997,7 +1029,8 @@ SBcore <- R6::R6Class("SBcore",
       } else {
         # update Substance and other data from 
         # substance block in private$suBmode to ReactiveDAG
-        theList <- private$getBlock(private$suBmode, value)
+        theList <- private$suBmode[[value]]
+        browser() # are there multiple substances??
         private$set_sources(theList)
         private$Substance <- value
       }
@@ -1080,6 +1113,8 @@ SBcore <- R6::R6Class("SBcore",
   private = list(
     myDataLocation = NULL,
     SBmode = NULL,
+    suBmode = NULL,
+    debugR = NULL,
     rawTables = NULL,
     rowIdentifyers = NULL,
     myReactiveDAG = NULL,
@@ -1110,60 +1145,113 @@ SBcore <- R6::R6Class("SBcore",
       return(states)
     },
     
+    # Get block from json structure
+    Block2DAG = function(theList){
+      purrr::imap(theList, function(aVar, nm) {
+        if (!is.atomic(aVar)) {
+          aVar <- aVar |>
+            dplyr::bind_rows(.id = "id")
+        }
+        private$myReactiveDAG$set_source(nm, aVar)
+      })
+    },
+      
+    # helper: for a single value (or vector), try numeric, then logical, else keep as is
+    coerce_scalar = function(x) {
+      # assume length-1 here in vector mode; still works for length > 1
+      num <- suppressWarnings(as.numeric(x))
+      if (!any(is.na(num))) {
+        return(num)
+      }
+      
+      logi <- suppressWarnings(as.logical(x))
+      if (!any(is.na(logi))) {
+        return(logi)
+      }
+      
+      x
+    },
+    
     # use data from Defs, possibly towider, .. 
     # and put each var into a reactive value, 
     # possibly inherit Matrix, Component
-    data2DAG = function(DefsTable, Table_type){
+    data2DAG = function(DefsTable, Table_type = "vector") {
       
-      dims = self$RawTables$rowIdentifyers
-      # split each PROPER variable column plus Dims
+      dims <- self$RawTables$rowIdentifyers
       dim2use <- dims[dims %in% names(DefsTable)]
       
-      if ("Substance" %in% dim2use){
-        if (!self$substancemessage){
+      if ("Substance" %in% dim2use) {
+        if (!self$substancemessage) {
           message("Substance properties now in separated json-file / list()")
-          #once is enough
           self$substancemessage <- TRUE
         }
         return()
       }
       
-      switch (Table_type,
-        # variables in columns 
+      switch(
+        Table_type,
+        
+        # default: each non-dimension column becomes a scalar/vector source
+        "vector" = {
+          for (nam in names(DefsTable)){
+            aValue <- private$coerce_scalar(unlist(DefsTable[nam]))
+            private$myReactiveDAG$add_source(nam, aValue)
+          }
+        },
+        
+        # variables in columns
         "Vars" = {
           
-          # exception: Matrix and Compartment function as look-up, mimicking inheritance ->
-          # the are not "dimensions" in this table, so:
-          if (length (dim2use) == 3  && all(dim2use %in% c("SubCompart", "Matrix", "Compartment"))){
+          if (length(dim2use) == 3 &&
+              all(dim2use %in% c("SubCompart", "Matrix", "Compartment"))) {
             dim2use <- "SubCompart"
           }
-          # create reactive tibble for each
-          cols_to_use <- names(DefsTable)[! names(DefsTable) %in% dim2use]
-          tibble_list <-  purrr::map(
+          
+          cols_to_use <- names(DefsTable)[!names(DefsTable) %in% dim2use]
+          
+          tibble_list <- purrr::map(
             cols_to_use,
-            ~ DefsTable |> dplyr::select(all_of(c(dim2use, .x)))
+            ~ DefsTable |> dplyr::select(dplyr::all_of(c(dim2use, .x)))
           )
           names(tibble_list) <- cols_to_use
-          for (nm in cols_to_use) {
-            private$myReactiveDAG$add_source(nm, tibble_list[[nm]])
-          }
+          
+          tibble_list |>
+            purrr::iwalk(~ private$myReactiveDAG$add_source(.y, .x))
         },
         
         # from long format, variables in VarName, Waarde
         "ToWiden" = {
+          
           needcols <- c(dim2use, "VarName", "Waarde")
+          
           tibble_list <- DefsTable |>
-            dplyr::filter(!is.na(Waarde)) |>          # keep only rows with a Waarde
-            dplyr::select(all_of({{needcols}})) |>
-            split(~ VarName)                   # list of tibbles, one per VarName
+            dplyr::filter(!is.na(Waarde)) |>
+            dplyr::select(dplyr::all_of(needcols)) |>
+            split(~ VarName)
+          
           for (nm in names(tibble_list)) {
-            exclVarNam <- tibble_list[[nm]] |> 
-              dplyr::select(-VarName) |> 
-              dplyr::rename(!!nm := Waarde) #! yes := (oldschool pascal!!) because LHS variable name
+            exclVarNam <- tibble_list[[nm]] |>
+              dplyr::select(-VarName) |>
+              dplyr::rename(!!nm := Waarde)
             private$myReactiveDAG$add_source(nm, exclVarNam)
           }
         }
-        
+      )
+    },
+    
+    get_clean_args = function(fun_name, ns = getNamespace("sboo")) {
+      f    <- get(fun_name, envir = ns)
+      fmls <- formals(f)
+      
+      arg_names  <- names(fmls)
+      args_clean <- gsub("^(to|from|all)\\.", "", arg_names)
+      
+      has_default <- vapply(fmls, function(x) !is.null(x), logical(1))
+      
+      data.frame(
+        name        = args_clean,
+        has_default = has_default,
+        stringsAsFactors = FALSE
       )
     },
     

@@ -52,7 +52,13 @@ ReadRawData <- R6::R6Class("SBreadData",
         stop("`$SubstanceTables` are R.O>", call. = FALSE)
       }
     },
-    
+    CONST = function(value){
+      if (missing(value)) {
+        private$CONSTANTS
+      } else {
+        stop("`$SubstanceTables` are R.O>", call. = FALSE)
+      }
+    },
     ProcessFromTo = function(value){
       if (missing(value)) {
         private$processfromto

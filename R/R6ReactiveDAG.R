@@ -5,12 +5,14 @@ ReactiveDAG <- R6::R6Class(
     nodes = NULL,
     sources = NULL,
     params = NULL,
+    debugR = NULL,
     
-    initialize = function(params = list()) {
+    initialize = function(params = list(), debugR = FALSE) {
       self$session <- shiny::MockShinySession$new()
       self$nodes <- list()
       self$sources <- list()
       self$params <- list2env(params, parent = emptyenv())
+      self$debugR <- debugR
     },
     
     add_source = function(name, value = NULL) {
@@ -27,7 +29,7 @@ ReactiveDAG <- R6::R6Class(
       }
     },
     
-    add_node_reactive = function(node_name, node_fun_name = node_name, debug = FALSE) {
+    add_node_reactive = function(node_name, node_fun_name = node_name, debug = self$debugR) {
       node_fun <- get(node_fun_name, mode = "function")
       
       wrapped <- private$make_smart_wrapper(
@@ -46,10 +48,16 @@ ReactiveDAG <- R6::R6Class(
       })
     },
     
-    trigger = function(name) {
-      shiny::withReactiveDomain(self$session, {
+    get_value = function(name) {
+      if (name %in% names(self$sources)) {
+        shiny::isolate(self$sources[[name]]())
+      } else if (name %in% names(self$nodes)) {
         shiny::isolate(self$nodes[[name]]())
-      })
+      } else if (exists(name, envir = self$params, inherits = FALSE)) {
+        get(name, envir = self$params, inherits = FALSE)
+      } else {
+        stop("Unknown dependency: ", name, call. = FALSE)
+      }
     }
   ),
   
@@ -60,7 +68,14 @@ ReactiveDAG <- R6::R6Class(
       } else { 
         stop("knowns is read-only")
       }
-    } 
+    },
+    dataNames = function(value){
+      if (missing(value)){
+        names(self$sources)
+      } else { 
+        stop("dataNames is read-only")
+      }
+    }
   ),
   
   private = list(

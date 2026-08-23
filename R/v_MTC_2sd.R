@@ -7,11 +7,9 @@
 #'@return MTC_2sd
 #'@export
 MTC_2sd <- function(kwsd.water, Matrix, SubCompartName){
-  switch(Matrix,
-    "water" =  {
-      if(SubCompartName == "cloudwater") return (NA)
-      kwsd.water
-      },
-    NA
-  )
+  SubCompart <- SubCompartName$SubCompart[SubCompartName$SubCompartName != "cloudwater"]
+  return(data.frame(
+    SubCompart = SubCompart,
+    MTC_2sd = kwsd.water
+  ))
 }
