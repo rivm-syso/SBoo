@@ -82,12 +82,14 @@ ReactiveDAG <- R6::R6Class(
   
   private = list(
     get_reactive = function(name) {
-      if (name %in% names(self$sources)) {
-        self$sources[[name]]()
-      } else if (name %in% names(self$nodes)) {
-        self$nodes[[name]]()
-      } else if (exists(name, envir = self$params, inherits = FALSE)) {
-        get(name, envir = self$params, inherits = FALSE)
+      lookup_name <- sub("^(to|all)\\.", "", name)
+      
+      if (lookup_name %in% names(self$sources)) {
+        self$sources[[lookup_name]]()
+      } else if (lookup_name %in% names(self$nodes)) {
+        self$nodes[[lookup_name]]()
+      } else if (exists(lookup_name, envir = self$params, inherits = FALSE)) {
+        get(lookup_name, envir = self$params, inherits = FALSE)
       } else {
         stop("Unknown dependency: ", name, call. = FALSE)
       }
