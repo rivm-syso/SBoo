@@ -261,6 +261,44 @@ SBstates <- R6::R6Class("SBstates",
       invisible(States_filtered)
     },
     
+    #' @description Clip a data.frame to rows matching existing valid states
+    #' @param aDFwithD A data.frame containing either all The3D columns
+    #'   (Scale, SubCompart, Species) or only column 'Abbr'
+    #' @return Filtered data.frame containing only valid rows
+    clipStates = function(aDFwithD) {
+      
+      if (is.null(private$AsDataFrame)) {
+        stop("No States table available; call buildStates() first.")
+      }
+      
+      if (!is.data.frame(aDFwithD)) {
+        stop("clipStates() expects a data.frame")
+      }
+      
+      has_abbr <- "Abbr" %in% names(aDFwithD)
+      has_all_3d <- all(The3D %in% names(aDFwithD))
+      
+      if (has_all_3d) {
+        valid_keys <- unique(private$AsDataFrame[, The3D, drop = FALSE])
+        
+        keep <- apply(aDFwithD[, The3D, drop = FALSE], 1, function(x) {
+          any(apply(valid_keys, 1, function(y) all(x == y)))
+        })
+        
+      } else if (has_abbr && !any(The3D %in% names(aDFwithD))) {
+        keep <- aDFwithD$Abbr %in% private$AsDataFrame$Abbr
+        
+      } else {
+        stop(
+          "clipStates() expects either all The3D columns (",
+          paste(The3D, collapse = ", "),
+          ") or only column 'Abbr'."
+        )
+      }
+      
+      aDFwithD[keep, , drop = FALSE]
+    },
+    
     #' @description map vector abbr for scale species subcompart to index in State
     #' @param abbr Oldschool abbreviation (character vector)
     #' @return integer vector of indices in private$AsDataFrame$Abbr (NA if not found)

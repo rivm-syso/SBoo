@@ -6,13 +6,15 @@ ReactiveDAG <- R6::R6Class(
     sources = NULL,
     params = NULL,
     debugR = NULL,
+    parent = NULL,
     
-    initialize = function(params = list(), debugR = FALSE) {
+    initialize = function(params = list(), debugR = FALSE, parent = NULL) {
       self$session <- shiny::MockShinySession$new()
       self$nodes <- list()
       self$sources <- list()
       self$params <- list2env(params, parent = emptyenv())
       self$debugR <- debugR
+      self$parent <- parent
     },
     
     add_source = function(name, value = NULL) {
@@ -92,7 +94,11 @@ ReactiveDAG <- R6::R6Class(
     },
     
     make_smart_wrapper = function(fun, fun_name, fun_env, get_reactive, debug = FALSE) {
-      deps <- setdiff(names(formals(fun)), "...")
+      fun_formals <- names(formals(fun))
+      deps <- setdiff(fun_formals, c("...", "parent"))
+      
+      accepts_dots <- "..." %in% fun_formals
+      accepts_parent <- "parent" %in% fun_formals
       
       reactive_env <- new.env(parent = environment(fun))
       for (nm in deps) {
@@ -111,16 +117,24 @@ ReactiveDAG <- R6::R6Class(
       environment(reactive_fun) <- reactive_env
       
       function(...) {
+        extra_args <- list(...)
+        
+        if (!is.null(self$parent) && (accepts_parent || accepts_dots)) {
+          extra_args$parent <- self$parent
+        }
+        
         if (debug) {
           args <- setNames(lapply(deps, get_reactive), deps)
           
-          # Call by name so debugonce(fun_name) can trigger
           do.call(
             what = get(fun_name, envir = fun_env, mode = "function"),
-            args = c(args, list(...))
+            args = c(args, extra_args)
           )
         } else {
-          reactive_fun(...)
+          do.call(
+            what = reactive_fun,
+            args = extra_args
+          )
         }
       }
     }

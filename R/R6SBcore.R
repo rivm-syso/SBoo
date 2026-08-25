@@ -30,7 +30,7 @@ SBcore <- R6::R6Class("SBcore",
       private$States$myCore <- self
 
       # init reactives
-      private$myReactiveDAG <- ReactiveDAG$new(debugR = private$debugR)
+      private$myReactiveDAG <- ReactiveDAG$new(debugR = private$debugR, parent = self)
 
       # and fill it with the data from Defs
       private$data2DAG(self$RawTables$CONST)
