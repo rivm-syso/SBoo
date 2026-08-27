@@ -7,11 +7,23 @@
 #' @return Kaerw
 #' @export
 Kaerw <- function (Kacompw, FRorig, SubCompartName) {
-
-  switch(SubCompartName,
-         "air" = 1/(Kacompw*FRorig),
-         NA)
   
-
+  out <- Kacompw |>
+    expand_grid(SubCompartName) |>
+    full_join(FRorig, by="SubCompart") |>
+    mutate(
+      Kaerw = dplyr::case_when(
+        SubCompartName == 'air' ~ 1/(Kacompw*FRorig),
+        TRUE ~ NA_real_
+      )
+    ) |>
+    filter(!is.na(Kaerw)) |>
+    arrange(Scale, SubCompart) |>
+    select(Scale, SubCompart, Kaerw)
   
+  return(out)
+   
+  # switch(SubCompartName,
+  #        "air" = 1/(Kacompw*FRorig),
+  #        NA)
 }

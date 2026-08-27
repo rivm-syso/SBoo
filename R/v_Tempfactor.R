@@ -9,41 +9,65 @@
 #'@return  Temperature correction degradation rate water/sed/soil [-]
 #'@export
 
-Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName) {
+Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent) {
   
-  if (SpeciesName %in% c("Molecular")) {
-    
-    switch(Matrix,
-           "air" =   {
-             return(exp((Ea.OHrad/constants::syms$r)*((Temp-T25)/T25^2)))
-           },
-           "soil" = {return(Q.10^((Temp-T25)/10))
-           },
-           "sediment" = {return(Q.10^((Temp-T25)/10))
-           },
-           "water" = {return(Q.10^((Temp-T25)/10))
-           },
-           return(NA)
-    )
-  } else { # Particulate
-    
-    switch(Matrix,
-           "air" =   {
-             
-             return(1) # not corrected for temperature or other aspects
-           },
-           "soil" = {
-             return(1) # not corrected for temperature or other aspects
-           },
-           "sediment" = {
-             
-             return(1) # not corrected for temperature or other aspects
-           },
-           "water" = {
-             return(1) # not corrected for temperature or other aspects
-           },
-           return(NA)
-    )
-  }
+  out <- Matrix |>
+    expand_grid(Temp, SpeciesName) |>
+    filter(!is.na(SpeciesName)) |>
+    parent$states$clipStates() |>
+    dplyr::mutate(
+      Tempfactor = dplyr::case_when(
+        Matrix == 'air' &  SpeciesName == 'Molecular' ~ exp((Ea.OHrad/constants::syms$r)*((Temp-T25)/T25^2)),
+        Matrix == 'soil' &  SpeciesName == 'Molecular' ~ Q.10^((Temp-T25)/10),
+        Matrix == 'sediment' &  SpeciesName == 'Molecular' ~ Q.10^((Temp-T25)/10),
+        Matrix == 'water' &  SpeciesName == 'Molecular' ~ Q.10^((Temp-T25)/10),
+        # particulate not corrected for temperature or other aspects
+        Matrix == 'air' &  SpeciesName != 'Molecular' ~ 1,
+        Matrix == 'soil' &  SpeciesName != 'Molecular' ~ 1,
+        Matrix == 'sediment' &  SpeciesName != 'Molecular' ~ 1,
+        Matrix == 'water' &  SpeciesName != 'Molecular' ~ 1,
+        TRUE ~ NA_real_
+        )
+      ) |>
+    arrange(Scale, SubCompart, Species) |>
+    select(Scale, SubCompart, Species, Tempfactor)
+  
+  return(out)
+  
+  
+  # if (SpeciesName %in% c("Molecular")) {
+  #   
+  #   switch(Matrix,
+  #          "air" =   {
+  #            return(exp((Ea.OHrad/constants::syms$r)*((Temp-T25)/T25^2)))
+  #          },
+  #          "soil" = {return(Q.10^((Temp-T25)/10))
+  #          },
+  #          "sediment" = {return(Q.10^((Temp-T25)/10))
+  #          },
+  #          "water" = {return(Q.10^((Temp-T25)/10))
+  #          },
+  #          return(NA)
+  #   )
+  # } else { # Particulate
+  #   
+  #   switch(Matrix,
+  #          "air" =   {
+  #            
+  #            return(1) # not corrected for temperature or other aspects
+  #          },
+  #          "soil" = {
+  #            return(1) # not corrected for temperature or other aspects
+  #          },
+  #          "sediment" = {
+  #            
+  #            return(1) # not corrected for temperature or other aspects
+  #          },
+  #          "water" = {
+  #            return(1) # not corrected for temperature or other aspects
+  #          },
+  #          return(NA)
+  #   )
+  # }
   
 }

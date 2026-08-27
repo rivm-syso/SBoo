@@ -9,5 +9,19 @@
 #' @seealso [Fringas(), FRinw(), FRins()]
 #' @export
 FRinaers <- function (Kaers, Kaerw, FRACs, FRACw) {
-  FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
+  
+  out <- FRACw |>
+    full_join(FRACs, by = c("Scale", "SubCompart")) |>
+    full_join(Kaerw, by = c("Scale", "SubCompart")) |>
+    full_join(Kaers, by = "SubCompart") |>
+    mutate(
+      FRinaers = FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
+    ) |>
+    filter(!is.na(FRinaers)) |>
+    arrange(Scale, SubCompart) |>
+    select(Scale, SubCompart, FRinaers)
+  
+  return(out)
+  
+  # FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
 }

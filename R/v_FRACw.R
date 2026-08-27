@@ -9,8 +9,24 @@
 #'@return FRACw
 #'@export
 FRACw <- function(subFRACa, subFRACw, subFRACs, Matrix){
-  if (Matrix == "water") {
-    return (1 - subFRACs - subFRACa)
-  } else
-    return (subFRACw)
+  
+  out <- subFRACa |>
+    full_join(subFRACw, by=c("Scale", "SubCompart")) |>
+    full_join(subFRACs, by=c("Scale", "SubCompart")) |>
+    left_join(Matrix, by="SubCompart") |>
+    mutate(
+      FRACw = dplyr::case_when(
+        Matrix == 'water' ~ 1 - subFRACs - subFRACa,
+        TRUE ~ subFRACw
+      )
+    ) |>
+    arrange(Scale, SubCompart) |>
+    select(Scale, SubCompart, FRACw)
+
+  return(out)  
+  
+  # if (Matrix == "water") {
+  #   return (1 - subFRACs - subFRACa)
+  # } else
+  #   return (subFRACw)
 }

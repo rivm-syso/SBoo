@@ -11,20 +11,45 @@
 #'
 
 
-FracROWatComp <- function(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName) {
-  # browser()
+FracROWatComp <- function(all.landFRAC, 
+                          #all.Matrix, 
+                          Matrix, 
+                          SubCompartName, 
+                          ScaleName, 
+                          parent) {
   
-  if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
-    
-    compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale == ScaleName]
-    mergeddata <- merge(all.landFRAC, all.Matrix)
-    waterFrac <- sum(mergeddata$landFRAC[mergeddata$Matrix == "water" & mergeddata$Scale == ScaleName])
-    return(compFrac / waterFrac)
-    
-  } else if ((SubCompartName == "sea") & (ScaleName %in% c("Tropic", "Moderate", "Arctic"))){ 
-    return(1)
-  }  else
-  {
-    return(NA)
-  }
+  out <- ScaleName |>
+    expand_grid(SubCompartName) |>
+    full_join(Matrix, by="SubCompart") |>
+    full_join(all.landFRAC, c("Scale", "SubCompart")) |>
+    mutate(Species ='Unbound') |>
+    parent$states$clipStates() |>
+    group_by(ScaleName, Matrix) |>
+    mutate(
+      FracRoWatComp = dplyr::case_when(
+        Matrix == 'water' & ScaleName %in% c("Regional", "Continental") ~ landFRAC / sum(landFRAC, na.rm=TRUE),
+        SubCompartName == 'sea' & ScaleName %in% c("Tropic", "Moderate", "Arctic") ~ 1,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    ungroup() |>
+    filter(!is.na(FracRoWatComp)) |>
+    arrange(Scale, SubCompart, Species) |>
+    select(Scale, SubCompart, Species, FracRoWatComp)
+  
+  return(out)  
+  
+  # if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
+  #   
+  #   compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale == ScaleName]
+  #   mergeddata <- merge(all.landFRAC, all.Matrix)
+  #   waterFrac <- sum(mergeddata$landFRAC[mergeddata$Matrix == "water" & mergeddata$Scale == ScaleName])
+  #   return(compFrac / waterFrac)
+  #   
+  # } else if ((SubCompartName == "sea") & (ScaleName %in% c("Tropic", "Moderate", "Arctic"))){ 
+  #   return(1)
+  # }  else
+  # {
+  #   return(NA)
+  # }
 }

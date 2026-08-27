@@ -17,7 +17,10 @@ Kaers <- function (Kaw25,Kow, Corg, RhoCOL, Matrix,
                    Pvap25, MaxPvap, Sol25, MW, T25, ChemClass) {
   
   if(ChemClass == "particle"){
-    return(NA)
+    return(data.frame(
+      SubCompart = Matrix$SubCompart,
+      Kaers = NA_real_
+    ))
   } else {
     
     #easy reading kBolts as R
@@ -34,9 +37,19 @@ Kaers <- function (Kaw25,Kow, Corg, RhoCOL, Matrix,
       Kow = 18 
       warning("v_Kaers: Kow is NA, default of 18 used!")
     }
-    switch(Matrix,
-          "air" = 0.54 * (Kow/Kaw25) * Corg * (RhoCOL/1000),
-          NA)
+    
+    out <- Matrix |>
+      left_join(Corg, by="Matrix") |>
+      full_join(RhoCOL, by="SubCompart") |>
+      dplyr::mutate(
+        Kaers = dplyr::case_when(
+          SubCompart == 'air' ~ 0.54 * (Kow/Kaw25) * Corg * (RhoCOL/1000),
+          TRUE ~ NA_real_
+      )) |>
+      filter(!is.na(Kaers)) |>
+      select(SubCompart, Kaers)
+      
+    return(out)
   }
 }
 

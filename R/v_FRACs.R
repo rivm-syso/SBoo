@@ -9,10 +9,30 @@
 #'@return FRACs 
 #'@export
 FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
-  if (Matrix %in% c("soil", "sediment")) {
-    if (Matrix == "sediment") subFRACa <- 0
-    return (1 - subFRACw - subFRACa)
-  } else
-    return (subFRACs)
+  
+  out <- subFRACa |>
+    full_join(subFRACw, by=c("Scale", "SubCompart")) |>
+    full_join(subFRACs, by=c("Scale", "SubCompart")) |>
+    left_join(Matrix, by="SubCompart") |>
+    mutate(
+      subFRACa = dplyr::case_when(
+        Matrix == 'sediment' ~ 0,
+        TRUE ~ subFRACa
+      ),
+      FRACs = dplyr::case_when(
+        Matrix %in% c("soil", "sediment") ~ 1 - subFRACw - subFRACa,
+        TRUE ~ subFRACs
+      )
+    ) |>
+    arrange(Scale, SubCompart) |>
+    select(Scale, SubCompart, FRACs)
+    
+  return(out)  
+
+  # if (Matrix %in% c("soil", "sediment")) {
+  #   if (Matrix == "sediment") subFRACa <- 0
+  #   return (1 - subFRACw - subFRACa)
+  # } else
+  #   return (subFRACs)
 }
 

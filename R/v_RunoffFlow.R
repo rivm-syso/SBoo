@@ -11,9 +11,26 @@
 #' @return Rain water runoff from soils [m3/s]
 #' @export
 RunoffFlow <- function (FRACrun, Area, RAINrate, Compartment){
-  if (Compartment == "soil") {
-    return(FRACrun * Area * RAINrate)
-  } else {
-    return(NA)
-  }
+  
+  out <- Area |>
+    full_join(RAINrate, by="Scale") |>
+    full_join(Compartment, by ="SubCompart") |>
+    mutate(
+      FRACrun = FRACrun,
+      Runoff = dplyr::case_when(
+        Compartment == "soil" ~ FRACrun * Area * RAINrate,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    filter(!is.na(Runoff)) |>
+    arrange(Scale, SubCompart) |>
+    select(Scale, SubCompart, Runoff)
+  
+  return(out)
+  
+  # if (Compartment == "soil") {
+  #   return(FRACrun * Area * RAINrate)
+  # } else {
+  #   return(NA)
+  # }
 }

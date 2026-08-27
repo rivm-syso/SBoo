@@ -11,5 +11,5 @@
 #' @export
 Ksw.alt <- function (KocAltDorC, CorgStandard, all.rhoMatrix){
   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
-  KocAltDorC*CorgStandard * RHOsolid / 1000
+  return(KocAltDorC*CorgStandard * RHOsolid / 1000)
 }

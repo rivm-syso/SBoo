@@ -7,19 +7,21 @@
 #'@param Matrix type of compartment considered
 #'@return FRorig
 #'@export
-FRorig <- function(ChemClass, Matrix, 
-                pH,
-                pKa){
-  if (Matrix %in% c("soil", "sediment")) {
-  switch(ChemClass,
-         "acid" = 1/(1+10^(pH-0.6-pKa)),
-         "base" = 1/(1+10^(pKa-4.5)),
-         1) # the else clause
-  } else if (Matrix %in% c("water", "air")){ # tried to include solid and water FRorig in 1 function for different matrices.
-    switch(ChemClass,
-           "acid" = 1/(1+10^(pH-pKa)),
-           "base" = 1/(1+10^(pKa-pH)),
-           1)
-  } else return (NA)
+FRorig <- function(ChemClass, Matrix,pH, pKa){
+  out <- Matrix |> 
+    full_join(pH, by="SubCompart") |>
+    mutate(
+      FRorig = dplyr::case_when(
+        (Matrix == 'soil' | Matrix == 'sediment') & ChemClass == 'acid' & !is.na(pKa) ~ 1/(1+10^(pH-0.6-pKa)),
+        (Matrix == 'soil' | Matrix == 'sediment') & ChemClass == 'base' & !is.na(pKa) ~ 1/(1+10^(pKa-4.5)),
+        (Matrix == 'water' | Matrix == 'air') & ChemClass == 'acid' & !is.na(pKa) ~ 1/(1+10^(pH-pKa)),
+        (Matrix == 'water' | Matrix == 'air') & ChemClass == 'base' & !is.na(pKa) ~ 1/(1+10^(pKa-pH)),
+        (Matrix == 'water' | Matrix == 'sediment' | Matrix == 'air' | Matrix == 'soil') ~ 1,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    filter(!is.na(FRorig)) |>
+    select(SubCompart, FRorig)
   
+  return(out)       
 }
