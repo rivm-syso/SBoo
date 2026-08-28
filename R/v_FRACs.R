@@ -8,12 +8,14 @@
 #'@param Matrix type of compartment
 #'@return FRACs 
 #'@export
-FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
+FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName){
   
-  out <- subFRACa |>
+  out <- ScaleName |>
+    expand_grid(SpeciesName, Matrix) |>
     full_join(subFRACw, by=c("Scale", "SubCompart")) |>
     full_join(subFRACs, by=c("Scale", "SubCompart")) |>
-    left_join(Matrix, by="SubCompart") |>
+    full_join(subFRACa, by=c("Scale", "SubCompart")) |>
+    parent$states$clipStates() |>
     mutate(
       subFRACa = dplyr::case_when(
         Matrix == 'sediment' ~ 0,
@@ -25,9 +27,10 @@ FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix){
       )
     ) |>
     arrange(Scale, SubCompart) |>
+    filter(!is.na(FRACs)) |>
     select(Scale, SubCompart, FRACs)
     
-  return(out)  
+  return(data.frame(out))  
 
   # if (Matrix %in% c("soil", "sediment")) {
   #   if (Matrix == "sediment") subFRACa <- 0

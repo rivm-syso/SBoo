@@ -6,11 +6,14 @@
 #' @param SubCompartName subcompartment considered
 #' @return Volume
 #' @export
-Volume <- function (VertDistance, Area, FRACcldw, SubCompartName){
+Volume <- function (VertDistance, Area, FRACcldw, SubCompartName, parent, ScaleName, SpeciesName){
   
-  out <- VertDistance |>
+  out <- ScaleName |>
+    expand_grid(SubCompartName, SpeciesName) |>
     full_join(Area) |>
     full_join(FRACcldw) |>
+    full_join(VertDistance, by=c("Scale", "SubCompart")) |>
+    parent$states$clipStates() |>
     mutate(
       FRACcldw = dplyr::case_when(
         SubCompart %in% c('cloudwater', 'air') ~ FRACcldw,
@@ -26,7 +29,7 @@ Volume <- function (VertDistance, Area, FRACcldw, SubCompartName){
     arrange(Scale, SubCompart) |>
     select(Scale, SubCompart, Volume)
   
-  return(out)
+  return(data.frame(out))
   
   # if(SubCompartName == "air"){
   #   VertDistance * Area * (1-FRACcldw)

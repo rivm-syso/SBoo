@@ -8,12 +8,14 @@
 #'@param Matrix type of compartment 
 #'@return FRACa 
 #'@export
-FRACa <- function(subFRACa, subFRACw, subFRACs, Matrix) {
+FRACa <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName) {
   
-  out <- subFRACa |>
+  out <- ScaleName |>
+    expand_grid(SpeciesName, Matrix) |>
     full_join(subFRACw, by=c("Scale", "SubCompart")) |>
     full_join(subFRACs, by=c("Scale", "SubCompart")) |>
-    left_join(Matrix, by="SubCompart") |>
+    full_join(subFRACa, by=c("Scale", "SubCompart")) |>
+    parent$states$clipStates() |>
     mutate(
       FRACa = dplyr::case_when(
         Matrix == 'air' ~ 1 - subFRACw - subFRACs,
@@ -21,10 +23,11 @@ FRACa <- function(subFRACa, subFRACw, subFRACs, Matrix) {
         TRUE ~ subFRACa
       )
     ) |>
+    filter(!is.na(FRACa)) |>
     arrange(Scale, SubCompart) |>
     select(Scale, SubCompart, FRACa)
   
-  return(out)  
+  return(data.frame(out))  
   
   # if (Matrix == "air") {
   #   return (1 - subFRACw - subFRACs)

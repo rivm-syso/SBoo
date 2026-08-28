@@ -12,12 +12,39 @@
 #'@param FRorig_spw Fraction original species in porewater of soil [-]
 #'@param rhoMatrix density of the matrix [kg.m-3]
 #'@export
-FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, all.rhoMatrix, KpCOL, 
-                  Kacompw, SUSP, COL, Matrix){
-  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
-  switch(Matrix,
-         "water" = 1/(1+Kp*SUSP/1000+KpCOL*COL/1000),
-         "soil" = # for soil pore water
-           FRACw/(FRACa*(Kacompw*FRorig_spw)+FRACw+FRACs*Kp*RHOsolid/1000)
-  )
+FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, rhoMatrix, KpCOL, 
+                  Kacompw, SUSP, COL, Matrix, parent, SpeciesName, ScaleName){
+  
+  RHOsolid <- rhoMatrix |> filter(Matrix == 'soil') |> pull(rhoMatrix)
+  out <- ScaleName |>
+    expand_grid(Matrix, SpeciesName) |>
+    parent$states$clipStates() |>
+    full_join(FRACw, by=c("Scale", "SubCompart")) |>
+    full_join(FRACa, by=c("Scale", "SubCompart")) |>
+    full_join(FRACs, by=c("Scale", "SubCompart")) |>
+    full_join(FRorig_spw, by='SubCompart') |>
+    full_join(Kp, by="SubCompart") |>
+    full_join(KpCOL, by="SubCompart") |>
+    full_join(Kacompw, by="Scale") |>
+    full_join(SUSP, by ="SubCompart") |>
+    full_join(COL, by="SubCompart") |>
+    mutate(
+      Frinw = dplyr::case_when(
+        Matrix == 'water' ~ 1/(1+Kp*SUSP/1000+KpCOL*COL/1000),
+        Matrix == 'soil' ~ FRACw/(FRACa*(Kacompw*FRorig_spw)+FRACw+FRACs*Kp*RHOsolid/1000),
+        TRUE ~ NA_real_
+      )
+    ) |>
+    filter(!is.na(Frinw)) |>
+    select(Scale, SubCompart, Frinw) |>
+    arrange(Scale, SubCompart)
+    
+  return(data.frame(out))
+   
+  # RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
+  # switch(Matrix,
+  #        "water" = 1/(1+Kp*SUSP/1000+KpCOL*COL/1000),
+  #        "soil" = # for soil pore water
+  #          FRACw/(FRACa*(Kacompw*FRorig_spw)+FRACw+FRACs*Kp*RHOsolid/1000)
+  # )
 }

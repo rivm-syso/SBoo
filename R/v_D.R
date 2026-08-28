@@ -13,15 +13,39 @@ D <- function(FRorig, pKa, Kow, ChemClass){
     warning("v_D: Kow is NA, to continue Kow set to 18 by default.", call. = FALSE)
   }
   
-  Kow.alt = 10^(log10(Kow)-3.5)
+  out <- FRorig |>
+    expand_grid(pKa, Kow, ChemClass) |>
+    mutate(
+      Kow.alt = 10^(log10(Kow)-3.5),
+      D = dplyr::case_when(
+        is.na(Kow) | Kow == 'NA' ~ NA,
+        ChemClass == 'acid' & !(is.na(Kow) | Kow == 'NA') ~ 
+          1/(1+10^(7-pKa)) * Kow + (1 - 1/(1+10^(7-pKa)))*Kow.alt,
+        ChemClass == 'base' & !(is.na(Kow) | Kow == 'NA') ~ 
+          1/(1+10^(pKa-7)) * Kow + (1- 1/(1+10^(pKa-7)))*Kow.alt,
+        TRUE ~ Kow
+      )
+    ) |>
+    filter(!is.na(D)) |>
+    arrange(SubCompart) |>
+    select(SubCompart, D)
+
+  return(data.frame(out))
   
-  switch(ChemClass,
-         "acid" = 
-           1/(1+10^(7-pKa)) * Kow + (1 - 1/(1+10^(7-pKa)))*Kow.alt,
-         "base" = 
-           1/(1+10^(pKa-7)) * Kow + (1- 1/(1+10^(pKa-7)))*Kow.alt,
-         # else for other ChemClass:
-         Kow
-          
-       )
+  # if (is.na(Kow) || Kow == "NA") {
+  #   Kow = 18 
+  #   warning("v_D: Kow is NA, to continue Kow set to 18 by default.", call. = FALSE)
+  # }
+  # 
+  # Kow.alt = 10^(log10(Kow)-3.5)
+  # 
+  # switch(ChemClass,
+  #        "acid" = 
+  #          1/(1+10^(7-pKa)) * Kow + (1 - 1/(1+10^(7-pKa)))*Kow.alt,
+  #        "base" = 
+  #          1/(1+10^(pKa-7)) * Kow + (1- 1/(1+10^(pKa-7)))*Kow.alt,
+  #        # else for other ChemClass:
+  #        Kow
+  #         
+  #      )
 }

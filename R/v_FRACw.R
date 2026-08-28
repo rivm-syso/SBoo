@@ -8,22 +8,25 @@
 #'@param Matrix type of compartment 
 #'@return FRACw
 #'@export
-FRACw <- function(subFRACa, subFRACw, subFRACs, Matrix){
+FRACw <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName){
   
-  out <- subFRACa |>
+  out <- ScaleName |>
+    expand_grid(SpeciesName, Matrix) |>
     full_join(subFRACw, by=c("Scale", "SubCompart")) |>
+    full_join(subFRACa, by=c("Scale", "SubCompart")) |>
     full_join(subFRACs, by=c("Scale", "SubCompart")) |>
-    left_join(Matrix, by="SubCompart") |>
+    parent$states$clipStates() |>
     mutate(
       FRACw = dplyr::case_when(
         Matrix == 'water' ~ 1 - subFRACs - subFRACa,
         TRUE ~ subFRACw
       )
     ) |>
+    filter(!is.na(FRACw)) |>
     arrange(Scale, SubCompart) |>
     select(Scale, SubCompart, FRACw)
 
-  return(out)  
+  return(data.frame(out))  
   
   # if (Matrix == "water") {
   #   return (1 - subFRACs - subFRACa)

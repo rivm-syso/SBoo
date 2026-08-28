@@ -13,14 +13,14 @@ Area <- function (AreaLand,
                   SubCompartName,
                   ScaleName,
                   Regional_and_Continental_deepocean,
-                  parent) {
+                  parent,
+                  SpeciesName) {
   
   out <- ScaleName |>
-    expand_grid(SubCompartName) |>
+    expand_grid(SubCompartName, SpeciesName) |>
     full_join(AreaSea, "Scale") |>
     full_join(AreaLand, "Scale") |>
     full_join(landFRAC, c("Scale", "SubCompart")) |>
-    mutate(Species ='Unbound') |>
     parent$states$clipStates() |>
     group_by(ScaleName) |>
     mutate(

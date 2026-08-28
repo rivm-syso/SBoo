@@ -7,9 +7,27 @@
 #' @param dischargeFRAC Fraction discharge of freshwater between regional and continental scales and vice versa [-]
 #' @return River Discharge for scale Continental [s-1]
 #' @export
-x_ContRiver2Reg <- function(ScaleName, SubCompartName,
-                            all.RunoffFlow, all.RainOnFreshwater,
-                            dischargeFRAC) {
+x_ContRiver2Reg <- function(ScaleName, SubCompartName, RunoffFlow, RainOnFreshwater,dischargeFRAC, parent, SpeciesName) {
+  
+  # out <- ScaleName |>
+  #   expand_grid(SubCompartName, SpeciesName) |>
+  #   parent$states$clipStates() |>
+  #   full_join(RunoffFlow, by=c("Scale", "SubCompart")) |>
+  #   full_join(RainOnFreshwater, by=c("Scale", "SubCompart")) |>
+  #   full_join(dischargeFRAC, by="Scale") |>
+  #   filter(Scale == 'Continental') |>
+  #   summarise(
+  #     Scale = 'Continental',
+  #     SubCompart = 'river',
+  #     Runoff  = sum(Runoff , na.rm=TRUE),
+  #     RainOnFreshwater = sum(RainOnFreshwater, na.rm=TRUE),
+  #     dischargeFRAC = first(dischargeFRAC)
+  #   ) |>
+  #   mutate(
+  #     x_ContRiver2Reg = (Runoff + RainOnFreshwater) * dischargeFRAC
+  #   )
+    
+  
   switch(ScaleName,
     "Continental" = {
       switch(SubCompartName,

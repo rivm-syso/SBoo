@@ -9,11 +9,11 @@
 #'@return  Temperature correction degradation rate water/sed/soil [-]
 #'@export
 
-Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent) {
+Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent, ScaleName) {
   
-  out <- Matrix |>
-    expand_grid(Temp, SpeciesName) |>
-    filter(!is.na(SpeciesName)) |>
+  out <- ScaleName |>
+    expand_grid(Matrix, SpeciesName) |>
+    full_join(Temp, by="Scale") |>
     parent$states$clipStates() |>
     dplyr::mutate(
       Tempfactor = dplyr::case_when(
@@ -32,7 +32,7 @@ Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent) {
     arrange(Scale, SubCompart, Species) |>
     select(Scale, SubCompart, Species, Tempfactor)
   
-  return(out)
+  return(data.frame(out))
   
   
   # if (SpeciesName %in% c("Molecular")) {
