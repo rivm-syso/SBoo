@@ -1147,11 +1147,35 @@ SBcore <- R6::R6Class("SBcore",
     
     # Get block from json structure
     Block2DAG = function(theList){
+      
       purrr::imap(theList, function(aVar, nm) {
         if (!is.atomic(aVar)) {
           aVar <- aVar |>
             dplyr::bind_rows(.id = "id")
         }
+        
+        # Apply SI conversion if exists
+        if (!is.atomic(aVar) && !is.null(self$RawTables$Units)) {
+          SIexpression <- self$RawTables$Units$ToSI[
+            self$RawTables$Units$VarName == nm
+          ]
+          if (length(SIexpression) == 1 && !is.na(SIexpression) && SIexpression != "") {
+            # Apply conversion to the data frame column
+            if (nm %in% names(aVar)) {
+              aVar[[nm]] <- eval(parse(text = gsub(nm, "aVar[[nm]]", SIexpression)))
+            }
+          }
+        } else if (is.atomic(aVar) && !is.null(self$RawTables$Units)) {
+          # For scalar values
+          SIexpression <- self$RawTables$Units$ToSI[
+            self$RawTables$Units$VarName == nm
+          ]
+          if (length(SIexpression) == 1 && !is.na(SIexpression) && SIexpression != "") {
+            assign(nm, aVar)
+            aVar <- eval(parse(text = SIexpression))
+          }
+        }
+        
         private$myReactiveDAG$set_source(nm, aVar)
       })
     },
@@ -1177,6 +1201,12 @@ SBcore <- R6::R6Class("SBcore",
     # possibly inherit Matrix, Component
     data2DAG = function(DefsTable, Table_type = "vector") {
       
+      Doexpression <- function (varname, x, SIexpression){ #execute expression to convert to SI
+        #NB varname is local here
+        assign(varname, x)
+        eval(parse(text = SIexpression))
+      }
+      
       dims <- self$RawTables$rowIdentifyers
       dim2use <- dims[dims %in% names(DefsTable)]
       
@@ -1195,6 +1225,17 @@ SBcore <- R6::R6Class("SBcore",
         "vector" = {
           for (nam in names(DefsTable)){
             aValue <- private$coerce_scalar(unlist(DefsTable[nam]))
+            
+            #Convert to SI
+            if (!is.null(self$RawTables$Units)) {
+              SIexpression <- self$RawTables$Units$ToSI[
+                self$RawTables$Units$VarName == nam
+              ]
+              if (length(SIexpression) == 1 && !is.na(SIexpression) && SIexpression != "") {
+                aValue <- Doexpression(nam, aValue, SIexpression)
+              }
+            }
+            
             private$myReactiveDAG$add_source(nam, aValue)
           }
         },
@@ -1215,13 +1256,26 @@ SBcore <- R6::R6Class("SBcore",
           )
           names(tibble_list) <- cols_to_use
           
+          tibble_list <- tibble_list |>
+            purrr::imap(function(.x, .y) {
+              
+              # Convert to SI units
+              if (!is.null(self$RawTables$Units)) {
+                SIexpression <- self$RawTables$Units$ToSI[
+                  self$RawTables$Units$VarName == .y
+                ]
+                if (length(SIexpression) == 1 && !is.na(SIexpression) && SIexpression != "") {
+                  .x[,.y] <- Doexpression(.y, .x[,.y], SIexpression)
+                }
+              }
+              .x
+            })
           tibble_list |>
             purrr::iwalk(~ private$myReactiveDAG$add_source(.y, .x))
         },
         
         # from long format, variables in VarName, Waarde
         "ToWiden" = {
-          
           needcols <- c(dim2use, "VarName", "Waarde")
           
           tibble_list <- DefsTable |>
@@ -1230,9 +1284,22 @@ SBcore <- R6::R6Class("SBcore",
             split(~ VarName)
           
           for (nm in names(tibble_list)) {
+            
+            # Convert to SI-units
+            if (!is.null(self$RawTables$Units)) {
+              SIexpression <- self$RawTables$Units$ToSI[
+                self$RawTables$Units$VarName == nm
+              ]
+              if (length(SIexpression) == 1 && !is.na(SIexpression) && SIexpression != "") {
+                tibble_list[[nm]] <- tibble_list[[nm]] |> 
+                  dplyr::mutate(Waarde = Doexpression(nm, Waarde, SIexpression))
+              }
+            }
+            
             exclVarNam <- tibble_list[[nm]] |>
               dplyr::select(-VarName) |>
               dplyr::rename(!!nm := Waarde)
+             
             private$myReactiveDAG$add_source(nm, exclVarNam)
           }
         }

@@ -6,14 +6,19 @@
 #'@param ChemClass Class of chemical, in this case Acid, Base or other
 #'@param Matrix type of compartment considered
 #'@export
-FRorig_spw <- function(ChemClass, Matrix, 
-                   pH,
-                   pKa){
-  if (Matrix %in% c("soil")){ # soil pore water
-    switch(ChemClass,
-           "acid" = 1/(1+10^(pH-pKa)),
-           "base" = 1/(1+10^(pKa-pH)),
-           1)
-  } else return (NA)
+FRorig_spw <- function(ChemClass, Matrix, pH, pKa){
+  out <- Matrix |> 
+    full_join(pH, by="SubCompart") |>
+    mutate(
+      FRorig_spw = dplyr::case_when(
+        Matrix == 'soil' & ChemClass == 'acid' & !is.na(pKa) ~ 1/(1+10^(pH-pKa)),
+        Matrix == 'soil' & ChemClass == 'base' & !is.na(pKa) ~ 1/(1+10^(pKa-pH)),
+        Matrix == 'soil' ~ 1,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    filter(!is.na(FRorig_spw)) |>
+    select(SubCompart, FRorig_spw)
   
+  return(out)                              
 }

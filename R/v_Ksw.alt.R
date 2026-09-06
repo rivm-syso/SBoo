@@ -9,7 +9,15 @@
 #'@param pKa Dissociation constant of (conjugated) acid (default = 7
 #'@param KswDorC soil water partitioning coefficient for colloids [-]
 #' @export
-Ksw.alt <- function (KocAltDorC, CorgStandard, all.rhoMatrix){
-  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
-  KocAltDorC*CorgStandard * RHOsolid / 1000
+Ksw.alt <- function (KocAltDorC, CorgStandard, rhoMatrix){
+  out <- rhoMatrix |>
+    filter(Matrix == 'soil') |>
+    mutate(
+      Ksw.alt = KocAltDorC*CorgStandard * rhoMatrix / 1000
+    ) |>
+    pull(Ksw.alt)
+  return(out)
+  
+  # RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
+  # return(KocAltDorC*CorgStandard * RHOsolid / 1000)
 }

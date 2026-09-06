@@ -5,7 +5,7 @@ usethis::use_data(The3D, internal = FALSE, overwrite = T)
 #initial dataframes from M 
 
 Defs = c(
-  "ScaleSubCompartData",
+  "ScaleSubCompartData", #Bevat landFRAC
   "ScaleSpeciesData",
   "SubCompartSpeciesData",
   "ScaleSheet",
