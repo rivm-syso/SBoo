@@ -8,7 +8,7 @@ ReactiveDAG <- R6::R6Class(
     debugR = NULL,
     parent = NULL,
     
-    initialize = function(params = list(), debugR = FALSE, parent = NULL) {
+    initialize = function(params = list(), parent = NULL, debugR = FALSE) {
       self$session <- shiny::MockShinySession$new()
       self$nodes <- list()
       self$sources <- list()

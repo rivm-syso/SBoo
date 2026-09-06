@@ -49,10 +49,14 @@ SBcore <- R6::R6Class("SBcore",
         private$Block2DAG(SubstanceList)
       }
       
+      # flows 4 advection
+      flows <- self$RawTables$FlowIO
+        
+      # (other) processes
       process_functions = read.csv(file.path(SBooDataLocation, "Processes4SpeciesTp.csv"))
       processes4Mode <- process_functions$Process[process_functions[, private$SBmode] == "X"]
 
-      SBvars <- self$build_DAG(processes4Mode) 
+      SBvars <- self$build_DAG(unique(flows$FlowName), processes4Mode)
       
       print(SBvars)
     },
@@ -577,16 +581,17 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #' @description Tries to create all non-data reactives that current processes and all flows need
-    build_DAG = function(ModeProcesses) {
+    build_DAG = function(flowNames, ModeProcesses) {
       ns <- getNamespace("sboo")
       my_ls <- ls(ns)
       
       processnames <- paste("k", ModeProcesses, sep = "_")
       stopifnot(all(processnames %in% my_ls))
       
+      stopifnot(all(flowNames %in% my_ls))
+      
       function_names <- c(
-        processnames,
-        my_ls |> stringr::str_subset("x_")
+        processnames, flowNames
       )
       
       # Initial needvars (params of the initial functions)
@@ -646,6 +651,12 @@ SBcore <- R6::R6Class("SBcore",
         known <- c(known, complete_nodes)
       }
       
+      # add flows and processes to DAG
+      for (pf in function_names){
+        private$myReactiveDAG$add_node_reactive(node_name = pf)
+      }
+
+      # to debug vars
       complete_nodes_piter
     },  
     
@@ -804,137 +815,64 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     #' @description derive transfer processes from datalayer
-    #' @param processName the one you are looking for, or (default) for "all" processes 
-    FromDataAndTo = function(processName = "all"){
-      #Get all form-to state combination, given
-      #[3D]Processes sheets and
-      #Processes columns in [3D]Sheet
-      #And restrict to existing states
-      PrepMatrix <- private$FetchData("Compartment")
-      #do not join on SubCompart, no expansion needed there
-      names(PrepMatrix) <- c("ExpandSubCompart", "compartment")
-      The3Process <- lapply(The3D, function (oneOf3) {
-        DTable <- private$SB4Ndata[[(paste0(oneOf3,"Processes"))]]
-        if (processName != "all") {
-          DTable <- DTable[DTable$process == processName,]
+    #' @param processName the one you are looking for, similar to  
+    FromDataAndTo = function(processName){
+      # Get all form-to state combination, given
+      # [3D]Processes sheets and
+      # Processes columns in [3D]Sheet
+      # And restrict to existing states
+      # k_Advection is a aggregation of all flows
+      if (processName == "k_Advection"){
+        warning("k_Advection is a aggregation of all flows")
+        return(NULL)
+      }
+      hit3D <- vapply(
+        The3D,
+        function(d) any(self$RawTables$ProcessFromTo[[d]]$process == processName),
+        logical(1)
+      )
+      stopifnot(sum(hit3D) == 1) #there can only be one
+      one3D <- The3D[hit3D]
+      
+      dim1 <- self$RawTables$ProcessFromTo[[one3D]] |>
+        dplyr::filter(process == processName) |>
+        dplyr::rename(
+          !!paste("from", one3D, sep = ".") := from,
+          !!paste("to",   one3D, sep = ".") := to
+        )
+      
+      ########## local helper 
+      # dimension: "SubCompart" or "Species"
+      # process: e.g. "k_DryDeposition"
+      # values: vector of SubCompart or Species values to check
+      is_allowed <- function(dimension, process, values) {
+        exc <- self$RawTables$k_exceptions[[dimension]]
+        
+        # If process column not present in exception table: everything allowed
+        if (!process %in% colnames(exc)) {
+          return(rep(TRUE, length(values)))
         }
-        if (nrow(DTable) > 0) {
-          #expand matrix to subcompartments?
-          if (all(DTable$from %in% PrepMatrix$compartment)){
-            possExpand <- lapply(1:nrow(DTable), function (xrow){
-              merge(DTable[xrow,], PrepMatrix, by.x = "from", by.y = "compartment")
-            }) 
-            #rbind and clean columnames
-            DTable <- do.call(rbind, possExpand)
-            DTable$from <- DTable$ExpandSubCompart
-            DTable$ExpandSubCompart <- NULL
-          }
-          #dito expansion for to; make a function??
-          if (all(DTable$to %in% PrepMatrix$compartment)){
-            possExpand <- lapply(1:nrow(DTable), function (xrow){
-              merge(DTable[xrow,], PrepMatrix, by.x = "to", by.y = "compartment")
-            }) 
-            #rbind and clean columnames
-            DTable <- do.call(rbind, possExpand)
-            DTable$to <- DTable$ExpandSubCompart
-            DTable$ExpandSubCompart <- NULL
-          }
-          
-        }
         
-        colnames(DTable)[colnames(DTable)=="from"] <- paste0("from",oneOf3)
-        colnames(DTable)[colnames(DTable)=="to"] <- paste0("to",oneOf3)
-        DTable
-      })
-      
-      names(The3Process) <- The3D
-      The3Sheet <- lapply(The3D, function (oneOf3) {
-        private$SB4Ndata[[(paste0(oneOf3,"Sheet"))]]
-      })
-      names(The3Sheet) <- The3D
-      processes3D <-lapply(The3D, function(D){
+        # Match values against exception table and read the TRUE/FALSE flag
+        idx <- match(values, exc[[dimension]])
+        # TRUE/FALSE for those that exist in table; NA treated as TRUE (no rule)
+        allowed <- exc[[process]][idx]
+        allowed[is.na(allowed)] <- TRUE
         
-        #The other two dimensions; readability
-        Others <- which(names(The3Sheet)!=D,arr.ind = T)
-        Others1 <- Others[1]
-        Others2 <- Others[2]
-        AllNames1 <- lapply(The3Sheet[Others1],FUN = names)
-        AllNames2 <- lapply(The3Sheet[Others2],FUN = names)
-        
-        #loop over processes within a dimension
-        #1) list of processes
-        Processes <- unique(The3Process[[D]][,"process"])
-        #2 restrictions on expand?
-        #search process attribute, if present indicating 'T|F' (only F matters, actually)
-        # else include all elements of the dimension
-        lapply(Processes, function(p){
-          
-          Df0 <- The3Process[[D]][The3Process[[D]]$process == p,]
-          
-          Oth1 <- The3Sheet[[Others1]][[The3D[Others1]]]
-          if(p %in% unlist(AllNames1)){
-            Oth1T <- which(The3Sheet[[Others1]][[p]] != "F")
-            Oth1 <- Oth1[Oth1T]
-          }
-          #append the from-to
-          Df1 <- data.frame(
-            from = Oth1,
-            to = Oth1, stringsAsFactors = F
-          )
-          names(Df1) <- sapply(names(Df1),paste0,The3D[Others1])
-          Oth2 <- The3Sheet[[Others2]][[The3D[Others2]]]
-          if(p %in% unlist(AllNames2)){
-            Oth2T <- which(The3Sheet[[Others2]][[p]] != "F")
-            Oth2 <- Oth2[Oth2T]
-          }
-          #append the from-to
-          Df2 <- data.frame(
-            from = Oth2,
-            to = Oth2, stringsAsFactors = F
-          )
-          names(Df2) <- sapply(names(Df2),paste0,The3D[Others2])
-          Step1Expand <- expand.grid.df(Df0, Df1, Df2)
-          #remove processes with F in ProcessName - column of 2D-combination-tables
-          D2combn <- combn(The3D,2)
-          dummy <- apply(D2combn, 2, function(D2v){
-            TableName <- paste0(do.call(paste0,as.list(D2v)),"Data")
-            D2others <- private$SB4Ndata[[TableName]]
-            if (p %in% colnames(D2others)) {
-              ToDel <- D2others[D2others[,p]=="F" & !is.na(D2others[,p]), c(D2v[1],D2v[2])]
-              for (k in 1:nrow(ToDel)){
-                which1 <- which(D2others[,Others1] == ToDel[k,D2v[1]])
-                which2 <- which(D2others[,Others2] == ToDel[k,D2v[2]])
-                bothwhiches <- which1 & which2
-                if (length(bothwhiches) < 0)
-                  Step1Expand <- Step1Expand[-bothwhiches,]
-              }
-            }
-          })
-          Step1Expand
-        })
-      })#next D
-      #flatten processes3D; 1) rbind nested level 2 2) rbind the list of dataframes
-      processes3DUnnest <- lapply(processes3D, function (InList) {
-        if (length(InList) == 0) return(NULL)
-        if (length(InList) == 1) return(InList[[1]])
-        #else rbind
-        do.call(rbind,InList)
-      })
-      AllKaasCalc <- do.call(rbind,processes3DUnnest)
+        allowed
+      }
+
+      #expand to other dims
+      Other <- The3D[!hit3D]
       
-      #which states exist?
-      exist.from <- apply(AllKaasCalc, 1, function(othrow) {
-        any(private$States$asDataFrame$Scale == othrow["fromScale"] &
-              private$States$asDataFrame$SubCompart == othrow["fromSubCompart"] &
-              private$States$asDataFrame$Species == othrow["fromSpecies"])
-      })
-      exist.to <- apply(AllKaasCalc, 1, function(othrow) {
-        any(private$States$asDataFrame$Scale == othrow["toScale"] &
-              private$States$asDataFrame$SubCompart == othrow["toSubCompart"] &
-              private$States$asDataFrame$Species == othrow["toSpecies"])
-      })
-      return(AllKaasCalc[exist.from & exist.to, ]) 
+      for (oDim in Other){ 
+        fulldim <- self$RawTables$DimsTables[[oDim]]
+        allowed <- is_allowed(oDim, processName, fulldim[[oDim]])
+        dim1 <- expand.grid.df(dim1, fulldim[allowed, oDim])
+        names(dim1)[names(dim1) == "y"] <- oDim
+      }
       
+      return(dim1)
     },
     
     #' @description states and all data-layer to an rds-file

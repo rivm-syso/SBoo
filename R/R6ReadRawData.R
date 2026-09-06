@@ -67,11 +67,26 @@ ReadRawData <- R6::R6Class("SBreadData",
       }
     },
     
+    FlowIO = function(value){
+      if (missing(value)) {
+        private$flowIO
+      } else {
+        stop("`$FlowIO` are R.O>", call. = FALSE)
+      }
+    },
+      
     Units = function(value){
       if (missing(value)) {
         private$units
       } else {
-        stop("`$processfromto` are R.O>", call. = FALSE)
+        stop("`$units` are R.O>", call. = FALSE)
+      }
+    },
+    k_exceptions = function(value){
+      if (missing(value)) {
+        private$K_exceptions
+      } else {
+        stop("`$k_exceptions` are R.O>", call. = FALSE)
       }
     }
   ),
@@ -80,10 +95,12 @@ ReadRawData <- R6::R6Class("SBreadData",
     ToWidenList = list(), 
     VarsList = list(),
     DimList = list(),
+    K_exceptions = list(),
     SubstanceList = list(),
     processfromto = list(),
     CONSTANTS = NULL,
     units = NULL,
+    flowIO = NULL,
     
     RowIdentifyers = c(
       The3D,
@@ -101,9 +118,10 @@ ReadRawData <- R6::R6Class("SBreadData",
       VarsList <- list()
       DimList <- list()
       ProcessList <- list()
+      k_exceptions <- list()
       substanceProperties <- list()
 
-      for (Def in Defs[Defs != "Units"]) {
+      for (Def in Defs) {
         tableName <- read.csv(
           paste(MlikeFile, "/", Def, ".csv", sep = ""))
         if (Def == "CONSTANTS") {
@@ -111,13 +129,23 @@ ReadRawData <- R6::R6Class("SBreadData",
           names(private$CONSTANTS) <- tableName$VarName
           next
         }
-        if("VarName" %in% names(tableName)) {
+        if (Def == "FlowIO") {
+          private$flowIO <- tableName
+        }
+        if (Def == "Units") {
+          private$units <- tableName
+          next
+        }
+        
+        if ("VarName" %in% names(tableName)) {
           DimNames <- names(tableName)[names(tableName) %in% private$RowIdentifyers]
           ToWidenList[[length(ToWidenList)+1]] <- tableName[ ,c(DimNames, "VarName", "Waarde")]
           next
         } else {
-          if ("process" %in% names(tableName)){
-            ProcessList[[length(ProcessList)+1]] <- tableName
+          if (grepl("Processes", Def)) {
+            procesDim <- sub("(.*)Processes.*", "\\1", Def)
+            stopifnot(procesDim %in% The3D)
+            ProcessList[[procesDim]] <- tableName
             next
           } else {
             wantColumns <- names(tableName)[!names(tableName) %in% OtherDimColNames] 
@@ -132,17 +160,22 @@ ReadRawData <- R6::R6Class("SBreadData",
           } else {
             TheDim = Dims[1]
           }
+          # separate from-to info from other
+          k_columns <- startsWith(names(tableName), prefix = "k_")
+          k_columns <- names(tableName)[k_columns]
+          if (length(k_columns) > 0 ){
+            k_exceptions[[TheDim]] <- tableName |> dplyr::select(all_of(c(TheDim, k_columns)))
+            tableName <- tableName |> dplyr::select(-all_of(k_columns))
+          }
           wantColumns <- c(Dims, names(tableName)[names(tableName) %in% OtherDimColNames]) 
           DimList[[TheDim]] = tableName[, wantColumns]
         }
       }
       
-      private$units <- read.csv(
-        paste(MlikeFile, "/Units.csv", sep = ""))
-      
       private$ToWidenList <- ToWidenList 
       private$VarsList <- VarsList
       private$DimList <- DimList
+      private$K_exceptions <- k_exceptions
       private$processfromto <- ProcessList
     }
   )
