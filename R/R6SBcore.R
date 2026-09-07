@@ -831,6 +831,28 @@ SBcore <- R6::R6Class("SBcore",
         function(d) any(self$RawTables$ProcessFromTo[[d]]$process == processName),
         logical(1)
       )
+      if (sum(hit3D) == 0) { # it may be a flow!
+
+        flows <- self$RawTables$FlowIO |> dplyr::filter(FlowName == processName)
+        if (nrow(flows) == 0){
+          stop(paste("no from/to found for", processName))
+        }
+        one3D <- unique(flows$Dimension)
+        stopifnot(length(one3D) == 1)
+        forwhichCol <- ifelse(one3D == "Scale", "SubCompart", "Scale") #the "other"
+        dim1 <- flows |> dplyr::rename(
+          !!paste("from", one3D, sep = ".") := from,
+          !!paste("to",   one3D, sep = ".") := to,
+          !!forwhichCol := forWhich
+        ) |> 
+          dplyr::select(-FlowName, -Dimension) |>
+          expand.grid.df(self$states$asDataFrame |> 
+                           dplyr::select(Species) |>
+                           dplyr::distinct()
+          )
+        return(dim1)
+      }
+      # it is a process
       stopifnot(sum(hit3D) == 1) #there can only be one
       one3D <- The3D[hit3D]
       
