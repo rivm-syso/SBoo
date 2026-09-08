@@ -10,22 +10,22 @@
 AirFlow <- function (Volume, Area, WINDspeed, SubCompartName, parent, SpeciesName, ScaleName){
   
   out <- ScaleName |>
-    expand_grid(SubCompartName, SpeciesName) |>
-    full_join(Area, by=c("Scale", "SubCompart")) |>
-    full_join(Volume, by=c("Scale", "SubCompart")) |>
-    full_join(WINDspeed, by=c("Scale")) |>
-    filter(SubCompartName %in% c("air")) |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::full_join(Area, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(Volume, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(WINDspeed, by=c("Scale")) |>
+    dplyr::filter(SubCompartName %in% c("air")) |>
     parent$states$clipStates() |>
-    mutate(
+    dplyr::mutate(
       TAU = dplyr::case_when(
         SubCompart %in% c("air") ~ f_TAU(Area, WINDspeed),
         TRUE ~ NA_real_
       ),
       AirFlow = Volume / TAU
     ) |>
-    filter(!is.na(AirFlow)) |>
-    select(Scale, SubCompart, AirFlow) |>
-    arrange(Scale, SubCompart)
+    dplyr::filter(!is.na(AirFlow)) |>
+    dplyr::select(Scale, SubCompart, AirFlow) |>
+    dplyr::arrange(Scale, SubCompart)
     
   return(data.frame(out))
     

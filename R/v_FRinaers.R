@@ -11,17 +11,17 @@
 FRinaers <- function (Kaers, Kaerw, FRACs, FRACw, parent, SpeciesName) {
   
   out <- FRACw |>
-    full_join(FRACs, by = c("Scale", "SubCompart")) |>
-    full_join(Kaerw, by = c("Scale", "SubCompart")) |>
-    full_join(Kaers, by = "SubCompart") |>
-    expand_grid(SpeciesName) |>
+    dplyr::full_join(FRACs, by = c("Scale", "SubCompart")) |>
+    dplyr::full_join(Kaerw, by = c("Scale", "SubCompart")) |>
+    dplyr::full_join(Kaers, by = "SubCompart") |>
+    tidyr::expand_grid(SpeciesName) |>
     parent$states$clipStates() |>
-    mutate(
+    dplyr::mutate(
       FRinaers = FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
     ) |>
-    filter(!is.na(FRinaers)) |>
-    arrange(Scale, SubCompart) |>
-    select(Scale, SubCompart, FRinaers)
+    dplyr::filter(!is.na(FRinaers)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, FRinaers)
   
   return(data.frame(out))
   

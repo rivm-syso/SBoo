@@ -18,16 +18,16 @@ KocAltDorC <- function (Kow, a, b, pKa, KocAlt, ChemClass){
       }
       
       out <- a |>
-        full_join(b, by="QSAR.ChemClass") |>
-        filter(QSAR.ChemClass %in% ChemClass) |>
-        mutate(
+        dplyr::full_join(b, by="QSAR.ChemClass") |>
+        dplyr::filter(QSAR.ChemClass %in% ChemClass) |>
+        dplyr::mutate(
           KocAltDorC = dplyr::case_when(
             QSAR.ChemClass == 'acid' ~ 10^(0.11*log10(Kow)+1.54),
             QSAR.ChemClass == 'base' ~ 10^(pKa^0.65*(Kow/(1+Kow))^0.14),
             TRUE ~ a * Kow^b
             )
           ) |>
-        pull(KocAltDorC)
+        dplyr::pull(KocAltDorC)
         
         return(out)
       # switch(ChemClass,

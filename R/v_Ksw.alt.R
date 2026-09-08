@@ -11,11 +11,11 @@
 #' @export
 Ksw.alt <- function (KocAltDorC, CorgStandard, rhoMatrix){
   out <- rhoMatrix |>
-    filter(Matrix == 'soil') |>
-    mutate(
+    dplyr::filter(Matrix == 'soil') |>
+    dplyr::mutate(
       Ksw.alt = KocAltDorC*CorgStandard * rhoMatrix / 1000
     ) |>
-    pull(Ksw.alt)
+    dplyr::pull(Ksw.alt)
   return(out)
   
   # RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]

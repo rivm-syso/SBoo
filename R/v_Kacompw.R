@@ -77,8 +77,8 @@ Kacompw <- function(Kaw25,
       dplyr::mutate(
         Kacompw = Kaw25 * exp((H0vap / R) * (1 / T25 - 1 / Temp)) * exp(-(H0sol / R) * (1 / T25 - 1 / Temp)) * (T25 / Temp)
       ) |>
-      select(Scale, Kacompw) |>
-      filter(!is.na(Kacompw))
+      dplyr::select(Scale, Kacompw) |>
+      dplyr::filter(!is.na(Kacompw))
     
     return(out)
   }

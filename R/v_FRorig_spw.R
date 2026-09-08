@@ -8,8 +8,8 @@
 #'@export
 FRorig_spw <- function(ChemClass, Matrix, pH, pKa){
   out <- Matrix |> 
-    full_join(pH, by="SubCompart") |>
-    mutate(
+    dplyr::full_join(pH, by="SubCompart") |>
+    dplyr::mutate(
       FRorig_spw = dplyr::case_when(
         Matrix == 'soil' & ChemClass == 'acid' & !is.na(pKa) ~ 1/(1+10^(pH-pKa)),
         Matrix == 'soil' & ChemClass == 'base' & !is.na(pKa) ~ 1/(1+10^(pKa-pH)),
@@ -17,8 +17,8 @@ FRorig_spw <- function(ChemClass, Matrix, pH, pKa){
         TRUE ~ NA_real_
       )
     ) |>
-    filter(!is.na(FRorig_spw)) |>
-    select(SubCompart, FRorig_spw)
+    dplyr::filter(!is.na(FRorig_spw)) |>
+    dplyr::select(SubCompart, FRorig_spw)
   
   return(out)                              
 }

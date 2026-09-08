@@ -11,12 +11,12 @@
 FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName){
   
   out <- ScaleName |>
-    expand_grid(SpeciesName, Matrix) |>
-    full_join(subFRACw, by=c("Scale", "SubCompart")) |>
-    full_join(subFRACs, by=c("Scale", "SubCompart")) |>
-    full_join(subFRACa, by=c("Scale", "SubCompart")) |>
+    tidyr::expand_grid(SpeciesName, Matrix) |>
+    dplyr::full_join(subFRACw, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(subFRACs, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(subFRACa, by=c("Scale", "SubCompart")) |>
     parent$states$clipStates() |>
-    mutate(
+    dplyr::mutate(
       subFRACa = dplyr::case_when(
         Matrix == 'sediment' ~ 0,
         TRUE ~ subFRACa
@@ -26,9 +26,9 @@ FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, Speci
         TRUE ~ subFRACs
       )
     ) |>
-    arrange(Scale, SubCompart) |>
-    filter(!is.na(FRACs)) |>
-    select(Scale, SubCompart, FRACs)
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::filter(!is.na(FRACs)) |>
+    dplyr::select(Scale, SubCompart, FRACs)
     
   return(data.frame(out))  
 

@@ -10,12 +10,12 @@ MTC_2sd <- function(kwsd.water, Matrix, SubCompartName){
   
   out <- dplyr::full_join(SubCompartName, Matrix) |>
     dplyr::filter(SubCompart != 'cloudwater' & Matrix == 'water') |>
-    mutate(
+    dplyr::mutate(
       MTC_2sd = kwsd.water
     ) |>
-    filter(!is.na(MTC_2sd)) |>
-    arrange(SubCompart) |>
-    select(SubCompart, MTC_2sd)
+    dplyr::filter(!is.na(MTC_2sd)) |>
+    dplyr::arrange(SubCompart) |>
+    dplyr::select(SubCompart, MTC_2sd)
   
   return(out)
 }

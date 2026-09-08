@@ -14,8 +14,8 @@ D <- function(FRorig, pKa, Kow, ChemClass){
   }
   
   out <- FRorig |>
-    expand_grid(pKa, Kow, ChemClass) |>
-    mutate(
+    tidyr::expand_grid(pKa, Kow, ChemClass) |>
+    dplyr::mutate(
       Kow.alt = 10^(log10(Kow)-3.5),
       D = dplyr::case_when(
         is.na(Kow) | Kow == 'NA' ~ NA,
@@ -26,9 +26,9 @@ D <- function(FRorig, pKa, Kow, ChemClass){
         TRUE ~ Kow
       )
     ) |>
-    filter(!is.na(D)) |>
-    arrange(SubCompart) |>
-    select(SubCompart, D)
+    dplyr::filter(!is.na(D)) |>
+    dplyr::arrange(SubCompart) |>
+    dplyr::select(SubCompart, D)
 
   return(data.frame(out))
   

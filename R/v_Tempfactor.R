@@ -12,8 +12,8 @@
 Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent, ScaleName) {
   
   out <- ScaleName |>
-    expand_grid(Matrix, SpeciesName) |>
-    full_join(Temp, by="Scale") |>
+    tidyr::expand_grid(Matrix, SpeciesName) |>
+    dplyr::full_join(Temp, by="Scale") |>
     parent$states$clipStates() |>
     dplyr::mutate(
       Tempfactor = dplyr::case_when(
@@ -29,8 +29,8 @@ Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent, Sc
         TRUE ~ NA_real_
         )
       ) |>
-    arrange(Scale, SubCompart, Species) |>
-    select(Scale, SubCompart, Species, Tempfactor)
+    dplyr::arrange(Scale, SubCompart, Species) |>
+    dplyr::select(Scale, SubCompart, Species, Tempfactor)
   
   return(data.frame(out))
   

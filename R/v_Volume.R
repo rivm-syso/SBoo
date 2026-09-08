@@ -9,12 +9,12 @@
 Volume <- function (VertDistance, Area, FRACcldw, SubCompartName, parent, ScaleName, SpeciesName){
   
   out <- ScaleName |>
-    expand_grid(SubCompartName, SpeciesName) |>
-    full_join(Area) |>
-    full_join(FRACcldw) |>
-    full_join(VertDistance, by=c("Scale", "SubCompart")) |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::full_join(Area) |>
+    dplyr::full_join(FRACcldw) |>
+    dplyr::full_join(VertDistance, by=c("Scale", "SubCompart")) |>
     parent$states$clipStates() |>
-    mutate(
+    dplyr::mutate(
       FRACcldw = dplyr::case_when(
         SubCompart %in% c('cloudwater', 'air') ~ FRACcldw,
         TRUE ~ NA_real_
@@ -25,9 +25,9 @@ Volume <- function (VertDistance, Area, FRACcldw, SubCompartName, parent, ScaleN
         TRUE ~ VertDistance * Area
       )
     )  |>
-    filter(!is.na(Volume)) |>
-    arrange(Scale, SubCompart) |>
-    select(Scale, SubCompart, Volume)
+    dplyr::filter(!is.na(Volume)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, Volume)
   
   return(data.frame(out))
   

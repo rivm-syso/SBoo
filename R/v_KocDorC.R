@@ -12,9 +12,9 @@ KocDorC <- function (Kow, a, b, Koc, ChemClass){
     
   if (is.na(Koc) || Koc == "NA") {
     out <- a |>
-      full_join(b, by="QSAR.ChemClass") |>
-      filter(QSAR.ChemClass %in% ChemClass) |>
-      mutate(
+      dplyr::full_join(b, by="QSAR.ChemClass") |>
+      dplyr::filter(QSAR.ChemClass %in% ChemClass) |>
+      dplyr::mutate(
         KocDorC = dplyr::case_when(
           QSAR.ChemClass == 'acid' ~ 10^(0.54*log10(Kow)+1.11),
           QSAR.ChemClass == 'base' ~ 10^(0.37*log10(Kow)+1.7),
@@ -23,7 +23,7 @@ KocDorC <- function (Kow, a, b, Koc, ChemClass){
           TRUE ~ a * Kow^b
         )
       ) |>
-      pull(KocDorC)
+      dplyr::pull(KocDorC)
     return(out)
   } else return(Koc)
     
