@@ -20,7 +20,7 @@ FracROWatComp <- function(landFRAC,
                           parent) {
   
   out <- ScaleName |>
-    tidry::expand_grid(SubCompartName, SpeciesName) |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
     dplyr::full_join(Matrix, by="SubCompart") |>
     dplyr::full_join(landFRAC, c("Scale", "SubCompart")) |>
     parent$states$clipStates() |>
