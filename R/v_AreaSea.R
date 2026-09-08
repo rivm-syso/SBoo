@@ -15,19 +15,19 @@ AreaSea <- function (TotalArea,
   ContinentalInModerate <- T #For now ! not yet an input option
   
   out <- ScaleName |>
-    full_join(TotalArea) |>
-    full_join(FRACsea) |>
-    mutate(
+    dplyr::full_join(TotalArea) |>
+    dplyr::full_join(FRACsea) |>
+    dplyr::mutate(
       AreaSea= TotalArea * (FRACsea)
     ) |>
-    mutate(
+    dplyr::mutate(
       AreaSea = dplyr::case_when(
         ScaleName =='Continental' & ContinentalInModerate ~ AreaSea - AreaSea[ScaleName == "Regional"],
         ScaleName == 'Moderate' ~  AreaSea - AreaSea[ScaleName == "Continental"],
         TRUE ~ AreaSea
       )
     ) |>
-    select(Scale, AreaSea)
+    dplyr::select(Scale, AreaSea)
   
   return(out)  
   

@@ -12,23 +12,23 @@ AreaLand <- function (TotalArea,
                       FRACsea,
                       ScaleName) {
   
-  # Nog al vreemde logical in de oude code!
+  # Optional ContinentalInTropic ? 
   ContinentalInModerate <- T #For now ! not yet an input option
   
   out <- ScaleName |>
-    full_join(TotalArea) |>
-    full_join(FRACsea) |>
-    mutate(
+    dplyr::full_join(TotalArea) |>
+    dplyr::full_join(FRACsea) |>
+    dplyr::mutate(
       AreaLand = TotalArea * (1-FRACsea)
     ) |>
-    mutate(
+    dplyr::mutate(
       AreaLand = dplyr::case_when(
         ScaleName =='Continental' & ContinentalInModerate ~ AreaLand - AreaLand[ScaleName == "Regional"],
         ScaleName == 'Moderate' ~  AreaLand - AreaLand[ScaleName == "Continental"],
         TRUE ~ AreaLand
       )
     ) |>
-    select(Scale, AreaLand)
+    dplyr::select(Scale, AreaLand)
   
   return(out)  
   

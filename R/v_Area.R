@@ -17,13 +17,13 @@ Area <- function (AreaLand,
                   SpeciesName) {
   
   out <- ScaleName |>
-    expand_grid(SubCompartName, SpeciesName) |>
-    full_join(AreaSea, "Scale") |>
-    full_join(AreaLand, "Scale") |>
-    full_join(landFRAC, c("Scale", "SubCompart")) |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::full_join(AreaSea, "Scale") |>
+    dplyr::full_join(AreaLand, "Scale") |>
+    dplyr::full_join(landFRAC, c("Scale", "SubCompart")) |>
     parent$states$clipStates() |>
-    group_by(ScaleName) |>
-    mutate(
+    dplyr::group_by(ScaleName) |>
+    dplyr::mutate(
       landFRAC_used = dplyr::case_when(
         SubCompartName == "lakesediment" &
           ScaleName %in% c("Regional", "Continental") ~
@@ -61,19 +61,18 @@ Area <- function (AreaLand,
         TRUE ~ NA_real_
       )
     ) |>
-    ungroup() |>
-    select(Scale, SubCompart, Area)  
+    dplyr::ungroup() |>
+    dplyr::select(Scale, SubCompart, Area)  
   
-  # Add area for cloudwater
-  extra <- out |>
-    filter(SubCompart == 'air') |>
-    mutate(
-      SubCompart = 'cloudwater'
-    )
+  # Add area for cloudwater -- no, it's in SubCompartName, if present in states?
+  # extra <- out |>
+  #   dplyr::filter(SubCompart == 'air') |>
+  #   dplyr::mutate(
+  #     SubCompart = 'cloudwater'
+  #   )
   out <- out |>
-    bind_rows(extra) |>
-    filter(!is.na(Area)) |>
-    arrange(Scale, SubCompart, Area)
+    dplyr::filter(!is.na(Area)) |>
+    dplyr::arrange(Scale, SubCompart, Area)
   
   return(data.frame(out))
 

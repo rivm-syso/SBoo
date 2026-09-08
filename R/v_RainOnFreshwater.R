@@ -10,16 +10,16 @@
 RainOnFreshwater <- function (RAINrate, Area, SubCompartName, parent, SpeciesName) {
   
   out <- Area |>
-    filter(SubCompart %in% c("river", "lake")) |>
-    full_join(RAINrate, by="Scale") |>
-    expand_grid(SpeciesName) |>
+    dplyr::filter(SubCompart %in% c("river", "lake")) |>
+    dplyr::full_join(RAINrate, by="Scale") |>
+    tidyr::expand_grid(SpeciesName) |>
     parent$states$clipStates() |>
-    mutate(
+    dplyr::mutate(
       RainOnFreshwater = RAINrate * Area
     ) |>
-    filter(!is.na(RainOnFreshwater)) |>
-    arrange(Scale, SubCompart) |>
-    select(Scale, SubCompart, RainOnFreshwater)
+    dplyr::filter(!is.na(RainOnFreshwater)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, RainOnFreshwater)
   
   return(data.frame(out))
   
