@@ -6,14 +6,14 @@
 #' @param SubCompartName subcompartment considered
 #' @return Volume
 #' @export
-Volume <- function (VertDistance, Area, FRACcldw, SubCompartName, parent, ScaleName, SpeciesName){
+Volume <- function (VertDistance, Area, FRACcldw, SubCompartName, parent, ScaleName){
   
   out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    tidyr::expand_grid(SubCompartName) |>
     dplyr::full_join(Area) |>
     dplyr::full_join(FRACcldw) |>
     dplyr::full_join(VertDistance, by=c("Scale", "SubCompart")) |>
-    parent$states$clipStates() |>
+    parent$states$clipStates(NoSpeciesKey = TRUE) |>
     dplyr::mutate(
       FRACcldw = dplyr::case_when(
         SubCompart %in% c('cloudwater', 'air') ~ FRACcldw,

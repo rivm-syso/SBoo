@@ -16,15 +16,14 @@ FracROWatComp <- function(landFRAC,
                           Matrix, 
                           SubCompartName, 
                           ScaleName,
-                          SpeciesName,
-                          parent) {
+                          parent, SpeciesName) {
   
   out <- ScaleName |>
     tidyr::expand_grid(SubCompartName, SpeciesName) |>
     dplyr::full_join(Matrix, by="SubCompart") |>
     dplyr::full_join(landFRAC, c("Scale", "SubCompart")) |>
     parent$states$clipStates() |>
-    dplyr::group_by(ScaleName, Matrix) |>
+    dplyr::group_by(ScaleName, Matrix, SpeciesName) |>
     dplyr::mutate(
       FracROWatComp = dplyr::case_when(
         Matrix == 'water' & ScaleName %in% c("Regional", "Continental") ~ landFRAC / sum(landFRAC, na.rm=TRUE),
@@ -35,7 +34,7 @@ FracROWatComp <- function(landFRAC,
     dplyr::ungroup() |>
     dplyr::filter(!is.na(FracROWatComp)) |>
     dplyr::arrange(Scale, SubCompart, Species) |>
-    dplyr::select(Scale, SubCompart, FracROWatComp)
+    dplyr::select(Scale, SubCompart, Species, FracROWatComp)
   
   return(data.frame(out)) 
   

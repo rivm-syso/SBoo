@@ -10,13 +10,16 @@
 
 #' @export
 KocAltDorC <- function (Kow, a, b, pKa, KocAlt, ChemClass){
-
+  
     if (is.na(KocAlt) || KocAlt == "NA") {
+      if (ChemClass == 'particle') {
+        return(NA)
+      }
+      
       if (is.na(pKa) || pKa == "NA"){
         pKa <- 7
         warning("KswDorC: pKa is needed but missing, setting pKa=7", call. = FALSE)
       }
-      
       out <- a |>
         dplyr::full_join(b, by="QSAR.ChemClass") |>
         dplyr::filter(QSAR.ChemClass %in% ChemClass) |>

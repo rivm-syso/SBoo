@@ -14,12 +14,33 @@
 #'@export
 k_Erosion <- function(relevant_depth_s,penetration_depth_s, EROSIONsoil, VertDistance,
                       to.FracROWatComp,
-                      ScaleName, to.SubCompartName,  Matrix, all.landFRAC, all.Matrix ){
-  if (ScaleName %in% c("Regional", "Continental") & to.SubCompartName == "sea") {
-    return(NA)
-  } 
-  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & to.SubCompartName != "sea") {
-    return(NA)
-  } 
-  EROSIONsoil * f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / VertDistance * to.FracROWatComp  #[s-1]
+                      ScaleName, to.SubCompartName,  Matrix, landFRAC, parent){
+  
+  out <- parent$FromDataAndTo("k_Erosion") |>
+    tidyr::expand_grid(relevant_depth_s, penetration_depth_s) |>
+    dplyr::left_join(EROSIONsoil, by=c("from.SubCompart"="SubCompart")) |>
+    dplyr::left_join(VertDistance, by=c("from.SubCompart"= "SubCompart", "Scale" = "Scale")) |>
+    dplyr::left_join(to.FracROWatComp, by=c("to.SubCompart"= "SubCompart", "Scale" = "Scale", "Species"="Species")) |>
+    # dplyr::left_join(landFRAC, by=c("from.SubCompart"= "SubCompart", "Scale" = "Scale")) |>
+    dplyr::mutate(
+      k_Erosion = dplyr::case_when(
+        Scale %in% c("Regional", "Continental") & to.SubCompart == "sea" ~ NA,
+        Scale %in% c("Tropic", "Moderate", "Arctic") & to.SubCompart != "sea" ~ NA,
+        TRUE ~ EROSIONsoil * f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / VertDistance * FracROWatComp  #[s-1]
+      )
+    ) |>
+    dplyr::filter(!is.na(k_Erosion)) |>
+    dplyr::select(process, from.SubCompart, to.SubCompart, Scale, Species, k_Erosion) |>
+    dplyr::arrange(process, from.SubCompart, to.SubCompart, Scale, Species)
+  
+  return(data.frame(out))
+  
+  
+  # if (ScaleName %in% c("Regional", "Continental") & to.SubCompartName == "sea") {
+  #   return(NA)
+  # } 
+  # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & to.SubCompartName != "sea") {
+  #   return(NA)
+  # } 
+  # EROSIONsoil * f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / VertDistance * to.FracROWatComp  #[s-1]
 }

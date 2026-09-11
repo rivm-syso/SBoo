@@ -13,12 +13,12 @@
 #'@param rhoMatrix density of the matrix [kg.m-3]
 #'@export
 FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, rhoMatrix, KpCOL, 
-                  Kacompw, SUSP, COL, Matrix, parent, SpeciesName, ScaleName){
+                  Kacompw, SUSP, COL, Matrix, parent, ScaleName){
   
   RHOsolid <- rhoMatrix |> dplyr::filter(Matrix == 'soil') |> dplyr::pull(rhoMatrix)
   out <- ScaleName |>
-    tidyr::expand_grid(Matrix, SpeciesName) |>
-    parent$states$clipStates() |>
+    tidyr::expand_grid(Matrix) |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::full_join(FRACw, by=c("Scale", "SubCompart")) |>
     dplyr::full_join(FRACa, by=c("Scale", "SubCompart")) |>
     dplyr::full_join(FRACs, by=c("Scale", "SubCompart")) |>

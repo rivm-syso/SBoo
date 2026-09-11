@@ -16,12 +16,17 @@ Area <- function (AreaLand,
                   parent,
                   SpeciesName) {
   
+  # if (Species %in% c(names(AreaLand), names(AreaSea), names(landFRAC))) {
+  #   # Species 
+  #   
+  # }
+  
   out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    tidyr::expand_grid(SubCompartName) |>
     dplyr::full_join(AreaSea, "Scale") |>
     dplyr::full_join(AreaLand, "Scale") |>
     dplyr::full_join(landFRAC, c("Scale", "SubCompart")) |>
-    parent$states$clipStates() |>
+    parent$states$clipStates(NoSpeciesKey = TRUE) |>
     dplyr::group_by(ScaleName) |>
     dplyr::mutate(
       landFRAC_used = dplyr::case_when(
@@ -64,12 +69,7 @@ Area <- function (AreaLand,
     dplyr::ungroup() |>
     dplyr::select(Scale, SubCompart, Area)  
   
-  # Add area for cloudwater -- no, it's in SubCompartName, if present in states?
-  # extra <- out |>
-  #   dplyr::filter(SubCompart == 'air') |>
-  #   dplyr::mutate(
-  #     SubCompart = 'cloudwater'
-  #   )
+  
   out <- out |>
     dplyr::filter(!is.na(Area)) |>
     dplyr::arrange(Scale, SubCompart, Area)

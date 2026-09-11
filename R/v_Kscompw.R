@@ -9,12 +9,12 @@
 #' @param Matrix type of compartment
 #' @return Kscompw
 #' @export
-Kscompw <- function(FRACw, FRACa, Kacompw, FRorig_spw, Kp, rhoMatrix, Matrix, parent, SpeciesName, ScaleName) {
+Kscompw <- function(FRACw, FRACa, Kacompw, FRorig_spw, Kp, rhoMatrix, Matrix, parent, ScaleName) {
   
   RHOsolid <- rhoMatrix |> dplyr::filter(Matrix == 'soil') |> dplyr::pull(rhoMatrix)
   out <- ScaleName |>
-    tidyr::expand_grid(Matrix, SpeciesName) |>
-    parent$states$clipStates() |>
+    tidyr::expand_grid(Matrix) |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::full_join(FRACw, by=c("Scale", "SubCompart")) |>
     dplyr::full_join(FRACa, by=c("Scale", "SubCompart")) |>
     dplyr::full_join(Kp, by="SubCompart") |>

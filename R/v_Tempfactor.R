@@ -41,7 +41,7 @@ Tempfactor <- function(Q.10,Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent, Sc
   #          "air" =   {
   #            return(exp((Ea.OHrad/constants::syms$r)*((Temp-T25)/T25^2)))
   #          },
-  #          "soil" = {return(Q.10^((Temp-T25)/10))
+  #          "soil" = {return(Q.10^((Temp-T25)/10)) 
   #          },
   #          "sediment" = {return(Q.10^((Temp-T25)/10))
   #          },

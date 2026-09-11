@@ -7,11 +7,11 @@
 #'@param from.Matrix Matrix/compartment from which the relevant process is taking place
 #'@return MTC_2w
 #'@export
-MTC_2w <- function(WINDspeed, MW, kwsd.sed, Matrix, parent, ScaleName, SpeciesName){
+MTC_2w <- function(WINDspeed, MW, kwsd.sed, Matrix, parent, ScaleName){
   
   out <- ScaleName |>
-    tidyr::expand_grid(Matrix, SpeciesName) |>
-    parent$states$clipStates() |>
+    tidyr::expand_grid(Matrix) |>
+    parent$states$clipStates(NoSpeciesKey = TRUE) |>
     dplyr::filter(Matrix %in% c("air", "sediment")) |>
     dplyr::full_join(WINDspeed) |>
     dplyr::mutate(

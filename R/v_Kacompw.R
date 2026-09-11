@@ -28,7 +28,8 @@ Kacompw <- function(Kaw25,
   # easy reading kBolts as R
 
   if (ChemClass == "particle") {
-    return(NA)
+    return(data.frame(Scale = Temp$Scale, Kacompw = NA))
+    
   } else {
     if (as.character(Test) == "TRUE") {
       R <- 8.314

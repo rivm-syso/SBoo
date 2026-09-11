@@ -8,7 +8,24 @@
 #' @return The fraction of a chemical in the aerosol gas phase. Total: FRingas + FRinaerw + FRinaers = 1.
 #' @seealso [Fringas(), FRinw(), FRins()]
 #' @export
-FRingas <- function(FRACw, FRACs, Kaerw, Kaers, ...){ #, FRcldw
-  1-FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) -FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
+FRingas <- function(FRACw, FRACs, Kaerw, Kaers, ScaleName, SubCompartName, parent, ...){ #, FRcldw
+  
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName) |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::left_join(FRACw, by = c("Scale", "SubCompart")) |>
+    dplyr::left_join(FRACs, by = c("Scale", "SubCompart")) |>
+    dplyr::left_join(Kaerw, by = c("Scale", "SubCompart")) |>
+    dplyr::left_join(Kaers, by = c("SubCompart")) |>
+    dplyr::mutate(
+      FRingas = 1-FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) -FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
+    ) |>
+    dplyr::filter(!is.na(FRingas)) |>
+    dplyr::arrange(Scale, SubCompart, Species) |>
+    dplyr::select(Scale, SubCompart, Species, FRingas)
+  
+  return(data.frame(out))
+  
+  # 1-FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) -FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
 }
 

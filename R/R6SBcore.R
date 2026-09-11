@@ -1109,7 +1109,20 @@ SBcore <- R6::R6Class("SBcore",
     Block2DAG = function(theList){
       
       purrr::imap(theList, function(aVar, nm) {
-        if (!is.atomic(aVar)) {
+        # Lege waardes bij pKa bijv werden door bind_rows een lege tibble, extra safeguard gebouwd
+        # if (nm =='pKa') {
+        #   browser()
+        # }
+        # 
+        # if (!is.atomic(aVar)) {
+        #   aVar <- aVar |>
+        #     dplyr::bind_rows(.id = "id")
+        # }
+        if (is.null(aVar)) {
+          aVar <- NA
+        } else if (is.list(aVar) && length(aVar) == 0) {
+          aVar <- NA
+        } else if (!is.atomic(aVar)) {
           aVar <- aVar |>
             dplyr::bind_rows(.id = "id")
         }
@@ -1639,7 +1652,7 @@ SBcore <- R6::R6Class("SBcore",
     #' uh, not in use at this point in time
     #' return side-effect; vector?
     UpdateDL = function(VarFunName = NULL, DIMRestrict = NULL, ...) {
-      #browser()
+      # browser()
       MetaData <- self$metaData()
       if (is.null(VarFunName)) {
         inp <- list(...)

@@ -8,14 +8,13 @@
 #' @returns The fraction of a chemical in the aerosol solid phase. Total: FRingas + FRinaerw + FRinaers = 1.
 #' @seealso [Fringas(), FRinw(), FRins()]
 #' @export
-FRinaers <- function (Kaers, Kaerw, FRACs, FRACw, parent, SpeciesName) {
+FRinaers <- function (Kaers, Kaerw, FRACs, FRACw, parent) {
   
   out <- FRACw |>
     dplyr::full_join(FRACs, by = c("Scale", "SubCompart")) |>
     dplyr::full_join(Kaerw, by = c("Scale", "SubCompart")) |>
     dplyr::full_join(Kaers, by = "SubCompart") |>
-    tidyr::expand_grid(SpeciesName) |>
-    parent$states$clipStates() |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::mutate(
       FRinaers = FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
     ) |>

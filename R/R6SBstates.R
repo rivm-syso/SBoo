@@ -264,8 +264,9 @@ SBstates <- R6::R6Class("SBstates",
     #' @description Clip a data.frame to rows matching existing valid states
     #' @param aDFwithD A data.frame containing either all The3D columns
     #'   (Scale, SubCompart, Species) or only column 'Abbr'
+    #' @NoSpeciesKey Option to use Scale and SubCompart as unique keys for clipping, by default FALSE
     #' @return Filtered data.frame containing only valid rows
-    clipStates = function(aDFwithD) {
+    clipStates = function(aDFwithD, NoSpeciesKey=FALSE) {
       
       if (is.null(private$AsDataFrame)) {
         stop("No States table available; call buildStates() first.")
@@ -280,14 +281,17 @@ SBstates <- R6::R6Class("SBstates",
       
       if (has_all_3d) {
         valid_keys <- unique(private$AsDataFrame[, The3D, drop = FALSE])
-        
         keep <- apply(aDFwithD[, The3D, drop = FALSE], 1, function(x) {
           any(apply(valid_keys, 1, function(y) all(x == y)))
         })
-        
       } else if (has_abbr && !any(The3D %in% names(aDFwithD))) {
         keep <- aDFwithD$Abbr %in% private$AsDataFrame$Abbr
-        
+      } else if (NoSpeciesKey && !has_all_3d) {
+        # Option to clip dataframe on unique Scale and Subcompartments if species is not a unique key
+        valid_keys <- unique(private$AsDataFrame[, c("Scale", "SubCompart"), drop = FALSE])
+        keep <- apply(aDFwithD[, c("Scale", "SubCompart"), drop = FALSE], 1, function(x) {
+          any(apply(valid_keys, 1, function(y) all(x == y)))
+        })
       } else {
         stop(
           "clipStates() expects either all The3D columns (",

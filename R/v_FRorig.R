@@ -8,7 +8,9 @@
 #'@return FRorig
 #'@export
 FRorig <- function(ChemClass, Matrix,pH, pKa){
+  
   out <- Matrix |> 
+    tidyr::expand_grid(pKa) |>
     dplyr::full_join(pH, by="SubCompart") |>
     dplyr::mutate(
       FRorig = dplyr::case_when(
@@ -23,5 +25,5 @@ FRorig <- function(ChemClass, Matrix,pH, pKa){
     dplyr::filter(!is.na(FRorig)) |>
     dplyr::select(SubCompart, FRorig)
   
-  return(out)       
+  return(data.frame(out))       
 }

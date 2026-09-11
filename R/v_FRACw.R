@@ -8,14 +8,14 @@
 #'@param Matrix type of compartment 
 #'@return FRACw
 #'@export
-FRACw <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName){
+FRACw <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName){
   
   out <- ScaleName |>
-    tidyr::expand_grid(SpeciesName, Matrix) |>
+    tidyr::expand_grid(Matrix) |>
     dplyr::full_join(subFRACw, by=c("Scale", "SubCompart")) |>
     dplyr::full_join(subFRACa, by=c("Scale", "SubCompart")) |>
     dplyr::full_join(subFRACs, by=c("Scale", "SubCompart")) |>
-    parent$states$clipStates() |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::mutate(
       FRACw = dplyr::case_when(
         Matrix == 'water' ~ 1 - subFRACs - subFRACa,

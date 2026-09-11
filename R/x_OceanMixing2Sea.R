@@ -9,24 +9,32 @@
 #' @param ScaleName name of the scale of the box at hand
 #' @return Mixing flow from deep ocean to surface sea [m3.s-1]
 #' @export
-x_OceanMixing2Sea <- function (all.Volume,
+x_OceanMixing2Sea <- function (Volume,
                                TAUsea,
-                               OceanCurrent, SubCompartName, ScaleName) {
+                               OceanCurrent, parent) {
   
+  out <- parent$FromDataAndTo("x_OceanMixing2Sea") |>
+    dplyr::left_join(Volume, by=c("Scale" = "Scale", "to.SubCompart" = "SubCompart")) |> #in switch the volume of the to compartment is used ? 
+    dplyr::left_join(TAUsea, by=c("Scale" = "Scale")) |>
+    dplyr::mutate(
+      x_OceanMixing2Sea = (Volume / TAUsea) + OceanCurrent #Is constant
+    ) |>
+    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, x_OceanMixing2Sea)
   
-  
-  switch (SubCompartName,
-          "deepocean" = {
-            toVolume <- all.Volume$Volume[all.Volume$SubCompart == "sea" &
-                                            all.Volume$Scale == ScaleName]
-           OceanMixingFlow <- toVolume / TAUsea
-            
-            if (ScaleName %in% c("Moderate", "Tropic", "Arctic")){ 
-              return((OceanMixingFlow + OceanCurrent) )
-            } else return (NA)
-          },
-          return(NA)
-  )
+  return(data.frame(out)) 
+    
+  # switch (SubCompartName,
+  #         "deepocean" = {
+  #           toVolume <- all.Volume$Volume[all.Volume$SubCompart == "sea" &
+  #                                           all.Volume$Scale == ScaleName]
+  #          OceanMixingFlow <- toVolume / TAUsea
+  #           
+  #           if (ScaleName %in% c("Moderate", "Tropic", "Arctic")){ 
+  #             return((OceanMixingFlow + OceanCurrent) )
+  #           } else return (NA)
+  #         },
+  #         return(NA)
+  # )
   
 }
 

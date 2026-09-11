@@ -7,13 +7,12 @@
 #' @return waterflow of rain directly on lake/river
 #' and continental being a part of Moderate (/ Tropic)
 #' @export
-RainOnFreshwater <- function (RAINrate, Area, SubCompartName, parent, SpeciesName) {
+RainOnFreshwater <- function (RAINrate, Area, SubCompartName, parent) {
   
   out <- Area |>
     dplyr::filter(SubCompart %in% c("river", "lake")) |>
     dplyr::full_join(RAINrate, by="Scale") |>
-    tidyr::expand_grid(SpeciesName) |>
-    parent$states$clipStates() |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::mutate(
       RainOnFreshwater = RAINrate * Area
     ) |>

@@ -11,6 +11,9 @@
 KocDorC <- function (Kow, a, b, Koc, ChemClass){
     
   if (is.na(Koc) || Koc == "NA") {
+    if (ChemClass == 'particle') {
+      return(NA)
+    }
     out <- a |>
       dplyr::full_join(b, by="QSAR.ChemClass") |>
       dplyr::filter(QSAR.ChemClass %in% ChemClass) |>
@@ -24,6 +27,7 @@ KocDorC <- function (Kow, a, b, Koc, ChemClass){
         )
       ) |>
       dplyr::pull(KocDorC)
+    
     return(out)
   } else return(Koc)
     

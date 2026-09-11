@@ -12,7 +12,7 @@
 #'@export
 Kp <- function(FRorig, KswDorC, Ksw.alt, rhoMatrix, Corg, CorgStandard, Matrix, ChemClass){
   
-  RHOsolid <- rhoMatrix |> filter(Matrix == 'soil') |> pull(rhoMatrix)
+  RHOsolid <- rhoMatrix |> dplyr::filter(Matrix == 'soil') |> dplyr::pull(rhoMatrix)
   
   out <- Matrix |>
     dplyr::full_join(FRorig, by = "SubCompart") |>
@@ -32,10 +32,10 @@ Kp <- function(FRorig, KswDorC, Ksw.alt, rhoMatrix, Corg, CorgStandard, Matrix, 
     dplyr::filter(!is.na(Kp)) |>
     dplyr::arrange(SubCompart) |>
     dplyr::select(SubCompart, Kp)
-    
+  
   
   return(data.frame(out))
-    
+  
   # if (Matrix %in% c("soil", "sediment","water")) {
   #   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
   #   return(
