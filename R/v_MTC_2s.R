@@ -9,14 +9,14 @@
 MTC_2s <- function(Mackay1, Mackay2, Matrix){
   
   out <- Matrix |>
-    mutate(
+    dplyr::mutate(
       MTC_2s = dplyr::case_when(
         Matrix == 'air' ~ Mackay1/Mackay2,
         TRUE ~ NA_real_
       )
     ) |>
-    filter(!is.na(MTC_2s)) |>
-    select(SubCompart, MTC_2s)
+    dplyr::filter(!is.na(MTC_2s)) |>
+    dplyr::select(SubCompart, MTC_2s)
   
   return(out)
 }

@@ -6,25 +6,25 @@
 #' @param SubCompartName subcompartment considered
 #' @return Kaerw
 #' @export
-Kaerw <- function (Kacompw, FRorig, SubCompartName, parent, ScaleName, SpeciesName) {
+Kaerw <- function (Kacompw, FRorig, SubCompartName, parent, ScaleName) {
   
   out <- ScaleName |>
-    expand_grid(SubCompartName, SpeciesName) |>
-    full_join(FRorig, by="SubCompart") |>
-    full_join(Kacompw, by="Scale") |>
-    parent$states$clipStates() |>
-    mutate(
+    tidyr::expand_grid(SubCompartName) |>
+    dplyr::full_join(FRorig, by="SubCompart") |>
+    dplyr::full_join(Kacompw, by="Scale") |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::mutate(
       Kaerw = dplyr::case_when(
         SubCompartName == 'air' ~ 1/(Kacompw*FRorig),
         TRUE ~ NA_real_
       )
     ) |>
-    filter(!is.na(Kaerw)) |>
-    arrange(Scale, SubCompart) |>
-    select(Scale, SubCompart, Kaerw)
+    dplyr::filter(!is.na(Kaerw)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, Kaerw)
   
   return(data.frame(out))
-   
+  
   # switch(SubCompartName,
   #        "air" = 1/(Kacompw*FRorig),
   #        NA)

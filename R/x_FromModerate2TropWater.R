@@ -9,11 +9,22 @@
 #' @return Flow [m3.s-1]
 #' @export
 #' 
-x_FromModerate2TropWater <- function ( OceanCurrent, SubCompartName, ScaleName) {
-           switch (SubCompartName,
-                   "sea" = {return(0)},
-                   "deepocean" = {OceanCurrent}, #fix, data in code
-                   NA
-           )
+x_FromModerate2TropWater <- function ( OceanCurrent, SubCompartName, ScaleName, parent) {
+  
+  out <- parent$FromDataAndTo("x_FromModerate2TropWater") |>
+    dplyr::mutate(
+      x_FromModerate2TropWater = dplyr::case_when(
+        SubCompart == "sea" ~ 0,
+        SubCompart == "deepocean" ~ OceanCurrent, #fix, data in code
+        TRUE ~ NA
+      )
+    )
+  return(data.frame(out))
+  
+           # switch (SubCompartName,
+           #         "sea" = {return(0)},
+           #         "deepocean" = {OceanCurrent}, #fix, data in code
+           #         NA
+  # )
   
 }

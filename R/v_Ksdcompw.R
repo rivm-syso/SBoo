@@ -8,25 +8,25 @@
 #'@param Matrix type of compartment considered
 #'@return Ksdcompw
 #'@export
-Ksdcompw <- function(FRACw, FRACs, Kp, rhoMatrix, Matrix, parent, SpeciesName, ScaleName){
+Ksdcompw <- function(FRACw, FRACs, Kp, rhoMatrix, Matrix, parent, ScaleName){
   
-  RHOsolid <- rhoMatrix |> filter(Matrix == 'soil') |> pull(rhoMatrix)
+  RHOsolid <- rhoMatrix |> dplyr::filter(Matrix == 'soil') |> dplyr::pull(rhoMatrix)
   out <- ScaleName |>
-    expand_grid(Matrix, SpeciesName) |>
-    parent$states$clipStates() |>
-    full_join(FRACw, by=c("Scale", "SubCompart")) |>
-    full_join(FRACs, by=c("Scale", "SubCompart")) |>
-    full_join(Kp, by="SubCompart") |>
-    mutate(
+    tidyr::expand_grid(Matrix) |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::full_join(FRACw, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(FRACs, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(Kp, by="SubCompart") |>
+    dplyr::mutate(
       Ksdcompw = dplyr::case_when(
         Matrix == 'sediment' ~ FRACw+FRACs*Kp*RHOsolid/1000,
         TRUE ~ NA_real_
       )
     ) |>
-    filter(!is.na(Ksdcompw)) |>
-    select(Scale, SubCompart, Ksdcompw) |>
-    arrange(Scale, SubCompart)
-    
+    dplyr::filter(!is.na(Ksdcompw)) |>
+    dplyr::select(Scale, SubCompart, Ksdcompw) |>
+    dplyr::arrange(Scale, SubCompart)
+  
   return(data.frame(out))
   
   # if (Matrix == "sediment") {

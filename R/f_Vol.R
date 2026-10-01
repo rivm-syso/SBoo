@@ -24,11 +24,11 @@ fVol <- function(rad_particle = NULL, #option to use input as radius
   }
   # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
   if (((is.na(Intermediate_side) || 
-       is.null(Intermediate_side)) & 
+        is.null(Intermediate_side)) & 
        (is.na(Longest_side) || 
-       is.null(Longest_side))) & 
+        is.null(Longest_side))) & 
       (!Shape %in% c("Sphere", "Default"))) {
-     stop("For shapes other than Sphere provide Intermediate_side and/or Longest_side")
+    stop("For shapes other than Sphere provide Intermediate_side and/or Longest_side")
   }
   
   
@@ -58,5 +58,26 @@ fVol <- function(rad_particle = NULL, #option to use input as radius
   } else {
     stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Film, Fiber, Cylindric - circular, or Cylindric - elliptic.")
   }
+  
+  
+  # if (!is.null(rad_particle)) {
+  #   out <- data.frame(rad_particle = rad_particle, Shortest_side=Shortest_side) |>
+  #     dplyr::mutate(
+  #       Shape = Shape, Longest_side=Longest_side, Intermediate_side=Intermediate_side,
+  #       radius = Shortest_side / 2,
+  #       radius_major = Intermediate_side  / 2,
+  #       radius_minor = Shortest_side  / 2,
+  #       volume = dplyr::case_when(
+  #         Shape %in% c("Sphere", "Default") ~ (4/3) * pi * radius^3,
+  #         Shape == 'Ellipsoid' ~ (1/6) * pi * Longest_side * Intermediate_side * Shortest_side,
+  #         Shape %in% c("Cube", "Box", "Film") ~  Longest_side * Intermediate_side * Shortest_side,
+  #         Shape %in% c("Cylindric - circular", "Fiber") ~ pi * radius^2 * Longest_side,
+  #         Shape == "Cylindric - elliptic" ~ pi * radius_major * radius_minor * Longest_side,
+  #         TRUE ~ NA
+  #       )
+  #     )
+  #   return(out$volume)
+  # } 
+
 }
 

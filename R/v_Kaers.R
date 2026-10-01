@@ -39,15 +39,15 @@ Kaers <- function (Kaw25,Kow, Corg, RhoCOL, Matrix,
     }
     
     out <- Matrix |>
-      left_join(Corg, by="Matrix") |>
-      full_join(RhoCOL, by="SubCompart") |>
+      dplyr::left_join(Corg, by="Matrix") |>
+      dplyr::full_join(RhoCOL, by="SubCompart") |>
       dplyr::mutate(
         Kaers = dplyr::case_when(
           SubCompart == 'air' ~ 0.54 * (Kow/Kaw25) * Corg * (RhoCOL/1000),
           TRUE ~ NA_real_
       )) |>
-      filter(!is.na(Kaers)) |>
-      select(SubCompart, Kaers)
+      dplyr::filter(!is.na(Kaers)) |>
+      dplyr::select(SubCompart, Kaers)
       
     return(out)
   }

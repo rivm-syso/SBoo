@@ -8,24 +8,24 @@
 #'@param Matrix type of compartment 
 #'@return FRACa 
 #'@export
-FRACa <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName) {
+FRACa <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName) {
   
   out <- ScaleName |>
-    expand_grid(SpeciesName, Matrix) |>
-    full_join(subFRACw, by=c("Scale", "SubCompart")) |>
-    full_join(subFRACs, by=c("Scale", "SubCompart")) |>
-    full_join(subFRACa, by=c("Scale", "SubCompart")) |>
-    parent$states$clipStates() |>
-    mutate(
+    tidyr::expand_grid( Matrix) |>
+    dplyr::full_join(subFRACw, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(subFRACs, by=c("Scale", "SubCompart")) |>
+    dplyr::full_join(subFRACa, by=c("Scale", "SubCompart")) |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::mutate(
       FRACa = dplyr::case_when(
         Matrix == 'air' ~ 1 - subFRACw - subFRACs,
         Matrix == 'sediment' ~ 0,
         TRUE ~ subFRACa
       )
     ) |>
-    filter(!is.na(FRACa)) |>
-    arrange(Scale, SubCompart) |>
-    select(Scale, SubCompart, FRACa)
+    dplyr::filter(!is.na(FRACa)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, FRACa)
   
   return(data.frame(out))  
   

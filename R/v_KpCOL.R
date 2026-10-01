@@ -7,14 +7,14 @@
 KpCOL <- function(D, Matrix){
   
   out <- Matrix |>
-    full_join(D, by="SubCompart") |>
-    filter(Matrix == 'water') |>
-    mutate(
+    dplyr::full_join(D, by="SubCompart") |>
+    dplyr::filter(Matrix == 'water') |>
+    dplyr::mutate(
       KpCOL = 0.08 * D
     ) |>
-    filter(!is.na(KpCOL)) |>
-    select(SubCompart, KpCOL) |>
-    arrange(SubCompart)
+    dplyr::filter(!is.na(KpCOL)) |>
+    dplyr::select(SubCompart, KpCOL) |>
+    dplyr::arrange(SubCompart)
   
   return(out)
   

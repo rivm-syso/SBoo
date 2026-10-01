@@ -23,125 +23,217 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
                              Matrix,SubCompartName, ScaleName,
                              Shape,Longest_side,
                              Intermediate_side, Shortest_side, DragMethod,
-                             MinSettVel, Regional_and_Continental_deepocean, VelInput) {
+                             MinSettVel, Regional_and_Continental_deepocean, VelInput,
+                             parent, SpeciesName) {
   
-  if (anyNA(c(rho_species,rhoMatrix))){
-    return(NA)
-  }
-  # if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean" &&
-  #     (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
-  #   return(NA)
-  # }
-  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
-    return(NA)
-  }
-  # Check if Shortest side is NA or NULL and assign default values if so
-  # if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
-  #   Shortest_side <- rad_particle * 2
-  # }
-  # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
-  
-  #return VelInput for that compartment, if it is defined and input
-  if (!is.null(VelInput) && !is.na(VelInput) && !is.nan(VelInput) && VelInput != 0) {
-    return(VelInput)
-  }
-
   
   if (is.na(Shape) || is.null(Shape)){
     Shape <- "Default"
   }
-  
   GN <- constants::syms$gn
-  
-  if(Matrix == "soil" | Matrix == "sediment") return(NA)
-  if(SubCompartName == "cloudwater") return(NA)
-  
   if (is.na(MinSettVel) || is.null(MinSettVel)) {
     MinSettVel <- 0
   }
-  
-  if(DragMethod == "Original" & Matrix =="water"){
-    sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
-    if (sv <= MinSettVel){
-      return(MinSettVel)
-    } 
-    else {
-      return(sv)
-    }
-  } 
-  if(DragMethod == "Original" & Matrix =="air") {
-    Cunningham <- f_Cunningham(rad_species)
-    sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN*Cunningham) / (9*DynViscAirStandard)
-    if (sv <= MinSettVel){
-      return(MinSettVel)
-    } 
-    else {
-      return(sv)
-    }
+  if (is.null(VelInput)) {
+    VelInput = NA
   }
-  
   if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
     Intermediate_side <- rad_species * 2 #maybe 0.75 or build in shape functions
     Longest_side <- rad_species * 2
     warning("Need for Intermediate_side or Longest_side, but not provided, setting to 2*rad_species")
   }
+
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    parent$states$clipStates() |>
+    dplyr::left_join(Matrix, by="SubCompart") |>
+    dplyr::left_join(rad_species, by=c("Scale", "SubCompart", "Species")) |>
+    dplyr::left_join(rho_species, by=c("Scale", "SubCompart", "Species")) |>
+    dplyr::left_join(rhoMatrix, by=c("Matrix")) |>
+    dplyr::mutate(
+      # Functions: take rad_species as vector and Shape and all sides as single value, function return vector
+      Cunningham = f_Cunningham(rad_species),
+      Species_Volume = fVol(rad_particle = rad_species,Shape = Shape, Longest_side = Longest_side,Intermediate_side = Intermediate_side),
+      surfaceareaparticle = f_SurfaceAreaParticle(Shape=Shape, Intermediate_side=Intermediate_side, Longest_side=Longest_side, rad_particle=rad_species),
+      perimeterparticle = f_PerimeterParticle(Shape=Shape, Intermediate_side=Intermediate_side,Longest_side=Longest_side, rad_particle=rad_species),
+      d_eq = (6/ pi * Species_Volume)^(1/3),
+      perimetercircle = f_PerimeterParticle(Shape="Sphere", rad_particle=d_eq/2),
+      surfaceareaperfectsphere = f_SurfaceAreaParticle(Shape="Sphere", rad_particle=d_eq/2),
+
+      # Values based on function results
+      circularity = perimeterparticle/perimetercircle,
+      sphericity = surfaceareaperfectsphere/surfaceareaparticle,
+      Psi = sphericity/circularity, # Shape factor Dioguardi
+      CSF = rad_species/(sqrt(Longest_side*Intermediate_side)), #Corey Shape Factor
+      #Parameters for Bagheri et al. 2016
+      alpha = 0.45+10/exp(2.5*log10(rho_species/rhoMatrix)+30),
+      beta = 1-37/exp(3*log10(rho_species/rhoMatrix)+100),
+      f = Shortest_side/Intermediate_side,
+      e =  Intermediate_side/Longest_side,
+      FN = f^2*e*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side)),
+      FS = f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side)),
+      kS = 1/2*(FS^(1/3)+FS^(-1/3)),
+      kN = 10^(alpha*(-log10(FN))^beta),
+      sv_water =2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard),
+      sv_air =2*(rad_species^2*(rho_species-rhoMatrix)*GN*Cunningham) / (9*DynViscAirStandard),
+
+      # Some Constants, be aware some of these are converted to a vector after being used in functions above
+      DynViscWaterStandard = DynViscWaterStandard, DynViscAirStandard = DynViscAirStandard,Shortest_side=Shortest_side,Intermediate_side=Intermediate_side, Longest_side=Longest_side, Shape=Shape,
+      VelInput =VelInput, MinSettVel=MinSettVel, DragMethod=DragMethod,
+    ) |>
+    dplyr::mutate(
+      SettlingVelocity = dplyr::case_when(
+        is.na(rho_species) | is.na(rhoMatrix) ~ NA,
+        ScaleName %in% c("Tropic", "Moderate", "Arctic") & SubCompartName %in% c("lake","river") ~ NA,
+        ScaleName %in% c("Regional", "Continental") & SubCompartName == 'deepocean' ~ NA,
+        !is.null(VelInput) & !is.na(VelInput) & !is.nan(VelInput) & VelInput != 0 ~ VelInput,
+        Matrix %in% c("soil", "sediment") | SubCompartName =='cloudwater' ~ NA,
+        DragMethod == 'Original' & Matrix =='water' ~ sv_water,
+        DragMethod == 'Original' & Matrix =='air' ~ sv_air,
+        DragMethod != 'Original' & Matrix =='water' ~ f_SetVelSolver(d_eq=d_eq, Psi=Psi,
+                                                                   DynViscFluidStandard=DynViscWaterStandard,
+                                                                   rhoParticle=rho_species,
+                                                                   rhoFluid=rhoMatrix, DragMethod=DragMethod,
+                                                                   CSF=CSF, Matrix=Matrix, rad_species=rad_species,
+                                                                   kS=kS, kN=kN),
+        DragMethod != 'Original' & Matrix =='air' ~ f_SetVelSolver(d_eq=d_eq, Psi=Psi,
+                                                                     DynViscFluidStandard=DynViscAirStandard,
+                                                                     rhoParticle=rho_species,
+                                                                     rhoFluid=rhoMatrix, DragMethod=DragMethod,
+                                                                     CSF=CSF, Matrix=Matrix, rad_species=rad_species,
+                                                                     kS=kS, kN=kN),
+        TRUE ~ NA
+      ),
+      SettlingVelocity = dplyr::case_when(
+        SettlingVelocity <= MinSettVel ~ MinSettVel,
+        TRUE ~ SettlingVelocity
+      )
+    ) |>
+    dplyr::arrange(Scale, SubCompart, Species) |>
+    dplyr::select(Scale, SubCompart, Species, SettlingVelocity) |>
+    dplyr::filter(!is.na(SettlingVelocity))
   
-  Species_Volume <- fVol(rad_particle = rad_species,
-                         Shape = Shape, 
-                         Longest_side = Longest_side,
-                         Intermediate_side = Intermediate_side)
-  
-  d_eq <- (6/ pi * Species_Volume)^(1/3) # calculate equivalent diameter of perfect sphere
-  
-  surfaceareaparticle <- f_SurfaceAreaParticle(Shape=Shape, 
-                                               Intermediate_side=Intermediate_side, 
-                                               Longest_side=Longest_side, 
-                                               rad_particle=rad_species)
-  surfaceareaperfectsphere <- f_SurfaceAreaParticle(Shape="Sphere", rad_particle=d_eq/2)
-  #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
-  perimeterparticle <- f_PerimeterParticle(Shape=Shape, Intermediate_side=Intermediate_side,Longest_side=Longest_side, rad_particle=rad_species)
-  perimetercircle <- f_PerimeterParticle(Shape="Sphere", rad_particle=d_eq/2)
-  circularity <- perimeterparticle/perimetercircle
-  sphericity <- surfaceareaperfectsphere/surfaceareaparticle
-  Psi <- sphericity/circularity # Shape factor Dioguardi
-  CSF <- rad_species/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
-  #Parameters for Bagheri et al. 2016
-  alpha <- 0.45+10/exp(2.5*log10(rho_species/rhoMatrix)+30) 
-  beta <- 1-37/exp(3*log10(rho_species/rhoMatrix)+100)
-  f <- Shortest_side/Intermediate_side
-  e <-  Intermediate_side/Longest_side
-  FN <- f^2*e*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
-  FS <- f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
-  kS <- 1/2*(FS^(1/3)+FS^(-1/3))
-  kN <- 10^(alpha*(-log10(FN))^beta)
-  
-  if (rho_species <= rhoMatrix) {
-    return(MinSettVel)
-  } else {
-  switch (Matrix,
-          "water" = { 
-            v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
-                                  DynViscFluidStandard=DynViscWaterStandard, 
-                                  rhoParticle=rho_species, 
-                                  rhoFluid=rhoMatrix, DragMethod=DragMethod, 
-                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species,
-                                  kS=kS, kN=kN)
-            return(v_s)
-          }, 
-          "air"= {
-            v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
-                                  DynViscFluidStandard=DynViscAirStandard, 
-                                  rhoParticle=rho_species, 
-                                  rhoFluid=rhoMatrix, DragMethod=DragMethod, 
-                                  CSF=CSF, Matrix=Matrix, rad_species=rad_species,
-                                  kS=kS, kN=kN)
-            return(v_s)
-          },
-          NA
-  )
-  
-  
-  return(v_s)
-  }
+  return(data.frame(out))
+
+  # 
+  # # 
+  # if (anyNA(c(rho_species,rhoMatrix))){
+  #   return(NA)
+  # }
+  # # if ((ScaleName %in% c("Regional", "Continental")) & SubCompartName == "deepocean" &&
+  # #     (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+  # #   return(NA)
+  # # }
+  # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & SubCompartName %in% c("lake","river")) {
+  #   return(NA)
+  # }
+  # # Check if Shortest side is NA or NULL and assign default values if so
+  # # if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
+  # #   Shortest_side <- rad_particle * 2
+  # # }
+  # # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+  # 
+  # #return VelInput for that compartment, if it is defined and input
+  # if (!is.null(VelInput) && !is.na(VelInput) && !is.nan(VelInput) && VelInput != 0) {
+  #   return(VelInput)
+  # }
+  # 
+  # 
+  # if (is.na(Shape) || is.null(Shape)){
+  #   Shape <- "Default"
+  # }
+  # 
+  # GN <- constants::syms$gn
+  # 
+  # if(Matrix == "soil" | Matrix == "sediment") return(NA)
+  # if(SubCompartName == "cloudwater") return(NA)
+  # 
+  # if (is.na(MinSettVel) || is.null(MinSettVel)) {
+  #   MinSettVel <- 0
+  # }
+  # 
+  # if(DragMethod == "Original" & Matrix =="water"){
+  #   sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN) / (9*DynViscWaterStandard)
+  #   if (sv <= MinSettVel){
+  #     return(MinSettVel)
+  #   } 
+  #   else {
+  #     return(sv)
+  #   }
+  # } 
+  # if(DragMethod == "Original" & Matrix =="air") {
+  #   Cunningham <- f_Cunningham(rad_species)
+  #   sv <- 2*(rad_species^2*(rho_species-rhoMatrix)*GN*Cunningham) / (9*DynViscAirStandard)
+  #   if (sv <= MinSettVel){
+  #     return(MinSettVel)
+  #   } 
+  #   else {
+  #     return(sv)
+  #   }
+  # }
+  # 
+  # if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
+  #   Intermediate_side <- rad_species * 2 #maybe 0.75 or build in shape functions
+  #   Longest_side <- rad_species * 2
+  #   warning("Need for Intermediate_side or Longest_side, but not provided, setting to 2*rad_species")
+  # }
+  # 
+  # Species_Volume <- fVol(rad_particle = rad_species,
+  #                        Shape = Shape, 
+  #                        Longest_side = Longest_side,
+  #                        Intermediate_side = Intermediate_side)
+  # 
+  # d_eq <- (6/ pi * Species_Volume)^(1/3) # calculate equivalent diameter of perfect sphere
+  # 
+  # surfaceareaparticle <- f_SurfaceAreaParticle(Shape=Shape, 
+  #                                              Intermediate_side=Intermediate_side, 
+  #                                              Longest_side=Longest_side, 
+  #                                              rad_particle=rad_species)
+  # surfaceareaperfectsphere <- f_SurfaceAreaParticle(Shape="Sphere", rad_particle=d_eq/2)
+  # #circularity <- Longest_side*Intermediate_side / (d_eq*d_eq)
+  # perimeterparticle <- f_PerimeterParticle(Shape=Shape, Intermediate_side=Intermediate_side,Longest_side=Longest_side, rad_particle=rad_species)
+  # perimetercircle <- f_PerimeterParticle(Shape="Sphere", rad_particle=d_eq/2)
+  # circularity <- perimeterparticle/perimetercircle
+  # sphericity <- surfaceareaperfectsphere/surfaceareaparticle
+  # Psi <- sphericity/circularity # Shape factor Dioguardi
+  # CSF <- rad_species/(sqrt(Longest_side*Intermediate_side)) #Corey Shape Factor
+  # #Parameters for Bagheri et al. 2016
+  # alpha <- 0.45+10/exp(2.5*log10(rho_species/rhoMatrix)+30) 
+  # beta <- 1-37/exp(3*log10(rho_species/rhoMatrix)+100)
+  # f <- Shortest_side/Intermediate_side
+  # e <-  Intermediate_side/Longest_side
+  # FN <- f^2*e*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  # FS <- f*e^1.3*(d_eq^3/(Longest_side*Intermediate_side*Shortest_side))
+  # kS <- 1/2*(FS^(1/3)+FS^(-1/3))
+  # kN <- 10^(alpha*(-log10(FN))^beta)
+  # 
+  # if (rho_species <= rhoMatrix) {
+  #   return(MinSettVel)
+  # } else {
+  # switch (Matrix,
+  #         "water" = { 
+  #           v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
+  #                                 DynViscFluidStandard=DynViscWaterStandard, 
+  #                                 rhoParticle=rho_species, 
+  #                                 rhoFluid=rhoMatrix, DragMethod=DragMethod, 
+  #                                 CSF=CSF, Matrix=Matrix, rad_species=rad_species,
+  #                                 kS=kS, kN=kN)
+  #           return(v_s)
+  #         }, 
+  #         "air"= {
+  #           v_s <- f_SetVelSolver(d_eq=d_eq, Psi=Psi, 
+  #                                 DynViscFluidStandard=DynViscAirStandard, 
+  #                                 rhoParticle=rho_species, 
+  #                                 rhoFluid=rhoMatrix, DragMethod=DragMethod, 
+  #                                 CSF=CSF, Matrix=Matrix, rad_species=rad_species,
+  #                                 kS=kS, kN=kN)
+  #           return(v_s)
+  #         },
+  #         NA
+  # )
+  # 
+  # 
+  # return(v_s)
+  # }
 }
 

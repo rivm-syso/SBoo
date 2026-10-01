@@ -14,16 +14,16 @@ KswDorC <- function (KocDorC, CorgStandard, rhoMatrix, Ksw, ChemClass){
   
   if (is.na(Ksw) || Ksw == "NA") { 
     out <- rhoMatrix |>
-      filter(Matrix == 'soil') |>
-      expand_grid(data.frame(ChemClass)) |>
-      mutate(
+      dplyr::filter(Matrix == 'soil') |>
+      tidyr::expand_grid(data.frame(ChemClass)) |>
+      dplyr::mutate(
         KswDorC = dplyr::case_when(
           ChemClass == 'metal' ~ NA,
           ChemClass == 'particle' ~ NA,
           TRUE ~ KocDorC*CorgStandard * rhoMatrix / 1000
           )
         ) |>
-      pull(KswDorC)
+      dplyr::pull(KswDorC)
     
     if (out == NA && ChemClass == 'metal') {
       stop("Ksw Should be in the data")

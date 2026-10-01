@@ -28,7 +28,8 @@ Kacompw <- function(Kaw25,
   # easy reading kBolts as R
 
   if (ChemClass == "particle") {
-    return(NA)
+    return(data.frame(Scale = Temp$Scale, Kacompw = NA))
+    
   } else {
     if (as.character(Test) == "TRUE") {
       R <- 8.314
@@ -77,8 +78,8 @@ Kacompw <- function(Kaw25,
       dplyr::mutate(
         Kacompw = Kaw25 * exp((H0vap / R) * (1 / T25 - 1 / Temp)) * exp(-(H0sol / R) * (1 / T25 - 1 / Temp)) * (T25 / Temp)
       ) |>
-      select(Scale, Kacompw) |>
-      filter(!is.na(Kacompw))
+      dplyr::select(Scale, Kacompw) |>
+      dplyr::filter(!is.na(Kacompw))
     
     return(out)
   }

@@ -10,16 +10,27 @@
 #' @export
 x_OceanMixing2Deep <- function (Volume,
                                 TAUsea, #either one is NA the other not
-                                OceanCurrent, ScaleName, SubCompartName) {
-  switch (SubCompartName,
-    "sea" = {
-      OceanMixingFlow <- Volume / TAUsea
-      if (ScaleName %in% c("Moderate", "Arctic", "Tropic")){ 
-        return((OceanMixingFlow + OceanCurrent) )
-      } else {
-        return (NA)
-      } 
-    },
-    return(NA)
-  )
+                                OceanCurrent, parent) {
+  
+  out <- parent$FromDataAndTo("x_OceanMixing2Deep")  |>
+    dplyr::left_join(Volume, by=c("Scale" = "Scale", "from.SubCompart" = "SubCompart")) |>
+    dplyr::left_join(TAUsea, by=c("Scale" = "Scale")) |>
+    dplyr::mutate(
+      x_OceanMixing2Deep = (Volume / TAUsea) + OceanCurrent #Is constant
+    ) |>
+    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, x_OceanMixing2Deep)
+  
+  return(data.frame(out))
+  
+  # switch (SubCompartName,
+  #   "sea" = {
+  #     OceanMixingFlow <- Volume / TAUsea
+  #     if (ScaleName %in% c("Moderate", "Arctic", "Tropic")){ 
+  #       return((OceanMixingFlow + OceanCurrent) )
+  #     } else {
+  #       return (NA)
+  #     } 
+  #   },
+  #   return(NA)
+  # )
 }
