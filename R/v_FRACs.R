@@ -8,7 +8,7 @@
 #'@param Matrix type of compartment
 #'@return FRACs 
 #'@export
-FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName, SpeciesName){
+FRACs <- function(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName){
   
   out <- ScaleName |>
     tidyr::expand_grid(Matrix) |>

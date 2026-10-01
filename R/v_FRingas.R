@@ -21,8 +21,8 @@ FRingas <- function(FRACw, FRACs, Kaerw, Kaers, ScaleName, SubCompartName, paren
       FRingas = 1-FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) -FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
     ) |>
     dplyr::filter(!is.na(FRingas)) |>
-    dplyr::arrange(Scale, SubCompart, Species) |>
-    dplyr::select(Scale, SubCompart, Species, FRingas)
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, FRingas)
   
   return(data.frame(out))
   

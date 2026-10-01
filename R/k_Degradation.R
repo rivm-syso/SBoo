@@ -18,80 +18,116 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Regional_and_Continental_deepocean) {
-  # exclusions of process:
-  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
-                                                            SubCompartName == "lakesediment" |
-                                                            SubCompartName == "lake" |
-                                                            SubCompartName == "river" |
-                                                            SubCompartName == "agriculturalsoil"|
-                                                            SubCompartName == "othersoil"))) {
-    return(NA)
-  }
-    
-  #if Regional_and_Continental_deepocean is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
-  else if ((ScaleName %in% c("Regional", "Continental")) &&
-      (SubCompartName == "deepocean") &&
-      (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
-    return(NA)
-  }
+                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Regional_and_Continental_deepocean, parent) {
   
-  else if (SpeciesName %in% c("Molecular")) {
-    
-    switch(Matrix,
-           "air" =   {
-             FRingas * KdegDorC * (C.OHrad / C.OHrad.n) * Tempfactor
-           },
-           "soil" = {
-             Tempfactor*KdegDorC
-           },
-           "sediment" = {
-             Tempfactor*KdegDorC
-           },
-           "water" = {
-             Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw
-           }
-           
-    )
-  } else { # Particulate
-    
-    if (as.character(Test) == "TRUE"){
-      switch(Matrix,
-             "air" =   {
-               
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             },
-             "soil" = {
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             },
-             "sediment" = {
-               
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             },
-             "water" = {
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             }
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    parent$states$clipStates() |>
+    dplyr::left_join(Matrix, by=c("SubCompart")) |>
+    dplyr::left_join(FRingas, by=c("Scale", "SubCompart")) |>
+    dplyr::left_join(KdegDorC, by=c("Scale", "SubCompart", "Species")) |>
+    dplyr::left_join(C.OHrad, by=c("Scale")) |>
+    dplyr::left_join(Tempfactor, by=c("Scale", "SubCompart", "Species")) |>
+    dplyr::left_join(FRinw, by=c("Scale", "SubCompart")) |>
+    dplyr::left_join(BACTcomp, by=c("Species" = "Species", "Matrix" = "Compartment")) |>
+    dplyr::mutate(
+      k_Degradation = dplyr::case_when(
+        # Exclusions of process are not needed as clipStates removes these combinations of compartments, model data is here defined in function!
+        SpeciesName == 'Molecular' & Matrix == 'air' ~ FRingas * KdegDorC * (C.OHrad / C.OHrad.n) * Tempfactor,
+        SpeciesName == 'Molecular' & Matrix == 'soil' ~ Tempfactor*KdegDorC,
+        SpeciesName == 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
+        SpeciesName == 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw,
+        
+        SpeciesName != 'Molecular' & Matrix == 'air' & as.character(Test) == "TRUE" ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'soil' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'sediment' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'water' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
+        
+        SpeciesName != 'Molecular' & Matrix == 'air' ~ Tempfactor*KdegDorC,
+        SpeciesName != 'Molecular' & Matrix == 'soil' ~ Tempfactor*KdegDorC,
+        SpeciesName != 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
+        SpeciesName != 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC,
+        TRUE ~ NA
       )
-    }
-    
-    else
-
-    switch(Matrix,
-           "air" =   {
-             
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           },
-           "soil" = {
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           },
-           "sediment" = {
-             
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           },
-           "water" = {
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           }
-    )
-  }
+    ) |>
+    dplyr::select(Scale,SubCompart,Species,k_Degradation) |>
+    dplyr::arrange(Scale,SubCompart,Species) 
   
+  return(data.frame(out))
+  
+  # # exclusions of process:
+  # if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+  #                                                           SubCompartName == "lakesediment" |
+  #                                                           SubCompartName == "lake" |
+  #                                                           SubCompartName == "river" |
+  #                                                           SubCompartName == "agriculturalsoil"|
+  #                                                           SubCompartName == "othersoil"))) {
+  #   return(NA)
+  # }
+  #   
+  # #if Regional_and_Continental_deepocean is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
+  # else if ((ScaleName %in% c("Regional", "Continental")) &&
+  #     (SubCompartName == "deepocean") &&
+  #     (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+  #   return(NA)
+  # }
+  # 
+  # else if (SpeciesName %in% c("Molecular")) {
+  #   
+  #   switch(Matrix,
+  #          "air" =   {
+  #            FRingas * KdegDorC * (C.OHrad / C.OHrad.n) * Tempfactor
+  #          },
+  #          "soil" = {
+  #            Tempfactor*KdegDorC
+  #          },
+  #          "sediment" = {
+  #            Tempfactor*KdegDorC
+  #          },
+  #          "water" = {
+  #            Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw
+  #          }
+  #          
+  #   )
+  # } else { # Particulate
+  #   
+  #   if (as.character(Test) == "TRUE"){
+  #     switch(Matrix,
+  #            "air" =   {
+  #              
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            },
+  #            "soil" = {
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            },
+  #            "sediment" = {
+  #              
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            },
+  #            "water" = {
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            }
+  #     )
+  #   }
+  #   
+  #   else
+  # 
+  #   switch(Matrix,
+  #          "air" =   {
+  #            
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          },
+  #          "soil" = {
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          },
+  #          "sediment" = {
+  #            
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          },
+  #          "water" = {
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          }
+  #   )
+  # }
+  # 
 }

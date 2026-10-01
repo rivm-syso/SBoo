@@ -29,14 +29,14 @@ FRinw <- function(FRorig_spw, FRACw, FRACa, FRACs, Kp, rhoMatrix, KpCOL,
     dplyr::full_join(SUSP, by ="SubCompart") |>
     dplyr::full_join(COL, by="SubCompart") |>
     dplyr::mutate(
-      Frinw = dplyr::case_when(
+      FRinw = dplyr::case_when(
         Matrix == 'water' ~ 1/(1+Kp*SUSP/1000+KpCOL*COL/1000),
         Matrix == 'soil' ~ FRACw/(FRACa*(Kacompw*FRorig_spw)+FRACw+FRACs*Kp*RHOsolid/1000),
         TRUE ~ NA_real_
       )
     ) |>
-    dplyr::filter(!is.na(Frinw)) |>
-    dplyr::select(Scale, SubCompart, Frinw) |>
+    dplyr::filter(!is.na(FRinw)) |>
+    dplyr::select(Scale, SubCompart, FRinw) |>
     dplyr::arrange(Scale, SubCompart)
     
   return(data.frame(out))
