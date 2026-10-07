@@ -57,112 +57,14 @@ SBcore <- R6::R6Class("SBcore",
       processes4Mode <- process_functions$Process[process_functions[, private$SBmode] == "X"]
 
       SBvars <- self$build_DAG(unique(flows$FlowName), processes4Mode)
-      
-      print(SBvars)
-    },
-    #' @description add a process to the calculations
-    #' @param ProcessFunction The name (as character) of the process defining function 
-    #' see 
-    NewProcess = function(ProcessFunction){
-      #existing function?
-      stopifnot("function" %in% class(match.fun(ProcessFunction)))
-      #delete, if it exists (being updated)
-      if (ProcessFunction %in% names(private$ModuleList)){
-        private$ModuleList <- private$ModuleList[private$ModuleList != ProcessFunction]
-        private$nodeList <- private$nodeList[private$nodeList$Calc != ProcessFunction,]
-      }
-      aNewProcessModule <- ProcessModule$new(self,ProcessFunction)
-      private$storeNodes(aNewProcessModule)
-      private$ModuleList[[ProcessFunction]] <- aNewProcessModule
-      invisible(aNewProcessModule)
-    },
-    
-    #' @description remove a set of SB items from the calculations, for later reprocessing
-    #' @param VarFunctions The name (as character) of the process defining function 2be postponed
-    #' @param FlowFunctions The name (as character) of the process defining function 2be postponed
-    #' @param ProcesFunctions The name (as character) of the process defining function 2be postponed
-    #' @details The SBitems will be removed from the internal structures, but the names of their defining functions 
-    #' will be stored locally. The private method DoPostponed will add and execute them. (This is automised, 
-    #' because it will be needed in sensitivity analyses etc.)
-    PostponeVarProcess = function(VarFunctions = NULL, FlowFunctions = NULL, ProcesFunctions) {
-      #test if all exist
-      #browser()
-      for (modname in c(VarFunctions, FlowFunctions, ProcesFunctions)){
-        TheModule <- self$moduleList[[modname]]
-        if (is.null(TheModule)) {
-          stop(paste("Module", modname, "does not exist; define it before setting it as postpone"))
-        }
-      }
-      private$l_postPoneList <- list(VarFunctions, FlowFunctions, ProcesFunctions)
-    },
-    
-    #' @description add a flow to the calculations
-    #' @param FlowFunction The name (as character) of the flow defining function 
-    #' see 
-    #' @param WithProcess The name (as character) of the process related to this function
-    #' This is normally the k_Advection process; created if not already present
-    NewFlow = function(FlowFunction, WithProcess = "k_Advection"){
-      #existing function?
-      stopifnot("function" %in% class(match.fun(FlowFunction)))
-      
-      #delete FlowModule, if it exists already (being updated)
-      if (FlowFunction %in% names(private$ModuleList)){
-        private$ModuleList <- private$ModuleList[private$ModuleList != FlowFunction]
-        private$nodeList <- private$nodeList[private$nodeList$Calc != FlowFunction,]
-      }
-      aNewFlowModule <- FlowModule$new(self, FlowFunction, WithProcess)
-      private$storeNodes(aNewFlowModule)
+      # print(SBvars)
 
-      # book-keeping for the WithProcess
-      stopifnot("function" %in% class(match.fun(WithProcess)))
-      # is it an advection process, i.e. proper parameter(s)
-      stopifnot("flow" %in% formalArgs(WithProcess))
-      # make the process, if not present
-      if (WithProcess %in% names(private$ModuleList)) {
-        nodeProcess <- private$ModuleList[[WithProcess]]
-      } else {
-        nodeProcess <- self$NewProcess(WithProcess)
-      }
-      if(length(nodeProcess$WithFlow)==1 && anyNA(nodeProcess$WithFlow)){
-        nodeProcess$WithFlow <- FlowFunction
-      } else {
-        nodeProcess$WithFlow <- c(nodeProcess$WithFlow, FlowFunction) 
-      }
-      # update needVars and private$nodeList for WithProcess; 
-      # replace flow (the parameter in the function) with all individual flows, for DAG
-      OrigVars <- formalArgs(WithProcess)
-      nodeProcess$needVars <- c(OrigVars[OrigVars != "flow"], nodeProcess$WithFlow)
-      #possibly replace existing Params "flow", or add the new flowname
-      indProcess <- which(WithProcess == private$nodeList$Calc)
-      matchWithFlow <- match("flow", private$nodeList$Params[indProcess])
-      if (!is.na(matchWithFlow) && matchWithFlow > 0) {
-        private$nodeList$Params[indProcess[matchWithFlow]] <- FlowFunction
-      } else {
-        private$nodeList[nrow(private$nodeList)+1,] <- c(WithProcess, FlowFunction, "Process")
-      }
-      private$ModuleList[[FlowFunction]] <- aNewFlowModule
-      invisible(aNewFlowModule)
+      # store (names of) flows and processes for UpdateKaas()
+      private$flows <- unique(flows$FlowName)
+      private$processes <- processes4Mode
       
     },
-    
-    #' @description add a SBVariable to the calculations
-    #' @param VariableFunction The name (as character) of the SBvariable defining function 
-    #' see 
-    #' @param AggrBy exceptional parameter to aggregate over a dim (1 of The3D)
-    #' @param AggrFun FUN to use in aggregation over a dim (1 of The3D)
-    NewCalcVariable = function(VariableFunction, AggrBy = NA, AggrFun = NA){
-      #delete, if it exists (being updated)
-      if (VariableFunction %in% names(private$ModuleList)){
-        private$ModuleList <- private$ModuleList[private$ModuleList != VariableFunction]
-        private$nodeList <- private$nodeList[private$nodeList$Calc != VariableFunction,]
-      }
-      aNewVariableModule <- VariableModule$new(self,VariableFunction, AggrBy = AggrBy, AggrFun = AggrFun)
-      private$storeNodes(aNewVariableModule)
-      private$ModuleList[[VariableFunction]] <- aNewVariableModule
-      invisible(aNewVariableModule)
-      
-    },
-    
+
     #' @description create and set the solver (there can only be one)
     #' @param SolverFunction The (name of) the solver defining function 
     #' @param ... passed on to init of SolverModule i.e. to CalcGraphModule$MoreParams
@@ -420,24 +322,8 @@ SBcore <- R6::R6Class("SBcore",
     #' Not needed in normal use
     #' see 
     metaData = function(){
-      AllTables <- names(private$SB4Ndata)
-      res <- data.frame(
-        Tablenames = rep(AllTables, sapply(private$SB4Ndata, ncol)),
-        AttributeNames = unname(unlist(sapply(private$SB4Ndata, names))
-        ))
-      res[!(res$Tablenames %in% c("Flows", "MatrixSheet", "Substances", "SubstanceCompartments", "SubstanceSubCompartSpeciesData")),]
-    },
-    
-    fetchDims = function(vars){
-      MetaData <- self$metaData()
-      Attrn <- MetaData[MetaData$AttributeNames %in% vars,]
-      unique(unlist(
-        lapply(unique(Attrn$Tablenames), function(tname){
-          allNames <- names(private$SB4Ndata[[tname]])
-          allNames[allNames %in% The3D]
-        })
-      ))
-      
+      list(sources = names(private$myReactiveDAG$sources),
+           nodes = names(private$myReactiveDAG$nodes))
     },
     
     #' @description Obtain the data for a SBvariable or a flow
@@ -541,41 +427,17 @@ SBcore <- R6::R6Class("SBcore",
       private$WhichDataTable (KeyNames)
     },
     
-    #' @description runs (or tries to) the calculation graph, either the whole graph or 
-    #' limited to a single process
-    #' @param aProcessModule the name of the state
-    #' @param mergeExisting normally leaves all other processes unchanged, but if 
-    #' not mergeExisting, all process results (kaas) are cleared first
-    UpdateKaas = function(aProcessModule = NULL, #(Default) NULL means calculate CalcTreeBack
-                          mergeExisting = T){ 
+    #' @description runs (or tries to) the calculation DAG
+    #' Parameters are no longer usefull with R6ReactiveDAG
+    UpdateKaas = function(){ 
       #browser()
 
-      if (is.null(aProcessModule)) {
-        NewKaas <- private$CalcTreeBack(aProcessModule = NULL)
-      } else {
-        if (! "ProcessModule" %in% class(aProcessModule)){ # assuming it's a string with the name of
-          aProcessName <- aProcessModule
-          aProcessModule <- private$ModuleList[[aProcessName]]
-        }
-        if (! "ProcessModule" %in% class(aProcessModule)){ # now it's an error
-          stop(paste("unknown process", aProcessName))
-        }
-        NewKaas <- private$CalcTreeBack(aProcessModule)
+      # Calculate (fetch) flows, assign to Advection process and add to kaas
+      for (fl in private$flows){
+        flow_calculated <- private$FetchData(fl)
+        
       }
-      
-      NewKaas <- self$filterStatesFrame(NewKaas)
-      
-      if (is.null(private$SBkaas) | !mergeExisting){
-          private$SBkaas <- NewKaas
-      } else { #merge with existing kaas; update or append if new
-        Processes2Update <- unique(NewKaas$process)
-        private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
-        private$SBkaas <- merge(NewKaas, private$SBkaas, all = T)
-      }
-      
-      # do postponed if postponed exists
-      private$DoPostponed()
-      
+      # Calculate (fetch) all processes and add to kaas
       #return only for purpose of transparent update; side effect is done
       invisible(private$SBkaas)
     },
@@ -589,6 +451,46 @@ SBcore <- R6::R6Class("SBcore",
       stopifnot(all(processnames %in% my_ls))
       
       stopifnot(all(flowNames %in% my_ls))
+      
+      molecular_deposition_proces = "k_Deposition"
+      browser()
+      if (molecular_deposition_proces %in% processnames){
+        # obtain nasty deposition, depending on other air sinks (param "OtherkAir")
+        fromtoes <- lapply(processnames[processnames != molecular_deposition_proces],
+                           self$FromDataAndTo)
+        otherairsinks <- fromtoes |>
+          purrr::compact() |>
+          purrr::keep(~ "from.SubCompart" %in% names(.x)) |>
+          dplyr::bind_rows() |>
+          dplyr::filter(from.SubCompart == "air") |>
+          dplyr::pull(process) |>
+          unique()
+
+        # fromtoesflow <- lapply(flowNames,
+        #                    self$FromDataAndTo)
+        # names(fromtoesflow) <- flowNames
+        # otherairflows <- fromtoesflow |>
+        #   purrr::imap(~ dplyr::mutate(.x, flowname = as.character(.y))) |>
+        #   purrr::compact() |>
+        #   purrr::keep(~ "SubCompart" %in% names(.x)) |>
+        #   dplyr::bind_rows() |>
+        #   dplyr::filter(SubCompart == "air") |>
+        #   dplyr::pull(flowname) |>
+        #   unique()
+
+        # create the airsinks reactive
+        node_name <- "other_MolAir_sinks"
+        
+        other_MolAir_sinks <- make_combiner_fun(otherairsinks)
+        
+        # assign the function into the environment where it will be found
+        assign(node_name, other_MolAir_sinks, envir = .GlobalEnv)  
+        
+        private$myReactiveDAG$add_node_reactive(
+          node_name      = node_name,
+          node_fun_name  = node_name
+        )
+      }
       
       function_names <- c(
         processnames, flowNames
@@ -651,24 +553,23 @@ SBcore <- R6::R6Class("SBcore",
         known <- c(known, complete_nodes)
       }
       
-      # add flows and processes to DAG
+      # add flows and processes to DAG; collect air-processes
       for (pf in function_names){
         private$myReactiveDAG$add_node_reactive(node_name = pf)
+        # # Molecular deposition depends on these
+        # fromtos <- self$FromDataAndTo(pf) |>
+        #   mutate(
+        #     from_sub = coalesce(from.SubCompart, SubCompart)
+        #   ) |>
+        #   filter(Species == "Unbound", from_sub == "air")
+        # if (nrow(fromtos) > 0 ){
+        #   
+        # }
       }
 
       # to debug vars
       complete_nodes_piter
     },  
-    
-    #' @description runs (or tries to) the calculation for a Variable and stores the results.
-    #' After this, the SBvariable can be viewed with fetchData and this data will be used 
-    #' when calculating processes, or other variables.
-    #' @param aVariable the name of the Variable
-    CalcVar = function(aVariable){
-      TestTree <- private$nodeList[private$nodeList$ModuleType %in% c("Variable", "Flow"),]
-      if (!aVariable %in% TestTree$Calc) stop(paste (aVariable, "not found"))
-      private$UpdateDL(VarFunName = aVariable)
-    },
     
     #' @description set a constant in the internal data, to enable use by SB variable etc.
     #' @param ... named value
@@ -684,24 +585,6 @@ SBcore <- R6::R6Class("SBcore",
       } else {
         private$UpdateDL(...)
       }
-    },
-    
-    #' @description runs (or tries to) the calculation for Variables,
-    #' and continues from there to update all processes and variables 
-    #' that have a depency of any of the Variables, recursively.
-    #' @param Variables the name(s) of the Variable(s) that are "dirty" 
-    #' (Datalayer has been updated)
-    UpdateDirty = function(Variables){#recalc DAG, starting onwards from vector of Variables
-      #browser()
-      NotUsed <- Variables[!Variables %in% private$nodeList$Params]
-      if (length(NotUsed)> 0) warning(do.call(paste, as.list(
-            c("Not all Variables are used:", NotUsed))))
-      NewKaas <- private$CalcTreeForward(Variables[Variables %in% private$nodeList$Params])
-      Processes2Update <- unique(NewKaas$process)
-      private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% Processes2Update,]
-      private$SBkaas <- rbind(NewKaas[,names(private$SBkaas)], private$SBkaas)
-      
-      private$DoPostponed()
     },
     
     #' @description  Which Graph elements SBVars depend on?
@@ -723,13 +606,6 @@ SBcore <- R6::R6Class("SBcore",
       private$CheckTree()
     },
 
-    #' @description removes variables appearently not needed in the calculation DAG
-    #' starting from Varname upwards
-    #' @param VarName the name of the Variable which inputs are cleaned, recursively
-    CleanupCalcGraphAbove = function(VarName){
-      private$cleanupCGAbove (VarName) 
-    },
-    
     #' @description if UpdateRows is a list of variables (each containing a fetchdata() result): see private$MutateVar,
     #' if UpdateRows is (a csv filename of) a single dataframe it will be converted before the call
     mutateVars = function(UpdateRows) {
@@ -926,6 +802,20 @@ SBcore <- R6::R6Class("SBcore",
         stop("`$states` are set by new()", call. = FALSE)
       }
     },
+    Flows = function(value){
+      if (missing(value)) {
+        private$flows
+      } else {
+        stop("`$Flows` are set at initialise", call. = FALSE)
+      }
+    },
+    Processes = function(value){
+      if (missing(value)) {
+        private$processes
+      } else {
+        stop("`$Processes` are set at initialise", call. = FALSE)
+      }
+    },
     substancemessage = function(value){
       if (missing(value)) {
         private$Substancemessage
@@ -944,22 +834,7 @@ SBcore <- R6::R6Class("SBcore",
         private$SBkaas <- value
       }
     },
-    #' @field nodelist getter for r.o. property
-    nodelist = function(value) {
-      if (missing(value)) {
-        private$nodeList
-      } else {
-        stop("use the $NewProcess(), $NewCalcVariable() and $NewFlow() methods to construct a node-list", call. = FALSE)
-      }
-    },
-    #' @field moduleList getter for r.o. property
-    moduleList = function(value) {
-      if (missing(value)) {
-        private$ModuleList
-      } else {
-        stop("use the $NewProcess(), $NewCalcVariable() and $NewFlow() methods to construct a node-list", call. = FALSE)
-      }
-    },
+    
     SuBmode = function(value){
       if (missing(value)){
         private$suBmode
@@ -1089,6 +964,8 @@ SBcore <- R6::R6Class("SBcore",
     solver = NULL,
     l_postPoneList = NULL,
     concentration = NULL,
+    flows = NULL,
+    processes = NULL,
     filterstates = list(),
     substanceproperties = list(),
 
@@ -1152,7 +1029,7 @@ SBcore <- R6::R6Class("SBcore",
         private$myReactiveDAG$set_source(nm, aVar)
       })
     },
-      
+    
     # helper: for a single value (or vector), try numeric, then logical, else keep as is
     coerce_scalar = function(x) {
       # assume length-1 here in vector mode; still works for length > 1
@@ -1222,6 +1099,8 @@ SBcore <- R6::R6Class("SBcore",
           }
           
           cols_to_use <- names(DefsTable)[!names(DefsTable) %in% dim2use]
+          # exclude those with a process name (indicating from and to, not reactive!)
+          cols_to_use <- cols_to_use[!startsWith(cols_to_use, "k_")]
           
           tibble_list <- purrr::map(
             cols_to_use,
@@ -1350,117 +1229,6 @@ SBcore <- R6::R6Class("SBcore",
       unique(TestTree$Params[!TestTree$Check])
     },
     
-    CalcTreeForward = function(DirtyVariables){ #calculation of variables and kaas
-      #browser()
-      if (is.null(DirtyVariables)) stop("Cannot CalcTreeForward without a(starting/dirty)Variable")
-      # determine modules that need updating by module dependencies, derived from params of SB vars etc.
-      # loop until Trunc does not grow anymore
-      TestTrunc <- NULL
-      grow <- private$nodeList[private$nodeList$Params %in% DirtyVariables,]
-
-      while (nrow(grow) != 0) {
-        TestTrunc <- rbind(TestTrunc, grow)
-        grow <- private$nodeList[private$nodeList$Params %in% grow$Calc,]
-      }
-      #clean doubles in TestTrunc, order by the last entry, reverse to set final calculation order
-      ToCalculate <- rev(unique(rev(TestTrunc$Calc)))
-      ToCalculate <- ToCalculate[!ToCalculate %in% private$l_postPoneList]
-      
-      #remove kaas from postpones!! 
-      if (!is.null(private$l_postPoneList)) {
-        postkaas <- unlist(private$l_postPoneList)[
-          startsWith(unlist(private$l_postPoneList), "k_")]
-        
-        private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postkaas,]
-      }
-      kaaslist <- list()
-      for (i in 1:length(ToCalculate)){ #these are in proper order, all should succeed
-        ModName <- ToCalculate[i]
-        CalcMod <- private$ModuleList[[ModName]]
-        clcm <- class(CalcMod)
-        if (exists("verbose") && verbose){
-            cat(paste("calculating", ModName), "\n")
-        }
-        if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-            private$UpdateDL(ModName)
-        } else { # a process; add kaas to the list
-            kaaslist[[CalcMod$myName]] <- CalcMod$execute() # Hier komt de error vandaan
-        }
-      }
-      return(private$IntegrateKaaslist(kaaslist))
-    },
-    
-    CalcTreeBack = function(aProcessModule){ #calculation of variables and kaas
-     
-      #treat the objects that do not use private$ModuleList separate
-      if ("ClassicNanoProcess" %in% class(aProcessModule))   {
-        return(aProcessModule$execute())
-        
-      } else {
-        kaaslist <- list() # all the dataframes of (future) new kaas
-        if (is.null(aProcessModule)) {
-          #exception for the CalcGraph* that are calculated after the tree i.e. molecular deposition special
-          TestTree <- private$nodeList[!private$nodeList$Calc %in% unlist(private$l_postPoneList),]
-        } else {
-          if (! "ProcessModule" %in% class(aProcessModule)){ # assuming it's a string with the name of
-            aProcessModule <- private$nodeList[[aProcessModule]]
-          }
-          TestTree <- private$nodeList[private$nodeList$ModuleType %in%  c("Variable", "Flow") | 
-                                         private$nodeList$Calc==aProcessModule$myName,]
-        }
-        AllWant <- unique(TestTree$Calc)
-        MetaData <- self$metaData()
-        TestTree$Params[TestTree$Params %in% MetaData$AttributeNames] <- ""
-        #Hardcoded the "keyword" flow; assuming it will be calculated by all (relevant) FlowModules
-        TestTree$Params[TestTree$Params == "flow"] <- ""
-        #Loop until all TestTree$Params == "", if possible
-        repeat{
-          TestTree$Check <- TestTree$Params == ""
-          CountCantdo <- length(which(!TestTree$Check))
-          CantDo <- unique(TestTree$Calc[!TestTree$Check])
-          CanDo <- AllWant[!AllWant %in% CantDo]
-          if (length(CanDo > 0)){
-            for (i in 1:length(CanDo)){
-              CalcMod <- private$ModuleList[[CanDo[i]]]
-              if (exists("verbose") && verbose){
-                cat(paste("calculating", CanDo[i]), "\n")
-              }
-              if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-                
-                private$UpdateDL(CanDo[i])
-              } else { # a process; add kaas to the list
-                kaaslist[[CalcMod$myName]] <- CalcMod$execute()
-              }
-              #skip them from the "todo" list 
-              TestTree$Params[TestTree$Params == CanDo[i]] <- ""
-              TestTree <- TestTree[-which(TestTree$Calc == CanDo[i]),] 
-              AllWant <- AllWant[-which(AllWant == CanDo[i])]
-            }
-          } else {
-            #anything left; enough?
-            if (length(CantDo)>0){
-              NotToDo <- names(private$ModuleList[CantDo])
-              if (exists("verbose") && verbose) {
-                NotToDoString <- do.call(paste, as.list(NotToDo))
-                cat (paste("Can't calculate", NotToDoString, "\n"))
-                lapply(private$ModuleList[CantDo], function(aModule){
-                  if("ProcessModule" %in% class(aModule) | "FlowModule" %in% class(aModule)){
-                    pmissing <- TestTree$Params[TestTree$Calc == aModule$myName & TestTree$Params != ""]
-                    stopifnot(length(pmissing)>0) #can't be, would have been calculated
-                    missParams <- do.call(paste,as.list(pmissing))
-                    cat(paste(aModule$myName, "is missing", missParams, "\n"))
-                  } 
-                })
-              }
-              warning("Can't calculate all needed modules !!")
-            }
-            break #repeat
-          }
-        }
-      }
-      private$IntegrateKaaslist(kaaslist)
-    },
-
     IntegrateKaaslist = function(kaaslist){
       #select kaas names only for all kaaslist - data.frames
       kaaslist <- kaaslist[!sapply(kaaslist, anyNA)]
@@ -1474,32 +1242,6 @@ SBcore <- R6::R6Class("SBcore",
       } else {return(NULL)}
       
     },
-    
-    DoPostponed = function() {
-      #browser()
-      ppl <- private$l_postPoneList
-      
-      validPostPoneList <- Filter(Negate(is.null), private$l_postPoneList)
-      
-      if (!is.null(validPostPoneList)){
-        for (postNames in validPostPoneList){ #force order??
-          CalcMod <- private$ModuleList[[postNames]]
-          if ("VariableModule" %in% class(CalcMod) | "FlowModule" %in% class(CalcMod)) { #update DL
-            succes <- private$UpdateDL(postNames)
-            if (nrow(succes) < 1) warning(paste("R6SBcore: For ",postNames,"; no rows calculated"))
-          } else { # a process; add kaas to the list
-            postKaas <- CalcMod$execute()
-            if (!any(is.na(postKaas))) {
-              private$SBkaas <- private$SBkaas[!private$SBkaas$process %in% postNames,]
-              private$SBkaas <- rbind(private$SBkaas, postKaas)
-            }
-          }
-        }
-      }
-      
-    },
-    
-    #facilitate access to self$SB4Ndata
     
     #' description fetch the values for a dataframe with parameters/dimensions (any purpose),
     #' param varname name of variable to find
@@ -1652,7 +1394,7 @@ SBcore <- R6::R6Class("SBcore",
     #' uh, not in use at this point in time
     #' return side-effect; vector?
     UpdateDL = function(VarFunName = NULL, DIMRestrict = NULL, ...) {
-      # browser()
+      #browser()
       MetaData <- self$metaData()
       if (is.null(VarFunName)) {
         inp <- list(...)

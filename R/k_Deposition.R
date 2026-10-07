@@ -34,7 +34,7 @@ k_Deposition <- function(FRingas,
                          Kacompw,
                          FRorig,
                          SpeciesName,
-                         OtherkAir,
+                         other_MolAir_sinks, # created in SBcore !!
                          to.Area,
                          from.Area,
                          Kaers,
