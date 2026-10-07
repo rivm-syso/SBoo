@@ -8,18 +8,37 @@
 #' @export
 
 
-k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, 	Regional_and_Continental_deepocean){
-  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
-                                                             SubCompartName == "lakesediment" |
-                                                             SubCompartName == "lake" |
-                                                             SubCompartName == "river" |
-                                                             SubCompartName == "agriculturalsoil"|
-                                                             SubCompartName == "othersoil")) ){
-    return(NA)
-  } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(	Regional_and_Continental_deepocean) || isFALSE(	Regional_and_Continental_deepocean) || 	Regional_and_Continental_deepocean == "FALSE")){
-    return(NA)
-  } else {
-    return(kfrag)
-  }
+k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, 	Regional_and_Continental_deepocean, parent, SpeciesName){
+  
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::full_join(kfrag) |>
+    parent$states$clipStates() |>
+    dplyr::mutate(
+      k_Fragmentation = dplyr::case_when(
+        ScaleName %in% c("Tropic", "Moderate", "Arctic") & 
+          SubCompartName %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") ~ NA_real_,
+        ScaleName %in% c("Regional", "Continental") & SubCompartName == "deepocean" & (is.na(	Regional_and_Continental_deepocean) || isFALSE(	Regional_and_Continental_deepocean) || 	Regional_and_Continental_deepocean == "FALSE") ~ NA_real_,
+        TRUE ~ kfrag
+      )
+    ) |>
+    dplyr::filter(!is.na(k_Fragmentation)) |>
+    dplyr::select(Scale, SubCompart, k_Fragmentation) |>
+    dplyr::arrange(Scale, SubCompart)
+  
+  return(data.frame(out))
+  
+  # if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+  #                                                            SubCompartName == "lakesediment" |
+  #                                                            SubCompartName == "lake" |
+  #                                                            SubCompartName == "river" |
+  #                                                            SubCompartName == "agriculturalsoil"|
+  #                                                            SubCompartName == "othersoil")) ){
+  #   return(NA)
+  # } else if (ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(	Regional_and_Continental_deepocean) || isFALSE(	Regional_and_Continental_deepocean) || 	Regional_and_Continental_deepocean == "FALSE")){
+  #   return(NA)
+  # } else {
+  #   return(kfrag)
+  # }
     
 }

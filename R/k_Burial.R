@@ -14,7 +14,7 @@ k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent
   NETsedrate_sediments <- NETsedrate |>
     dplyr::filter(SubCompart %in% c("lake", 'deepocean', 'sea', 'river')) |>
     dplyr::mutate(
-      SubCompart = dplyr::case_when(
+      from.SubCompart = dplyr::case_when(
         SubCompart == 'lake' ~ 'lakesediment',
         SubCompart == 'deepocean' & Scale %in% c("Tropic", "Moderate", "Arctic") ~ 'marinesediment',
         SubCompart == 'river' ~ 'freshwatersediment',
@@ -22,20 +22,23 @@ k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent
         TRUE ~ NA
       )
     ) |>
-    dplyr::filter(!is.na(SubCompart)) # NETsedrate has deepocean in regional whereas clip states doesnt
+    dplyr::rename(to.SubCompart = SubCompart) |>
+    dplyr::filter(!is.na(from.SubCompart)) |> # NETsedrate has deepocean in regional whereas clip states doesnt 
+    dplyr::select(NETsedrate, from.SubCompart, Scale, to.SubCompart)
 
   out <- ScaleName |>
     tidyr::expand_grid(SubCompartName, SpeciesName) |>
     parent$states$clipStates() |>
     dplyr::left_join(VertDistance, by=c("Scale", "SubCompart")) |>
     dplyr::filter(SubCompart %in% c("lakesediment", "marinesediment", "freshwatersediment")) |>
-    dplyr::left_join(NETsedrate_sediments, by=c("Scale", "SubCompart")) |>
+    dplyr::left_join(NETsedrate_sediments, by=c("Scale" = "Scale", "SubCompart" = "from.SubCompart")) |>
     dplyr::mutate(
-      waterNETsedrate = NETsedrate / VertDistance
+      k_Burial = NETsedrate / VertDistance
     ) |>
-    dplyr::filter(!is.na(waterNETsedrate)) |>
-    dplyr::arrange(Scale, SubCompart, Species) |>
-    dplyr::select(Scale, SubCompart, Species, waterNETsedrate)
+    dplyr::filter(!is.na(k_Burial)) |>
+    dplyr::rename(from.SubCompart = SubCompart) |>
+    dplyr::arrange(Scale, from.SubCompart, to.SubCompart, Species) |>
+    dplyr::select(Scale, from.SubCompart, to.SubCompart, Species, k_Burial)
     
   return(data.frame(out))
 
@@ -43,7 +46,7 @@ k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent
   # # NETsedrate assumed identical to NETsedrate of the water column above the sediment
   # waterabove <- switch (SubCompartName,
   #     "lakesediment" = "lake",
-  #     "marinesediment" = {switch(ScaleName, 
+  #     "marinesediment" = {switch(ScaleName,
   #                                "Tropic" = "deepocean",
   #                                "Moderate" = "deepocean",
   #                                "Arctic" = "deepocean",
