@@ -22,49 +22,135 @@
 #'@param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export
-k_Adsorption <- function (FRingas, FRinw, from.MTC_2sd, to.FRorig_spw,
-                          to.MTC_2w, from.MTC_2w, to.MTC_2a, from.MTC_2s, to.FRorig, Kacompw, 
-                          to.Kscompw, to.Matrix, VertDistance, 
-                          AreaLand, AreaSea, to.Area, all.FRorig, all.FRorig_spw,
-                          from.SubCompartName, to.SubCompartName, ScaleName, Test, Regional_and_Continental_deepocean) {
-  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompartName == "sea") {
-    return(NA)
-  }
-  if ((isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE") &&
-    (ScaleName %in% c("Regional", "Continental") & from.SubCompartName == "deepocean")) {
-    return(NA)
-  }
-  switch(to.Matrix,
-         
-         "water" = { # air to water
-           if (ScaleName %in% c("Regional", "Continental")){
-             if (as.character(Test) == "TRUE"){
-               to.FRorig <-  all.FRorig |>
-                 filter(SubCompart == "river") 
-               to.FRorig <- to.FRorig$FRorig
-             } 
-           }
-           GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*to.FRorig)+to.MTC_2a))
-           AreaFrac = to.Area/(AreaLand+AreaSea)
-           return(GASABS/VertDistance*AreaFrac) },
-         "soil" = { # air to soil
-           if (as.character(Test) == "TRUE"){
-             to.FRorig_spw <- all.FRorig_spw |>
-               filter(SubCompart == "naturalsoil")
-             to.FRorig_spw <- to.FRorig_spw$FRorig_spw
-           } 
-           GASABS = FRingas*(from.MTC_2s*to.MTC_2a)/(from.MTC_2s*(Kacompw*to.FRorig_spw)/to.Kscompw+to.MTC_2a)
-           AreaFrac = to.Area/(AreaLand+AreaSea)
-           return(GASABS/VertDistance*AreaFrac) },
-         "sediment" = { # water to sediment
-           ADSORB = (from.MTC_2sd*to.MTC_2w)/(from.MTC_2sd+to.MTC_2w)*FRinw
-           if (as.character(Test) == "TRUE" && to.SubCompartName == "lakesediment"){
-             return(NA)
-           } else {
-              return(ADSORB/VertDistance) 
-           }
-          }, 
-         return(NA)
-  )
+k_Adsorption <- function (FRingas, FRinw, MTC_2sd, FRorig_spw,
+                          MTC_2w, MTC_2a, MTC_2s, FRorig, Kacompw, 
+                          Kscompw, Matrix, VertDistance, 
+                          AreaLand, AreaSea, Area,
+                          SubCompartName, ScaleName, Test, Regional_and_Continental_deepocean,
+                          parent, SpeciesName) {
+  
+  # copies of whole dataframes for the test argument
+  FRorig_og = FRorig
+  FRorig_spw_og = FRorig_spw
+  
+  # All data needed for the to-compartments
+  to <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::left_join(Matrix) |>
+    dplyr::left_join(FRorig) |>
+    dplyr::left_join(FRorig) |>
+    dplyr::left_join(Kscompw) |>
+    dplyr::left_join(FRorig_spw) |>
+    dplyr::left_join(MTC_2a) |>
+    dplyr::left_join(Area) |>
+    dplyr::left_join(MTC_2w) |>
+    parent$states$clipStates() |>
+    dplyr::rename(to.SubCompart = SubCompart, to.Matrix = Matrix, to.MTC_2w = MTC_2w) |>
+    dplyr::select(-ScaleName, -SubCompartName, -SpeciesName) |>
+    dplyr::filter(to.Matrix %in% c("water", "soil", "sediment")) |>
+    dplyr::mutate(
+      from.Matrix = dplyr::case_when(
+        to.Matrix == 'water' ~ 'air',
+        to.Matrix == 'soil' ~ 'air',
+        to.Matrix == 'sediment' ~ 'water',
+        TRUE ~ NA
+      )
+    )
+  
+  # All data needed for the from compartments, join with to for from-to row
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::left_join(Matrix) |>
+    dplyr::left_join(MTC_2w) |>
+    dplyr::left_join(MTC_2s) |>
+    dplyr::left_join(MTC_2sd) |>
+    dplyr::left_join(Kacompw) |>
+    dplyr::left_join(FRingas) |>
+    dplyr::left_join(AreaLand) |>
+    dplyr::left_join(AreaSea) |>
+    dplyr::left_join(VertDistance) |>
+    dplyr::left_join(FRinw) |>
+    parent$states$clipStates() |>
+    dplyr::filter(Matrix %in% c("air", "water")) |>
+    dplyr::left_join(to, by=c("Scale" = "Scale", "Matrix" = "from.Matrix", "Species" = "Species")) |>
+    dplyr::mutate(
+      FRorig = dplyr::case_when(
+        to.Matrix == 'water' & as.character(Test) == 'TRUE' ~ dplyr::filter(FRorig_og, SubCompart =='river') |> dplyr::pull(FRorig),
+        TRUE ~ FRorig
+      ),
+      FRorig_spw = dplyr::case_when(
+        to.Matrix == 'soil' & as.character(Test) == 'TRUE' ~ dplyr::filter(FRorig_spw_og, SubCompart =='naturalsoil') |> dplyr::pull(FRorig_spw),
+        TRUE ~ FRorig_spw
+      ),
+      GASABS = dplyr::case_when(
+        to.Matrix == 'water' ~ FRingas*(MTC_2w*MTC_2a/(MTC_2w*(Kacompw*FRorig)+MTC_2a)),
+        to.Matrix == 'soil' ~ FRingas*(MTC_2s*MTC_2a)/(MTC_2s*(Kacompw*FRorig_spw)/Kscompw+MTC_2a),
+        TRUE ~ NA
+      ),
+      AreaFrac = dplyr::case_when(
+        to.Matrix == 'water' ~ Area/(AreaLand+AreaSea),
+        to.Matrix == 'soil' ~ Area/(AreaLand+AreaSea),
+        TRUE ~ NA
+      ),
+      ADSORB = dplyr::case_when(
+        to.Matrix == 'sediment' ~ (MTC_2sd*to.MTC_2w)/(MTC_2sd+to.MTC_2w)*FRinw,
+        TRUE ~ NA
+      ),
+      k_Adsorption = dplyr::case_when(
+        to.Matrix == 'water' ~ GASABS/VertDistance*AreaFrac,
+        to.Matrix == 'soil' ~ GASABS/VertDistance*AreaFrac,
+        to.Matrix == 'sediment' & as.character(Test) == "TRUE" & to.SubCompart == "lakesediment" ~ NA,
+        to.Matrix == 'sediment' ~ ADSORB/VertDistance,
+        TRUE ~ NA
+      )
+    ) |>
+    dplyr::rename(from.SubCompart = SubCompart) |>
+    dplyr::filter(!is.na(k_Adsorption)) |> 
+    dplyr::arrange(Scale, from.SubCompart, Species) |>
+    dplyr::select(Scale, from.SubCompart, to.SubCompart, Species, k_Adsorption)
+    
+  return(data.frame(out))
+  
+  
+  # 
+  # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompartName == "sea") {
+  #   return(NA)
+  # }
+  # if ((isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE") &&
+  #   (ScaleName %in% c("Regional", "Continental") & from.SubCompartName == "deepocean")) {
+  #   return(NA)
+  # }
+  # switch(to.Matrix,
+  #        
+  #        "water" = { # air to water
+  #          if (ScaleName %in% c("Regional", "Continental")){
+  #            if (as.character(Test) == "TRUE"){
+  #              to.FRorig <-  all.FRorig |>
+  #                filter(SubCompart == "river") 
+  #              to.FRorig <- to.FRorig$FRorig
+  #            } 
+  #          }
+  #          GASABS = FRingas*(from.MTC_2w*to.MTC_2a/(from.MTC_2w*(Kacompw*to.FRorig)+to.MTC_2a))
+  #          AreaFrac = to.Area/(AreaLand+AreaSea)
+  #          return(GASABS/VertDistance*AreaFrac) },
+  #        "soil" = { # air to soil
+  #          if (as.character(Test) == "TRUE"){
+  #            to.FRorig_spw <- all.FRorig_spw |>
+  #              filter(SubCompart == "naturalsoil")
+  #            to.FRorig_spw <- to.FRorig_spw$FRorig_spw
+  #          } 
+  #          GASABS = FRingas*(from.MTC_2s*to.MTC_2a)/(from.MTC_2s*(Kacompw*to.FRorig_spw)/to.Kscompw+to.MTC_2a)
+  #          AreaFrac = to.Area/(AreaLand+AreaSea)
+  #          return(GASABS/VertDistance*AreaFrac) },
+  #        "sediment" = { # water to sediment
+  #          ADSORB = (from.MTC_2sd*to.MTC_2w)/(from.MTC_2sd+to.MTC_2w)*FRinw
+  #          if (as.character(Test) == "TRUE" && to.SubCompartName == "lakesediment"){
+  #            return(NA)
+  #          } else {
+  #             return(ADSORB/VertDistance) 
+  #          }
+  #         }, 
+  #        return(NA)
+  # )
   
 }

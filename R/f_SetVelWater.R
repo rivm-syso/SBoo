@@ -15,6 +15,30 @@ f_SetVelWater <- function(Shortest_side, # for simplification only Shortest_side
                           DynViscAirStandard,
                           Matrix, SubCompartName, Shape,
                           Longest_side, Intermediate_side, DragMethod) {
+  
+  # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so
+  # if (is.na(Intermediate_side) || is.null(Intermediate_side) || is.na(Longest_side) || is.null(Longest_side)) {
+  #   Intermediate_side <- Shortest_side * 2 #maybe 0.75 or build in shape functions
+  #   Longest_side <- Shortest_side * 2 # maybe consider other default based on shape
+  # }
+  # rad_particle = Shortest_side/2 # for Originial and Cunningham in air settling rate
+  # 
+  # GN <- constants::syms$gn
+  # 
+  # if (is.na(Shape) || is.null(Shape)) {
+  #   Shape <- "Default"
+  # }
+  
+  
+  # out <- data.frame(
+  #   rho_species = rho_species, rhoMatrix = rhoMatrix, Matrix = Matrix, SubCompartName = SubCompartName
+  #   ) |>
+  #   dplyr::mutate(
+  #     
+  #   )
+  #   
+ 
+  
   if (anyNA(c(rho_species, rhoMatrix))) {
     return(NA)
   }

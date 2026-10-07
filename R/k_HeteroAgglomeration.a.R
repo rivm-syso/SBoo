@@ -39,8 +39,9 @@ k_HeteroAgglomeration.a <- function(rad_species,
                                     DynViscAirStandard,
                                     NumConcNuc, NumConcAcc, NumConcCP,
                                     Matrix,
-                                    to.SpeciesName, Test = "FALSE"){
-  
+                                    to.SpeciesName, Test = "FALSE",
+                                    parent, SpeciesName){
+  browser()
   ThermVel <- function(Temp, Radius, Rho){
     kboltz <- constants::syms$k
     ((8*kboltz*Temp)/(pi*fVol(Radius)*Rho))^0.5

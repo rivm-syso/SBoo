@@ -11,20 +11,42 @@
 #'@return MTC_2a
 #'@export
 MTC_2a <- function(WINDspeed, MW, Tempfactor, KdegDorC, 
-                   Matrix, SpeciesName, ScaleName, SubCompartName){
-  if (SpeciesName %in% c("Molecular")) {
-  switch(Matrix,
-         "water" = {
-           if (SubCompartName == "deepocean") return(NA)
-           if (ScaleName %in% c("Arctic", "Moderate", "Tropic") & 
-               SubCompartName %in% c("lake", "river")) return(NA)
-           0.01*(0.0004+0.00004*WINDspeed^2)*((0.032/MW)^(0.5*0.5))
-         },
-         "soil" = {
-           if (ScaleName %in% c("Arctic", "Moderate", "Tropic") & 
-               SubCompartName %in% c("othersoil", "agriculturalsoil")) return(NA)
-           0.1*Tempfactor*KdegDorC
-         }, 
-         NA
-  )} else return(NA)
+                   Matrix, SpeciesName, ScaleName, SubCompartName, parent){
+  
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::left_join(Matrix, by="SubCompart") |>
+    dplyr::left_join(WINDspeed, by="Scale") |>
+    dplyr::left_join(Tempfactor) |>
+    dplyr::left_join(KdegDorC) |>
+    parent$states$clipStates() |>
+    dplyr::mutate(
+      MTC_2a = dplyr::case_when(
+        Matrix == 'water' & SubCompart == 'deepocean' ~ NA,
+        Matrix == 'water' & Scale %in% c("Arctic", "Moderate", "Tropic") & SubCompart %in% c("lake", "river") ~ NA,
+        Matrix == 'water' ~ 0.01*(0.0004+0.00004*WINDspeed^2)*((0.032/MW)^(0.5*0.5)),
+        Matrix == 'soil' & ScaleName %in% c("Arctic", "Moderate", "Tropic") & SubCompart %in% c("othersoil", "agriculturalsoil") ~ NA,
+        Matrix == 'soil' ~ 0.1*Tempfactor*KdegDorC,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    dplyr::filter(!is.na(MTC_2a)) |>
+    dplyr::arrange(Scale, SubCompart, Species) |>
+    dplyr::select(Scale, SubCompart, Species, MTC_2a)
+  
+  # if (SpeciesName %in% c("Molecular")) {
+  # switch(Matrix,
+  #        "water" = {
+  #          if (SubCompartName == "deepocean") return(NA)
+  #          if (ScaleName %in% c("Arctic", "Moderate", "Tropic") & 
+  #              SubCompartName %in% c("lake", "river")) return(NA)
+  #          0.01*(0.0004+0.00004*WINDspeed^2)*((0.032/MW)^(0.5*0.5))
+  #        },
+  #        "soil" = {
+  #          if (ScaleName %in% c("Arctic", "Moderate", "Tropic") & 
+  #              SubCompartName %in% c("othersoil", "agriculturalsoil")) return(NA)
+  #          0.1*Tempfactor*KdegDorC
+  #        }, 
+  #        NA
+  # )} else return(NA)
 }

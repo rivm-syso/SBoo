@@ -45,7 +45,7 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
     tidyr::expand_grid(SubCompartName, SpeciesName) |>
     parent$states$clipStates() |>
     dplyr::left_join(Matrix, by=c("SubCompart")) |>
-    dplyr::left_join(kdeg, by=c("SubCompart" = "Compartment")) |>
+    dplyr::left_join(kdeg) |> #Look for all matching cols
     dplyr::left_join(rhoMatrix, by=c("Matrix")) |>
     dplyr::left_join(UVintensity, by=c("Scale", "SubCompart")) |>
     dplyr::left_join(MICROBconc, by=c("Scale", "SubCompart"))|>
