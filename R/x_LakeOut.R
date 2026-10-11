@@ -8,33 +8,24 @@
 #' @param ScaleName Runoff needs to be calculated per scale.
 #' @return Lake discharge
 #' @export
-x_LakeOut <- function(RainOnFreshwater, RunoffFlow,FracROWatComp,SubCompartName,ScaleName, parent){
+x_LakeOut <- function(RainOnFreshwater, RunoffFlow, FracROWatComp, parent){
   
+  Runoff <- RunoffFlow |>
+    dplyr::group_by(Scale) |>
+    dplyr::summarise(allsoils_runoff = sum(Runoff, na.rm = TRUE))
+  
+  RainOnFreshwater <- RainOnFreshwater |> 
+    dplyr::group_by(Scale) |>
+    dplyr::summarise(RainOnFreshwater = sum(RainOnFreshwater, na.rm = TRUE))
+      
   out <- parent$FromDataAndTo("x_LakeOut") |>
-    dplyr::left_join(RunoffFlow, by=c("Scale" = "Scale")) |>
-    dplyr::group_by(Scale) |>
-    dplyr::summarise(
-      from.SubCompart = dplyr::first(from.SubCompart),
-      to.SubCompart = dplyr::first(to.SubCompart),
-      Species = dplyr::first(Species),
-      Runoff = sum(Runoff, na.rm = TRUE)
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::left_join(RainOnFreshwater[, c("Scale", "SubCompart", "RainOnFreshwater")], by=c("Scale" = "Scale", "from.SubCompart" = "SubCompart")) |>
-    dplyr::group_by(Scale) |>
-    dplyr::summarise(
-      from.SubCompart = dplyr::first(from.SubCompart),
-      to.SubCompart = dplyr::first(to.SubCompart),
-      Species = dplyr::first(Species),
-      Runoff = dplyr::first(Runoff),
-      RainOnFreshwater = sum(RainOnFreshwater, na.rm=TRUE)
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::left_join(FracROWatComp, by=c("from.SubCompart" = "SubCompart", "Scale" = "Scale")) |>
+    dplyr::left_join(Runoff) |>
+    dplyr::left_join(RainOnFreshwater) |>
+    dplyr::left_join(FracROWatComp, by=c("from.SubCompart" = "SubCompart", "Scale", "Species")) |>
     dplyr::mutate(
-      x_LakeOut = RainOnFreshwater + (FracROWatComp * Runoff)
+      flow = RainOnFreshwater + (FracROWatComp * allsoils_runoff)
     ) |>
-    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, x_LakeOut)
+    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, flow)
   
   return(data.frame(out))
   

@@ -14,12 +14,12 @@ x_OceanMixing2Sea <- function (Volume,
                                OceanCurrent, parent) {
   
   out <- parent$FromDataAndTo("x_OceanMixing2Sea") |>
-    dplyr::left_join(Volume, by=c("Scale" = "Scale", "to.SubCompart" = "SubCompart")) |> #in switch the volume of the to compartment is used ? 
-    dplyr::left_join(TAUsea, by=c("Scale" = "Scale")) |>
+    dplyr::left_join(Volume, by=c("Scale", "to.SubCompart" = "SubCompart")) |> #in switch the volume of the to compartment is used ? 
+    dplyr::left_join(TAUsea, by=c("Scale")) |>
     dplyr::mutate(
-      x_OceanMixing2Sea = (Volume / TAUsea) + OceanCurrent #Is constant
+      flow = (Volume / TAUsea) + OceanCurrent #Is constant
     ) |>
-    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, x_OceanMixing2Sea)
+    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, flow)
   
   return(data.frame(out)) 
     

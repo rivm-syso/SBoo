@@ -14,31 +14,21 @@ x_RiverDischarge <- function (RunoffFlow, RainOnFreshwater,
   
   out <- parent$FromDataAndTo("x_RiverDischarge")
   
-  data <- ScaleName |>
-    tidyr::expand_grid(SubCompartName) |>
-    parent$states$clipStates(NoSpeciesKey=TRUE) |>
-    dplyr::filter(SubCompartName  == 'river') |>
-    dplyr::full_join(RunoffFlow, by=c("Scale", "SubCompart")) |>
-    dplyr::full_join(RainOnFreshwater, by=c("Scale", "SubCompart")) |>
-    dplyr::full_join(dischargeFRAC, by="Scale") |>
-    dplyr::filter(Scale %in% out$Scale) |>
+  Runoff <- RunoffFlow |>
     dplyr::group_by(Scale) |>
+    dplyr::summarise(allsoils_runoff = sum(Runoff, na.rm = TRUE))
     
-    dplyr::summarise(
-      SubCompart = 'river',
-      Runoff  = sum(Runoff , na.rm=TRUE),
-      RainOnFreshwater = sum(RainOnFreshwater, na.rm=TRUE),
-      dischargeFRAC = dplyr::first(dischargeFRAC)
-    ) |>
-    dplyr::ungroup() |>
+  out <- out |> 
+    dplyr::left_join(Runoff) |>
+    dplyr::left_join(dischargeFRAC) |>
+    dplyr::left_join(RainOnFreshwater, by = c("from.SubCompart" = "SubCompart", "Scale")) |>
+    
     dplyr::mutate(
-      x_RiverDischarge = (Runoff + RainOnFreshwater) * (1-dischargeFRAC)
+      flow = (allsoils_runoff + RainOnFreshwater) * (1-dischargeFRAC)
     ) |>
-    dplyr::select(Scale, SubCompart, x_RiverDischarge)
+    dplyr::select(-allsoils_runoff, -RainOnFreshwater, -dischargeFRAC)
   
-  out <- dplyr::left_join(out, data, by = c("from.SubCompart" = "SubCompart", "Scale" = "Scale"))
-  
-  return(data.frame(out))
+  return(out)
   
   # x_ContRiver2Reg <- sum(all.x_ContRiver2Reg$flow) #sum to force an atomic number ?
   # SumRainRunoff <- sum(all.RunoffFlow$RunoffFlow[all.RunoffFlow$Scale == ScaleName]) +

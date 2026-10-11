@@ -6,17 +6,17 @@
 #' @return Advection sea - deepocean
 #' @export
 #' 
-x_FromModerate2ContWater <- function (Volume, TAUsea, parent,
-                                     x_RegSea2Cont) {
+x_FromModerate2ContWater <- function (Volume, TAUsea,
+                                     x_RegSea2Cont, parent) {
   
   out <- parent$FromDataAndTo("x_FromModerate2ContWater") |>
     dplyr::left_join(Volume, by=c("to.Scale" = "Scale", "SubCompart" = "SubCompart")) |>
     dplyr::left_join(TAUsea, by=c("to.Scale" = "Scale")) |>
-    dplyr::left_join(x_RegSea2Cont[, c("to.Scale", "x_RegSea2Cont")], by=c("to.Scale" = "to.Scale")) |>
+    dplyr::left_join(x_RegSea2Cont |> dplyr::select(to.Scale, flow)) |>
     dplyr::mutate(
-      x_FromModerate2ContWater = (Volume/TAUsea) - x_RegSea2Cont
+      flow = (Volume/TAUsea) - flow #from x_RegSea2Cont
     ) |>
-    dplyr::select(from.Scale, to.Scale, SubCompart, Species, x_FromModerate2ContWater)
+    dplyr::select(from.Scale, to.Scale, SubCompart, Species, flow)
   
  
   return(data.frame(out))  

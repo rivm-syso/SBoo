@@ -6,11 +6,11 @@
 #' @export
 x_ContSea2Reg <- function(x_RiverDischarge, parent) {
   
-  x_RiverDischarge <- dplyr::filter(x_RiverDischarge, Scale == 'Regional') |> dplyr::pull(x_RiverDischarge)
+  Regional_RiverDischarge <- dplyr::filter(x_RiverDischarge, Scale == 'Regional') |> dplyr::pull(flow)
   
   out <- parent$FromDataAndTo("x_ContSea2Reg") |>
     dplyr::mutate(
-      x_ContSea2Reg = (10 - 1) * x_RiverDischarge
+      x_ContSea2Reg = (10 - 1) * Regional_RiverDischarge
     )
   return(data.frame(out))  
   

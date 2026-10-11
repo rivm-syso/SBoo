@@ -11,15 +11,15 @@
 #' @return Water flow to Moderate scale surface and deepocean waters [m3 s-1]
 #' @export
 #' 
-x_ToModerateWater <- function (Volume, TAUsea, parent, x_RegSea2Cont, OceanCurrent, Remove_global) {
+x_ToModerateWater <- function (Volume, TAUsea, x_RegSea2Cont, OceanCurrent, Remove_global, parent) {
   
-  x_RegSea2Cont <- dplyr::filter(x_RegSea2Cont, SubCompart == 'sea', from.Scale == 'Regional') |> dplyr::pull(x_RegSea2Cont)
+  x_RegSea2Cont <- dplyr::filter(x_RegSea2Cont, SubCompart == 'sea', from.Scale == 'Regional') |> dplyr::pull(flow)
   
   out <- parent$FromDataAndTo("x_ToModerateWater") |>
-    dplyr::left_join(Volume, by=c("from.Scale" = "Scale", "SubCompart" = "SubCompart")) |> 
+    dplyr::left_join(Volume, by=c("from.Scale" = "Scale", "SubCompart")) |> 
     dplyr::left_join(TAUsea, by=c("from.Scale" = "Scale")) |>
     dplyr::mutate(
-      x_ToModerateWater = dplyr::case_when(
+      flow = dplyr::case_when(
         SubCompart == 'sea' & from.Scale == "Arctic" ~ 0,
         
         SubCompart == 'deepocean' & from.Scale == "Arctic" ~ OceanCurrent,
@@ -38,7 +38,7 @@ x_ToModerateWater <- function (Volume, TAUsea, parent, x_RegSea2Cont, OceanCurre
         TRUE ~ NA
       )
     ) |>
-    dplyr::select(from.Scale, to.Scale, SubCompart, Species, x_ToModerateWater)
+    dplyr::select(from.Scale, to.Scale, SubCompart, Species, flow)
   
   return(data.frame(out))
   

@@ -453,7 +453,7 @@ SBcore <- R6::R6Class("SBcore",
       stopifnot(all(flowNames %in% my_ls))
       
       molecular_deposition_proces = "k_Deposition"
-      browser()
+      
       if (molecular_deposition_proces %in% processnames){
         # obtain nasty deposition, depending on other air sinks (param "OtherkAir")
         fromtoes <- lapply(processnames[processnames != molecular_deposition_proces],

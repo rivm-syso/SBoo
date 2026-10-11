@@ -7,36 +7,27 @@
 #' @param dischargeFRAC Fraction discharge of freshwater between regional and continental scales and vice versa [-]
 #' @return River Discharge for scale Continental [s-1]
 #' @export
-x_ContRiver2Reg <- function(ScaleName, SubCompartName, RunoffFlow, RainOnFreshwater,dischargeFRAC, parent) {
+x_ContRiver2Reg <- function(ScaleName, SubCompartName, RunoffFlow, RainOnFreshwater, dischargeFRAC, parent) {
   
-  # Calculate a flow from
-  # Input often contains data with different keys that are needed for a value
+  out <- parent$FromDataAndTo("x_ContRiver2Reg")
+
+  Runoff <- RunoffFlow |>
+    dplyr::group_by(Scale) |>
+    dplyr::summarise(allsoils_runoff = sum(Runoff, na.rm = TRUE))
+  
   # Runoff needs to be summed across soils compartment to represent input for river compartment
-  data <- ScaleName |>
-    tidyr::expand_grid(SubCompartName) |>
-    parent$states$clipStates(NoSpeciesKey=TRUE) |>
-    dplyr::filter(SubCompartName  == 'river') |>
-    dplyr::full_join(RunoffFlow, by=c("Scale", "SubCompart")) |>
-    dplyr::full_join(RainOnFreshwater, by=c("Scale", "SubCompart")) |>
-    dplyr::full_join(dischargeFRAC, by="Scale") |>
-    dplyr::filter(Scale == 'Continental') |>
-    dplyr::summarise(
-      Scale = 'Continental',
-      SubCompart = 'river',
-      Runoff  = sum(Runoff , na.rm=TRUE),
-      RainOnFreshwater = sum(RainOnFreshwater, na.rm=TRUE),
-      dischargeFRAC = dplyr::first(dischargeFRAC)
-    ) |>
+  out <- out |> 
+    dplyr::left_join(Runoff, by = c("from.Scale" = "Scale")) |>
+    dplyr::left_join(dischargeFRAC, by = c("from.Scale" = "Scale")) |>
+    dplyr::left_join(RainOnFreshwater, by = c("from.Scale" = "Scale", "SubCompart")) |>
+    
     dplyr::mutate(
-      x_ContRiver2Reg = (Runoff + RainOnFreshwater) * dischargeFRAC
-    ) |>
-    dplyr::select(Scale, SubCompart, x_ContRiver2Reg)
+      flow = (allsoils_runoff + RainOnFreshwater) * dischargeFRAC
+    )
   
-  # The above calculated from joined with the scaffolding, leftjoin should preserve scaffold
-  out <- parent$FromDataAndTo("x_ContRiver2Reg") |>
-    dplyr::left_join(data, by=c("from.Scale" = "Scale", "SubCompart" = "SubCompart"))
+  out <- dplyr::select(out, -allsoils_runoff, -dischargeFRAC, -RainOnFreshwater)
   
-  return(data.frame(out)) 
+  return(out) 
   
   # switch(ScaleName,
   #   "Continental" = {
