@@ -22,7 +22,6 @@ x_RiverDischarge <- function (RunoffFlow, RainOnFreshwater,
     dplyr::left_join(Runoff) |>
     dplyr::left_join(dischargeFRAC) |>
     dplyr::left_join(RainOnFreshwater, by = c("from.SubCompart" = "SubCompart", "Scale")) |>
-    
     dplyr::mutate(
       flow = (allsoils_runoff + RainOnFreshwater) * (1-dischargeFRAC)
     ) |>

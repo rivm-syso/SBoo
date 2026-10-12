@@ -24,6 +24,7 @@ x_ContRiver2Reg <- function(ScaleName, SubCompartName, RunoffFlow, RainOnFreshwa
     dplyr::mutate(
       flow = (allsoils_runoff + RainOnFreshwater) * dischargeFRAC
     )
+
   
   out <- dplyr::select(out, -allsoils_runoff, -dischargeFRAC, -RainOnFreshwater)
   
