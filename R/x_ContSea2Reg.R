@@ -10,7 +10,7 @@ x_ContSea2Reg <- function(x_RiverDischarge, parent) {
   
   out <- parent$FromDataAndTo("x_ContSea2Reg") |>
     dplyr::mutate(
-      x_ContSea2Reg = (10 - 1) * Regional_RiverDischarge
+      flow = (10 - 1) * Regional_RiverDischarge
     )
   return(data.frame(out))  
   

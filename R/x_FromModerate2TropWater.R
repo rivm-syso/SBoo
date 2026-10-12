@@ -13,12 +13,14 @@ x_FromModerate2TropWater <- function ( OceanCurrent, SubCompartName, ScaleName, 
   
   out <- parent$FromDataAndTo("x_FromModerate2TropWater") |>
     dplyr::mutate(
-      x_FromModerate2TropWater = dplyr::case_when(
-        SubCompart == "sea" ~ 0,
+      flow = dplyr::case_when(
+        #SubCompart == "sea" ~ 0,
         SubCompart == "deepocean" ~ OceanCurrent, #fix, data in code
         TRUE ~ NA
       )
-    )
+    )|> # and remove NA
+    dplyr::filter(!is.na(flow))
+  
   return(data.frame(out))
   
            # switch (SubCompartName,

@@ -6,7 +6,7 @@
 #' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @return x.Advection_Air, the flow
 #' @export
-x_Advection_Air <- function(AirFlow, Remove_global, parent){
+x_Advection_Air <- function(AirFlow, parent){
   # The airflow was step 1; now the corrections for the mass balance to add up..
   # "normal" k is 1/Tau ;  Airflow = Volume/Tau
   
@@ -32,7 +32,7 @@ x_Advection_Air <- function(AirFlow, Remove_global, parent){
     )) |> 
     
     # remove columns
-    select(-from.AirFlow, -to.AirFlow)
+    dplyr::select(-from.AirFlow, -to.AirFlow)
   
   return (out)
 }

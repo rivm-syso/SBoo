@@ -12,10 +12,12 @@ x_RegSea2Cont <- function (x_RiverDischarge, x_ContSea2Reg, parent){
     dplyr::left_join(x_RiverDischarge, by=c("from.Scale" = "Scale", "SubCompart" = "to.SubCompart", "Species")) |>
     dplyr::select(-from.SubCompart) |>
     dplyr::filter(!is.na(flow)) |>
+    dplyr::rename(x_RiverDischarge = flow) |>
     dplyr::left_join(x_ContSea2Reg, by=c("to.Scale" = "from.Scale", "SubCompart", "Species")) |>
     dplyr::select(-to.Scale.y) |>
     dplyr::mutate(
-      x_RegSea2Cont = x_ContSea2Reg + flow # from x_RiverDischarge 
+      x_RegSea2Cont = flow + # from x_ContSea2Reg
+        + x_RiverDischarge 
     ) |>
     dplyr::select(from.Scale, to.Scale, SubCompart, Species, x_RegSea2Cont) |>
     dplyr::rename(flow = x_RegSea2Cont) 

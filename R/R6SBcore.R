@@ -430,14 +430,21 @@ SBcore <- R6::R6Class("SBcore",
     #' @description runs (or tries to) the calculation DAG
     #' Parameters are no longer usefull with R6ReactiveDAG
     UpdateKaas = function(){ 
-      #browser()
+      browser()
 
       # Calculate (fetch) flows, assign to Advection process and add to kaas
-      for (fl in private$flows){
-        flow_calculated <- private$FetchData(fl)
-        
-      }
-      # Calculate (fetch) all processes and add to kaas
+      fromVolume <- self$fetchData("Volume")
+      asProcess_list <- lapply(private$flows, function(fl) {
+        flow_calculated <- self$fetchData(fl)
+        k2_Advection(flow_calculated, fromVolume)
+      })
+      # Calculate (fetch) all other processes
+      ProcessKaas <- lapply(private$processes, function(procs) {
+        self$fetchData(procs)
+      })
+      
+      private$SBkaas <- do.call(rbind, c(ProcessKaas, asProcess_list))
+      
       #return only for purpose of transparent update; side effect is done
       invisible(private$SBkaas)
     },
@@ -448,6 +455,9 @@ SBcore <- R6::R6Class("SBcore",
       my_ls <- ls(ns)
       
       processnames <- paste("k", ModeProcesses, sep = "_")
+      # exclude "k_Advection", it's now automatically added from flows 
+      processnames <- processnames[processnames != "k_Advection"]
+      
       stopifnot(all(processnames %in% my_ls))
       
       stopifnot(all(flowNames %in% my_ls))
@@ -846,8 +856,8 @@ SBcore <- R6::R6Class("SBcore",
           private$suBmode <- if (is.list(value)) {
             value
           } else {
-            stopifnot(file.exists(value))
-            jsonlite::fromJSON(value, simplifyDataFrame = FALSE)
+            stopifnot(file.exists(file.path(private$myDataLocation, value)))
+            jsonlite::fromJSON(file.path(private$myDataLocation, value), simplifyDataFrame = FALSE)
           }
           # extract needed SBmode
           private$SBmode <- {
