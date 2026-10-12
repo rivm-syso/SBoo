@@ -18,14 +18,14 @@ RunoffFlow <- function (FRACrun, Area, RAINrate, Compartment, parent){
     parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::mutate(
       FRACrun = FRACrun,
-      Runoff = dplyr::case_when(
+      RunoffFlow = dplyr::case_when(
         Compartment == "soil" ~ FRACrun * Area * RAINrate,
         TRUE ~ NA_real_
       )
     ) |>
-    dplyr::filter(!is.na(Runoff)) |>
+    dplyr::filter(!is.na(RunoffFlow)) |>
     dplyr::arrange(Scale, SubCompart) |>
-    dplyr::select(Scale, SubCompart, Runoff)
+    dplyr::select(Scale, SubCompart, RunoffFlow)
   
   return(data.frame(out))
   

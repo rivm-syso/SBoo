@@ -16,13 +16,13 @@ IntrcptFrac <- function(VegInterceptFrac, SizeRunoff, rad_species, Matrix, paren
     dplyr::filter(SubCompart %in% c("othersoil", "naturalsoil", "agriculturalsoil")) |>
     parent$states$clipStates() |>
     dplyr::mutate(
-      interceptFraction = dplyr::case_when(
+      IntrcptFrac = dplyr::case_when(
         rad_species < SizeRunoff ~ 0,
         TRUE ~ VegInterceptFrac
       )
     ) |>
-    dplyr::filter(!is.na(interceptFraction)) |>
-    dplyr::select(Scale, SubCompart, Species, interceptFraction) |>
+    dplyr::filter(!is.na(IntrcptFrac)) |>
+    dplyr::select(Scale, SubCompart, Species, IntrcptFrac) |>
     dplyr::arrange(Scale, SubCompart, Species)
   
   return(data.frame(out))

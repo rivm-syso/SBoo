@@ -10,11 +10,19 @@
 
 k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent, SpeciesName){
   
+  # Custom join func
+  join_suffix <- function(x, y, by) {
+    dplyr::left_join(x, y, by = by, suffix = c("_from", "_to"))
+  }
+  
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Burial")))
+  
   # Get NETsedrates of the water column above the sediment, ie map&link the correct subcompartments
   NETsedrate_sediments <- NETsedrate |>
     dplyr::filter(SubCompart %in% c("lake", 'deepocean', 'sea', 'river')) |>
     dplyr::mutate(
-      from.SubCompart = dplyr::case_when(
+      SubCompart = dplyr::case_when(
         SubCompart == 'lake' ~ 'lakesediment',
         SubCompart == 'deepocean' & Scale %in% c("Tropic", "Moderate", "Arctic") ~ 'marinesediment',
         SubCompart == 'river' ~ 'freshwatersediment',
@@ -22,26 +30,24 @@ k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent
         TRUE ~ NA
       )
     ) |>
-    dplyr::rename(to.SubCompart = SubCompart) |>
-    dplyr::filter(!is.na(from.SubCompart)) |> # NETsedrate has deepocean in regional whereas clip states doesnt 
-    dplyr::select(NETsedrate, from.SubCompart, Scale, to.SubCompart)
-
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
-    parent$states$clipStates() |>
-    dplyr::left_join(VertDistance, by=c("Scale", "SubCompart")) |>
-    dplyr::filter(SubCompart %in% c("lakesediment", "marinesediment", "freshwatersediment")) |>
-    dplyr::left_join(NETsedrate_sediments, by=c("Scale" = "Scale", "SubCompart" = "from.SubCompart")) |>
+    dplyr::select(NETsedrate, SubCompart, Scale, SubCompart)
+  
+  
+  out <- parent$FromDataAndTo("k_Burial") |>
+    # From
+    dplyr::left_join(VertDistance, by=c("Scale" = "Scale", "from.SubCompart" = "SubCompart")) |>
+    
+    # To met functie om suffix in te stellen
+    join_suffix(NETsedrate_sediments, by=c("Scale" = "Scale", "to.SubCompart" = "SubCompart")) |>
+    
     dplyr::mutate(
       k_Burial = NETsedrate / VertDistance
     ) |>
     dplyr::filter(!is.na(k_Burial)) |>
-    dplyr::rename(from.SubCompart = SubCompart) |>
-    dplyr::arrange(Scale, from.SubCompart, to.SubCompart, Species) |>
-    dplyr::select(Scale, from.SubCompart, to.SubCompart, Species, k_Burial)
-    
+    dplyr::select(names, k_Burial) |>
+    dplyr::arrange(dplyr::across(names))
+  
   return(data.frame(out))
-
   
   # # NETsedrate assumed identical to NETsedrate of the water column above the sediment
   # waterabove <- switch (SubCompartName,

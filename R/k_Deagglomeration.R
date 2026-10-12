@@ -9,24 +9,27 @@
 
 k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName, Regional_and_Continental_deepocean, parent){
   
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName) |>
-    parent$states$clipStates(NoSpeciesKey = TRUE) |>
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Deagglomeration")))
+  
+  out <- parent$FromDataAndTo("k_Deagglomeration") |>
+    # From
+    dplyr::left_join(kdeag, by=c("SubCompart" = "SubCompart", "from.Species"="Species")) |>
     dplyr::mutate(
       k_Deagglomeration = dplyr::case_when(
-        ScaleName %in% c("Tropic", "Moderate", "Arctic") & SubCompartName %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") ~
+        Scale %in% c("Tropic", "Moderate", "Arctic") & SubCompart %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") ~
           NA,
-        !is.null(ScaleName) & ScaleName %in% c("Regional", "Continental") & (SubCompartName == "deepocean") & (is.na(Regional_and_Continental_deepocean) | isFALSE(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE") ~
+        !is.null(Scale) & Scale %in% c("Regional", "Continental") & (SubCompart == "deepocean") & (is.na(Regional_and_Continental_deepocean) | isFALSE(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE") ~
           NA,
         TRUE ~ kdeag
-      )
-    ) |>
-    dplyr::select(Scale,SubCompart,k_Deagglomeration) |>
-    dplyr::arrange(Scale,SubCompart)
+        )
+    )|>
+    dplyr::filter(!is.na(k_Deagglomeration)) |>
+    dplyr::select(names, k_Deagglomeration) |>
+    dplyr::arrange(dplyr::across(names))
   
   return(data.frame(out))
-    
-  
+
   # if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
   #                                                            SubCompartName == "lakesediment" |
   #                                                            SubCompartName == "lake" |

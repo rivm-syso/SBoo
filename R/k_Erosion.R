@@ -13,15 +13,31 @@
 #'@return k_Erosion Erosion of attached ENP species (P) from soil to water #[s-1]
 #'@export
 k_Erosion <- function(relevant_depth_s,penetration_depth_s, EROSIONsoil, VertDistance,
-                      to.FracROWatComp,
-                      ScaleName, to.SubCompartName,  Matrix, landFRAC, parent){
+                      FracROWatComp,
+                      ScaleName, SubCompartName,  Matrix, landFRAC, SpeciesName, parent){
   
+  
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Erosion")))
+
+  # Build grid
+  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "EROSIONsoil", "VertDistance", "landFRAC")
+  dfs <- mget(args, envir = environment())
+  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  # To
+  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "FracROWatComp")
+  dfs <- mget(args, envir = environment())
+  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+
+
+  # Output
   out <- parent$FromDataAndTo("k_Erosion") |>
-    tidyr::expand_grid(relevant_depth_s, penetration_depth_s) |>
-    dplyr::left_join(EROSIONsoil, by=c("from.SubCompart"="SubCompart")) |>
-    dplyr::left_join(VertDistance, by=c("from.SubCompart"= "SubCompart", "Scale" = "Scale")) |>
-    dplyr::left_join(to.FracROWatComp, by=c("to.SubCompart"= "SubCompart", "Scale" = "Scale", "Species"="Species")) |>
-    # dplyr::left_join(landFRAC, by=c("from.SubCompart"= "SubCompart", "Scale" = "Scale")) |>
+    # From
+    dplyr::left_join(grid_from, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
+
+    #To
+    dplyr::left_join(grid_to, by=c("to.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species"), suffix=c("_from", "_to")) |>
+
     dplyr::mutate(
       k_Erosion = dplyr::case_when(
         Scale %in% c("Regional", "Continental") & to.SubCompart == "sea" ~ NA,
@@ -30,9 +46,9 @@ k_Erosion <- function(relevant_depth_s,penetration_depth_s, EROSIONsoil, VertDis
       )
     ) |>
     dplyr::filter(!is.na(k_Erosion)) |>
-    dplyr::select(process, from.SubCompart, to.SubCompart, Scale, Species, k_Erosion) |>
-    dplyr::arrange(process, from.SubCompart, to.SubCompart, Scale, Species)
-  
+    dplyr::select(names, k_Erosion) |>
+    dplyr::arrange(dplyr::across(names))
+
   return(data.frame(out))
   
   

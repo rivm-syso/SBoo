@@ -37,12 +37,18 @@ SettlingVelocity <- function(rad_species, rho_species, rhoMatrix,
   if (is.null(VelInput)) {
     VelInput = NA
   }
+ 
   if (is.na(Intermediate_side) || is.null(Intermediate_side) ||is.na(Longest_side) || is.null(Longest_side)) {
-    Intermediate_side <- rad_species * 2 #maybe 0.75 or build in shape functions
-    Longest_side <- rad_species * 2
-    warning("Need for Intermediate_side or Longest_side, but not provided, setting to 2*rad_species")
+    if (nrow(rad_species)==0) {
+      Intermediate_side <- NA
+      Longest_side <- NA
+    } else {
+      Intermediate_side <- rad_species * 2 #maybe 0.75 or build in shape functions
+      Longest_side <- rad_species * 2
+      warning("Need for Intermediate_side or Longest_side, but not provided, setting to 2*rad_species")
+    }
   }
-
+  
   out <- ScaleName |>
     tidyr::expand_grid(SubCompartName, SpeciesName) |>
     parent$states$clipStates() |>

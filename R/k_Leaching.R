@@ -10,20 +10,56 @@
 #'@return Leaching rate constant of compound from  soil out of the system (e.g. no deep(er) soil layer considered). [s-1]
 #'@export
 k_Leaching <- function(FRACinf,FRACrun, RAINrate, VertDistance, SpeciesName, 
-                       penetration_depth_s, Kscompw){ #k_ Leaching
+                       penetration_depth_s, Kscompw, ScaleName, SubCompartName, parent){ #k_ Leaching
   
-  if(SpeciesName %in%  c("Aggregated", "Nanoparticle") ){
-    #Correction factor depth dependent soil concentration
-    CORRleach <- f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s) 
-    #If due to extreme inputs, FRACinf and FRACrun are both too large, scale FRACinf to mass conserve rain
-    if((FRACinf + FRACrun) > 1) {FRACinf = 1-FRACrun}
-    #Leaching of aggregated (A) and free (S) enp species from natural soil [s-1]
-    return( (FRACinf * RAINrate * CORRleach) / VertDistance )
-  } else if( SpeciesName %in% c("Molecular")) {
-    CORRleach <- f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s=0.1)
-    #If due to extreme inputs, FRACinf and FRACrun are both too large, scale FRACinf to conserve rain
-    if((FRACinf + FRACrun) > 1) {FRACinf = 1-FRACrun}
-    return(FRACinf*RAINrate/Kscompw*CORRleach/VertDistance)
-  } else return(NA)
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Leaching")))
+  
+  # Build grid
+  args <- c("ScaleName", "SubCompartName", "SpeciesName", "FRACinf", "RAINrate", "VertDistance", "Kscompw")
+  dfs <- mget(args, envir = environment())
+  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  
+  # Output
+  out <- parent$FromDataAndTo("k_Leaching") |>
+    # From
+    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
+    
+    dplyr::mutate( 
+      CORRleach = dplyr::case_when(
+        SpeciesName %in%  c("Aggregated", "Nanoparticle") ~ f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s),
+        SpeciesName %in% c("Molecular") ~ f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s=0.1),
+        TRUE ~ NA
+      ),
+      #If due to extreme inputs, FRACinf and FRACrun are both too large, scale FRACinf to mass conserve rain
+      FRACinf = dplyr::case_when(
+        (FRACinf + FRACrun) > 1 ~ 1-FRACrun,
+        TRUE ~ FRACinf
+      ),
+      k_Leaching = dplyr::case_when(
+        SpeciesName %in%  c("Aggregated", "Nanoparticle") ~ (FRACinf * RAINrate * CORRleach) / VertDistance,
+        SpeciesName %in% c("Molecular") ~ FRACinf*RAINrate/Kscompw*CORRleach/VertDistance,
+        TRUE ~ NA
+      )
+    ) |>
+    dplyr::filter(!is.na(k_Leaching)) |>
+    dplyr::select(names, k_Leaching) |>
+    dplyr::arrange(dplyr::across(names))
+  
+  return(data.frame(out))
+  
+  # if(SpeciesName %in%  c("Aggregated", "Nanoparticle") ){
+  #   #Correction factor depth dependent soil concentration
+  #   CORRleach <- f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s) 
+  #   #If due to extreme inputs, FRACinf and FRACrun are both too large, scale FRACinf to mass conserve rain
+  #   if((FRACinf + FRACrun) > 1) {FRACinf = 1-FRACrun}
+  #   #Leaching of aggregated (A) and free (S) enp species from natural soil [s-1]
+  #   return( (FRACinf * RAINrate * CORRleach) / VertDistance )
+  # } else if( SpeciesName %in% c("Molecular")) {
+  #   CORRleach <- f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s=0.1)
+  #   #If due to extreme inputs, FRACinf and FRACrun are both too large, scale FRACinf to conserve rain
+  #   if((FRACinf + FRACrun) > 1) {FRACinf = 1-FRACrun}
+  #   return(FRACinf*RAINrate/Kscompw*CORRleach/VertDistance)
+  # } else return(NA)
   
 }

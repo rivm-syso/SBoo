@@ -38,213 +38,271 @@
 # #' @seealso \code{\link{f_Brown}}, \code{\link{f_Inter}} and \code{\link{f_Grav}}
 #' @export
 
-k_HeteroAgglomeration.wsd <- function(to.alpha,
-                                      COL,
-                                      SUSP,
-                                      Shear,
-                                      RadS,
-                                      RhoS,
-                                      Shape,
-                                      RadCOL,
-                                      RadCP,
-                                      Temp,
-                                      DynViscWaterStandard,
-                                      RhoCOL,
-                                      RhoCP,
-                                      rhoMatrix,
-                                      Udarcy,
-                                      to.FRACs,
-                                      hamakerSP.w,
-                                      Matrix,
-                                      to.SpeciesName,
-                                      SubCompartName, 
-                                      ScaleName,
+k_HeteroAgglomeration.wsd <- function(alpha, COL,SUSP, Shear,RadS,RhoS,Shape,RadCOL,RadCP,Temp,DynViscWaterStandard,RhoCOL,RhoCP,rhoMatrix,Udarcy,FRACs,hamakerSP.w,
+                                      Matrix, SpeciesName,SubCompartName, ScaleName,
                                       Longest_side, Intermediate_side, Shortest_side, 
-                                      DragMethod, 
-                                      Regional_and_Continental_deepocean){
-  
-  if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & 
-      (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
-    return(NA)
-  }
-  
-  else if ((ScaleName %in% c("Regional", "Continental")) &&
-           (SubCompartName == "deepocean") &&
-           (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
-    return(NA)
-  }
-  
+                                      DragMethod, Regional_and_Continental_deepocean, parent){
   rhoWater = 998 # easyfix could be done more elegantly
   kboltz <- constants::syms$k
   GN <- constants::syms$gn
   
-  if(is.na(RadS) || is.null(RadS)) { RadS = Shortest_side/2 }
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_HeteroAgglomeration.wsd")))
   
-  switch(tolower(Matrix),
-          "water" = {
-            switch (tolower(to.SpeciesName),
-                    "aggregated" = {
-                      ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCOL)
-                      
-                      ColBrown <- f_Brown(Temp=Temp,
-                                          viscosity=DynViscWaterStandard,
-                                          radius=RadS,
-                                          radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(rhoParticle= RhoS,
-                                        radius_Otherparticle = RadCOL,
-                                        rho_Otherparticle = RhoCOL, 
-                                        rhoFluid = rhoMatrix,
-                                        DynViscWaterStandard = DynViscWaterStandard,
-                                        Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
-                                        Longest_side=Longest_side, 
-                                        Intermediate_side=Intermediate_side, 
-                                        Shortest_side=RadS*2, DragMethod=DragMethod)
+  # Build grid
+  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "COL", "SUSP", "Shear","RadCOL","RadCP","Temp","RhoCOL","RhoCP","rhoMatrix","Udarcy")
+  dfs <- mget(args, envir = environment())
+  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  
+  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "FRACs", "alpha")
+  dfs <- mget(args, envir = environment())
+  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  
+  # Output
+  out <- parent$FromDataAndTo("k_HeteroAgglomeration.wsd") |>
+    # From
+    dplyr::left_join(grid_from, by=c("SubCompart" = "SubCompart", "Scale"="Scale", "from.Species"="Species")) |>
+    
+    #To
+    dplyr::left_join(grid_to, by=c("SubCompart" = "SubCompart", "Scale"="Scale", "to.Species"="Species"), suffix=c("_from", "_to")) |>
+    
+    dplyr::mutate( 
+      ColInter = dplyr::case_when(
+        Matrix_from == 'water' & to.Species == 'Small' ~ f_Inter(Shear,RadS,radius_Otherparticle = RadCOL),
+        Matrix_from == 'water' & to.Species == 'Large' ~ f_Inter(Shear,RadS,radius_Otherparticle = RadCP),
+        TRUE ~ NA
+      ),
+      ColBrown = dplyr::case_when(
+        Matrix_from %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ f_Brown(Temp=Temp, viscosity=DynViscWaterStandard, radius=RadS,radius_Otherparticle = RadCOL),
+        Matrix_from == 'water' & to.Species == 'Large' ~ f_Brown(Temp=Temp, viscosity=DynViscWaterStandard, radius=RadS,radius_Otherparticle = RadCP),
+        TRUE ~ NA
+      ),
+      ColGrav = dplyr::case_when(
+        Matrix_from %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ 
+          f_Grav(rhoParticle= RhoS,radius_Otherparticle = RadCOL,rho_Otherparticle = RhoCOL, rhoFluid = rhoMatrix,DynViscWaterStandard = DynViscWaterStandard,
+                 Matrix=Matrix_from,SubCompartName=SubCompartName, Shape=Shape,Longest_side=Longest_side, Intermediate_side=Intermediate_side, 
+                 Shortest_side=RadS*2, DragMethod=DragMethod),
+        Matrix_from == 'water' & to.Species == 'Large' ~ 
+          f_Grav(rhoParticle= RhoS,radius_Otherparticle = RadCP,rho_Otherparticle = RhoCP, rhoFluid = rhoMatrix,DynViscWaterStandard = DynViscWaterStandard,
+                 Matrix=Matrix_from,SubCompartName=SubCompartName, Shape=Shape,Longest_side=Longest_side, Intermediate_side=Intermediate_side, 
+                 Shortest_side=RadS*2, DragMethod=DragMethod),
+        TRUE ~ NA
+      ),
+      NumConcOther = dplyr::case_when(
+        Matrix_from %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ f_NumConc(rad_particle=RadCOL, rho_particle=RhoCOL, MasConc=COL),
+        Matrix_from == 'water' & to.Species == 'Large' ~  f_NumConc(rad_particle=RadCP, rho_particle=RhoCP, MasConc=SUSP),
+        TRUE ~ NA
+      ),
+      DiffS.w = f_Diffusivity(Matrix=Matrix_from, Temp = Temp, DynVisc=DynViscWaterStandard, rad_species=RadS),
+      Por = 1-FRACs,
+      GammPDF = (1-Por)^(1/3),
+      ASPDF = (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6),
+      aspectratioSFP = RadS/RadCP,
+      PecletNumberFP = (Udarcy*2*RadCP)/(DiffS.w),
+      vdWaalsNumberSFP = hamakerSP.w/(kboltz*Temp),
+      BrownSFP = 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053,
+      InterceptSFP = 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125,
+      GravNumberS = (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy),
+      GravSFP = 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053,
+      fTotalSFP = BrownSFP+InterceptSFP+GravSFP,
+      Filter = (3/2)*(1-Por)/(2*RadCP*Por),
+      K_het.sd = Filter*Udarcy*fTotalSFP*alpha,
+      k_HeteroAgglomeration.wsd = dplyr::case_when(
+        Matrix_from == 'water' & to.Species %in% c("Small", "Large") ~ alpha*NumConcOther*(ColBrown+ColGrav+ColInter),
+        Matrix_from %in% c('sediment','soil') & to.Species == 'Small' ~ alpha*NumConcOther*(ColBrown+ColGrav),
+        Matrix_from %in% c('sediment','soil') & to.Species == 'Large' ~ K_het.sd,
+        TRUE ~ NA
+      )
+    ) |>
+    dplyr::filter(!is.na(k_HeteroAgglomeration.wsd)) |>
+    dplyr::select(names, k_HeteroAgglomeration.wsd) |>
+    dplyr::arrange(dplyr::across(names))
+  
+  return(data.frame(out))
 
-                      NumConcOther <- f_NumConc(rad_particle=RadCOL, 
-                                               rho_particle=RhoCOL, 
-                                               MasConc=COL)
-                      
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
-                    },
-                    "attached" = {
-                      ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCP)
-                      
-                      ColBrown <- f_Brown(Temp=Temp,
-                                          viscosity=DynViscWaterStandard,
-                                          radius=RadS,
-                                          radius_Otherparticle = RadCP )
-                      ColGrav <-f_Grav(rhoParticle= RhoS,
-                                       radius_Otherparticle = RadCP,
-                                       rho_Otherparticle = RhoCP, 
-                                       rhoFluid = rhoMatrix,
-                                       DynViscWaterStandard = DynViscWaterStandard,
-                                       Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
-                                       Longest_side=Longest_side, 
-                                       Intermediate_side=Intermediate_side, 
-                                       Shortest_side=RadS*2, DragMethod=DragMethod)
-                      
-                      NumConcOther <- f_NumConc(rad_particle=RadCP, 
-                                               rho_particle=RhoCP, 
-                                               MasConc=SUSP)
-                      
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
-                    },
-                    return(NA)
-            )
-          },
-          "soil" = {
-            switch (tolower(to.SpeciesName),
-                    "aggregated" = {
-                      ColBrown <-f_Brown(Temp=Temp,
-                                         viscosity=DynViscWaterStandard,
-                                         radius=RadS,
-                                         radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(rhoParticle= RhoS,
-                                        radius_Otherparticle = RadCOL,
-                                        rho_Otherparticle = RhoCOL, 
-                                        rhoFluid = rhoWater,
-                                        DynViscWaterStandard = DynViscWaterStandard,
-                                        Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
-                                        Longest_side=Longest_side, 
-                                        Intermediate_side=Intermediate_side, 
-                                        Shortest_side=RadS*2, DragMethod=DragMethod)
-                      
-                      NumConcOther <- f_NumConc(rad_particle=RadCOL, 
-                                               rho_particle=RhoCOL, 
-                                               MasConc=COL)
-                      
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav))
-                    },
-                    "attached" = {
-                      DiffS.w <- f_Diffusivity(Matrix=Matrix, 
-                                               Temp = Temp, 
-                                               DynVisc=DynViscWaterStandard, 
-                                               rad_species=RadS)
-                      
-                      rhoWater <- 998
-                      Por <- 1-to.FRACs
-                      GammPDF <- (1-Por)^(1/3)
-                      
-                      ASPDF <- (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6)
-                      aspectratioSFP <- RadS/RadCP
-                      PecletNumberFP <- (Udarcy*2*RadCP)/(DiffS.w)
-                      vdWaalsNumberSFP <- hamakerSP.w/(kboltz*Temp)
-                      
-                      BrownSFP <- 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053
-                      
-                      InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
-                      
-                      GravNumberS <- (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy)
-                      GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
-                      
-                      fTotalSFP <- BrownSFP+InterceptSFP+GravSFP
-                      
-                      Filter <- (3/2)*(1-Por)/(2*RadCP*Por)
-                      
-                      K_het.sd <- Filter*Udarcy*fTotalSFP*to.alpha 
-                      
-                      return(K_het.sd)
-                    },
-                    return(NA)
-            )
-          },
-          "sediment" = {
-            switch (tolower(to.SpeciesName),
-                    "aggregated" = {
-                      ColBrown <- f_Brown(Temp=Temp,
-                                          viscosity=DynViscWaterStandard,
-                                          radius=RadS,
-                                          radius_Otherparticle = RadCOL )
-                      ColGrav <- f_Grav(rhoParticle= RhoS,
-                                        radius_Otherparticle = RadCOL,
-                                        rho_Otherparticle = RhoCOL, 
-                                        rhoFluid = rhoWater,
-                                        DynViscWaterStandard = DynViscWaterStandard,
-                                        Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
-                                        Longest_side=Longest_side, 
-                                        Intermediate_side=Intermediate_side, 
-                                        Shortest_side=RadS*2, DragMethod=DragMethod)
-                      
-                      NumConcOther <- f_NumConc(rad_particle=RadCOL, 
-                                               rho_particle=RhoCOL, 
-                                               MasConc=COL)
-                      
-                      return(to.alpha*NumConcOther*(ColBrown+ColGrav))
-                    },
-                    "attached" = {
-                      DiffS.w <- f_Diffusivity(Matrix=Matrix, 
-                                               Temp, DynVisc=DynViscWaterStandard, 
-                                               rad_species=RadS)
-                      
-                      Por <- 1-to.FRACs
-                      GammPDF <- (1-Por)^(1/3)
-                      
-                      ASPDF <- (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6)
-                      aspectratioSFP <- RadS/RadCP
-                      PecletNumberFP <- (Udarcy*2*RadCP)/(DiffS.w)
-                      vdWaalsNumberSFP <- hamakerSP.w/(kboltz*Temp)
-                      
-                      BrownSFP <- 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053
-                      
-                      InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
-                      
-                      GravNumberS <- (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy)
-                      GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
-                      
-                      fTotalSFP <- BrownSFP+InterceptSFP+GravSFP
-                      
-                      Filter <- (3/2)*(1-Por)/(2*RadCP*Por)
-                      
-                      K_het.sd <- Filter*Udarcy*fTotalSFP*to.alpha 
-                      
-                      return(K_het.sd)
-                    },
-                    return(NA)
-            )
-          },
-          return(NA)
-  )
-  
+
+  # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & 
+  #     (SubCompartName %in% c("agriculturalsoil", "othersoil", "lakesediment", "freshwatersediment"))) {
+  #   return(NA)
+  # }
+  # 
+  # else if ((ScaleName %in% c("Regional", "Continental")) &&
+  #          (SubCompartName == "deepocean") &&
+  #          (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+  #   return(NA)
+  # }
+  # 
+  # rhoWater = 998 # easyfix could be done more elegantly
+  # kboltz <- constants::syms$k
+  # GN <- constants::syms$gn
+  # 
+  # if(is.na(RadS) || is.null(RadS)) { RadS = Shortest_side/2 }
+  # 
+  # switch(tolower(Matrix),
+  #         "water" = {
+  #           switch (tolower(to.SpeciesName),
+  #                   "aggregated" = {
+  #                     ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCOL)
+  #                     
+  #                     ColBrown <- f_Brown(Temp=Temp,
+  #                                         viscosity=DynViscWaterStandard,
+  #                                         radius=RadS,
+  #                                         radius_Otherparticle = RadCOL )
+  #                     ColGrav <- f_Grav(rhoParticle= RhoS,
+  #                                       radius_Otherparticle = RadCOL,
+  #                                       rho_Otherparticle = RhoCOL, 
+  #                                       rhoFluid = rhoMatrix,
+  #                                       DynViscWaterStandard = DynViscWaterStandard,
+  #                                       Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
+  #                                       Longest_side=Longest_side, 
+  #                                       Intermediate_side=Intermediate_side, 
+  #                                       Shortest_side=RadS*2, DragMethod=DragMethod)
+  # 
+  #                     NumConcOther <- f_NumConc(rad_particle=RadCOL, 
+  #                                              rho_particle=RhoCOL, 
+  #                                              MasConc=COL)
+  #                     
+  #                     return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
+  #                   },
+  #                   "attached" = {
+  #                     ColInter <- f_Inter(Shear,RadS,radius_Otherparticle = RadCP)
+  #                     
+  #                     ColBrown <- f_Brown(Temp=Temp,
+  #                                         viscosity=DynViscWaterStandard,
+  #                                         radius=RadS,
+  #                                         radius_Otherparticle = RadCP )
+  #                     ColGrav <-f_Grav(rhoParticle= RhoS,
+  #                                      radius_Otherparticle = RadCP,
+  #                                      rho_Otherparticle = RhoCP, 
+  #                                      rhoFluid = rhoMatrix,
+  #                                      DynViscWaterStandard = DynViscWaterStandard,
+  #                                      Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
+  #                                      Longest_side=Longest_side, 
+  #                                      Intermediate_side=Intermediate_side, 
+  #                                      Shortest_side=RadS*2, DragMethod=DragMethod)
+  #                     
+  #                     NumConcOther <- f_NumConc(rad_particle=RadCP, 
+  #                                              rho_particle=RhoCP, 
+  #                                              MasConc=SUSP)
+  #                     
+  #                     return(to.alpha*NumConcOther*(ColBrown+ColGrav+ColInter))
+  #                   },
+  #                   return(NA)
+  #           )
+  #         },
+  #         "soil" = {
+  #           switch (tolower(to.SpeciesName),
+  #                   "aggregated" = {
+  #                     ColBrown <-f_Brown(Temp=Temp,
+  #                                        viscosity=DynViscWaterStandard,
+  #                                        radius=RadS,
+  #                                        radius_Otherparticle = RadCOL )
+  #                     ColGrav <- f_Grav(rhoParticle= RhoS,
+  #                                       radius_Otherparticle = RadCOL,
+  #                                       rho_Otherparticle = RhoCOL, 
+  #                                       rhoFluid = rhoWater,
+  #                                       DynViscWaterStandard = DynViscWaterStandard,
+  #                                       Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
+  #                                       Longest_side=Longest_side, 
+  #                                       Intermediate_side=Intermediate_side, 
+  #                                       Shortest_side=RadS*2, DragMethod=DragMethod)
+  #                     
+  #                     NumConcOther <- f_NumConc(rad_particle=RadCOL, 
+  #                                              rho_particle=RhoCOL, 
+  #                                              MasConc=COL)
+  #                     
+  #                     return(to.alpha*NumConcOther*(ColBrown+ColGrav))
+  #                   },
+  #                   "attached" = {
+  #                     DiffS.w <- f_Diffusivity(Matrix=Matrix, 
+  #                                              Temp = Temp, 
+  #                                              DynVisc=DynViscWaterStandard, 
+  #                                              rad_species=RadS)
+  #                     
+  #                     rhoWater <- 998
+  #                     Por <- 1-to.FRACs
+  #                     GammPDF <- (1-Por)^(1/3)
+  #                     
+  #                     ASPDF <- (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6)
+  #                     aspectratioSFP <- RadS/RadCP
+  #                     PecletNumberFP <- (Udarcy*2*RadCP)/(DiffS.w)
+  #                     vdWaalsNumberSFP <- hamakerSP.w/(kboltz*Temp)
+  #                     
+  #                     BrownSFP <- 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053
+  #                     
+  #                     InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
+  #                     
+  #                     GravNumberS <- (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy)
+  #                     GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
+  #                     
+  #                     fTotalSFP <- BrownSFP+InterceptSFP+GravSFP
+  #                     
+  #                     Filter <- (3/2)*(1-Por)/(2*RadCP*Por)
+  #                     
+  #                     K_het.sd <- Filter*Udarcy*fTotalSFP*to.alpha 
+  #                     
+  #                     return(K_het.sd)
+  #                   },
+  #                   return(NA)
+  #           )
+  #         },
+  #         "sediment" = {
+  #           switch (tolower(to.SpeciesName),
+  #                   "aggregated" = {
+  #                     ColBrown <- f_Brown(Temp=Temp,
+  #                                         viscosity=DynViscWaterStandard,
+  #                                         radius=RadS,
+  #                                         radius_Otherparticle = RadCOL )
+  #                     ColGrav <- f_Grav(rhoParticle= RhoS,
+  #                                       radius_Otherparticle = RadCOL,
+  #                                       rho_Otherparticle = RhoCOL, 
+  #                                       rhoFluid = rhoWater,
+  #                                       DynViscWaterStandard = DynViscWaterStandard,
+  #                                       Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,
+  #                                       Longest_side=Longest_side, 
+  #                                       Intermediate_side=Intermediate_side, 
+  #                                       Shortest_side=RadS*2, DragMethod=DragMethod)
+  #                     
+  #                     NumConcOther <- f_NumConc(rad_particle=RadCOL, 
+  #                                              rho_particle=RhoCOL, 
+  #                                              MasConc=COL)
+  #                     
+  #                     return(to.alpha*NumConcOther*(ColBrown+ColGrav))
+  #                   },
+  #                   "attached" = {
+  #                     DiffS.w <- f_Diffusivity(Matrix=Matrix, 
+  #                                              Temp, DynVisc=DynViscWaterStandard, 
+  #                                              rad_species=RadS)
+  #                     
+  #                     Por <- 1-to.FRACs
+  #                     GammPDF <- (1-Por)^(1/3)
+  #                     
+  #                     ASPDF <- (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6)
+  #                     aspectratioSFP <- RadS/RadCP
+  #                     PecletNumberFP <- (Udarcy*2*RadCP)/(DiffS.w)
+  #                     vdWaalsNumberSFP <- hamakerSP.w/(kboltz*Temp)
+  #                     
+  #                     BrownSFP <- 2.4*ASPDF^(1/3)*aspectratioSFP^(-0.081)*PecletNumberFP^-0.715*vdWaalsNumberSFP^0.053
+  #                     
+  #                     InterceptSFP <- 0.55*aspectratioSFP^1.55*PecletNumberFP^-0.125*vdWaalsNumberSFP^0.125
+  #                     
+  #                     GravNumberS <- (2*RadS^2*(RhoS-rhoWater)*GN)/(9*DynViscWaterStandard*Udarcy)
+  #                     GravSFP <- 0.22*aspectratioSFP^-0.24*GravNumberS^1.11*vdWaalsNumberSFP^0.053
+  #                     
+  #                     fTotalSFP <- BrownSFP+InterceptSFP+GravSFP
+  #                     
+  #                     Filter <- (3/2)*(1-Por)/(2*RadCP*Por)
+  #                     
+  #                     K_het.sd <- Filter*Udarcy*fTotalSFP*to.alpha 
+  #                     
+  #                     return(K_het.sd)
+  #                   },
+  #                   return(NA)
+  #           )
+  #         },
+  #         return(NA)
+  # )
+  # 
 
 }
 
