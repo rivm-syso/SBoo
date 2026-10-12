@@ -11,25 +11,39 @@
 #' @return Diffusivity [m2/s]
 #' @export
 f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL) {
-  if(!is.numeric(Temp)){
-    warning("Temp missing in f_Diffusivity")
-    return(NA)
-  }
+  
+  # if(!is.numeric(Temp)){
+  #   warning("Temp missing in f_Diffusivity")
+  #   return(NA)
+  # }
+  
   if(!is.numeric(DynVisc)){
     warning("DynVisc missing in f_Diffusivity")
     return(NA)
   }
-  if(!is.numeric(rad_species)){
-    warning("rad_species missing in f_Diffusivity")
-    return(NA)
-  }
+  # if(!is.numeric(rad_species)){
+  #   warning("rad_species missing in f_Diffusivity")
+  #   return(NA)
+  # }
+  
   kboltz <- constants::syms$k
-  if (Matrix == "air") {
-    if (is.null(Cunningham))
-      Cunningham <- f_Cunningham(rad_species)
-    return ((kboltz*Temp*Cunningham)/(6*pi*DynVisc*rad_species))
-  } else {
-    (kboltz*Temp)/(6*pi*DynVisc*rad_species)
-  }
-
+  if (is.null(Cunningham))
+    Cunningham <- f_Cunningham(rad_species)
+  
+  # Allow vectors
+  return(ifelse(Matrix == 'air', 
+                (kboltz*Temp*Cunningham)/(6*pi*DynVisc*rad_species), 
+                (kboltz*Temp)/(6*pi*DynVisc*rad_species)
+  )
+  )
+  
+  # if (Matrix == "air") {
+  #   if (is.null(Cunningham))
+  #     Cunningham <- f_Cunningham(rad_species)
+  #   return ((kboltz*Temp*Cunningham)/(6*pi*DynVisc*rad_species))
+  # } else {
+  #   (kboltz*Temp)/(6*pi*DynVisc*rad_species)
+  # }
+  
 }
+

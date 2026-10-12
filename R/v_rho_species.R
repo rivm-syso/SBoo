@@ -22,9 +22,9 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
                          Shortest_side, Intermediate_side,
                          Longest_side, Shape, Regional_and_Continental_deepocean,
                          parent){
-  if (!Shape %in% c("Ellipsoid", "Cube", "Box", "Film", "Cylindric - circular", "Cylindric - elliptic", "Fiber", "Sphere", "Default")) {
-    stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, Fiber, or Cylindric - elliptic.")
-  }
+  # if (!Shape %in% c("Ellipsoid", "Cube", "Box", "Film", "Cylindric - circular", "Cylindric - elliptic", "Fiber", "Sphere", "Default")) {
+  #   stop("Invalid Shape! Please choose from Sphere, Ellipsoid, Cube, Box, Cylindric - circular, Fiber, or Cylindric - elliptic.")
+  # }
   
   out <- ScaleName |>
     tidyr::expand_grid(SubCompartName, SpeciesName) |>
@@ -45,10 +45,7 @@ rho_species <- function (SpeciesName, SubCompartName,ScaleName,
       RadS = dplyr::case_when(
         Shape %in% c("Sphere", "Default") & (is.na(RadS) | is.null(RadS)) ~ Shortest_side/2,
         TRUE ~ RadS
-      )
-    ) |>
-    dplyr::rowwise() |>
-    dplyr::mutate(
+      ),
       Vol_RadS = fVol(RadS),
       Vol_RadNuc = fVol(RadNuc),
       Vol_RadCOL = fVol(RadCOL),

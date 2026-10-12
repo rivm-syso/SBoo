@@ -7,6 +7,9 @@
 #' @export
 k_Escape <- function(t_half_Escape, parent){
   
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Escape")))
+  
   out <- parent$FromDataAndTo("k_Escape") |>
     dplyr::mutate(
       t_half_Escape = t_half_Escape,
@@ -17,8 +20,8 @@ k_Escape <- function(t_half_Escape, parent){
       )
     ) |>
     dplyr::filter(!is.na(k_Escape)) |>
-    dplyr::select(process, from.SubCompart, to.SubCompart, Scale, Species, k_Escape) |>
-    dplyr::arrange(process, from.SubCompart, to.SubCompart, Scale, Species)
+    dplyr::select(names, k_Escape) |>
+    dplyr::arrange(dplyr::across(names))
   
   return(data.frame(out))
   

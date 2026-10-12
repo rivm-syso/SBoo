@@ -39,7 +39,7 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
                                                           is.null(Shortest_side))) {
     stop(paste("For", Shape, "shape a side dimension is missing (e.g. Longest_side"))
   }
-
+ 
   out <- ScaleName |>
     tidyr::expand_grid(SubCompartName, SpeciesName) |>
     parent$states$clipStates() |>
@@ -64,18 +64,14 @@ rad_species <- function(SpeciesName, SubCompartName,ScaleName,
       RadS = dplyr::case_when(
         Shape %in% c("Sphere", "Default") & (is.na(RadS) | is.null(RadS)) ~ Shortest_side/2,
         TRUE ~ RadS
-      )
-    ) |>
-    # Calculate volumes rowwise
-    dplyr::rowwise() |>
-    dplyr::mutate(
+      ),
       Vol_RadS = fVol(RadS),
       Vol_RadNuc = fVol(RadNuc),
       Vol_RadCOL = fVol(RadCOL),
       Vol_RadCP = fVol(RadCP),
       Vol_shape = fVol(Shape = Shape,Longest_side = Longest_side,Intermediate_side = Intermediate_side,Shortest_side = Shortest_side)
     ) |>
-    dplyr::ungroup() |>
+    
     # Determine rad species
     dplyr::mutate(
       rad_species = dplyr::case_when(

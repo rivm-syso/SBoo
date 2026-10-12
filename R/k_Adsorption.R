@@ -29,90 +29,67 @@ k_Adsorption <- function (FRingas, FRinw, MTC_2sd, FRorig_spw,
                           SubCompartName, ScaleName, Test, Regional_and_Continental_deepocean,
                           parent, SpeciesName) {
   
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Adsorption")))
+  
   # copies of whole dataframes for the test argument
   FRorig_og = FRorig
   FRorig_spw_og = FRorig_spw
   
-  # All data needed for the to-compartments
-  to <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
-    dplyr::left_join(Matrix) |>
-    dplyr::left_join(FRorig) |>
-    dplyr::left_join(FRorig) |>
-    dplyr::left_join(Kscompw) |>
-    dplyr::left_join(FRorig_spw) |>
-    dplyr::left_join(MTC_2a) |>
-    dplyr::left_join(Area) |>
-    dplyr::left_join(MTC_2w) |>
-    parent$states$clipStates() |>
-    dplyr::rename(to.SubCompart = SubCompart, to.Matrix = Matrix, to.MTC_2w = MTC_2w) |>
-    dplyr::select(-ScaleName, -SubCompartName, -SpeciesName) |>
-    dplyr::filter(to.Matrix %in% c("water", "soil", "sediment")) |>
-    dplyr::mutate(
-      from.Matrix = dplyr::case_when(
-        to.Matrix == 'water' ~ 'air',
-        to.Matrix == 'soil' ~ 'air',
-        to.Matrix == 'sediment' ~ 'water',
-        TRUE ~ NA
-      )
-    )
+  # Build grid from
+  args <- c("SubCompartName", "ScaleName", "SpeciesName", "Matrix","FRingas", "FRinw", "MTC_2sd","MTC_2w", "MTC_2s", "Kacompw", "VertDistance", "AreaLand", "AreaSea")
+  dfs <- mget(args, envir = environment())
+  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
   
-  # All data needed for the from compartments, join with to for from-to row
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
-    dplyr::left_join(Matrix) |>
-    dplyr::left_join(MTC_2w) |>
-    dplyr::left_join(MTC_2s) |>
-    dplyr::left_join(MTC_2sd) |>
-    dplyr::left_join(Kacompw) |>
-    dplyr::left_join(FRingas) |>
-    dplyr::left_join(AreaLand) |>
-    dplyr::left_join(AreaSea) |>
-    dplyr::left_join(VertDistance) |>
-    dplyr::left_join(FRinw) |>
-    parent$states$clipStates() |>
-    dplyr::filter(Matrix %in% c("air", "water")) |>
-    dplyr::left_join(to, by=c("Scale" = "Scale", "Matrix" = "from.Matrix", "Species" = "Species")) |>
+  # Build grid to
+  args <- c("SubCompartName", "ScaleName", "SpeciesName", "Matrix","FRorig", "Kscompw", "FRorig_spw","MTC_2a", "Area", "MTC_2w")
+  dfs <- mget(args, envir = environment())
+  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  
+  out <- parent$FromDataAndTo("k_Adsorption") |>
+    # From
+    dplyr::left_join(grid_from, by=c("Scale" = "Scale", "from.SubCompart" = "SubCompart", "Species"= "Species")) |>
+    
+    # To met suffix 
+    dplyr::left_join(grid_to, by=c("Scale" = "Scale", "to.SubCompart" = "SubCompart", "Species"= "Species"), suffix = c("_from", "_to")) |>
+    
     dplyr::mutate(
       FRorig = dplyr::case_when(
-        to.Matrix == 'water' & as.character(Test) == 'TRUE' ~ dplyr::filter(FRorig_og, SubCompart =='river') |> dplyr::pull(FRorig),
+        Matrix_to == 'water' & as.character(Test) == 'TRUE' ~ dplyr::filter(FRorig_og, SubCompart =='river') |> dplyr::pull(FRorig),
         TRUE ~ FRorig
       ),
       FRorig_spw = dplyr::case_when(
-        to.Matrix == 'soil' & as.character(Test) == 'TRUE' ~ dplyr::filter(FRorig_spw_og, SubCompart =='naturalsoil') |> dplyr::pull(FRorig_spw),
+        Matrix_to == 'soil' & as.character(Test) == 'TRUE' ~ dplyr::filter(FRorig_spw_og, SubCompart =='naturalsoil') |> dplyr::pull(FRorig_spw),
         TRUE ~ FRorig_spw
       ),
       GASABS = dplyr::case_when(
-        to.Matrix == 'water' ~ FRingas*(MTC_2w*MTC_2a/(MTC_2w*(Kacompw*FRorig)+MTC_2a)),
-        to.Matrix == 'soil' ~ FRingas*(MTC_2s*MTC_2a)/(MTC_2s*(Kacompw*FRorig_spw)/Kscompw+MTC_2a),
+        Matrix_to == 'water' ~ FRingas*(MTC_2w_from*MTC_2a/(MTC_2w_from*(Kacompw*FRorig)+MTC_2a)),
+        Matrix_to == 'soil' ~ FRingas*(MTC_2s*MTC_2a)/(MTC_2s*(Kacompw*FRorig_spw)/Kscompw+MTC_2a),
         TRUE ~ NA
       ),
       AreaFrac = dplyr::case_when(
-        to.Matrix == 'water' ~ Area/(AreaLand+AreaSea),
-        to.Matrix == 'soil' ~ Area/(AreaLand+AreaSea),
+        Matrix_to == 'water' ~ Area/(AreaLand+AreaSea),
+        Matrix_to == 'soil' ~ Area/(AreaLand+AreaSea),
         TRUE ~ NA
       ),
       ADSORB = dplyr::case_when(
-        to.Matrix == 'sediment' ~ (MTC_2sd*to.MTC_2w)/(MTC_2sd+to.MTC_2w)*FRinw,
+        Matrix_to == 'sediment' ~ (MTC_2sd*MTC_2w_to)/(MTC_2sd+MTC_2w_to)*FRinw,
         TRUE ~ NA
       ),
       k_Adsorption = dplyr::case_when(
-        to.Matrix == 'water' ~ GASABS/VertDistance*AreaFrac,
-        to.Matrix == 'soil' ~ GASABS/VertDistance*AreaFrac,
-        to.Matrix == 'sediment' & as.character(Test) == "TRUE" & to.SubCompart == "lakesediment" ~ NA,
-        to.Matrix == 'sediment' ~ ADSORB/VertDistance,
+        Matrix_to == 'water' ~ GASABS/VertDistance*AreaFrac,
+        Matrix_to == 'soil' ~ GASABS/VertDistance*AreaFrac,
+        Matrix_to == 'sediment' & as.character(Test) == "TRUE" & to.SubCompart == "lakesediment" ~ NA,
+        Matrix_to == 'sediment' ~ ADSORB/VertDistance,
         TRUE ~ NA
       )
     ) |>
-    dplyr::rename(from.SubCompart = SubCompart) |>
-    dplyr::filter(!is.na(k_Adsorption)) |> 
-    dplyr::arrange(Scale, from.SubCompart, Species) |>
-    dplyr::select(Scale, from.SubCompart, to.SubCompart, Species, k_Adsorption)
-    
+    dplyr::filter(!is.na(k_Adsorption)) |>
+    dplyr::select(names, k_Adsorption) |>
+    dplyr::arrange(dplyr::across(names))
+
   return(data.frame(out))
-  
-  
-  # 
+
   # if ((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompartName == "sea") {
   #   return(NA)
   # }

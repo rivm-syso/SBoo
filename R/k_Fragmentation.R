@@ -10,11 +10,20 @@
 
 k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, 	Regional_and_Continental_deepocean, parent, SpeciesName){
   
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
-    dplyr::full_join(kfrag) |>
-    parent$states$clipStates() |>
-    dplyr::mutate(
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Fragmentation")))
+  
+  # Build grid
+  args <- c("ScaleName", "SubCompartName", "SpeciesName", "kfrag")
+  dfs <- mget(args, envir = environment())
+  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  
+  # Output
+  out <- parent$FromDataAndTo("k_Fragmentation") |>
+    # From
+    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
+    
+    dplyr::mutate( 
       k_Fragmentation = dplyr::case_when(
         ScaleName %in% c("Tropic", "Moderate", "Arctic") & 
           SubCompartName %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") ~ NA_real_,
@@ -23,8 +32,8 @@ k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, 	Regional_and_Con
       )
     ) |>
     dplyr::filter(!is.na(k_Fragmentation)) |>
-    dplyr::select(Scale, SubCompart, k_Fragmentation) |>
-    dplyr::arrange(Scale, SubCompart)
+    dplyr::select(names, k_Fragmentation) |>
+    dplyr::arrange(dplyr::across(names))
   
   return(data.frame(out))
   

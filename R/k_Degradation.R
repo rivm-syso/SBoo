@@ -19,17 +19,20 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
                           Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Regional_and_Continental_deepocean, parent) {
+ 
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Degradation")))
   
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
-    parent$states$clipStates() |>
-    dplyr::left_join(Matrix, by=c("SubCompart")) |>
-    dplyr::left_join(FRingas, by=c("Scale", "SubCompart")) |>
-    dplyr::left_join(KdegDorC, by=c("Scale", "SubCompart", "Species")) |>
-    dplyr::left_join(C.OHrad, by=c("Scale")) |>
-    dplyr::left_join(Tempfactor, by=c("Scale", "SubCompart", "Species")) |>
-    dplyr::left_join(FRinw, by=c("Scale", "SubCompart")) |>
-    dplyr::left_join(BACTcomp, by=c("Species" = "Species", "Matrix" = "Compartment")) |>
+  # Build grid
+  args <- c("FRingas", "KdegDorC", "C.OHrad","Tempfactor","FRinw","BACTcomp","Matrix", "SpeciesName", "SubCompartName", "ScaleName")
+  dfs <- mget(args, envir = environment())
+  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y))))
+  
+  # Output
+  out <- parent$FromDataAndTo("k_Degradation") |>
+    # From
+    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
+
     dplyr::mutate(
       k_Degradation = dplyr::case_when(
         # Exclusions of process are not needed as clipStates removes these combinations of compartments, model data is here defined in function!
@@ -50,8 +53,9 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
         TRUE ~ NA
       )
     ) |>
-    dplyr::select(Scale,SubCompart,Species,k_Degradation) |>
-    dplyr::arrange(Scale,SubCompart,Species) 
+    dplyr::filter(!is.na(k_Degradation)) |>
+    dplyr::select(names, k_Degradation) |>
+    dplyr::arrange(dplyr::across(names))
   
   return(data.frame(out))
   
