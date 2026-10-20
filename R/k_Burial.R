@@ -10,11 +10,6 @@
 
 k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent, SpeciesName){
   
-  # Custom join func
-  join_suffix <- function(x, y, by) {
-    dplyr::left_join(x, y, by = by, suffix = c("_from", "_to"))
-  }
-  
   # Names of dataframe
   names <- dplyr::all_of(names(parent$FromDataAndTo("k_Burial")))
   
@@ -36,14 +31,15 @@ k_Burial <- function(VertDistance, NETsedrate, ScaleName, SubCompartName, parent
   out <- parent$FromDataAndTo("k_Burial") |>
     # From
     dplyr::left_join(VertDistance, by=c("Scale" = "Scale", "from.SubCompart" = "SubCompart")) |>
+
+    dplyr::filter(!is.na(VertDistance)) |>
     
     # To met functie om suffix in te stellen
-    join_suffix(NETsedrate_sediments, by=c("Scale" = "Scale", "to.SubCompart" = "SubCompart")) |>
+    dplyr::left_join(NETsedrate_sediments, by=c("Scale" = "Scale", "to.SubCompart" = "SubCompart")) |>
     
     dplyr::mutate(
       k_Burial = NETsedrate / VertDistance
     ) |>
-    dplyr::filter(!is.na(k_Burial)) |>
     dplyr::select(names, k_Burial) |>
     dplyr::arrange(dplyr::across(names))
   

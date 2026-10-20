@@ -48,6 +48,11 @@ SBcore <- R6::R6Class("SBcore",
         NonSubstanceList <- self$SuBmode[!(names(self$SuBmode) == "Substance")]
         private$Block2DAG(SubstanceList)
       }
+
+      # used as "setting" in ReactiveDAG
+      speciesInUse <- private$States$asDataFrame |>
+        dplyr::pull(Species) |> unique()
+      private$myReactiveDAG$add_source("species", speciesInUse)
       
       # flows 4 advection
       flows <- self$RawTables$FlowIO
@@ -57,11 +62,23 @@ SBcore <- R6::R6Class("SBcore",
       processes4Mode <- process_functions$Process[process_functions[, private$SBmode] == "X"]
 
       SBvars <- self$build_DAG(unique(flows$FlowName), processes4Mode)
-      # print(SBvars)
-
+      
+      message("processes (besides advection) ", do.call(paste, as.list(processes4Mode)))
+      
+      # assuming unknown variable should be NA (function should raise the error)
+      SBvars$missing_vars
+      misvarstr <- do.call(paste, SBvars$missing_vars)
+      lapply(SBvars$missing_vars, function(x) private$myReactiveDAG$add_source(x, NA))
+      message(paste("unknown parameters (set to NA): ", misvarstr))
+      
       # store (names of) flows and processes for UpdateKaas()
       private$flows <- unique(flows$FlowName)
-      private$processes <- processes4Mode
+      # warning for updated Advection?
+      if ("Advection" %in% processes4Mode) {
+        warning("no need to define Advection")
+        processes4Mode <- processes4Mode[processes4Mode != "Advection"]
+      } 
+      private$processes <- paste0("k_", processes4Mode)
       
     },
 
@@ -430,7 +447,6 @@ SBcore <- R6::R6Class("SBcore",
     #' @description runs (or tries to) the calculation DAG
     #' Parameters are no longer usefull with R6ReactiveDAG
     UpdateKaas = function(){ 
-      browser()
 
       # Calculate (fetch) flows, assign to Advection process and add to kaas
       fromVolume <- self$fetchData("Volume")
@@ -443,6 +459,8 @@ SBcore <- R6::R6Class("SBcore",
         self$fetchData(procs)
       })
       
+      # rename all to k / expand 2 all from/to dim
+      ProcessKaas <- private$PrepareKaaslist(ProcessKaas)
       private$SBkaas <- do.call(rbind, c(ProcessKaas, asProcess_list))
       
       #return only for purpose of transparent update; side effect is done
@@ -513,11 +531,13 @@ SBcore <- R6::R6Class("SBcore",
         ) |>
         unique()
       needvars <- needvars[!needvars %in% private$myReactiveDAG$knowns]
+      missing_vars <- list()
       
       # complete SBvars
       repeat {
-        SBoofunction2do <- needvars[needvars %in% my_ls]
-        SBoofunction2do <- SBoofunction2do[!SBoofunction2do %in% private$myReactiveDAG$knowns]
+        needvars <- needvars[!needvars %in% c("parent", "...", "TRUE")] # parent resolved by ReactiveDAG, ... by R, TRUE??
+        missing_vars <- c(missing_vars, needvars[!(needvars %in% my_ls | needvars %in% private$myReactiveDAG$knowns)])
+        SBoofunction2do <- needvars[needvars %in% my_ls | needvars %in% private$myReactiveDAG$knowns]
         
         if (length(SBoofunction2do) == 0) {
           break
@@ -577,8 +597,8 @@ SBcore <- R6::R6Class("SBcore",
         # }
       }
 
-      # to debug vars
-      complete_nodes_piter
+      # to debug vars, ...
+      return (list(complete_nodes_piter = complete_nodes_piter, missing_vars = unique(missing_vars)))
     },  
     
     #' @description set a constant in the internal data, to enable use by SB variable etc.
@@ -597,25 +617,6 @@ SBcore <- R6::R6Class("SBcore",
       }
     },
     
-    #' @description  Which Graph elements SBVars depend on?
-    DependOn = function(SBVars){
-      AllDependVar <- NULL
-      DependVar <- SBVars
-      numDepend <- 1 #anything > 0
-      while (numDepend > 0) {
-        DependVar <- unique(private$nodeList$Params[private$nodeList$Calc %in% DependVar])
-        AllDependVar <- unique(c(AllDependVar, DependVar))
-        numDepend <- length(DependVar)
-      }
-      return(AllDependVar)
-    },
-    
-    #' @description Verifies the presence of needed variables for the calculation of 
-    #' all processes
-    whichUnresolved = function(){
-      private$CheckTree()
-    },
-
     #' @description if UpdateRows is a list of variables (each containing a fetchdata() result): see private$MutateVar,
     #' if UpdateRows is (a csv filename of) a single dataframe it will be converted before the call
     mutateVars = function(UpdateRows) {
@@ -679,25 +680,7 @@ SBcore <- R6::R6Class("SBcore",
     #' @param keys dims that determines the table to be updated, see whichDataTable
     #' @param TableName alternative to keys: provide the tablename. Use with care!
     UpdateData = function(UpdateDF, keys, TableName = NULL){
-      if (is.null(TableName)) {
-        TableName <- private$WhichDataTable(names(keys))
-        stopifnot(!is.null(TableName))
-      } 
-      nowTable <- private$SB4Ndata[[TableName]]
-      #remove current rows for keys; exception for CONSTANTS: keys = T
-      if (length(keys)==1 && keys){
-        private$SB4Ndata[[TableName]] <- UpdateDF
-      } else {#keys of the dimensions
-        DelRows <- sapply(names(keys), function(filter){
-          nowTable[,filter] == keys[[filter]]
-        })
-        if (ncol(DelRows) > 1) {
-          DelRows <- apply(DelRows, 1, all)
-        }
-        private$SB4Ndata[[TableName]] <- rbind(
-          nowTable[!DelRows,],
-          UpdateDF[,names(nowTable)])
-      }
+      stop("R6Core$UpdateData needs adapting to ReactiveDAG")
     },
     
     #' @description derive transfer processes from datalayer
@@ -742,11 +725,14 @@ SBcore <- R6::R6Class("SBcore",
       stopifnot(sum(hit3D) == 1) #there can only be one
       one3D <- The3D[hit3D]
       
+      from.one3D <- paste("from", one3D, sep = ".")
+      to.one3D <- paste("to", one3D, sep = ".")
+      
       dim1 <- self$RawTables$ProcessFromTo[[one3D]] |>
         dplyr::filter(process == processName) |>
         dplyr::rename(
-          !!paste("from", one3D, sep = ".") := from,
-          !!paste("to",   one3D, sep = ".") := to
+          !!from.one3D := from,
+          !!to.one3D := to
         )
       
       ########## local helper 
@@ -780,6 +766,26 @@ SBcore <- R6::R6Class("SBcore",
         names(dim1)[names(dim1) == "y"] <- oDim
       }
       
+      # test if both from and to states present in self$states
+      dimfrom <- dim1 |>
+        dplyr::mutate(.row_id = dplyr::row_number()) |> #keep rownumbers to keep from dim1
+        dplyr::select(Other, !!from.one3D, .row_id) |>
+        dplyr::rename(!!one3D := !!from.one3D) |>
+        self$states$clipStates() 
+      dimto <- dim1 |>
+        dplyr::mutate(.row_id = dplyr::row_number()) |> #keep rownumbers to keep from dim1
+        dplyr::select(Other, !!to.one3D, .row_id) |>
+        dplyr::rename(!!one3D := !!to.one3D) |>
+        self$states$clipStates() 
+      # delete those rows for which either from-to state do not exist
+      if (nrow(dimfrom) != nrow(dim1) | nrow(dimto) != nrow(dim1)) {
+        existrows <- union(
+          dimfrom |> dplyr::pull(.row_id),
+          dimto |> dplyr::pull(.row_id)
+        )
+        dim1 <- dim1 |>
+          dplyr::slice(existrows)
+      }
       return(dim1)
     },
     
@@ -788,8 +794,9 @@ SBcore <- R6::R6Class("SBcore",
       whole_world <- list(
         substance = private$Substance,
         states = private$States$asDataFrame,
-        SB4Ndata = private$SB4Ndata,
-        filterstates = private$filterstates)
+        DAGdata = private$myreactiveDAG$sources) # lapply fetchdata?
+        # private$myreactiveDAG$params ? not (yet) in use
+        # not used anymore filterstates = private$filterstates)
       saveRDS(whole_world, file = filename)
     },
     
@@ -798,8 +805,8 @@ SBcore <- R6::R6Class("SBcore",
       private$Substance <- whole_world$substance
       private$States <- SBstates$new(whole_world$states)
       private$States$myCore <- self
-      private$SB4Ndata <- whole_world$SB4Ndata
-      private$filterstates <- whole_world$filterstates
+      private$myreactiveDAG$sources <- whole_world$DAGdata 
+      # not used anymore private$filterstates <- whole_world$filterstates
     }
   ), 
   
@@ -941,17 +948,7 @@ SBcore <- R6::R6Class("SBcore",
     },
     
     filterStates = function(value){
-      if (missing(value)) {
-        return(private$filterstates)
-      } else {
-        if (!"list" %in% class(value)) {
-          stop("filterStates is expected a *list* of one or more values of ScaleName=, and/or SubCompartName=, and/or SpeciesName=")
-        }
-        if (!all(names(value) %in% c("ScaleName", "SubCompartName", "SpeciesName"))) {
-          stop("filterStates is expected a list of one or more values of ScaleName=, and/or SubCompartName=, and/or SpeciesName=")
-        }
-        private$filterstates <- value
-      }
+      stop("use methods of SBstates class")
     }
   ),
   
@@ -1205,46 +1202,32 @@ SBcore <- R6::R6Class("SBcore",
 
     },
     
-    cleanupCGAbove = function(VarName) {
-      #browser()
-      VarNameVector <- VarName
-      MoreVarNames <- VarName
-      repeat {
-        candidotes <- private$nodeList[private$nodeList$Calc %in% MoreVarNames,]
-        NoCandid <- private$nodeList[private$nodeList$Params %in% candidotes$Params &
-                                       !private$nodeList$Calc %in% VarNameVector,]
-        MoreVarNames <- candidotes$Params[!candidotes$Params %in% NoCandid$Params]
-        if (length(MoreVarNames) == 0) break
-        VarNameVector <- unique(c(VarNameVector, MoreVarNames))
-      }
-      #TODO remove from data?
-      cat (do.call(paste, c("removed nodes for", VarNameVector)))
-      private$nodeList <- private$nodeList[private$nodeList$Calc %in% VarNameVector,]
-    },
-    
-    CheckTree = function(){ #recursive checking the calculation of the DAG of processes/variables
-      TestTree <- private$nodeList
-      #remove the ones present in the data; these you have
-      MetaData <- self$metaData()
-      TestTree$Params[TestTree$Params %in% MetaData$AttributeNames] <- ""
-      AllWant <- unique(TestTree$Calc)
-      TestTree$Check <- TestTree$Params == "" 
-      repeat{
-        CountCantdo <- length(which(!TestTree$Check))
-        CantDo <- unique(TestTree$Calc[!TestTree$Check])
-        CanDo <- AllWant[!AllWant %in% CantDo]
-        TestTree$Check <- TestTree$Check | TestTree$Params %in% CanDo
-        if (CountCantdo == length(which(!TestTree$Check))) break
-      }
-      unique(TestTree$Params[!TestTree$Check])
-    },
-    
-    IntegrateKaaslist = function(kaaslist){
-      #select kaas names only for all kaaslist - data.frames
+    PrepareKaaslist = function(kaaslist){
+      # find columnname starting with k_
+      # rename to "k" and filter values > 0 for that column
+      # find changing dim for this process, extend with from, to for other dim
       kaaslist <- kaaslist[!sapply(kaaslist, anyNA)]
-      kaaslist <- lapply(kaaslist, 
-                         dplyr::select, c("process", "fromScale","fromSubCompart","fromSpecies",
-                                          "toScale","toSubCompart","toSpecies","k"))
+      kaaslist <- lapply(kaaslist, function (process){
+        
+        process.names <- names(process)
+        k.name <- process.names[startsWith(process.names,"k_")]
+        otherdimNames <- process.names[
+          !(process.names %in% c("process", k.name) |
+              startsWith(process.names, "to.") |
+              startsWith(process.names, "from.")
+          )
+        ]
+        for (o1 in otherdimNames){
+          to.o1 <- paste0("to.", o1)
+          from.o1 <- paste0("from.", o1)
+          process <- process |>
+            dplyr::mutate(!!from.o1 := .data[[o1]]) |>
+            dplyr::rename(!!to.o1 := !!o1)
+        }
+        # return
+        process |>
+          dplyr::rename(k = !!k.name)
+      })
       VolleKaas <- do.call(rbind, kaaslist)
       
       if(length(VolleKaas) > 0) { #length is 0 if no processes 
@@ -1253,120 +1236,13 @@ SBcore <- R6::R6Class("SBcore",
       
     },
     
-    #' description fetch the values for a dataframe with parameters/dimensions (any purpose),
-    #' param varname name of variable to find
-    ## '  @param ParamName.Dimensions data.frame with columns ParamName and the 3Dimensions() use merge x.all = T
-    #' return vector values (if found; else NA)
-    FetchData = function(varname) {
-      #browser()
-      #hack; because of ugly deposition dependency
-      if (varname == "kaas") {
-        return(self$kaas)
-      }
-      #Now for the actual fetching of variables; either calculated or data
-      if (varname %in% names(private$SB4Ndata)) {
-        #give the full table
-        return(private$SB4Ndata[[varname]])
-      } else {
-        #is it a flow?
-        fromFlows <- private$SB4Ndata[["Flows"]]
-        if (any(fromFlows$FlowName == varname)) {
-          fromFlows <- fromFlows[fromFlows$FlowName == varname,]
-          attr(fromFlows, which = "isflow") <- T
-          return(fromFlows)
-        } else {
-          QSARnames <- names(private$SB4Ndata[["QSARtable"]])
-          if (varname %in% QSARnames) {
-            ChemClassNow <- private$SB4Ndata[["CONSTANTS"]]$ChemClass
-            res = private$SB4Ndata[["QSARtable"]][private$SB4Ndata[["QSARtable"]]$QSAR.ChemClass == ChemClassNow,varname]
-            return(varname = res)
-          } else {
-            #normal behaviour: find the attribute and return its "view"
-            MetaData <- self$metaData()
-            if (varname=="all"){ #return an overview (listing of variables)
-              return( #all flows and all attribute names excluding key fields
-                sort(c(
-                  unique(fromFlows$FlowName),
-                  QSARnames,
-                  MetaData$AttributeNames[!MetaData$AttributeNames %in% c(
-                    The3D, paste("to.", The3D, sep = ""),
-                    "Default", "from", "to", "process", "AbbrS"
-                  )]
-                ))
-              )
-            }
-          }
-          
-          Attrn <- MetaData$Tablenames[which(varname == MetaData$AttributeNames)]
-          if (length(Attrn)==0) {
-            allVars <- MetaData[!MetaData$AttributeNames %in% c(
-              The3D, paste("to.", The3D, sep = ""),
-              "Default", "from", "to", "process", "AbbrS"
-            ) & ! MetaData$Tablenames %in% c("SubstanceCompartments"),]
-            grepVars <- do.call(paste,
-                                as.list(allVars$AttributeNames[grep(varname, allVars$AttributeNames, ignore.case=TRUE)]))
-            warning (paste("Cannot find property ", varname, "; but found", grepVars))
-            return(NA)
-          } 
-          
-          if(length(Attrn) > 1) {
-            stop (paste0(varname, " in multiple tables: ", Attrn))
-          } 
-          subvec <- MetaData[MetaData$Tablenames == Attrn, "AttributeNames"]
-          Dims <- c(The3D, paste("to.", The3D, sep = ""), "Substance") %in% subvec
-          names(Dims)[Dims] <- c(The3D, paste("to.", The3D, sep = ""), "Substance")[Dims]
-          DimsVarCols <- c(names(Dims)[Dims], varname)
-          
-          #browser()
-          
-          #Check if unit should be converted to SI
-          unitTable <- private$SB4Ndata[["Units"]]
-          SIexpression <- unitTable$ToSI[unitTable$VarName == varname]
-          
-          isExpression <-  length(SIexpression) == 1 &&
-            !is.na(SIexpression) && 
-            SIexpression != "" && 
-            SIexpression != "NA"
-          
-          Doexpression <- function (varname, x, SIexpression){ #execute expression to convert to SI
-            #NB varname is local here
-            assign(varname, x)
-            eval(parse(text = SIexpression))
-          }
-          
-          if (any(Dims)) { #it's a data.frame with varname as column
-            if ("Substance" %in% names(Dims) && Dims["Substance"]){
-              res <- private$SB4Ndata[[Attrn]][private$SB4Ndata[[Attrn]]$Substance == private$Substance,DimsVarCols]
-              ToDel <- FALSE
-            } else {
-              res <- private$SB4Ndata[[Attrn]][,DimsVarCols]
-              #remove the NA's from the pivot_wider; NB not for substance related data
-              ToDel <- is.na(res[,varname])
-            }
-            if (isExpression){
-              # ADJUST TO SI UNITS!!!
-              
-              res[,varname] <- Doexpression(varname, res[,varname], SIexpression)
-            }
-            return(res[!ToDel, DimsVarCols[DimsVarCols!="Substance"]])
-          } else { #it's atomic 
-            res <- private$SB4Ndata[[Attrn]][,DimsVarCols[DimsVarCols!="Substance"]]
-            if (isExpression){
-              #  ADJUST TO SI UNITS!!!
-              res <- Doexpression(varname, res, SIexpression)
-            }
-            return(varname = res)
-          }
-        }
-      }
-    },
-    
+
     #' @description update rows of a variable in the "datalayer" (SB4Ndata-dataframes)
     #' @param UpdateRows the data.frame with the variable, dimensions should match and  
     #' 1 other column containing values, named as the var name
     #' @return side-effect; new "fetchdata()" is returned
     MutateVar = function(UpdateRows) {
-      #browser()
+      browser()
       if ("data.frame" %in% class(UpdateRows)) {
         dims <- The3D[The3D %in% names(UpdateRows)]
         varName <- names(UpdateRows)[!names(UpdateRows) %in% dims]
@@ -1391,10 +1267,10 @@ SBcore <- R6::R6Class("SBcore",
         #update wannebe, remove newValue
         wannebeVar[!is.na(wannebeVar$newValue), varName] <- wannebeVar$newValue[!is.na(wannebeVar$newValue)]
         wannebeVar$newValue <- NULL
-        private$UpdateDL(wannebeVar)
+        private$myReactiveDAG$add_source()
         
       } else {# just a number
-        do.call(private$UpdateDL, UpdateRows) #all the trouble to get the name in..
+        private$myReactiveDAG$add_source()
       }
     },
 
@@ -1404,128 +1280,9 @@ SBcore <- R6::R6Class("SBcore",
     #' uh, not in use at this point in time
     #' return side-effect; vector?
     UpdateDL = function(VarFunName = NULL, DIMRestrict = NULL, ...) {
-      #browser()
-      MetaData <- self$metaData()
-      if (is.null(VarFunName)) {
-        inp <- list(...)
-        VarFunName <- names(inp)
-        NewData <- inp
-        Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
-      } else {
-        if ("data.frame" %in% class(VarFunName)) { 
-          NewData <- VarFunName
-          VarFunName <- names(NewData)[length(NewData)]
-          Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
-        } else { #
-          Attrn <- MetaData$Tablenames[match(VarFunName, MetaData$AttributeNames)]
-          #exist VarFunName as VariableModule?
-          if (! VarFunName %in% names(private$ModuleList)) stop(paste("Can't find", VarFunName, "as VariableModule"),call. = F)
-          VarFun <- private$ModuleList[[VarFunName]]
-          NewData <- VarFun$execute()
-          if (exists("verbose") && verbose){
-            cat(paste(VarFunName, nrow(NewData), "rows\n"))
-          }
-          if (anyNA(NewData) | (length(NewData) != 1 && nrow(NewData) < 1)) {
-            warning(paste("R6SBcore: For",VarFunName,"no rows calculated. Check, but probably not needed."), call. = FALSE)
-            #force the result, see below
-            NewData <- data.frame(NA)
-            names(NewData) <- VarFunName #for the flow that returns NA
-          } else {
-            #adjust column names 
-            if ("FlowModule" %in% class(VarFun)  ) {
-              #to conform the full Flows table)
-              NewData$FlowName <- VarFunName
-              if (!"toScale" %in% names(NewData)){
-                NewData$toScale <- NewData$fromScale
-              }
-              if (!"toSubCompart" %in% names(NewData)){
-                NewData$toSubCompart <- NewData$fromSubCompart
-              }
-            } 
-            if ("VariableModule" %in% class(VarFun)){
-              if(is.null(names(NewData))){
-                names(NewData) <- VarFunName
-              }
-            }
-          }
-        }
-      }
-      
-      # where should it go? flows or Where the dimensions are
-      # and prep diff 
-      if ("flow" %in% names(NewData)){
-        Target.Table <- "Flows"
-        if (VarFunName %in% private$SB4Ndata[["Flows"]]$FlowName){
-          diffTable <- private$FetchData(VarFunName)
-          names(diffTable)[names(diffTable)==VarFunName] <- paste("old",VarFunName,sep = "_")
-        }
-      } else {
-        if (all(is.na(NewData))){}
-          #set the result, as variable?!?! in the DataLayer (CONSTANTS), to have the graph continue
-        #Target.Table <- private$WhichDataTable(names(NewData))
-        if (!is.na(Attrn)){ #is already in the DL
-          Target.Table <- Attrn
-          diffTable <- private$FetchData(VarFunName)
-          names(diffTable)[names(diffTable)==VarFunName] <- paste("old",VarFunName,sep = "_")
-        } 
-        else Target.Table <- private$WhichDataTable(names(NewData))
-      }
-      #Special Case a "constant" or substance property
-      if (Target.Table == "CONSTANTS") {
-        private$SB4Ndata[[Target.Table]][names(NewData)] <- NewData
-        nd <- private$SB4Ndata[[Target.Table]][names(NewData)]
-      } else {
-        #delete and merge the DL-table
-        if (Target.Table == "Flows") {
-          WithoutPrevious <- private$SB4Ndata[[Target.Table]][
-            private$SB4Ndata[[Target.Table]]$FlowName != VarFunName,]
-          private$SB4Ndata[[Target.Table]] <- rbind(WithoutPrevious, NewData[,names(WithoutPrevious)])
-        } else { #a SBvariable
-          if (VarFunName %in% names(private$SB4Ndata[[Target.Table]])){
-            #another exceptional case 
-            if (Target.Table == "Substances") {
-              private$SB4Ndata[[Target.Table]][private$SB4Ndata[[Target.Table]]$Substance == private$Substance, VarFunName] <- unlist(NewData)
-            } else {
-              numCol <- match(VarFunName, names(private$SB4Ndata[[Target.Table]]))
-              private$SB4Ndata[[Target.Table]] <- private$SB4Ndata[[Target.Table]][,-numCol]
-            }
-          } 
-          private$SB4Ndata[[Target.Table]] <- merge(private$SB4Ndata[[Target.Table]], NewData, all = T)
-        }
-      }
-      
-      #just to show, side effect is in DL
-      if (!exists("diffTable")){ #new in the DL
-        return(NewData)
-      } else {
-        mt <- merge(diffTable, NewData, all = T)
-        return(merge(diffTable, NewData, all = T)) 
-      }
-    },
-    
-    WhichDataTable = function(KeyNames){# Which table ("1D"sheet or "2-3D"Data) in SB4N.data has identical dimensions?
-      # Special case, a Flows has special keynames for easy merging when calculation processes; 
-      # none of the actual keynames are in The3D
-      if (length(KeyNames) == 0){ #either CONSTANTS or a flow
-        if ("flow" %in% KeyNames){
-          return("Flows")
-        }
-      }
-        
-      MetaData <- self$metaData()
-      MetaDims <- data.frame(
-        SB4N.Table = unique(MetaData$tablenm)
-      )
-      WhichD <- The3D[The3D %in% KeyNames]
-      AppendString <- switch (length(WhichD)+1,
-        "CONSTANTS",
-        "Sheet",
-        "Data",
-        "Data")
-      do.call(paste,as.list(c(WhichD, AppendString, sep = "")))
-      
+      stop("use the methods related to reactiveDAG")
     }
-
+    
   )
 )
 

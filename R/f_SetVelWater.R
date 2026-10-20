@@ -42,7 +42,7 @@ f_SetVelWater <- function(Shortest_side, # for simplification only Shortest_side
   if (anyNA(c(rho_species, rhoMatrix))) {
     return(NA)
   }
-  if (Matrix == "soil" | Matrix == "sediment") {
+  if (Matrix %in% c("soil", "sediment")) {
     return(NA)
   }
   if (SubCompartName == "cloudwater") {

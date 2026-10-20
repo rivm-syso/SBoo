@@ -12,7 +12,7 @@ x_LakeOut <- function(RainOnFreshwater, RunoffFlow, FracROWatComp, parent){
   
   Runoff <- RunoffFlow |>
     dplyr::group_by(Scale) |>
-    dplyr::summarise(allsoils_runoff = sum(Runoff, na.rm = TRUE))
+    dplyr::summarise(allsoils_runoff = sum(RunoffFlow, na.rm = TRUE))
   
   RainOnFreshwater <- RainOnFreshwater |> 
     dplyr::group_by(Scale) |>

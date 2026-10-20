@@ -42,58 +42,62 @@ k_HeteroAgglomeration.wsd <- function(alpha, COL,SUSP, Shear,RadS,RhoS,Shape,Rad
                                       Matrix, SpeciesName,SubCompartName, ScaleName,
                                       Longest_side, Intermediate_side, Shortest_side, 
                                       DragMethod, Regional_and_Continental_deepocean, parent){
-  rhoWater = 998 # easyfix could be done more elegantly
+  
   kboltz <- constants::syms$k
   GN <- constants::syms$gn
   
+  out <- parent$FromDataAndTo("k_HeteroAgglomeration.wsd")
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_HeteroAgglomeration.wsd")))
+  names <- dplyr::all_of(names(out))
   
-  # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "COL", "SUSP", "Shear","RadCOL","RadCP","Temp","RhoCOL","RhoCP","rhoMatrix","Udarcy")
+  # 4 rhoMatrix
+  out <- out |>
+    dplyr::left_join(Matrix) |> 
+    dplyr::left_join(rhoMatrix) 
+
+  rhoWater = out |>
+    dplyr::filter(Matrix == "water") |>
+    dplyr::pull(rhoMatrix) |> head(1)
+  
+  # Extend non-species related
+  args <- c("out", "COL", "SUSP", "Shear","RadCOL","RadCP","Temp","RhoCOL","RhoCP","Udarcy", "FRACs", "SubCompartName")
   dfs <- mget(args, envir = environment())
-  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y))
   
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "FRACs", "alpha")
-  dfs <- mget(args, envir = environment())
-  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
-  
-  # Output
-  out <- parent$FromDataAndTo("k_HeteroAgglomeration.wsd") |>
-    # From
-    dplyr::left_join(grid_from, by=c("SubCompart" = "SubCompart", "Scale"="Scale", "from.Species"="Species")) |>
-    
-    #To
-    dplyr::left_join(grid_to, by=c("SubCompart" = "SubCompart", "Scale"="Scale", "to.Species"="Species"), suffix=c("_from", "_to")) |>
-    
+  out <- out |>
+    dplyr::left_join(alpha, by = c("SubCompart", "to.Species" = "Species")) |>
+
     dplyr::mutate( 
       ColInter = dplyr::case_when(
-        Matrix_from == 'water' & to.Species == 'Small' ~ f_Inter(Shear,RadS,radius_Otherparticle = RadCOL),
-        Matrix_from == 'water' & to.Species == 'Large' ~ f_Inter(Shear,RadS,radius_Otherparticle = RadCP),
+        Matrix == 'water' & to.Species == 'Small' ~ f_Inter(Shear,RadS,radius_Otherparticle = RadCOL),
+        Matrix == 'water' & to.Species == 'Large' ~ f_Inter(Shear,RadS,radius_Otherparticle = RadCP),
         TRUE ~ NA
       ),
       ColBrown = dplyr::case_when(
-        Matrix_from %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ f_Brown(Temp=Temp, viscosity=DynViscWaterStandard, radius=RadS,radius_Otherparticle = RadCOL),
-        Matrix_from == 'water' & to.Species == 'Large' ~ f_Brown(Temp=Temp, viscosity=DynViscWaterStandard, radius=RadS,radius_Otherparticle = RadCP),
+        Matrix %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ f_Brown(Temp=Temp, viscosity=DynViscWaterStandard, radius=RadS,radius_Otherparticle = RadCOL),
+        Matrix == 'water' & to.Species == 'Large' ~ f_Brown(Temp=Temp, viscosity=DynViscWaterStandard, radius=RadS,radius_Otherparticle = RadCP),
         TRUE ~ NA
       ),
-      ColGrav = dplyr::case_when(
-        Matrix_from %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ 
-          f_Grav(rhoParticle= RhoS,radius_Otherparticle = RadCOL,rho_Otherparticle = RhoCOL, rhoFluid = rhoMatrix,DynViscWaterStandard = DynViscWaterStandard,
-                 Matrix=Matrix_from,SubCompartName=SubCompartName, Shape=Shape,Longest_side=Longest_side, Intermediate_side=Intermediate_side, 
-                 Shortest_side=RadS*2, DragMethod=DragMethod),
-        Matrix_from == 'water' & to.Species == 'Large' ~ 
-          f_Grav(rhoParticle= RhoS,radius_Otherparticle = RadCP,rho_Otherparticle = RhoCP, rhoFluid = rhoMatrix,DynViscWaterStandard = DynViscWaterStandard,
-                 Matrix=Matrix_from,SubCompartName=SubCompartName, Shape=Shape,Longest_side=Longest_side, Intermediate_side=Intermediate_side, 
-                 Shortest_side=RadS*2, DragMethod=DragMethod),
-        TRUE ~ NA
-      ),
+      rho_Otherparticle = dplyr::case_when(
+        Matrix %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ RhoCOL,
+        Matrix == 'water' & to.Species == 'Large' ~ RhoCP,
+        TRUE ~ NA)
+    )
+  out <- out |>
+    dplyr::rowwise() |>
+    dplyr::mutate(
+      ColGrav = f_Grav(rhoParticle= RhoS,radius_Otherparticle = RadCOL,rho_Otherparticle = rho_Otherparticle, rhoFluid = rhoMatrix,DynViscWaterStandard = DynViscWaterStandard,
+                       Matrix=Matrix,SubCompartName=SubCompartName, Shape=Shape,Longest_side=Longest_side, Intermediate_side=Intermediate_side, 
+                       Shortest_side=RadS*2, DragMethod=DragMethod)
+    )
+  out <- out |>
+    dplyr::mutate(
       NumConcOther = dplyr::case_when(
-        Matrix_from %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ f_NumConc(rad_particle=RadCOL, rho_particle=RhoCOL, MasConc=COL),
-        Matrix_from == 'water' & to.Species == 'Large' ~  f_NumConc(rad_particle=RadCP, rho_particle=RhoCP, MasConc=SUSP),
+        Matrix %in% c('soil', 'water', 'sediment') & to.Species == 'Small' ~ f_NumConc(rad_particle=RadCOL, rho_particle=RhoCOL, MasConc=COL),
+        Matrix == 'water' & to.Species == 'Large' ~  f_NumConc(rad_particle=RadCP, rho_particle=RhoCP, MasConc=SUSP),
         TRUE ~ NA
       ),
-      DiffS.w = f_Diffusivity(Matrix=Matrix_from, Temp = Temp, DynVisc=DynViscWaterStandard, rad_species=RadS),
+      DiffS.w = f_Diffusivity(Matrix=Matrix, Temp = Temp, DynVisc=DynViscWaterStandard, rad_species=RadS),
       Por = 1-FRACs,
       GammPDF = (1-Por)^(1/3),
       ASPDF = (2*(1-GammPDF^5))/(2-3*GammPDF+3*GammPDF^5-2*GammPDF^6),
@@ -108,9 +112,9 @@ k_HeteroAgglomeration.wsd <- function(alpha, COL,SUSP, Shear,RadS,RhoS,Shape,Rad
       Filter = (3/2)*(1-Por)/(2*RadCP*Por),
       K_het.sd = Filter*Udarcy*fTotalSFP*alpha,
       k_HeteroAgglomeration.wsd = dplyr::case_when(
-        Matrix_from == 'water' & to.Species %in% c("Small", "Large") ~ alpha*NumConcOther*(ColBrown+ColGrav+ColInter),
-        Matrix_from %in% c('sediment','soil') & to.Species == 'Small' ~ alpha*NumConcOther*(ColBrown+ColGrav),
-        Matrix_from %in% c('sediment','soil') & to.Species == 'Large' ~ K_het.sd,
+        Matrix == 'water' & to.Species %in% c("Small", "Large") ~ alpha*NumConcOther*(ColBrown+ColGrav+ColInter),
+        Matrix %in% c('sediment','soil') & to.Species == 'Small' ~ alpha*NumConcOther*(ColBrown+ColGrav),
+        Matrix %in% c('sediment','soil') & to.Species == 'Large' ~ K_het.sd,
         TRUE ~ NA
       )
     ) |>

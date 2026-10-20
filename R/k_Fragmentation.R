@@ -7,30 +7,32 @@
 #' @return k_Fragmentation, the combined degradation and fragmentation rate of microplastics [s-1]
 #' @export
 
-
-k_Fragmentation <- function (kfrag, SubCompartName, ScaleName, 	Regional_and_Continental_deepocean, parent, SpeciesName){
+k_Fragmentation <- function (kfrag, parent, SpeciesName){
   
+  out <- parent$FromDataAndTo("k_Fragmentation")
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Fragmentation")))
+  names <- dplyr::all_of(names(out))
   
-  # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "kfrag")
-  dfs <- mget(args, envir = environment())
-  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  #Species for this process
+  Scale <- out |> 
+    dplyr::select(Scale) |>
+    dplyr::distinct()
   
-  # Output
-  out <- parent$FromDataAndTo("k_Fragmentation") |>
-    # From
-    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
+  exist_kfrag <- kfrag |>
+    dplyr::cross_join(Scale) |>
+    parent$states$clipStates()
+  # Build
+  out <- out |>
+    dplyr::inner_join(exist_kfrag, by = c("from.SubCompart" = "SubCompart", "Scale", "Species"))
+ 
+  # Calc
+  out <- out |>
+    dplyr::filter(!(
+      Scale %in% c("Tropic", "Moderate", "Arctic") & 
+        from.SubCompart %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") 
+    )) |>
+    dplyr::mutate(k_Fragmentation = kfrag) |>
     
-    dplyr::mutate( 
-      k_Fragmentation = dplyr::case_when(
-        ScaleName %in% c("Tropic", "Moderate", "Arctic") & 
-          SubCompartName %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") ~ NA_real_,
-        ScaleName %in% c("Regional", "Continental") & SubCompartName == "deepocean" & (is.na(	Regional_and_Continental_deepocean) || isFALSE(	Regional_and_Continental_deepocean) || 	Regional_and_Continental_deepocean == "FALSE") ~ NA_real_,
-        TRUE ~ kfrag
-      )
-    ) |>
     dplyr::filter(!is.na(k_Fragmentation)) |>
     dplyr::select(names, k_Fragmentation) |>
     dplyr::arrange(dplyr::across(names))

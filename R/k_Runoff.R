@@ -21,27 +21,26 @@
 k_Runoff <- function(RunoffFlow,VertDistance, FracROWatComp,
                      Volume, Kscompw,
                      relevant_depth_s, penetration_depth_s,
-                     ScaleName, SubCompartName, SpeciesName, Matrix, IntrcptFrac, parent){
+                     SpeciesName, Matrix, IntrcptFrac, parent){
   
+  out <- parent$FromDataAndTo("k_Runoff")
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Runoff")))
+  names <- dplyr::all_of(names(out))
+  #convenience rename for automatic matching columns (by = ...)
+  out <- dplyr::rename(out, SubCompart = from.SubCompart)
   
-  # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "RunoffFlow","VertDistance", "Volume", "Kscompw", "IntrcptFrac")
+  # Build 
+  args <- c("out", "SpeciesName", "Matrix", "RunoffFlow","VertDistance", "Volume", "Kscompw", "IntrcptFrac")
   dfs <- mget(args, envir = environment())
-  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "FracROWatComp")
-  dfs <- mget(args, envir = environment())
-  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
-  
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y)) # |> parent$states$clipStates()
+  # and back
+  out <- dplyr::rename(out, from.SubCompart = SubCompart) |>
+
+    dplyr::left_join(FracROWatComp, by = c("to.SubCompart" = "SubCompart", "Species", "Scale"))
+
   # Output
-  out <- parent$FromDataAndTo("k_Runoff") |>
-    # From
-    dplyr::left_join(grid_from, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
-    
-    #To
-    dplyr::left_join(grid_to, by=c("to.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species"), suffix=c("_from", "_to")) |>
-    
+  out <- out |>
+
     dplyr::mutate( 
       k_Runoff = dplyr::case_when(
         Scale %in% c("Regional", "Continental") & to.SubCompart== "sea" ~ NA,

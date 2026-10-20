@@ -45,14 +45,14 @@ k_HeteroAgglomeration.a <- function(rad_species, RadNuc,RadCOL,RadCP,rho_species
   names <- dplyr::all_of(names(parent$FromDataAndTo("k_HeteroAgglomeration.a")))
 
   # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "rad_species" ,"RadCOL","RadCP","rho_species" ,"RhoCOL","RhoCP", "Temp" ,"NumConcNuc", "NumConcAcc", "NumConcCP")
+  args <- c("Matrix", "rad_species" ,"RadCOL","RadCP","rho_species" ,"RhoCOL","RhoCP", "Temp" ,"NumConcNuc", "NumConcAcc", "NumConcCP")
   dfs <- mget(args, envir = environment())
   grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
 
   # Output
   out <- parent$FromDataAndTo("k_HeteroAgglomeration.a") |>
     # From
-    dplyr::left_join(grid, by=c("SubCompart" = "SubCompart", "Scale"="Scale", "from.Species"="Species")) |>
+    dplyr::left_join(grid, by=c("SubCompart", "Scale", "from.Species"="Species")) |>
 
     dplyr::mutate(
       ThermVelSpecies = dplyr::case_when(
@@ -73,7 +73,7 @@ k_HeteroAgglomeration.a <- function(rad_species, RadNuc,RadCOL,RadCP,rho_species
       ThermVelOther = ThermVel(Temp, Radius = RadCP, Rho = RhoCP),
       Fuchs = f_Fuchs (Diff.P1 = Diffusivity, Diff.P2 = DiffOther,Rad.P1 = rad_species, Rad.P2 = RadCP,Thermvel.P1 = ThermVelSpecies, Thermvel.P2 = ThermVelOther),
       k_HeteroAgglomeration.a = dplyr::case_when(
-        to.Species == 'small' ~ k_Acc + k_Nuc,
+        to.Species == 'Small' ~ k_Acc + k_Nuc,
         to.Species == 'Large' ~ Fuchs*(4*pi*(RadCP+rad_species)*(DiffOther+Diffusivity))*NumConcCP,
         TRUE ~ NA
       )

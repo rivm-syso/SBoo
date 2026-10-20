@@ -7,13 +7,13 @@
 #' @param dischargeFRAC Fraction discharge of freshwater between regional and continental scales and vice versa [-]
 #' @return River Discharge for scale Continental [s-1]
 #' @export
-x_ContRiver2Reg <- function(ScaleName, SubCompartName, RunoffFlow, RainOnFreshwater, dischargeFRAC, parent) {
+x_ContRiver2Reg <- function(RunoffFlow, RainOnFreshwater, dischargeFRAC, parent) {
   
   out <- parent$FromDataAndTo("x_ContRiver2Reg")
 
   Runoff <- RunoffFlow |>
     dplyr::group_by(Scale) |>
-    dplyr::summarise(allsoils_runoff = sum(Runoff, na.rm = TRUE))
+    dplyr::summarise(allsoils_runoff = sum(RunoffFlow, na.rm = TRUE))
   
   # Runoff needs to be summed across soils compartment to represent input for river compartment
   out <- out |> 

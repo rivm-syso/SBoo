@@ -18,21 +18,25 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Regional_and_Continental_deepocean, parent) {
+                          Matrix, SpeciesName, Test, kdis = dataframe(), parent) {
  
+  out <- parent$FromDataAndTo("k_Degradation") 
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Degradation")))
+  names <- dplyr::all_of(names(out))
+  #removal process from==to, so for easy joining/reading
+  out <- dplyr::rename(out, SubCompart = from.SubCompart) 
   
-  # Build grid
-  args <- c("FRingas", "KdegDorC", "C.OHrad","Tempfactor","FRinw","BACTcomp","Matrix", "SpeciesName", "SubCompartName", "ScaleName")
+  # Build 
+  args <- c("out", "FRingas", "KdegDorC", "C.OHrad","Tempfactor","FRinw","BACTcomp","Matrix", "SpeciesName")
   dfs <- mget(args, envir = environment())
-  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y))))
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y))
+  
+  if (nrow(kdis) > 0) { #can be omitted
+    out <- dplyr::left_join(out, kdis)
+  }
   
   # Output
-  out <- parent$FromDataAndTo("k_Degradation") |>
-    # From
-    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
-
+  out <- out |>
     dplyr::mutate(
       k_Degradation = dplyr::case_when(
         # Exclusions of process are not needed as clipStates removes these combinations of compartments, model data is here defined in function!
@@ -41,7 +45,7 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
         SpeciesName == 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
         SpeciesName == 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw,
         
-        SpeciesName != 'Molecular' & Matrix == 'air' & as.character(Test) == "TRUE" ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'air' & (as.character(Test) == "TRUE") ~ Tempfactor*KdegDorC + kdis,
         SpeciesName != 'Molecular' & Matrix == 'soil' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
         SpeciesName != 'Molecular' & Matrix == 'sediment' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
         SpeciesName != 'Molecular' & Matrix == 'water' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
@@ -54,6 +58,8 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
       )
     ) |>
     dplyr::filter(!is.na(k_Degradation)) |>
+    # back renamename
+    dplyr::rename(from.SubCompart = SubCompart) |> 
     dplyr::select(names, k_Degradation) |>
     dplyr::arrange(dplyr::across(names))
   

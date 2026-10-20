@@ -16,48 +16,73 @@
 #' @export
 k_Sedimentation <- function(FRinw, SettlingVelocity, DynViscWaterStandard, rhoMatrix, Matrix,
                             VertDistance, RhoCP, RadCP, RadS,
-                            SpeciesName, SubCompartName, ScaleName, Test, Regional_and_Continental_deepocean,parent){
+                            SpeciesName, Test, parent){
   
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Sedimentation")))
+  out <- parent$FromDataAndTo("k_Sedimentation")
+  names <- dplyr::all_of(names(out))
+  out <- dplyr::rename(out, SubCompart = from.SubCompart) |> parent$states$clipStates()
   
   # Build grid
-  args <- c("SpeciesName", "SubCompartName", "ScaleName", "Matrix", "FRinw", "SettlingVelocity", "rhoMatrix", "VertDistance", "RhoCP", "RadCP")
+  args <- c("out", "SpeciesName", "Matrix", "FRinw", "SettlingVelocity", "rhoMatrix", "VertDistance", "RhoCP", "RadCP")
   dfs <- mget(args, envir = environment())
-  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y)) 
   
   # Output
-  out <- parent$FromDataAndTo("k_Sedimentation") |>
-    # From
-    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
-    
+  out <- out |>
+    dplyr::filter(
+      !(
+        # 1) Tropic/Moderate/Arctic, sea -> marinesediment
+        (Scale %in% c("Tropic", "Moderate", "Arctic") &
+           SubCompart == "sea" &
+           to.SubCompart == "marinesediment") |
+          
+        # 2) Regional/Continental, deepocean -> marinesediment OR sea -> deepocean
+        (Scale %in% c("Regional", "Continental") &
+           (
+             (SubCompart == "deepocean" & to.SubCompart == "marinesediment") |
+               (SubCompart == "sea"       & to.SubCompart == "deepocean")
+           )) |
+        
+        # 3) Regional/Continental, from sea -> marinesediment
+        (Scale %in% c("Regional", "Continental") &
+           SubCompart == "sea" &
+           to.SubCompart == "marinesediment") |
+        
+        # 4) Tropic/Moderate/Arctic, from lake/river
+        (Scale %in% c("Tropic", "Moderate", "Arctic") &
+           SubCompart %in% c("lake", "river")) |
+        
+        # 5) Molecular to deepocean
+        (SpeciesName == "Molecular" &
+           to.SubCompart == "deepocean") |
+        
+        # 6) Molecular, Test == TRUE, to lakesediment
+        (SpeciesName == "Molecular" &
+           as.character(Test) == "TRUE" &
+           to.SubCompart == "lakesediment")
+      )
+    ) |> 
+    dplyr::rowwise() |>
+    dplyr::mutate(
+      SetVelWater = f_SetVelWater(Shortest_side=RadCP*2, rho_species=RhoCP, rhoMatrix=rhoMatrix, 
+                                  DynViscWaterStandard=DynViscWaterStandard,DynViscAirStandard=NA,
+                                  Matrix=Matrix,SubCompartName=SubCompart, Shape=NA,Longest_side=NA, 
+                                  Intermediate_side=NA, DragMethod="Original")
+    ) |>
     dplyr::mutate(
       k_Sedimentation = dplyr::case_when(
-        (Scale %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompart == "sea" & to.SubCompart== "marinesediment" ~ 
-          NA,
-        (Scale %in% c("Regional", "Continental")) &
-          ((from.SubCompart == "deepocean" & to.SubCompart == "marinesediment") | (from.SubCompart == "sea" & to.SubCompart == "deepocean")) &
-          (isFALSE(Regional_and_Continental_deepocean) | is.na(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE") ~
-          NA,
-        (Scale %in% c("Regional", "Continental")) & from.SubCompart == "sea" & to.SubCompart == "marinesediment" &
-          (Regional_and_Continental_deepocean == "TRUE" | isTRUE(Regional_and_Continental_deepocean)) ~
-          NA,
-        (Scale %in% c("Tropic", "Moderate", "Arctic")) & from.SubCompart %in% c("lake","river") ~ NA,
-        SpeciesName == 'Molecular' & to.SubCompart == 'deepocean' ~ NA,
-        SpeciesName == 'Molecular' & as.character(Test) == "TRUE" & to.SubCompart == 'lakesediment' ~ NA,
         SpeciesName == 'Molecular' & as.character(Test) == "TRUE" & to.SubCompart != 'lakesediment' ~
           (2.5/(24*3600))*(1 - FRinw) / VertDistance,
         SpeciesName == 'Molecular' & as.character(Test) != "TRUE" ~
-          (f_SetVelWater(Shortest_side=RadCP*2, rho_species=RhoCP, rhoMatrix=rhoMatrix, 
-                        DynViscWaterStandard=DynViscWaterStandard,DynViscAirStandard=NA,
-                        Matrix=Matrix,SubCompartName=from.SubCompart, Shape=NA,Longest_side=NA, 
-                        Intermediate_side=NA, DragMethod="Original")) * (1 - FRinw) / VertDistance,
+          SetVelWater * (1 - FRinw) / VertDistance,
         SpeciesName != 'Molecular' & (SettlingVelocity <= 0 | is.na(SettlingVelocity)) ~ 0,
         SpeciesName != 'Molecular' ~ SettlingVelocity/VertDistance,
         TRUE ~ NA
       )
     ) |>
     dplyr::filter(!is.na(k_Sedimentation)) |>
+    dplyr::rename(from.SubCompart = SubCompart) |>
     dplyr::select(names, k_Sedimentation) |>
     dplyr::arrange(dplyr::across(names))
   

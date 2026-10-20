@@ -4,6 +4,7 @@
 #' if no specific value for kdeg is available it is scaled into categories 
 #' as defined in Technical Guidance Document on risk assessment in support of
 #' Commission Directive 93/67/EEC (European Commission, 2003)
+#' @param species mode: which species are needed (Molecular, Small, Large ...) 
 #' @param kdeg degradation rate (as input, e.g. based on half life) [s-1]
 #' @param C.OHrad OH radical concentration specific to compartment, based on Wania & Daly (2002) [mol m-3]
 #' @param C.OHrad.n general OH radical concentration, based on Wania & Daly (2002) [mol m-3]
@@ -19,170 +20,130 @@
 #' @param SpeciesName species name considered
 #' @return Degradation rate constant for molecular species
 #' @export
-KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
+KdegDorC <- function(species, Compartment,
+                     DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25, 
                      Q.10, KswDorC, Biodeg, CorgStandard, rhoMatrix,
-                     Matrix,  SpeciesName,  Shortest_side, Intermediate_side, Longest_side,
+                     Matrix, Shortest_side, Intermediate_side, Longest_side,
                      Kssdr, Shape, CorFacSSA, RadS, degx, degtau, degy, 
-                     degtheta, degz, degeta, UVintensity, MICROBconc, Degrading_enzyme,
-                     parent, ScaleName, SubCompartName) {
-  #Set default shortest, intermediate and longest side, in case it is not defined
-  if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
-    Shortest_side <- RadS * 2
-  }
-  if ( is.na(Intermediate_side) || is.null(Intermediate_side) ) {
-    Intermediate_side <- RadS * 2
-  }
-
-  if ( is.na(Longest_side) || is.null(Longest_side) ) {
-    Longest_side <- RadS * 2
-  }
-  if (!DegApproach %in% c("Default","Kssdr","PlasticFADE")){
-    warning("v_KdegDorC: DegApproach not set to valid option, using Default.")
-    DegApproach <- "Default"
+                     degtheta, degz, degeta, UVintensity, MICROBconc, Degrading_enzyme) {
+  
+  # First for Molecular, 
+  if ("Unbound" %in% species) {
+    Collect_Molecular <- UVintensity |>
+      dplyr::left_join(Matrix) |>
+      dplyr::left_join(rhoMatrix, by=c("Matrix")) |>
+      dplyr::left_join(Compartment) |>
+      dplyr::left_join(kdeg) |>
+      dplyr::mutate(
+        Biodeg = Biodeg,
+        tmpBiodeg = KswDorC/CorgStandard*rhoMatrix/1000,
+        half_lifes = dplyr::case_when( # Halflife values (table 5 SB 4.0 2015-0161) FOR SOIL SEDIMENT
+          Biodeg == 'r' ~ 30, Biodeg == 'i' ~ 90, Biodeg %in% c('i', 'p') ~ 300, TRUE ~ NA),
+        half_lifes_corrected_biodegtest = dplyr::case_when(
+          tmpBiodeg < 100 ~ half_lifes,  
+          tmpBiodeg < 1000 ~ half_lifes * 10,
+          tmpBiodeg < 10000 ~ half_lifes * 100,
+          tmpBiodeg > 100000 ~ half_lifes * 1000,
+          tmpBiodeg < 100000 ~ NA,
+          TRUE ~ NA),
+        KdegDorC = dplyr::case_when(
+          # Soils
+          Matrix == 'sediment' & is.na(kdeg) ~ 0.1*Q.10^(13/10)*log(2)/half_lifes_corrected_biodegtest/(3600*24),
+          Matrix == 'soil' & is.na(kdeg) ~ Q.10^(13/10)*log(2)/half_lifes_corrected_biodegtest/(3600*24),
+          Matrix %in% c('soil','sediment') & !is.na(kdeg) & Biodeg %in% c("r", "r-", "i", "p") ~ kdeg,
+          # Water
+          Matrix == 'water' & is.na(kdeg) & Biodeg == 'r' ~ Q.10^(13/10)*log(2)/15/(3600*24),
+          Matrix == 'water' & is.na(kdeg) & Biodeg == 'r-' ~ Q.10^(13/10)*log(2)/50/(3600*24),
+          Matrix == 'water' & is.na(kdeg) & Biodeg == 'i' ~ Q.10^(13/10)*log(2)/150/(3600*24),
+          Matrix == 'water' & is.na(kdeg) & Biodeg == 'p' ~ 1e-20,
+          Matrix == 'water' & !is.na(kdeg) & Biodeg %in% c("r", "r-", "i", "p") ~ kdeg,
+          # air
+          Matrix == 'air' & is.na(kdeg) ~ C.OHrad.n * k0.OHrad * exp(-Ea.OHrad/(constants::syms$r*T25)),
+          Matrix == 'air' & !is.na(kdeg) ~ kdeg
+        ),
+        Species = "Unbound"
+      ) |>
+      dplyr::select(Scale,SubCompart,Species,KdegDorC)
   }
   
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName, SpeciesName) |>
-    parent$states$clipStates() |>
-    dplyr::left_join(Matrix, by=c("SubCompart")) |>
-    dplyr::left_join(kdeg) |> #Look for all matching cols
-    dplyr::left_join(rhoMatrix, by=c("Matrix")) |>
-    dplyr::left_join(UVintensity, by=c("Scale", "SubCompart")) |>
-    dplyr::left_join(MICROBconc, by=c("Scale", "SubCompart"))|>
-    dplyr::mutate(
-      # Constants
-      Biodeg = Biodeg,
-      tmpBiodeg = KswDorC/CorgStandard*rhoMatrix/1000,
-      UVintensity = dplyr::case_when(
-        is.na(UVintensity) & DegApproach == "PlasticFADE" ~ 0,
-        TRUE ~ UVintensity
-      ),
-      Degrading_enzyme = dplyr::case_when(
-        DegApproach == 'PlasticFADE' & is.na(Degrading_enzyme) ~ "FALSE",
-        TRUE ~ Degrading_enzyme
-      ),
+  # For particulate
+  if (any(c("Large", "Small", "Solid") %in% species)) {
     
-      KdegDorC = dplyr::case_when(
-        # Sediment
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 100  ~ 0.1*Q.10^(13/10)*log(2)/30/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 1000  ~ 0.1*Q.10^(13/10)*log(2)/300/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 10000  ~ 0.1*Q.10^(13/10)*log(2)/3000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg > 100000  ~ 0.1*Q.10^(13/10)*log(2)/30000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 100  ~ 0.1*Q.10^(13/10)*log(2)/90/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 1000  ~ 0.1*Q.10^(13/10)*log(2)/900/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 10000  ~ 0.1*Q.10^(13/10)*log(2)/9000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg > 100000  ~ 0.1*Q.10^(13/10)*log(2)/90000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 100  ~ 0.1*Q.10^(13/10)*log(2)/300/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 1000  ~ 0.1*Q.10^(13/10)*log(2)/3000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 10000  ~ 0.1*Q.10^(13/10)*log(2)/30000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg > 100000  ~ 0.1*Q.10^(13/10)*log(2)/300000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 100  ~ 0.1*Q.10^(13/10)*log(2)/300/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 1000  ~ 0.1*Q.10^(13/10)*log(2)/3000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 10000  ~ 0.1*Q.10^(13/10)*log(2)/30000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg > 100000  ~ 0.1*Q.10^(13/10)*log(2)/300000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'sediment' & !is.na(kdeg) & Biodeg %in% c("r", "r-", "i", "p") ~ kdeg,
-        
-        # Soil
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 100  ~ Q.10^(13/10)*log(2)/30/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 1000  ~ Q.10^(13/10)*log(2)/300/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 10000  ~ Q.10^(13/10)*log(2)/3000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg > 100000  ~ Q.10^(13/10)*log(2)/30000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 100  ~ Q.10^(13/10)*log(2)/90/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 1000  ~ Q.10^(13/10)*log(2)/900/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 10000  ~ Q.10^(13/10)*log(2)/9000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg > 100000  ~ Q.10^(13/10)*log(2)/90000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'r-' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 100  ~ Q.10^(13/10)*log(2)/300/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 1000  ~ Q.10^(13/10)*log(2)/3000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 10000  ~ Q.10^(13/10)*log(2)/30000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg > 100000  ~ Q.10^(13/10)*log(2)/300000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'i' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 100  ~ Q.10^(13/10)*log(2)/300/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 1000  ~ Q.10^(13/10)*log(2)/3000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 10000  ~ Q.10^(13/10)*log(2)/30000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg > 100000  ~ Q.10^(13/10)*log(2)/300000/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'soil' & is.na(kdeg) & Biodeg == 'p' & tmpBiodeg < 100000  ~ NA,
-        
-        SpeciesName == 'Molecular' & Matrix == 'soil' & !is.na(kdeg) & Biodeg %in% c("r", "r-", "i", "p") ~ kdeg, 
-        
-        # Water
-        SpeciesName == 'Molecular' & Matrix == 'water' & is.na(kdeg) & Biodeg == 'r' ~ Q.10^(13/10)*log(2)/15/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'water' & is.na(kdeg) & Biodeg == 'r-' ~ Q.10^(13/10)*log(2)/50/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'water' & is.na(kdeg) & Biodeg == 'i' ~ Q.10^(13/10)*log(2)/150/(3600*24),
-        SpeciesName == 'Molecular' & Matrix == 'water' & is.na(kdeg) & Biodeg == 'p' ~ 1e-20,
-        SpeciesName == 'Molecular' & Matrix == 'water' & !is.na(kdeg) & Biodeg %in% c("r", "r-", "i", "p") ~ kdeg,
-        
-        # air
-        SpeciesName == 'Molecular' & Matrix == 'air' & is.na(kdeg) ~ C.OHrad.n * k0.OHrad * exp(-Ea.OHrad/(constants::syms$r*T25)),
-        SpeciesName == 'Molecular' & Matrix == 'air' & !is.na(kdeg) ~ kdeg,
-        
-        # Cylindric or Fiber with PlasticFADE Kssdr or default, if UV insensity and degradingenzyme are 0 and FALSE return kdeg =0 else calc with SAV
-        # SAV = 4/(Shortest_side*100)+2/(Longest_side*100)
-        !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") & DegApproach == "PlasticFADE" & 
-          (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0))  ~
-          0,
-        !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") & DegApproach == "PlasticFADE" ~ 
-          degx * (4/(Shortest_side*100)+2/(Longest_side*100))^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60),
-        
-        # ShapeFAC = 3
-        !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") & DegApproach == "Kssdr" & 
-          (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0))  ~
-          0,
-        !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") & DegApproach == "Kssdr" ~
-          3 * Kssdr * CorFacSSA / (Shortest_side / 2),
-        # Default 
-        !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") & DegApproach == "Default" & Matrix %in% c("air", "soil", "sediment", "water") ~ 
-          kdeg,
-        
-        # Film
-        # SAV =  2/(Shortest_side*100)+2/(Intermediate_side*100)+2/(Longest_side*100)
-        !is.na(Shape) & Shape %in% c("Film") & DegApproach == "PlasticFADE" & 
-          (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0))  ~
-          0,
-        !is.na(Shape) & Shape %in% c("Film") & DegApproach == "PlasticFADE" ~ 
-          degx * (2/(Shortest_side*100)+2/(Intermediate_side*100)+2/(Longest_side*100))^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60),
-        
-        # ShapeFAC = 2
-        !is.na(Shape) & Shape %in% c("Film") & DegApproach == "Kssdr" & 
-          (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0))  ~
-          0,
-        !is.na(Shape) & Shape %in% c("Film") & DegApproach == "Kssdr" ~
-          2 * Kssdr * CorFacSSA / (Shortest_side / 2),
-        # Default 
-        !is.na(Shape) & Shape %in% c("Film") & DegApproach == "Default" & Matrix %in% c("air", "soil", "sediment", "water") ~ 
-          kdeg,
-        
-        is.na(Shape) & DegApproach == "PlasticFADE" & (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0)) ~
-          0,
-        is.na(Shape) & DegApproach == "PlasticFADE"  ~ 
-          degx * (4/(Shortest_side*100)+2/(Longest_side*100))^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60),
-        
-        is.na(Shape) & DegApproach == "Kssdr" & (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0)) ~
-          0,
-        is.na(Shape) & DegApproach == "Kssdr" ~ 
-          3 * Kssdr * CorFacSSA / (Shortest_side / 2),
-        is.na(Shape) & DegApproach == "Default" & Matrix %in% c("air", "soil", "sediment", "water") ~
-          kdeg,
-        TRUE ~ NA                                               
-      )
-    ) |>
-    dplyr::select(Scale,SubCompart,Species,KdegDorC) |>
-    dplyr::arrange(Scale,SubCompart,Species)
-
+    #Set default shortest, intermediate and longest side, in case it is not defined
+    if (is.na(Shortest_side) || is.null(Shortest_side) ) {
+      Shortest_side <- RadS * 2
+    }
+    if ( is.na(Intermediate_side) || is.null(Intermediate_side) ) {
+      Intermediate_side <- RadS * 2
+    }
+    
+    if ( is.na(Longest_side) || is.null(Longest_side) ) {
+      Longest_side <- RadS * 2
+    }
+    if (!DegApproach %in% c("Default","Kssdr","PlasticFADE")){
+      warning("v_KdegDorC: DegApproach not set to valid option, using Default.")
+      DegApproach <- "Default"
+    }
+    if(is.null(Degrading_enzyme) || is.na(Degrading_enzyme)){
+      warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to FALSE")
+      Degrading_enzyme = "FALSE"
+    }
+  
+    Collect_Particulate <- UVintensity |>
+      dplyr::left_join(Matrix) |>
+      dplyr::left_join(MICROBconc) |>
+      dplyr::left_join(Compartment) |>
+      dplyr::left_join(kdeg) |>
+      dplyr::mutate(
+        SAV = dplyr::case_when(
+          !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") ~ 4/(Shortest_side*100)+2/(Longest_side*100),
+          !is.na(Shape) & Shape %in% c("Film") ~ 2/(Shortest_side*100)+2/(Intermediate_side*100)+2/(Longest_side*100),
+          TRUE ~ 6/(Shortest_side*100)),
+        ShapeFac = dplyr::case_when(
+          !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") ~ 3,
+          !is.na(Shape) & Shape %in% c("Film") ~ 2,
+          TRUE ~ 4),
+        UVintensity = dplyr::case_when(
+          is.na(UVintensity) & DegApproach == "PlasticFADE" ~ 0,
+          TRUE ~ UVintensity),
+        Degrading_enzyme = dplyr::case_when(
+          DegApproach == 'PlasticFADE' & is.na(Degrading_enzyme) ~ "FALSE",
+          TRUE ~ Degrading_enzyme),
+        properMatrix = Matrix %in% c("air", "soil", "sediment", "water")
+      ) 
+    
+    Collect_Particulate <- Collect_Particulate |>
+      dplyr::mutate(
+        KdegDorC = dplyr::case_when(
+          DegApproach %in% c("Kssdr", "PlasticFADE", "Default") & 
+            (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0)) ~
+            0,
+          DegApproach == "PlasticFADE" ~ degx * SAV^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60),
+          DegApproach == "Kssdr" ~ ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2),
+          DegApproach == "Default" & properMatrix ~ kdeg,
+          # ? DegApproach == "Default" & !Matrix %in% c("air", "soil", "sediment", "water") ~ NA,
+          TRUE ~ NA
+        )
+      ) |> 
+      dplyr::filter(!is.na(KdegDorC)) |>
+      dplyr::select(Scale,SubCompart,KdegDorC) |>
+      # for all Species except Unbound
+      tidyr::crossing(Species = species[species != "Unbound"])
+  }
+  
+  out <-
+    if (!is.null(Collect_Molecular) && !is.null(Collect_Particulate)) {
+      dplyr::bind_rows(Collect_Molecular, Collect_Particulate)
+    } else if (!is.null(Collect_Molecular)) {
+      Collect_Molecular
+    } else if (!is.null(Collect_Particulate)) {
+      Collect_Particulate
+    } else {
+      NULL
+    }
+  
   return(data.frame(out))
-
+}
   
   # #Set default shortest, intermediate and longest side, in case it is not defined
   # if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
@@ -331,4 +292,3 @@ KdegDorC <- function(DegApproach, kdeg, C.OHrad.n, k0.OHrad, Ea.OHrad, T25,
   #   
   # }
   # 
-}

@@ -25,7 +25,7 @@ KswDorC <- function (KocDorC, CorgStandard, rhoMatrix, Ksw, ChemClass){
         ) |>
       dplyr::pull(KswDorC)
     
-    if (out == NA && ChemClass == 'metal') {
+    if (is.na(out) && ChemClass == 'metal') {
       stop("Ksw Should be in the data")
     }
     

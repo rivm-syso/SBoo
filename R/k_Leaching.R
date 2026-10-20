@@ -10,27 +10,27 @@
 #'@return Leaching rate constant of compound from  soil out of the system (e.g. no deep(er) soil layer considered). [s-1]
 #'@export
 k_Leaching <- function(FRACinf,FRACrun, RAINrate, VertDistance, SpeciesName, 
-                       penetration_depth_s, Kscompw, ScaleName, SubCompartName, parent){ #k_ Leaching
+                       penetration_depth_s, Kscompw, parent){ #k_ Leaching
   
+  # Attached does not leach??
+  
+  out <- parent$FromDataAndTo("k_Leaching")
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Leaching")))
+  names <- dplyr::all_of(names(out))
   
-  # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "FRACinf", "RAINrate", "VertDistance", "Kscompw")
+  # Build 
+  args <- c("out", "SpeciesName", "FRACinf", "RAINrate", "VertDistance", "Kscompw")
   dfs <- mget(args, envir = environment())
-  grid <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y))
   
   # Output
-  out <- parent$FromDataAndTo("k_Leaching") |>
-    # From
-    dplyr::left_join(grid, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
+  out <- out |>
     
     dplyr::mutate( 
-      CORRleach = dplyr::case_when(
-        SpeciesName %in%  c("Aggregated", "Nanoparticle") ~ f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s),
-        SpeciesName %in% c("Molecular") ~ f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s=0.1),
-        TRUE ~ NA
-      ),
+      
+      penetration_depth_s = dplyr::if_else(SpeciesName == "Molecular", 0.1, penetration_depth_s),
+      CORRleach = f_CORRsoil(VertDistance, relevant_depth_s=0.5, penetration_depth_s),
+      
       #If due to extreme inputs, FRACinf and FRACrun are both too large, scale FRACinf to mass conserve rain
       FRACinf = dplyr::case_when(
         (FRACinf + FRACrun) > 1 ~ 1-FRACrun,
@@ -43,7 +43,7 @@ k_Leaching <- function(FRACinf,FRACrun, RAINrate, VertDistance, SpeciesName,
       )
     ) |>
     dplyr::filter(!is.na(k_Leaching)) |>
-    dplyr::select(names, k_Leaching) |>
+    dplyr::select(all_of(names), k_Leaching) |>
     dplyr::arrange(dplyr::across(names))
   
   return(data.frame(out))

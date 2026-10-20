@@ -7,24 +7,22 @@
 #' @export
 k_WetDeposition <- function (Area, Volume, RAINrate, ScaleName, SubCompartName, SpeciesName, parent){
   
+  out <- parent$FromDataAndTo("k_WetDeposition")
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_WetDeposition")))
+  names <- dplyr::all_of(names(out))
 
-  # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Volume", "RAINrate")
-  dfs <- mget(args, envir = environment())
-  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Area")
-  dfs <- mget(args, envir = environment())
-  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
+  # Build
+  VolumeCloudwater <- Volume |>
+    dplyr::filter(SubCompart == "cloudwater") |>
+    dplyr::select(Scale, Volume)
+  out <- out |>
+    dplyr::left_join(VolumeCloudwater) |>
+    dplyr::left_join(RAINrate) |>
+    # Area of the to-Subcompart 
+    dplyr::left_join(Area, by = c("to.SubCompart" = "SubCompart", "Scale")) |>
+    dplyr::filter(!is.na(Area)) |>
 
-  # Output
-  out <- parent$FromDataAndTo("k_WetDeposition") |>
-    # From
-    dplyr::left_join(grid_from, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
-
-    #To
-    dplyr::left_join(grid_to, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species"), suffix=c("_from", "_to")) |>
+  # Calc
 
     dplyr::mutate(
       k_WetDeposition = (RAINrate* Area)/Volume

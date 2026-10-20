@@ -7,22 +7,19 @@
 #' @export
 
 
-k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName, Regional_and_Continental_deepocean, parent){
+k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName, parent){
   
   # Names of dataframe
   names <- dplyr::all_of(names(parent$FromDataAndTo("k_Deagglomeration")))
   
   out <- parent$FromDataAndTo("k_Deagglomeration") |>
     # From
-    dplyr::left_join(kdeag, by=c("SubCompart" = "SubCompart", "from.Species"="Species")) |>
+    dplyr::left_join(kdeag, by=c("SubCompart", "from.Species"="Species")) |>
+    dplyr::filter(!(
+      Scale %in% c("Tropic", "Moderate", "Arctic") & SubCompart %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil")
+    )) |>
     dplyr::mutate(
-      k_Deagglomeration = dplyr::case_when(
-        Scale %in% c("Tropic", "Moderate", "Arctic") & SubCompart %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil") ~
-          NA,
-        !is.null(Scale) & Scale %in% c("Regional", "Continental") & (SubCompart == "deepocean") & (is.na(Regional_and_Continental_deepocean) | isFALSE(Regional_and_Continental_deepocean) | Regional_and_Continental_deepocean == "FALSE") ~
-          NA,
-        TRUE ~ kdeag
-        )
+      k_Deagglomeration = kdeag
     )|>
     dplyr::filter(!is.na(k_Deagglomeration)) |>
     dplyr::select(names, k_Deagglomeration) |>

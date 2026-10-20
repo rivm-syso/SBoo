@@ -16,35 +16,31 @@ k_Erosion <- function(relevant_depth_s,penetration_depth_s, EROSIONsoil, VertDis
                       FracROWatComp,
                       ScaleName, SubCompartName,  Matrix, landFRAC, SpeciesName, parent){
   
-  
   # Names of dataframe
   names <- dplyr::all_of(names(parent$FromDataAndTo("k_Erosion")))
 
-  # Build grid
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "EROSIONsoil", "VertDistance", "landFRAC")
-  dfs <- mget(args, envir = environment())
-  grid_from <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
-  # To
-  args <- c("ScaleName", "SubCompartName", "SpeciesName", "Matrix", "FracROWatComp")
-  dfs <- mget(args, envir = environment())
-  grid_to <- purrr::reduce(dfs, ~ dplyr::full_join(.x, .y, by= intersect(names(.x), names(.y)))) |> parent$states$clipStates()
-
-
   # Output
   out <- parent$FromDataAndTo("k_Erosion") |>
+    # To, skips a lot first 
+    dplyr::left_join(FracROWatComp, by=c("to.SubCompart" = "SubCompart", "Scale", "Species")) |>
+    dplyr::filter(!is.na(FracROWatComp)) |>
+    # Not occuring:
+    dplyr::filter(!(Scale %in% c("Regional", "Continental") & to.SubCompart == "sea")) |>
+    dplyr::filter(!(Scale %in% c("Tropic", "Moderate", "Arctic") & to.SubCompart != "sea")) |>
     # From
-    dplyr::left_join(grid_from, by=c("from.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species")) |>
-
-    #To
-    dplyr::left_join(grid_to, by=c("to.SubCompart" = "SubCompart", "Scale"="Scale", "Species"="Species"), suffix=c("_from", "_to")) |>
+    dplyr::left_join(landFRAC, by=c("from.SubCompart" = "SubCompart", "Scale")) |>
+    dplyr::filter(!is.na(landFRAC)) |>
+    dplyr::left_join(EROSIONsoil |> dplyr::filter(!is.na(EROSIONsoil)), by=c("from.SubCompart" = "SubCompart")) |>
+    dplyr::left_join(Matrix, by=c("from.SubCompart" = "SubCompart")) |>
+    dplyr::left_join(VertDistance, by=c("from.SubCompart" = "SubCompart", "Scale")) |>
+    
+    # To 
+    # Does ..?? all water ! dplyr::left_join(Matrix, by=c("to.SubCompart" = "SubCompart"), suffix=c("_from", "_to")) |>
 
     dplyr::mutate(
-      k_Erosion = dplyr::case_when(
-        Scale %in% c("Regional", "Continental") & to.SubCompart == "sea" ~ NA,
-        Scale %in% c("Tropic", "Moderate", "Arctic") & to.SubCompart != "sea" ~ NA,
-        TRUE ~ EROSIONsoil * f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s) / VertDistance * FracROWatComp  #[s-1]
-      )
-    ) |>
+      CORRsoil = f_CORRsoil(VertDistance, relevant_depth_s, penetration_depth_s),
+      k_Erosion = EROSIONsoil * CORRsoil / VertDistance * FracROWatComp  #[s-1]
+      ) |>
     dplyr::filter(!is.na(k_Erosion)) |>
     dplyr::select(names, k_Erosion) |>
     dplyr::arrange(dplyr::across(names))
