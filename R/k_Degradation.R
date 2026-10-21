@@ -18,80 +18,126 @@
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, SubCompartName, ScaleName, Test, kdis = NA, Regional_and_Continental_deepocean) {
-  # exclusions of process:
-  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
-                                                            SubCompartName == "lakesediment" |
-                                                            SubCompartName == "lake" |
-                                                            SubCompartName == "river" |
-                                                            SubCompartName == "agriculturalsoil"|
-                                                            SubCompartName == "othersoil"))) {
-    return(NA)
-  }
-    
-  #if Regional_and_Continental_deepocean is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
-  else if ((ScaleName %in% c("Regional", "Continental")) &&
-      (SubCompartName == "deepocean") &&
-      (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
-    return(NA)
+                          Matrix, SpeciesName, Test, kdis = dataframe(), parent) {
+ 
+  out <- parent$FromDataAndTo("k_Degradation") 
+  # Names of dataframe
+  names <- dplyr::all_of(names(out))
+  #removal process from==to, so for easy joining/reading
+  out <- dplyr::rename(out, SubCompart = from.SubCompart) 
+  
+  # Build 
+  args <- c("out", "FRingas", "KdegDorC", "C.OHrad","Tempfactor","FRinw","BACTcomp","Matrix", "SpeciesName")
+  dfs <- mget(args, envir = environment())
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y))
+  
+  if (nrow(kdis) > 0) { #can be omitted
+    out <- dplyr::left_join(out, kdis)
   }
   
-  else if (SpeciesName %in% c("Molecular")) {
-    
-    switch(Matrix,
-           "air" =   {
-             FRingas * KdegDorC * (C.OHrad / C.OHrad.n) * Tempfactor
-           },
-           "soil" = {
-             Tempfactor*KdegDorC
-           },
-           "sediment" = {
-             Tempfactor*KdegDorC
-           },
-           "water" = {
-             Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw
-           }
-           
-    )
-  } else { # Particulate
-    
-    if (as.character(Test) == "TRUE"){
-      switch(Matrix,
-             "air" =   {
-               
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             },
-             "soil" = {
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             },
-             "sediment" = {
-               
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             },
-             "water" = {
-               Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
-             }
+  # Output
+  out <- out |>
+    dplyr::mutate(
+      k_Degradation = dplyr::case_when(
+        # Exclusions of process are not needed as clipStates removes these combinations of compartments, model data is here defined in function!
+        SpeciesName == 'Molecular' & Matrix == 'air' ~ FRingas * KdegDorC * (C.OHrad / C.OHrad.n) * Tempfactor,
+        SpeciesName == 'Molecular' & Matrix == 'soil' ~ Tempfactor*KdegDorC,
+        SpeciesName == 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
+        SpeciesName == 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw,
+        
+        SpeciesName != 'Molecular' & Matrix == 'air' & (as.character(Test) == "TRUE") ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'soil' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'sediment' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'water' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
+        
+        SpeciesName != 'Molecular' & Matrix == 'air' ~ Tempfactor*KdegDorC,
+        SpeciesName != 'Molecular' & Matrix == 'soil' ~ Tempfactor*KdegDorC,
+        SpeciesName != 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
+        SpeciesName != 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC,
+        TRUE ~ NA
       )
-    }
-    
-    else
-
-    switch(Matrix,
-           "air" =   {
-             
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           },
-           "soil" = {
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           },
-           "sediment" = {
-             
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           },
-           "water" = {
-             Tempfactor*KdegDorC # not corrected for temperature or other aspects
-           }
-    )
-  }
+    ) |>
+    dplyr::filter(!is.na(k_Degradation)) |>
+    # back renamename
+    dplyr::rename(from.SubCompart = SubCompart) |> 
+    dplyr::select(names, k_Degradation) |>
+    dplyr::arrange(dplyr::across(names))
   
+  return(data.frame(out))
+  
+  # # exclusions of process:
+  # if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+  #                                                           SubCompartName == "lakesediment" |
+  #                                                           SubCompartName == "lake" |
+  #                                                           SubCompartName == "river" |
+  #                                                           SubCompartName == "agriculturalsoil"|
+  #                                                           SubCompartName == "othersoil"))) {
+  #   return(NA)
+  # }
+  #   
+  # #if Regional_and_Continental_deepocean is TRUE, then compute a kdeg for deepocean and sea at regional and continental scale
+  # else if ((ScaleName %in% c("Regional", "Continental")) &&
+  #     (SubCompartName == "deepocean") &&
+  #     (isFALSE(Regional_and_Continental_deepocean) || is.na(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")) {
+  #   return(NA)
+  # }
+  # 
+  # else if (SpeciesName %in% c("Molecular")) {
+  #   
+  #   switch(Matrix,
+  #          "air" =   {
+  #            FRingas * KdegDorC * (C.OHrad / C.OHrad.n) * Tempfactor
+  #          },
+  #          "soil" = {
+  #            Tempfactor*KdegDorC
+  #          },
+  #          "sediment" = {
+  #            Tempfactor*KdegDorC
+  #          },
+  #          "water" = {
+  #            Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw
+  #          }
+  #          
+  #   )
+  # } else { # Particulate
+  #   
+  #   if (as.character(Test) == "TRUE"){
+  #     switch(Matrix,
+  #            "air" =   {
+  #              
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            },
+  #            "soil" = {
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            },
+  #            "sediment" = {
+  #              
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            },
+  #            "water" = {
+  #              Tempfactor*KdegDorC + kdis # not corrected for temperature or other aspects
+  #            }
+  #     )
+  #   }
+  #   
+  #   else
+  # 
+  #   switch(Matrix,
+  #          "air" =   {
+  #            
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          },
+  #          "soil" = {
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          },
+  #          "sediment" = {
+  #            
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          },
+  #          "water" = {
+  #            Tempfactor*KdegDorC # not corrected for temperature or other aspects
+  #          }
+  #   )
+  # }
+  # 
 }

@@ -10,10 +10,28 @@
 #' @param Compartment Only runoff for Compartment == "soil" 
 #' @return Rain water runoff from soils [m3/s]
 #' @export
-RunoffFlow <- function (FRACrun, Area, RAINrate, Compartment){
-  if (Compartment == "soil") {
-    return(FRACrun * Area * RAINrate)
-  } else {
-    return(NA)
-  }
+RunoffFlow <- function (FRACrun, Area, RAINrate, Compartment, parent){
+  
+  out <- Area |>
+    dplyr::full_join(RAINrate, by="Scale") |>
+    dplyr::full_join(Compartment, by ="SubCompart") |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::mutate(
+      FRACrun = FRACrun,
+      RunoffFlow = dplyr::case_when(
+        Compartment == "soil" ~ FRACrun * Area * RAINrate,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    dplyr::filter(!is.na(RunoffFlow)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, RunoffFlow)
+  
+  return(data.frame(out))
+  
+  # if (Compartment == "soil") {
+  #   return(FRACrun * Area * RAINrate)
+  # } else {
+  #   return(NA)
+  # }
 }

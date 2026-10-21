@@ -7,11 +7,15 @@
 #'@return MTC_2sd
 #'@export
 MTC_2sd <- function(kwsd.water, Matrix, SubCompartName){
-  switch(Matrix,
-    "water" =  {
-      if(SubCompartName == "cloudwater") return (NA)
-      kwsd.water
-      },
-    NA
-  )
+  
+  out <- dplyr::full_join(SubCompartName, Matrix) |>
+    dplyr::filter(SubCompart != 'cloudwater' & Matrix == 'water') |>
+    dplyr::mutate(
+      MTC_2sd = kwsd.water
+    ) |>
+    dplyr::filter(!is.na(MTC_2sd)) |>
+    dplyr::arrange(SubCompart) |>
+    dplyr::select(SubCompart, MTC_2sd)
+  
+  return(out)
 }

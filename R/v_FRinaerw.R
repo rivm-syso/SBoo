@@ -8,7 +8,22 @@
 #' @returns The fraction of a chemical in the aerosol water phase. Total: FRingas + FRinaerw + FRinaers = 1.
 #' @seealso [Fringas(), FRinw(), FRins()]
 #' @export
-FRinaerw <- function (Kaers, Kaerw, FRACw, FRACs) {
-  FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) 
+FRinaerw <- function (Kaers, Kaerw, FRACw, FRACs, parent) {
+
+  out <- FRACw |>
+    dplyr::full_join(FRACs, by = c("Scale", "SubCompart")) |>
+    dplyr::full_join(Kaerw, by = c("Scale", "SubCompart")) |>
+    dplyr::full_join(Kaers, by = "SubCompart") |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::mutate(
+      FRinaerw = FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers)
+    ) |>
+    dplyr::filter(!is.na(FRinaerw)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, FRinaerw)
+    
+  return(data.frame(out))
+  
+  # FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) 
 }
 

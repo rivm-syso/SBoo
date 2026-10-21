@@ -7,9 +7,23 @@
 #' @return waterflow of rain directly on lake/river
 #' and continental being a part of Moderate (/ Tropic)
 #' @export
-RainOnFreshwater <- function (RAINrate, Area, SubCompartName) {
-  if (SubCompartName %in% c("river", "lake")) {
-    # RAINrateToSI is generarted from units !
-    return(RAINrate * Area)
-  } else    return(NA)
+RainOnFreshwater <- function (RAINrate, Area, SubCompartName, parent) {
+  
+  out <- Area |>
+    dplyr::filter(SubCompart %in% c("river", "lake")) |>
+    dplyr::full_join(RAINrate, by="Scale") |>
+    parent$states$clipStates(NoSpeciesKey=TRUE) |>
+    dplyr::mutate(
+      RainOnFreshwater = RAINrate * Area
+    ) |>
+    dplyr::filter(!is.na(RainOnFreshwater)) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, RainOnFreshwater)
+  
+  return(data.frame(out))
+  
+  # if (SubCompartName %in% c("river", "lake")) {
+  #   # RAINrateToSI is generarted from units !
+  #   return(RAINrate * Area)
+  # } else    return(NA)
 }

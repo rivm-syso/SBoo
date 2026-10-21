@@ -11,20 +11,44 @@
 #'
 
 
-FracROWatComp <- function(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName) {
-  # browser()
+FracROWatComp <- function(landFRAC, 
+                          #all.Matrix, 
+                          Matrix, 
+                          SubCompartName, 
+                          ScaleName,
+                          parent, SpeciesName) {
   
-  if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
-    
-    compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale == ScaleName]
-    mergeddata <- merge(all.landFRAC, all.Matrix)
-    waterFrac <- sum(mergeddata$landFRAC[mergeddata$Matrix == "water" & mergeddata$Scale == ScaleName])
-    return(compFrac / waterFrac)
-    
-  } else if ((SubCompartName == "sea") & (ScaleName %in% c("Tropic", "Moderate", "Arctic"))){ 
-    return(1)
-  }  else
-  {
-    return(NA)
-  }
+  out <- ScaleName |>
+    tidyr::expand_grid(SubCompartName, SpeciesName) |>
+    dplyr::full_join(Matrix, by="SubCompart") |>
+    dplyr::full_join(landFRAC, c("Scale", "SubCompart")) |>
+    parent$states$clipStates() |>
+    dplyr::group_by(ScaleName, Matrix, SpeciesName) |>
+    dplyr::mutate(
+      FracROWatComp = dplyr::case_when(
+        Matrix == 'water' & ScaleName %in% c("Regional", "Continental") ~ landFRAC / sum(landFRAC, na.rm=TRUE),
+        SubCompartName == 'sea' & ScaleName %in% c("Tropic", "Moderate", "Arctic") ~ 1,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    dplyr::ungroup() |>
+    dplyr::filter(!is.na(FracROWatComp)) |>
+    dplyr::arrange(Scale, SubCompart, Species) |>
+    dplyr::select(Scale, SubCompart, Species, FracROWatComp)
+  
+  return(data.frame(out)) 
+  
+  # if ((Matrix == "water") & (ScaleName %in% c("Regional", "Continental"))) {
+  #   
+  #   compFrac <- all.landFRAC$landFRAC[all.landFRAC$SubCompart == SubCompartName & all.landFRAC$Scale == ScaleName]
+  #   mergeddata <- merge(all.landFRAC, all.Matrix)
+  #   waterFrac <- sum(mergeddata$landFRAC[mergeddata$Matrix == "water" & mergeddata$Scale == ScaleName])
+  #   return(compFrac / waterFrac)
+  #   
+  # } else if ((SubCompartName == "sea") & (ScaleName %in% c("Tropic", "Moderate", "Arctic"))){ 
+  #   return(1)
+  # }  else
+  # {
+  #   return(NA)
+  # }
 }

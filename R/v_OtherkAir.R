@@ -5,9 +5,7 @@
 #' @param ScaleName scale name considered
 #' @param Species species type considered (molecular)
 #' @export
-OtherkAir <- function (all.kaas, ScaleName, SpeciesName){
-  #is only for Molecular
-  if (SpeciesName != "Molecular") return (NA)
-  return(sum(all.kaas$k[all.kaas$fromScale == ScaleName & all.kaas$fromSpecies == "Unbound" & all.kaas$fromSubCompart == "air"]))
-
+OtherkAir <- function (kaas_air, ScaleName, SpeciesName){
+  # replaced by other_MolAir_sinks, which is created in SBcore
+  return(FALSE)
 }

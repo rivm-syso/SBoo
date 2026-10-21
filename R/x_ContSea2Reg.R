@@ -4,9 +4,18 @@
 #' @param RiverDischarge river discharge rate, see x_RiverDischarge [s-1]
 #' @return additional flux from continental sea to regional
 #' @export
-x_ContSea2Reg <- function(all.x_RiverDischarge) {
-  # NB the regional river discharge determines the sea flow from continental!!
-  x_RiverDischarge <- all.x_RiverDischarge$flow[all.x_RiverDischarge$fromScale == "Regional"]
-
-  return((10 - 1) * x_RiverDischarge) # 10-1 based on SB4.01, maybe change to TAU based approach!
+x_ContSea2Reg <- function(x_RiverDischarge, parent) {
+  
+  Regional_RiverDischarge <- dplyr::filter(x_RiverDischarge, Scale == 'Regional') |> dplyr::pull(flow)
+  
+  out <- parent$FromDataAndTo("x_ContSea2Reg") |>
+    dplyr::mutate(
+      flow = (10 - 1) * Regional_RiverDischarge
+    )
+  return(data.frame(out))  
+  
+  # # NB the regional river discharge determines the sea flow from continental!!
+  # x_RiverDischarge <- all.x_RiverDischarge$flow[all.x_RiverDischarge$fromScale == "Regional"]
+  # 
+  # return((10 - 1) * x_RiverDischarge) # 10-1 based on SB4.01, maybe change to TAU based approach!
 }

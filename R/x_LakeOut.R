@@ -8,16 +8,32 @@
 #' @param ScaleName Runoff needs to be calculated per scale.
 #' @return Lake discharge
 #' @export
-x_LakeOut <- function(RainOnFreshwater,
-                           all.RunoffFlow,
-                           FracROWatComp,
-                       SubCompartName,
-                           ScaleName){
-  switch(SubCompartName, # if this is coded with if statement it fails as SubCompartName for Arctic is NA
-          "lake" = {
-            SumRunoff <- sum(all.RunoffFlow$RunoffFlow[all.RunoffFlow$Scale == ScaleName])
-            return(RainOnFreshwater + FracROWatComp*SumRunoff)
-          },
-          NA
-  )
+x_LakeOut <- function(RainOnFreshwater, RunoffFlow, FracROWatComp, parent){
+  
+  Runoff <- RunoffFlow |>
+    dplyr::group_by(Scale) |>
+    dplyr::summarise(allsoils_runoff = sum(RunoffFlow, na.rm = TRUE))
+  
+  RainOnFreshwater <- RainOnFreshwater |> 
+    dplyr::group_by(Scale) |>
+    dplyr::summarise(RainOnFreshwater = sum(RainOnFreshwater, na.rm = TRUE))
+      
+  out <- parent$FromDataAndTo("x_LakeOut") |>
+    dplyr::left_join(Runoff) |>
+    dplyr::left_join(RainOnFreshwater) |>
+    dplyr::left_join(FracROWatComp, by=c("from.SubCompart" = "SubCompart", "Scale", "Species")) |>
+    dplyr::mutate(
+      flow = RainOnFreshwater + (FracROWatComp * allsoils_runoff)
+    ) |>
+    dplyr::select(from.SubCompart, to.SubCompart, Scale, Species, flow)
+  
+  return(data.frame(out))
+  
+  # switch(SubCompartName, # if this is coded with if statement it fails as SubCompartName for Arctic is NA
+  #         "lake" = {
+  #           SumRunoff <- sum(all.RunoffFlow$RunoffFlow[all.RunoffFlow$Scale == ScaleName])
+  #           return(RainOnFreshwater + FracROWatComp*SumRunoff)
+  #         },
+  #         NA
+  # )
 }

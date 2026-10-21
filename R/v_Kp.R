@@ -10,16 +10,41 @@
 #'@param Matrix the medium, the formula is only applicable to soil and sediment
 #'@param ksw.alt 
 #'@export
-Kp <- function(FRorig, KswDorC, Ksw.alt, all.rhoMatrix, Corg, CorgStandard, Matrix, ChemClass){
-  if (Matrix %in% c("soil", "sediment","water")) {
-    RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
-    return(
-      switch (ChemClass,
-        "acid" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
-        "base" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
-        {(FRorig*KswDorC) * (1000 / RHOsolid) * (Corg / CorgStandard)} #Corg
+Kp <- function(FRorig, KswDorC, Ksw.alt, rhoMatrix, Corg, CorgStandard, Matrix, ChemClass){
+  
+  RHOsolid <- rhoMatrix |> dplyr::filter(Matrix == 'soil') |> dplyr::pull(rhoMatrix)
+  
+  out <- Matrix |>
+    dplyr::full_join(FRorig, by = "SubCompart") |>
+    dplyr::full_join(Corg, by="Matrix") |>
+    tidyr::expand_grid(RHOsolid = RHOsolid) |>
+    dplyr::mutate(
+      Kp = dplyr::case_when(
+      Matrix %in% c("soil", "sediment","water") & ChemClass =='acid' ~ 
+        (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
+      Matrix %in% c("soil", "sediment","water") & ChemClass =='base' ~
+        (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
+      Matrix %in% c("soil", "sediment","water") & !(ChemClass %in% c('acid', 'base')) ~
+        (FRorig*KswDorC) * (1000 / RHOsolid) * (Corg / CorgStandard),
+      TRUE ~ NA_real_
       )
-      
-    )
-  } else return (NA)
+    ) |>
+    dplyr::filter(!is.na(Kp)) |>
+    dplyr::arrange(SubCompart) |>
+    dplyr::select(SubCompart, Kp)
+  
+  
+  return(data.frame(out))
+  
+  # if (Matrix %in% c("soil", "sediment","water")) {
+  #   RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
+  #   return(
+  #     switch (ChemClass,
+  #       "acid" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
+  #       "base" = (FRorig*KswDorC + (1-FRorig)*Ksw.alt) * (1000 / RHOsolid / CorgStandard) * Corg,
+  #       {(FRorig*KswDorC) * (1000 / RHOsolid) * (Corg / CorgStandard)} #Corg
+  #     )
+  #     
+  #   )
+  # } else return (NA)
 }

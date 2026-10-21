@@ -7,10 +7,22 @@
 #'@param from.Matrix Matrix/compartment from which the relevant process is taking place
 #'@return MTC_2w
 #'@export
-MTC_2w <- function(WINDspeed, MW, kwsd.sed, Matrix){
-  switch(Matrix,
-    "air" =  0.01*(0.3+0.2*WINDspeed)*((0.018/MW)^(0.67*0.5)),
-    "sediment" = kwsd.sed, 
-    NA
-  )
+MTC_2w <- function(WINDspeed, MW, kwsd.sed, Matrix, parent, ScaleName){
+  
+  out <- ScaleName |>
+    tidyr::expand_grid(Matrix) |>
+    parent$states$clipStates(NoSpeciesKey = TRUE) |>
+    dplyr::filter(Matrix %in% c("air", "sediment")) |>
+    dplyr::full_join(WINDspeed) |>
+    dplyr::mutate(
+      MTC_2w = dplyr::case_when(
+        Matrix == 'air' ~ 0.01*(0.3+0.2*WINDspeed)*((0.018/MW)^(0.67*0.5)),
+        Matrix == 'sediment' ~  kwsd.sed,
+        TRUE ~ NA_real_
+      )
+    ) |>
+    dplyr::arrange(Scale, SubCompart) |>
+    dplyr::select(Scale, SubCompart, MTC_2w)
+  
+  return(data.frame(out))
 }

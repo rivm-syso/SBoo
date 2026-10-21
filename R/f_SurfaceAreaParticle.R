@@ -9,7 +9,7 @@
 #' @return f_SurfaceAreaParticle [m2]
 #' @export
 
-f_SurfaceAreaParticle <- function(Shape, 
+f_SurfaceAreaParticle <- function(Shape = NULL, 
                                   Longest_side = NULL, 
                                   Intermediate_side = NULL, 
                                   Shortest_side = NULL, 
@@ -18,7 +18,7 @@ f_SurfaceAreaParticle <- function(Shape,
     Shape <- "Default"
   }
   # Check if Shortest side is NA or NULL and assign default values if so
-  if ( is.na(Shortest_side) || is.null(Shortest_side) ) {
+  if (is.na(Shortest_side) || is.null(Shortest_side) ) {
     Shortest_side <- rad_particle * 2
   }
   # Check if any of Intermediate or Longest sides is NA or NULL and assign default values if so

@@ -7,18 +7,37 @@
 #' @export
 
 
-k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName, Regional_and_Continental_deepocean){
-  if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
-                                                             SubCompartName == "lakesediment" |
-                                                             SubCompartName == "lake" |
-                                                             SubCompartName == "river" |
-                                                             SubCompartName == "agriculturalsoil"|
-                                                             SubCompartName == "othersoil")) ){
-    return(NA)
-  } else if (!is.null(ScaleName) && ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(Regional_and_Continental_deepocean) || isFALSE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")){
-    return(NA)
-  } else {
-    return(kdeag)
-  }
+k_Deagglomeration <- function (kdeag, SubCompartName, ScaleName, parent){
+  
+  # Names of dataframe
+  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Deagglomeration")))
+  
+  out <- parent$FromDataAndTo("k_Deagglomeration") |>
+    # From
+    dplyr::left_join(kdeag, by=c("SubCompart", "from.Species"="Species")) |>
+    dplyr::filter(!(
+      Scale %in% c("Tropic", "Moderate", "Arctic") & SubCompart %in% c("freshwatersediment", "lakesediment", "lake", "river", "agriculturalsoil", "othersoil")
+    )) |>
+    dplyr::mutate(
+      k_Deagglomeration = kdeag
+    )|>
+    dplyr::filter(!is.na(k_Deagglomeration)) |>
+    dplyr::select(names, k_Deagglomeration) |>
+    dplyr::arrange(dplyr::across(names))
+  
+  return(data.frame(out))
+
+  # if (((ScaleName %in% c("Tropic", "Moderate", "Arctic")) & (SubCompartName == "freshwatersediment" | 
+  #                                                            SubCompartName == "lakesediment" |
+  #                                                            SubCompartName == "lake" |
+  #                                                            SubCompartName == "river" |
+  #                                                            SubCompartName == "agriculturalsoil"|
+  #                                                            SubCompartName == "othersoil")) ){
+  #   return(NA)
+  # } else if (!is.null(ScaleName) && ScaleName %in% c("Regional", "Continental") && (SubCompartName == "deepocean") && (is.na(Regional_and_Continental_deepocean) || isFALSE(Regional_and_Continental_deepocean) || Regional_and_Continental_deepocean == "FALSE")){
+  #   return(NA)
+  # } else {
+  #   return(kdeag)
+  # }
     
 }

@@ -1,39 +1,38 @@
 #' @title Advection of fluxes of air between scales 
 #' @name x_Advection_air
 #' @description Calculation using AirFlow, but adjust to mass balance volume flows
-#' @param all.AirFlow to pick for the "from" scale 
-#' @param from.ScaleName name of the scale of the source of the process
-#' @param to.ScaleName name of the scale of the destination of the process
+#' @param AirFlow to pick for the "from" scale 
+#' @param ScaleName name of the scale of the source/sink of the process
 #' @param Remove_global If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed
 #' @return x.Advection_Air, the flow
 #' @export
-x_Advection_Air <- function(all.AirFlow, from.ScaleName, to.ScaleName, Remove_global){
+x_Advection_Air <- function(AirFlow, parent){
   # The airflow was step 1; now the corrections for the mass balance to add up..
   # "normal" k is 1/Tau ;  Airflow = Volume/Tau
   
-  from.AirFlow <- all.AirFlow$AirFlow[all.AirFlow$Scale == from.ScaleName] #if also for cloudwater, include subcompart in clause
-  to.Airflow <- all.AirFlow$AirFlow[all.AirFlow$Scale == to.ScaleName]
-  #local function to fetch airflow between continental to Regional, neither of which are from or to
-  Cont2Regional.Airflow <- function(){
-    all.AirFlow$AirFlow[all.AirFlow$Scale == "Regional"] # & All.Airflow$SubCompart =="air"
-  }
-
-  if(from.ScaleName %in% c("Arctic", "Regional", "Tropic")){
-    return(all.AirFlow$AirFlow[all.AirFlow$Scale == from.ScaleName])
-  }
+  out <- parent$FromDataAndTo("x_Advection_Air")
   
-  if(from.ScaleName == "Continental" & to.ScaleName == "Moderate"){
-    #the actual Airflow needs correcting 
-    if ((!is.na(Remove_global) && (isTRUE(Remove_global) || Remove_global == "TRUE"))) {
-      return(NA) } 
-    return(all.AirFlow$AirFlow[all.AirFlow$Scale == from.ScaleName] - Cont2Regional.Airflow())
-  } 
+  # to keep mass balance
+  Cont2Regional <- AirFlow$AirFlow[AirFlow$Scale == "Regional"]
+  Moder2Cont <- AirFlow$AirFlow[AirFlow$Scale == "Continental"] - Cont2Regional
   
-  if(from.ScaleName == "Moderate" & to.ScaleName == "Continental"){
-    #the actual Airflow needs correcting 
-    return(all.AirFlow$AirFlow[all.AirFlow$Scale == to.ScaleName] - Cont2Regional.Airflow())
-  } 
+  out <- out |>
+    dplyr::left_join(AirFlow, by = c("from.Scale" = "Scale", "SubCompart")) |>
+    dplyr::rename(from.AirFlow = AirFlow) |>
+    dplyr::left_join(AirFlow, by = c("to.Scale" = "Scale", "SubCompart")) |>
+    dplyr::rename(to.AirFlow = AirFlow) |>
+    
+    dplyr::mutate(flow = dplyr::case_when(
+      #exceptions first
+      from.Scale == "Continental" & to.Scale == "Regional"   ~ Cont2Regional,  # scalar or length n
+      from.Scale == "Moderate"    & to.Scale == "Continental" ~ Moder2Cont,
+      from.Scale == "Continental" & to.Scale == "Moderate"    ~ Moder2Cont,
+      from.Scale %in% c("Arctic", "Regional", "Tropic")       ~ from.AirFlow,
+      TRUE                                                     ~ to.AirFlow
+    )) |> 
+    
+    # remove columns
+    dplyr::select(-from.AirFlow, -to.AirFlow)
   
-  # else from is set to the to.AirFlow, keeping the mass balance;
-  return(all.AirFlow$AirFlow[all.AirFlow$Scale == to.ScaleName])
+  return (out)
 }

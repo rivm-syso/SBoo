@@ -323,35 +323,16 @@ Make_inv_unif01 = function(fun_type = "triangular", pars) {
       minx + (maxx - minx) * (log_scaled / max(log_scaled))
     })
   }
-  if (fun_type == "TRWP_size") {
-    if (!(inherits(pars, "list")) && length(pars) == 1) {
-      stop("")
-    }
-    path <- pars[["d"]]
-    return(function(x) {
-      # Read the data and process it
-      TRWP_data <- readxl::read_excel(path, sheet = "TRWP_data")
-      stopifnot("Size Fraction (um)" %in% colnames(TRWP_data))
-      TRWP_data <- TRWP_data |>
-        tidyr::separate(`Size Fraction (um)`,
-                 into = c("Size_um","max_size_um"), 
-                 sep = "-"
-                 ) |> 
-        dplyr::mutate(Size_um = as.numeric(gsub("400", "1000", Size_um)), # Change "400" to "1000"
-               Size_nm = Size_um*1000, # convert sizes to nanometer
-               PSD_um = as.numeric(PSD_um) # Assuming PSD_um is the particle size distribution (weights)
-        )|>
-        dplyr::mutate(cdf = cumsum(PSD_um), 
-               cdf = cdf / max(cdf) # Normalize the CDF
-               ) 
-       
-      # Use the approx function to interpolate Size_um based on the CDF
-      approx(x = TRWP_data$cdf, 
-             y = TRWP_data$Size_nm, 
-             xout = x, 
-             rule = 2)$y
-    })
+}
+
+# normalise Default to logical
+to_logical <- function(x) {
+  if (is.logical(x)) return(x)
+  suppressWarnings(x_num <- as.numeric(as.character(x)))
+  if (!all(is.na(x_num) == is.na(x))) {
+    stop("Default column could not be safely converted to numeric/logical.")
   }
+  x_num == 1
 }
 
 

@@ -10,22 +10,43 @@
 #' @param pKa Dissociation constant of (conjugated) acid (default = 70
 #' @param Ksw soil water partitioning coefficient in data
 #' @export
-KswDorC <- function (KocDorC, CorgStandard, all.rhoMatrix, Ksw, ChemClass){
-  RHOsolid <- all.rhoMatrix$rhoMatrix[all.rhoMatrix$SubCompart == "naturalsoil"]
+KswDorC <- function (KocDorC, CorgStandard, rhoMatrix, Ksw, ChemClass){
   
   if (is.na(Ksw) || Ksw == "NA") { 
-    switch(ChemClass,
-    #        "acid" = 10^(0.54*log10(Kow)+1.11) ,
-    #        "base" = 10^(0.37*log10(Kow)+1.7) ,
-           "metal" = stop("Ksw Should be in the data"),
-           #"particle" = stop("Ksw Should be in the data"),
-           "particle" = NA,
-           #else
-           { KocDorC*CorgStandard * RHOsolid / 1000})
+    out <- rhoMatrix |>
+      dplyr::filter(Matrix == 'soil') |>
+      tidyr::expand_grid(data.frame(ChemClass)) |>
+      dplyr::mutate(
+        KswDorC = dplyr::case_when(
+          ChemClass == 'metal' ~ NA,
+          ChemClass == 'particle' ~ NA,
+          TRUE ~ KocDorC*CorgStandard * rhoMatrix / 1000
+          )
+        ) |>
+      dplyr::pull(KswDorC)
     
-  }
-   
+    if (is.na(out) && ChemClass == 'metal') {
+      stop("Ksw Should be in the data")
+    }
     
- else return(Ksw)
+    return(out)
+  } else return(Ksw)
+  
+ #  RHOsolid <- rhoMatrix$rhoMatrix[rhoMatrix$SubCompart == "naturalsoil"]
+ #  
+ #  if (is.na(Ksw) || Ksw == "NA") { 
+ #    switch(ChemClass,
+ #    #        "acid" = 10^(0.54*log10(Kow)+1.11) ,
+ #    #        "base" = 10^(0.37*log10(Kow)+1.7) ,
+ #           "metal" = stop("Ksw Should be in the data"),
+ #           #"particle" = stop("Ksw Should be in the data"),
+ #           "particle" = NA,
+ #           #else
+ #           { KocDorC*CorgStandard * RHOsolid / 1000})
+ #    
+ #  }
+ #   
+ #    
+ # else return(Ksw)
   
 }

@@ -5,8 +5,34 @@
 #' @param from.VOLUME Volume of cloudwater compartment [m3]
 #' @param RAINrate average rain rate [m s-1]
 #' @export
-k_WetDeposition <- function (to.Area, from.Volume, RAINrate){
+k_WetDeposition <- function (Area, Volume, RAINrate, ScaleName, SubCompartName, SpeciesName, parent){
   
-  (RAINrate* to.Area)/from.Volume
+  out <- parent$FromDataAndTo("k_WetDeposition")
+  # Names of dataframe
+  names <- dplyr::all_of(names(out))
+
+  # Build
+  VolumeCloudwater <- Volume |>
+    dplyr::filter(SubCompart == "cloudwater") |>
+    dplyr::select(Scale, Volume)
+  out <- out |>
+    dplyr::left_join(VolumeCloudwater) |>
+    dplyr::left_join(RAINrate) |>
+    # Area of the to-Subcompart 
+    dplyr::left_join(Area, by = c("to.SubCompart" = "SubCompart", "Scale")) |>
+    dplyr::filter(!is.na(Area)) |>
+
+  # Calc
+
+    dplyr::mutate(
+      k_WetDeposition = (RAINrate* Area)/Volume
+    ) |>
+    dplyr::filter(!is.na(k_WetDeposition)) |>
+    dplyr::select(names, k_WetDeposition) |>
+    dplyr::arrange(dplyr::across(names))
+
+  return(data.frame(out))
+  
+  # (RAINrate* to.Area)/from.Volume
 }
 

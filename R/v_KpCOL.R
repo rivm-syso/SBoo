@@ -5,9 +5,22 @@
 #'@param Matrix the medium, the formula is only applicable to soil and sediment
 #'@export
 KpCOL <- function(D, Matrix){
-  if (Matrix %in% c("water")) {
-    return(
-      0.08*D
-    )
-  } else return (NA)
+  
+  out <- Matrix |>
+    dplyr::full_join(D, by="SubCompart") |>
+    dplyr::filter(Matrix == 'water') |>
+    dplyr::mutate(
+      KpCOL = 0.08 * D
+    ) |>
+    dplyr::filter(!is.na(KpCOL)) |>
+    dplyr::select(SubCompart, KpCOL) |>
+    dplyr::arrange(SubCompart)
+  
+  return(out)
+  
+  # if (Matrix %in% c("water")) {
+  #   return(
+  #     0.08*D
+  #   )
+  # } else return (NA)
 }

@@ -16,6 +16,10 @@
 #' @export
 
 f_DragCoefficient <- function(DragMethod, Re, Psi, CSF, kS, kN) {
+  if (is.na(DragMethod)) {
+    return(NA)
+  }
+  
   if (DragMethod == "Dioguardi" | DragMethod == "Default") {
     term1 <- (24 / Re) * (((1 - Psi) / Re) + 1) ^ 0.25
     term2 <- (24 / Re) * (0.1806 * Re ^ 0.6459) * Psi ^ - (Re^0.08)
