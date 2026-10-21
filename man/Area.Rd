@@ -4,7 +4,15 @@
 \alias{Area}
 \title{Area}
 \usage{
-Area(AreaLand, AreaSea, landFRAC, all.landFRAC, SubCompartName, ScaleName)
+Area(
+  AreaLand,
+  AreaSea,
+  landFRAC,
+  all.landFRAC,
+  SubCompartName,
+  ScaleName,
+  Regional_and_Continental_deepocean
+)
 }
 \arguments{
 \item{landFRAC}{fraction of land in the considered compartment [-]}

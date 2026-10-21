@@ -7,10 +7,9 @@
 x_ContRiver2Reg(
   ScaleName,
   SubCompartName,
-  all.Runoff,
-  RainOnFreshwater,
-  dischargeFRAC,
-  LakeFracRiver
+  all.RunoffFlow,
+  all.RainOnFreshwater,
+  dischargeFRAC
 )
 }
 \arguments{
@@ -18,13 +17,11 @@ x_ContRiver2Reg(
 
 \item{SubCompartName}{Name of the relevant sub-compartment}
 
+\item{dischargeFRAC}{Fraction discharge of freshwater between regional and continental scales and vice versa [-]}
+
+\item{RunoffFlow}{RunoffFlow flow from soil to river [m3.s-1]}
+
 \item{RainOnFreshwater}{Water flow of rain directly on lake/river [m3.s-1]}
-
-\item{dischargeFRAC}{Fraction discharge regional fresh water to continental scale [-]}
-
-\item{LakeFracRiver}{Fraction of river discharge that originates from lake [-]}
-
-\item{Runoff}{Runoff flow from soil to river [m3.s-1]}
 }
 \value{
 River Discharge for scale Continental [s-1]

@@ -33,6 +33,7 @@ the centre object for running simple box with an R script.
 \item \href{#method-SBcore-makeInvFuns}{\code{SBcore$makeInvFuns()}}
 \item \href{#method-SBcore-exportEngine}{\code{SBcore$exportEngine()}}
 \item \href{#method-SBcore-exportEngineR}{\code{SBcore$exportEngineR()}}
+\item \href{#method-SBcore-K_matrix}{\code{SBcore$K_matrix()}}
 \item \href{#method-SBcore-Masses}{\code{SBcore$Masses()}}
 \item \href{#method-SBcore-VariableValues}{\code{SBcore$VariableValues()}}
 \item \href{#method-SBcore-Concentration}{\code{SBcore$Concentration()}}
@@ -268,6 +269,16 @@ Export the matrix of speed constants, aka Engine, to an excel file
 Export the matrix to World
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SBcore$exportEngineR()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBcore-K_matrix"></a>}}
+\if{latex}{\out{\hypertarget{method-SBcore-K_matrix}{}}}
+\subsection{Method \code{K_matrix()}}{
+Save the last calculated masses in the core
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SBcore$K_matrix()}\if{html}{\out{</div>}}
 }
 
 }

@@ -18,7 +18,8 @@ k_Degradation(
   SubCompartName,
   ScaleName,
   Test,
-  kdis = NA
+  kdis = NA,
+  Regional_and_Continental_deepocean
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ k_Degradation(
 \item{SubCompartName}{name of the subcompartment}
 
 \item{ScaleName}{name of the considered scale}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 }
 \value{
 Degradation rate constant for molecular species

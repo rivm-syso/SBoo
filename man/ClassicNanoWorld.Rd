@@ -21,6 +21,7 @@ the centre object for running simple box with an R script.
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-ClassicNanoWorld-new}{\code{ClassicNanoWorld$new()}}
+\item \href{#method-ClassicNanoWorld-readMasCsvs}{\code{ClassicNanoWorld$readMasCsvs()}}
 \item \href{#method-ClassicNanoWorld-clone}{\code{ClassicNanoWorld$clone()}}
 }
 }
@@ -49,6 +50,15 @@ init
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ClassicNanoWorld-readMasCsvs"></a>}}
+\if{latex}{\out{\hypertarget{method-ClassicNanoWorld-readMasCsvs}{}}}
+\subsection{Method \code{readMasCsvs()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClassicNanoWorld$readMasCsvs(MlikeFile)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ClassicNanoWorld-clone"></a>}}

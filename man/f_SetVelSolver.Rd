@@ -7,13 +7,15 @@
 f_SetVelSolver(
   d_eq,
   Psi,
-  DynViscWaterStandard,
+  DynViscFluidStandard,
   rhoParticle,
-  rhoWater,
+  rhoFluid,
   DragMethod,
   CSF,
   Matrix,
-  rad_species
+  rad_species,
+  kS,
+  kN
 )
 }
 \arguments{
@@ -21,11 +23,11 @@ f_SetVelSolver(
 
 \item{Psi}{Shape factor, circularity/sphericity [-]}
 
-\item{DynViscWaterStandard}{Dynamic viscosity of liquid  (fraction of) compartment [kg.m-1.s-1]}
+\item{DynViscFluidStandard}{Dynamic viscosity of liquid  (water or air) compartment [kg.m-1.s-1]}
 
 \item{rhoParticle}{Density of nanoparticle [kg.m-3]}
 
-\item{rhoWater}{Density of the water [kg m-3]}
+\item{rhoFluid}{Density of water or air [kg m-3]}
 
 \item{DragMethod}{Method of calculating the Drag Coefficient}
 

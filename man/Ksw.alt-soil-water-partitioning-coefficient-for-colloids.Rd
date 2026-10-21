@@ -5,24 +5,24 @@
 \alias{Ksw.alt}
 \title{Ksw.alt}
 \usage{
-Ksw.alt(Kow, pKa, CorgStandard, ChemClass, a, b, all.rhoMatrix, KswDorC)
+Ksw.alt(KocAltDorC, CorgStandard, all.rhoMatrix)
 }
 \arguments{
-\item{Kow}{octanol water partitioning coefficient [-]}
-
-\item{pKa}{Dissociation constant of (conjugated) acid (default = 7}
-
 \item{CorgStandard}{Standard mass FRACTION organic carbon in soil/sediment [-]}
 
 \item{ChemClass}{Class of chemical, see QSAR table (REACH, 2012)}
+
+\item{Kow}{octanol water partitioning coefficient [-]}
 
 \item{a}{see QSAR table}
 
 \item{b}{see QSAR table}
 
-\item{KswDorC}{soil water partitioning coefficient for colloids [-]}
-
 \item{rhoMatrix}{density of the matrix [kg/m3]}
+
+\item{pKa}{Dissociation constant of (conjugated) acid (default = 7}
+
+\item{KswDorC}{soil water partitioning coefficient for colloids [-]}
 }
 \description{
 Ksw.alt

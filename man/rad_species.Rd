@@ -7,13 +7,18 @@
 rad_species(
   SpeciesName,
   SubCompartName,
+  ScaleName,
   RadCOL,
   RadCP,
   RadNuc,
   RadS,
   NumConcNuc,
   NumConcAcc,
-  Df
+  Shortest_side,
+  Intermediate_side,
+  Longest_side,
+  Shape,
+  Regional_and_Continental_deepocean
 )
 }
 \arguments{
@@ -33,7 +38,15 @@ rad_species(
 
 \item{NumConcAcc}{Number concentration of Accumulation mode aerosol particles [#/m3]}
 
-\item{Df}{fractal dimension of combined heteroagglomerate [-]}
+\item{Shortest_side}{Shortest side of the particle (nanomaterial or microplastics) this side will be adjusted based on the natural particle [m]}
+
+\item{Intermediate_side}{Intermediate side of the particle (nanomaterial or microplastics) [m]}
+
+\item{Longest_side}{Longest side of the particle (nanomaterial or microplastics) [m]}
+
+\item{Shape}{Shape of the particle}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 
 \item{NaturalRad}{natural particle radius all but small in air [m]}
 }

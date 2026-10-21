@@ -8,6 +8,8 @@ k_Sedimentation(
   FRinw,
   SettlingVelocity,
   DynViscWaterStandard,
+  rhoMatrix,
+  Matrix,
   VertDistance,
   from.RhoCP,
   from.RadCP,
@@ -16,7 +18,8 @@ k_Sedimentation(
   SubCompartName,
   to.SubCompartName,
   ScaleName,
-  Test
+  Test,
+  Regional_and_Continental_deepocean
 )
 }
 \arguments{
@@ -35,6 +38,8 @@ k_Sedimentation(
 \item{ScaleName}{Name of relevant scale for which k_Sedimentation is being calculated}
 
 \item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 
 \item{RadCP}{Radius of the Coarse natural particle [m]}
 

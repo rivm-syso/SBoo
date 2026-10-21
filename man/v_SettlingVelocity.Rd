@@ -13,11 +13,15 @@ SettlingVelocity(
   DynViscAirStandard,
   Matrix,
   SubCompartName,
+  ScaleName,
   Shape,
   Longest_side,
   Intermediate_side,
   Shortest_side,
-  DragMethod
+  DragMethod,
+  MinSettVel,
+  Regional_and_Continental_deepocean,
+  VelInput
 )
 }
 \arguments{
@@ -44,9 +48,11 @@ SettlingVelocity(
 \item{Shortest_side}{the shortst side of the particle as identified by user [m]}
 
 \item{DragMethod}{The Method used for computing the drag coefficient as defined by user, opportunity for choosing 4 different ones. See f_DragCoefficient for options}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 }
 \value{
-Settling velocity
+Settling velocity [m.s-1]
 }
 \description{
 Settling Velocity or terminal Velocity of particles in a fluid medium based on different DragMethods.

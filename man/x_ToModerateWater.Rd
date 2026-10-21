@@ -10,7 +10,8 @@ x_ToModerateWater(
   all.x_RegSea2Cont,
   OceanCurrent,
   SubCompartName,
-  ScaleName
+  ScaleName,
+  Remove_global
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ x_ToModerateWater(
 \item{SubCompartName}{Name of the subcompartment of the box at hand}
 
 \item{ScaleName}{Name of the scale of the box at hand}
+
+\item{Remove_global}{If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed}
 }
 \value{
 Water flow to Moderate scale surface and deepocean waters [m3 s-1]

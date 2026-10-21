@@ -90,13 +90,13 @@ solveInParallelSteadyState <- function(max_runs_per_slice,
       Dfiles <- list.files(paste(Path2PackageSource, "data", sep = "/"), pattern = "\\.rda$")
       Rded <- lapply(Dfiles, function(x) {
         Dfilename <- paste(Path2PackageSource, "data", x, sep = "/")
-        if (exists("verbose") && verbose) cat(Dfilename, "\n")
+        if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) cat(Dfilename, "\n")
         load(Dfilename, envir = global_env())
       })
       Rfiles <- list.files(paste(Path2PackageSource, "R", sep = "/"), pattern = "\\.R$")
       sourced <- lapply(Rfiles, function(x) {
         Rfilename <- paste(Path2PackageSource, "R", x, sep = "/")
-        if (exists("verbose") && verbose) cat(Rfilename, "\n")
+        if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) cat(Rfilename, "\n")
         source(Rfilename)
       })
     } else {
@@ -255,13 +255,13 @@ solveInParallelDynamic <- function(max_runs_per_slice,
       Dfiles <- list.files(paste(Path2PackageSource, "data", sep = "/"), pattern = "\\.rda$")
       Rded <- lapply(Dfiles, function(x) {
         Dfilename <- paste(Path2PackageSource, "data", x, sep = "/")
-        if (exists("verbose") && verbose) cat(Dfilename, "\n")
+        if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) cat(Dfilename, "\n")
         load(Dfilename, envir = global_env())
       })
       Rfiles <- list.files(paste(Path2PackageSource, "R", sep = "/"), pattern = "\\.R$")
       sourced <- lapply(Rfiles, function(x) {
         Rfilename <- paste(Path2PackageSource, "R", x, sep = "/")
-        if (exists("verbose") && verbose) cat(Rfilename, "\n")
+        if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) cat(Rfilename, "\n")
         source(Rfilename)
       })
     } else {
