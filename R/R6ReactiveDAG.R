@@ -12,10 +12,7 @@ ReactiveDAG <- R6::R6Class(
       self$session <- shiny::MockShinySession$new()
       self$nodes <- list()
       self$sources <- list()
-      
-      params$parent <- parent
       self$params <- list2env(params, parent = emptyenv())
-      
       self$debugR <- debugR
       self$parent <- parent
     },
@@ -100,19 +97,12 @@ ReactiveDAG <- R6::R6Class(
     
     make_smart_wrapper = function(fun, fun_name, fun_env, get_reactive, debug = FALSE) {
       fun_formals <- names(formals(fun))
-      deps <- setdiff(fun_formals, "...")
+      deps <- setdiff(fun_formals, c("...", "parent"))
       
       accepts_dots <- "..." %in% fun_formals
       accepts_parent <- "parent" %in% fun_formals
       
       reactive_env <- new.env(parent = environment(fun))
-      
-      makeActiveBinding(
-        sym = "parent",
-        fun = function() get_reactive("parent"),
-        env = reactive_env
-      )
-      
       for (nm in deps) {
         local({
           name <- nm
