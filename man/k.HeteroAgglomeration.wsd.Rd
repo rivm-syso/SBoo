@@ -12,6 +12,7 @@ k_HeteroAgglomeration.wsd(
   Shear,
   RadS,
   RhoS,
+  Shape,
   RadCOL,
   RadCP,
   Temp,
@@ -25,7 +26,12 @@ k_HeteroAgglomeration.wsd(
   Matrix,
   to.SpeciesName,
   SubCompartName,
-  ScaleName
+  ScaleName,
+  Longest_side,
+  Intermediate_side,
+  Shortest_side,
+  DragMethod,
+  Regional_and_Continental_deepocean
 )
 }
 \arguments{
@@ -38,6 +44,10 @@ k_HeteroAgglomeration.wsd(
 \item{Shear}{Shear rate of the fluid matrix [s-1]}
 
 \item{RadS}{Radius of nanoparticle [m]}
+
+\item{RhoS}{Radius of nanoparticle [kg m-3]}
+
+\item{Shape}{Shape of the particle [character string]}
 
 \item{RadCOL}{radius of accumulation mode of particle [m]}
 
@@ -57,6 +67,16 @@ k_HeteroAgglomeration.wsd(
 
 \item{ScaleName}{Name of relevant scale for which k_HeteroAgglomeration is being calculated}
 
+\item{Longest_side}{description}
+
+\item{Intermediate_side}{description}
+
+\item{Shortest_side}{description}
+
+\item{DragMethod}{Drag method [character string]}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
+
 \item{MasConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
 
 \item{from.radius}{Radius of nanoparticle [m]}
@@ -70,8 +90,6 @@ k_HeteroAgglomeration.wsd(
 \item{rhoFluid}{Density of fluid matrix [kg/m3]}
 
 \item{DynViscAirStandard}{Dynamic viscosity of Air [kg m-1 s-1]}
-
-\item{Rhos}{Radius of nanoparticle [kg m-3]}
 
 \item{rhoCOL}{density of accumulation mode of particle [kg m-3]}
 

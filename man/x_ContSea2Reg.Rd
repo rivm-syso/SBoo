@@ -4,16 +4,14 @@
 \alias{x_ContSea2Reg}
 \title{ContSea2Reg}
 \usage{
-x_ContSea2Reg(all.x_RiverDischarge, LakeFracRiver)
+x_ContSea2Reg(all.x_RiverDischarge)
 }
 \arguments{
-\item{LakeFracRiver}{part of river discharge that originates from lake [-]}
-
 \item{RiverDischarge}{river discharge rate, see x_RiverDischarge [s-1]}
 }
 \value{
 additional flux from continental sea to regional
 }
 \description{
-there is an additional flux from continental sea to regional to compensate from the LakeFracRiver
+THe mixing of continental and regional sea's  is based on a factor of 9 times the discharge rate of the regional freshwater to regional sea.
 }

@@ -17,7 +17,7 @@ ClassicNanoProcess <- R6::R6Class(
                        # }, filename = filename
       )
       private$ExcelFileName <- filename
-      if (exists("verbose") && verbose) {
+      if (exists("SB_verbose") && is.logical(SB_verbose) && SB_verbose) {
         warning("MPClassicNano is not part of the calculation-graph!")
       }
     },

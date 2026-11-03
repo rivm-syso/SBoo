@@ -4,10 +4,17 @@
 \alias{k_Deagglomeration}
 \title{Fragmentation and degradation of plastics}
 \usage{
-k_Deagglomeration(kdeag, SubCompartName, ScaleName)
+k_Deagglomeration(
+  kdeag,
+  SubCompartName,
+  ScaleName,
+  Regional_and_Continental_deepocean
+)
 }
 \arguments{
 \item{kdeag}{Falling appart or fragmenting of heteroaglomerates [s-1]}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 }
 \value{
 k_Deagglomeration, the combined degradation and fragmentation rate of microplastics [s-1]

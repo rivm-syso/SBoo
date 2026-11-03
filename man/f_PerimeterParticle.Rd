@@ -5,14 +5,16 @@
 \title{Calculate volume of perimeter of particle}
 \usage{
 f_PerimeterParticle(
+  rad_particle,
   Shape,
   Longest_side = NULL,
   Intermediate_side = NULL,
-  Shortest_side = NULL,
-  rad_particle
+  Shortest_side = NULL
 )
 }
 \arguments{
+\item{rad_particle}{Radius of particle [m]}
+
 \item{Shape}{Particle Shape defined by user, used for nano and plastic [-]}
 
 \item{Longest_side}{Longest side length as defined by user [m]}
@@ -20,8 +22,6 @@ f_PerimeterParticle(
 \item{Intermediate_side}{Intermediate side length as defined by user [m]}
 
 \item{Shortest_side}{Shortest side length as defined by user [m]}
-
-\item{rad_particle}{Radius of particle [m]}
 }
 \value{
 fPerimeterParticle [m]

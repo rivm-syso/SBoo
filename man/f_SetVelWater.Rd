@@ -4,16 +4,28 @@
 \alias{f_SetVelWater}
 \title{Function for calculating the Settling Velocity of a particle through water}
 \usage{
-f_SetVelWater(radius, rhoParticle, rhoWater, DynViscWaterStandard)
+f_SetVelWater(
+  Shortest_side,
+  rho_species,
+  rhoMatrix,
+  DynViscWaterStandard,
+  DynViscAirStandard,
+  Matrix,
+  SubCompartName,
+  Shape,
+  Longest_side,
+  Intermediate_side,
+  DragMethod
+)
 }
 \arguments{
-\item{radius}{Radius of the particle [m]}
+\item{DynViscWaterStandard}{Dynamic viscosity of water []}
 
 \item{rhoParticle}{Density of particle [kg/m3]}
 
 \item{rhoWater}{Density of fluid matrix in which particle is present [kg/m3]}
 
-\item{DynViscWaterStandard}{Dynamic viscosity of water []}
+\item{radius}{Radius of the particle [m]}
 
 \item{GN}{gravitational force constabt [m2/s]}
 }

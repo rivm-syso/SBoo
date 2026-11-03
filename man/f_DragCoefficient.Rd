@@ -4,16 +4,20 @@
 \alias{f_DragCoefficient}
 \title{Drag Coefficient particles}
 \usage{
-f_DragCoefficient(DragMethod, Re, Psi, CSF)
+f_DragCoefficient(DragMethod, Re, Psi, CSF, kS, kN)
 }
 \arguments{
-\item{DragMethod}{Method of calculating the Drag Coefficient}
+\item{DragMethod}{Method of calculating the Drag Coefficient. Options are: "Original", "Dioguardi" or "Default", "Swamee", "Stokes", "Bagheri".}
 
 \item{Re}{Reynolds number, as returned by the solver [-]}
 
 \item{Psi}{Shape factor, circularity/sphericity [-]}
 
 \item{CSF}{Corey Shape Factor [-]}
+
+\item{kS}{Stokes' drag correction (Bagheri) [-]}
+
+\item{kN}{Newton's drag correction (Bagheri) [-]}
 
 \item{CD}{Drag Coefficient of a particle [-]}
 
@@ -22,6 +26,8 @@ f_DragCoefficient(DragMethod, Re, Psi, CSF)
 \item{Swamee}{A Drag Coefficient method as described in Swamee & Ojha (1991) https://doi.org/10.1061/(ASCE)0733-9429(1991)117:5(660)}
 
 \item{Stokes}{A Stokes-Dietrich approximation as described in Dietrich (1982) https://doi.org/10.1029/WR018i006p01615}
+
+\item{Bagheri}{A Drag Coefficient method as described in Bagheri & Bonadonna (2016) https://doi.org/10.1016/j.powtec.2016.06.015}
 }
 \value{
 f_DragCoefficient

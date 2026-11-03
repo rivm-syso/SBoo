@@ -6,6 +6,7 @@
 \usage{
 k_Leaching(
   FRACinf,
+  FRACrun,
   RAINrate,
   VertDistance,
   SpeciesName,
@@ -27,8 +28,8 @@ k_Leaching(
 \item{Kscompw}{dimensionless partitioning coefficient soil-water [-]}
 }
 \value{
-Leaching of aggregated (A) or free (S) enp species from natural soil #[s-1]
+Leaching rate constant of compound from  soil out of the system (e.g. no deep(er) soil layer considered). [s-1]
 }
 \description{
-Leaching of particles due to infiltration into deeper soil layers
+Note: The fraction infiltration (FRACinf) is rescaled to the rest of inflow from rain based on the fraction rain going to runoff (FRACrun).
 }
