@@ -780,8 +780,9 @@ SBcore <- R6::R6Class("SBcore",
           private$suBmode <- if (is.list(value)) {
             value
           } else {
-            stopifnot(file.exists(value))
-            jsonlite::fromJSON(value, simplifyDataFrame = FALSE)
+            datapath <- file.path(private$myDataLocation, value)
+            stopifnot(file.exists(datapath))
+            jsonlite::fromJSON(datapath, simplifyDataFrame = FALSE)
           }
           # extract needed SBmode
           private$SBmode <- {
