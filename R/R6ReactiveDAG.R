@@ -131,10 +131,6 @@ ReactiveDAG <- R6::R6Class(
       function(...) {
         extra_args <- list(...)
         
-        if (!is.null(self$parent) && (accepts_parent || accepts_dots)) {
-          extra_args$parent <- self$parent
-        }
-        
         if (debug) {
           args <- setNames(lapply(deps, get_reactive), deps)
           

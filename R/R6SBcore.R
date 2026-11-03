@@ -565,6 +565,7 @@ SBcore <- R6::R6Class("SBcore",
         testorder <- testorder + 1
         
         incomplete_nodes <- setdiff(private$myReactiveDAG$knowns, known)
+        incomplete_nodes <- incomplete_nodes[!incomplete_nodes %in% c("parent", "...", "TRUE")]
         # which are now complete with known?
         complete_nodes <- character(0)
         for (fun in incomplete_nodes) {
