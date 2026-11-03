@@ -6,15 +6,18 @@ ReactiveDAG <- R6::R6Class(
     sources = NULL,
     params = NULL,
     debugR = NULL,
-    parent = NULL,
-    
+
     initialize = function(params = list(), parent = NULL, debugR = FALSE) {
+      # add parent (i.e. an SBcore) into params; it will be non-reactive, like other params
+      if (!is.null(parent)) {
+        params$parent <- parent
+      }
+      
       self$session <- shiny::MockShinySession$new()
-      self$nodes <- list()
+      self$nodes   <- list()
       self$sources <- list()
-      self$params <- list2env(params, parent = emptyenv())
-      self$debugR <- debugR
-      self$parent <- parent
+      self$params  <- list2env(params, parent = emptyenv())
+      self$debugR  <- debugR
     },
     
     add_source = function(name, value = NULL) {
@@ -35,15 +38,14 @@ ReactiveDAG <- R6::R6Class(
       node_fun <- get(node_fun_name, mode = "function")
       
       wrapped <- private$make_smart_wrapper(
-        fun = node_fun,
-        fun_name = node_fun_name,
-        fun_env = parent.frame(),
+        fun          = node_fun,
+        fun_name     = node_fun_name,
+        fun_env      = parent.frame(),
         get_reactive = function(name) private$get_reactive(name),
-        debug = debug
+        debug        = debug
       )
       
       shiny::withReactiveDomain(self$session, {
-        #side effect!
         self$nodes[[node_name]] <- shiny::reactive({
           wrapped()
         })
@@ -51,6 +53,7 @@ ReactiveDAG <- R6::R6Class(
     },
     
     get_value = function(name) {
+      #browser()
       if (name %in% names(self$sources)) {
         shiny::isolate(self$sources[[name]]())
       } else if (name %in% names(self$nodes)) {
@@ -97,13 +100,12 @@ ReactiveDAG <- R6::R6Class(
     
     make_smart_wrapper = function(fun, fun_name, fun_env, get_reactive, debug = FALSE) {
       fun_formals <- names(formals(fun))
-      deps <- setdiff(fun_formals, c("...", "parent"))
-      
-      accepts_dots <- "..." %in% fun_formals
-      accepts_parent <- "parent" %in% fun_formals
       
       reactive_env <- new.env(parent = environment(fun))
-      for (nm in deps) {
+      
+      # active bindings for all formals (including parent)
+      for (nm in fun_formals) {
+        if (nm == "...") next
         local({
           name <- nm
           makeActiveBinding(
@@ -115,28 +117,24 @@ ReactiveDAG <- R6::R6Class(
       }
       
       reactive_fun <- fun
-      formals(reactive_fun) <- alist(... = )
       environment(reactive_fun) <- reactive_env
       
-      function(...) {
-        extra_args <- list(...)
-        
-        if (!is.null(self$parent) && (accepts_parent || accepts_dots)) {
-          extra_args$parent <- self$parent
-        }
-        
+      function() {
         if (debug) {
-          args <- setNames(lapply(deps, get_reactive), deps)
+          # debug: pass all formals explicitly, so you can inspect args
+          arg_names <- fun_formals[fun_formals != "..."]
+          args <- setNames(lapply(arg_names, get_reactive), arg_names)
           
           do.call(
             what = get(fun_name, envir = fun_env, mode = "function"),
-            args = c(args, extra_args)
+            args = args
           )
         } else {
-          do.call(
-            what = reactive_fun,
-            args = extra_args
-          )
+          # non-debug: strip formals so the function no longer requires args
+          formals(reactive_fun) <- NULL
+          
+          # now call with no arguments; all symbols are resolved via bindings
+          reactive_fun()
         }
       }
     }
