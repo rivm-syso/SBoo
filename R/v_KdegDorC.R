@@ -26,10 +26,10 @@ KdegDorC <- function(species, Compartment,
                      Matrix, Shortest_side, Intermediate_side, Longest_side,
                      Kssdr, Shape, CorFacSSA, RadS, degx, degtau, degy, 
                      degtheta, degz, degeta, UVintensity, MICROBconc, Degrading_enzyme) {
-  
-  # First for Molecular, 
-  if ("Unbound" %in% species) {
-    Collect_Molecular <- UVintensity |>
+  out <- 
+   # Molecular ? 
+   if ("Unbound" %in% species) {
+     UVintensity |>
       dplyr::left_join(Matrix) |>
       dplyr::left_join(rhoMatrix, by=c("Matrix")) |>
       dplyr::left_join(Compartment) |>
@@ -64,83 +64,73 @@ KdegDorC <- function(species, Compartment,
         Species = "Unbound"
       ) |>
       dplyr::select(Scale,SubCompart,Species,KdegDorC)
+   } else {
+     # For particulate
+     if (any(c("Large", "Small", "Solid") %in% species)) {
+       
+       #Set default shortest, intermediate and longest side, in case it is not defined
+       if (is.na(Shortest_side) || is.null(Shortest_side) ) {
+         Shortest_side <- RadS * 2
+       }
+       if ( is.na(Intermediate_side) || is.null(Intermediate_side) ) {
+         Intermediate_side <- RadS * 2
+       }
+       
+       if ( is.na(Longest_side) || is.null(Longest_side) ) {
+         Longest_side <- RadS * 2
+       }
+       if (!DegApproach %in% c("Default","Kssdr","PlasticFADE")){
+         warning("v_KdegDorC: DegApproach not set to valid option, using Default.")
+         DegApproach <- "Default"
+       }
+       if(is.null(Degrading_enzyme) || is.na(Degrading_enzyme)){
+         warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to FALSE")
+         Degrading_enzyme = "FALSE"
+       }
+       
+       Collect_Particulate <- UVintensity |>
+         dplyr::left_join(Matrix) |>
+         dplyr::left_join(MICROBconc) |>
+         dplyr::left_join(Compartment) |>
+         dplyr::left_join(kdeg) |>
+         dplyr::mutate(
+           SAV = dplyr::case_when(
+             !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") ~ 4/(Shortest_side*100)+2/(Longest_side*100),
+             !is.na(Shape) & Shape %in% c("Film") ~ 2/(Shortest_side*100)+2/(Intermediate_side*100)+2/(Longest_side*100),
+             TRUE ~ 6/(Shortest_side*100)),
+           ShapeFac = dplyr::case_when(
+             !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") ~ 3,
+             !is.na(Shape) & Shape %in% c("Film") ~ 2,
+             TRUE ~ 4),
+           UVintensity = dplyr::case_when(
+             is.na(UVintensity) & DegApproach == "PlasticFADE" ~ 0,
+             TRUE ~ UVintensity),
+           Degrading_enzyme = dplyr::case_when(
+             DegApproach == 'PlasticFADE' & is.na(Degrading_enzyme) ~ "FALSE",
+             TRUE ~ Degrading_enzyme),
+           properMatrix = Matrix %in% c("air", "soil", "sediment", "water")
+         ) 
+       
+       Collect_Particulate |>
+         dplyr::mutate(
+           KdegDorC = dplyr::case_when(
+             DegApproach %in% c("Kssdr", "PlasticFADE", "Default") & 
+               (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0)) ~
+               0,
+             DegApproach == "PlasticFADE" ~ degx * SAV^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60),
+             DegApproach == "Kssdr" ~ ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2),
+             DegApproach == "Default" & properMatrix ~ kdeg,
+             # ? DegApproach == "Default" & !Matrix %in% c("air", "soil", "sediment", "water") ~ NA,
+             TRUE ~ NA
+           )
+         ) |> 
+         dplyr::filter(!is.na(KdegDorC)) |>
+         dplyr::select(Scale,SubCompart,KdegDorC) |>
+         # for all Species except Unbound
+         tidyr::crossing(Species = species[species != "Unbound"])
+     }
+
   }
-  
-  # For particulate
-  if (any(c("Large", "Small", "Solid") %in% species)) {
-    
-    #Set default shortest, intermediate and longest side, in case it is not defined
-    if (is.na(Shortest_side) || is.null(Shortest_side) ) {
-      Shortest_side <- RadS * 2
-    }
-    if ( is.na(Intermediate_side) || is.null(Intermediate_side) ) {
-      Intermediate_side <- RadS * 2
-    }
-    
-    if ( is.na(Longest_side) || is.null(Longest_side) ) {
-      Longest_side <- RadS * 2
-    }
-    if (!DegApproach %in% c("Default","Kssdr","PlasticFADE")){
-      warning("v_KdegDorC: DegApproach not set to valid option, using Default.")
-      DegApproach <- "Default"
-    }
-    if(is.null(Degrading_enzyme) || is.na(Degrading_enzyme)){
-      warning("v_KdegDorC: Degrading_enzyme is not set (NA), now set to FALSE")
-      Degrading_enzyme = "FALSE"
-    }
-  
-    Collect_Particulate <- UVintensity |>
-      dplyr::left_join(Matrix) |>
-      dplyr::left_join(MICROBconc) |>
-      dplyr::left_join(Compartment) |>
-      dplyr::left_join(kdeg) |>
-      dplyr::mutate(
-        SAV = dplyr::case_when(
-          !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") ~ 4/(Shortest_side*100)+2/(Longest_side*100),
-          !is.na(Shape) & Shape %in% c("Film") ~ 2/(Shortest_side*100)+2/(Intermediate_side*100)+2/(Longest_side*100),
-          TRUE ~ 6/(Shortest_side*100)),
-        ShapeFac = dplyr::case_when(
-          !is.na(Shape) & Shape %in% c("Cylindric - circular", "Fiber") ~ 3,
-          !is.na(Shape) & Shape %in% c("Film") ~ 2,
-          TRUE ~ 4),
-        UVintensity = dplyr::case_when(
-          is.na(UVintensity) & DegApproach == "PlasticFADE" ~ 0,
-          TRUE ~ UVintensity),
-        Degrading_enzyme = dplyr::case_when(
-          DegApproach == 'PlasticFADE' & is.na(Degrading_enzyme) ~ "FALSE",
-          TRUE ~ Degrading_enzyme),
-        properMatrix = Matrix %in% c("air", "soil", "sediment", "water")
-      ) 
-    
-    Collect_Particulate <- Collect_Particulate |>
-      dplyr::mutate(
-        KdegDorC = dplyr::case_when(
-          DegApproach %in% c("Kssdr", "PlasticFADE", "Default") & 
-            (!is.na(Degrading_enzyme) & (Degrading_enzyme == "FALSE" | Degrading_enzyme == FALSE) & (!is.na(UVintensity) & UVintensity == 0)) ~
-            0,
-          DegApproach == "PlasticFADE" ~ degx * SAV^degtau * (degy * UVintensity^degtheta + degz * MICROBconc^degeta) / (24*60*60),
-          DegApproach == "Kssdr" ~ ShapeFac * Kssdr * CorFacSSA / (Shortest_side / 2),
-          DegApproach == "Default" & properMatrix ~ kdeg,
-          # ? DegApproach == "Default" & !Matrix %in% c("air", "soil", "sediment", "water") ~ NA,
-          TRUE ~ NA
-        )
-      ) |> 
-      dplyr::filter(!is.na(KdegDorC)) |>
-      dplyr::select(Scale,SubCompart,KdegDorC) |>
-      # for all Species except Unbound
-      tidyr::crossing(Species = species[species != "Unbound"])
-  }
-  
-  out <-
-    if (!is.null(Collect_Molecular) && !is.null(Collect_Particulate)) {
-      dplyr::bind_rows(Collect_Molecular, Collect_Particulate)
-    } else if (!is.null(Collect_Molecular)) {
-      Collect_Molecular
-    } else if (!is.null(Collect_Particulate)) {
-      Collect_Particulate
-    } else {
-      NULL
-    }
   
   return(data.frame(out))
 }

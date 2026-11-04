@@ -448,11 +448,13 @@ SBcore <- R6::R6Class("SBcore",
     #' Parameters are no longer usefull with R6ReactiveDAG
     UpdateKaas = function(){ 
 
+      
       # Calculate (fetch) flows, assign to Advection process and add to kaas
       fromVolume <- self$fetchData("Volume")
       asProcess_list <- lapply(private$flows, function(fl) {
         flow_calculated <- self$fetchData(fl)
-        k2_Advection(flow_calculated, fromVolume)
+        k2_Advection(flow_calculated, fromVolume) |>
+          dplyr::select(-flow)
       })
       # Calculate (fetch) all other processes
       ProcessKaas <- lapply(private$processes, function(procs) {
@@ -461,7 +463,9 @@ SBcore <- R6::R6Class("SBcore",
       
       # rename all to k / expand 2 all from/to dim
       ProcessKaas <- private$PrepareKaaslist(ProcessKaas)
-      private$SBkaas <- do.call(rbind, c(ProcessKaas, asProcess_list))
+
+      private$SBkaas <- dplyr::bind_rows(ProcessKaas,
+              do.call(dplyr::bind_rows, asProcess_list))
       
       #return only for purpose of transparent update; side effect is done
       invisible(private$SBkaas)
@@ -1229,7 +1233,7 @@ SBcore <- R6::R6Class("SBcore",
         process |>
           dplyr::rename(k = !!k.name)
       })
-      VolleKaas <- do.call(rbind, kaaslist)
+      VolleKaas <- do.call(dplyr::bind_rows, kaaslist)
       
       if(length(VolleKaas) > 0) { #length is 0 if no processes 
         return(VolleKaas)
