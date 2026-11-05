@@ -16,10 +16,10 @@
 #' @return Degradation rate constant for molecular species
 #' @export
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
-                         Tempfactor,
+                          Tempfactor,
                           FRinw, BACTtest,BACTcomp,
-                          Matrix, SpeciesName, Test, kdis = dataframe(), parent) {
- 
+                          Matrix, SpeciesName, Test, kdis = data.frame(), parent) {
+
   out <- parent$FromDataAndTo("k_Degradation") 
   # Names of dataframe
   outnames <- dplyr::all_of(names(out))
@@ -32,7 +32,7 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
   out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y)) |>
     parent$states$clipStates()
   
-  if (nrow(kdis) > 0) { #can be omitted
+  if (inherits(kdis, "data.frame") && nrow(kdis) > 0) {
     out <- dplyr::left_join(out, kdis)
   }
   
@@ -46,7 +46,7 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
         SpeciesName == 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
         SpeciesName == 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC*(BACTcomp/BACTtest)*FRinw,
         
-        SpeciesName != 'Molecular' & Matrix == 'air' & (as.character(Test) == "TRUE") ~ Tempfactor*KdegDorC + kdis,
+        SpeciesName != 'Molecular' & Matrix == 'air' & as.character(Test) == "TRUE" ~ Tempfactor*KdegDorC + kdis,
         SpeciesName != 'Molecular' & Matrix == 'soil' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
         SpeciesName != 'Molecular' & Matrix == 'sediment' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
         SpeciesName != 'Molecular' & Matrix == 'water' & as.character(Test) == "TRUE"  ~ Tempfactor*KdegDorC + kdis,
@@ -55,7 +55,7 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
         SpeciesName != 'Molecular' & Matrix == 'soil' ~ Tempfactor*KdegDorC,
         SpeciesName != 'Molecular' & Matrix == 'sediment' ~ Tempfactor*KdegDorC,
         SpeciesName != 'Molecular' & Matrix == 'water' ~ Tempfactor*KdegDorC,
-        TRUE ~ NA
+        TRUE ~ NA_real_
       )
     ) |>
     dplyr::filter(!is.na(k_Degradation)) |>
