@@ -10,7 +10,7 @@ SBcore <- R6::R6Class("SBcore",
     #' (substance)data for SB (overruling any default data).
     #'  SBmode will be set to "Molecular"|"Particle" accordingly
     initialize = function(SBooDataLocation, SuBmode = "Molecular", debugR = FALSE){
-      
+
       private$myDataLocation <- SBooDataLocation
       private$debugR <- debugR
       self$SuBmode <- SuBmode # also sets private$SBmode
@@ -448,13 +448,14 @@ SBcore <- R6::R6Class("SBcore",
     #' Parameters are no longer usefull with R6ReactiveDAG
     UpdateKaas = function(){ 
 
-      
       # Calculate (fetch) flows, assign to Advection process and add to kaas
       fromVolume <- self$fetchData("Volume")
+      
       asProcess_list <- lapply(private$flows, function(fl) {
         flow_calculated <- self$fetchData(fl)
         k2_Advection(flow_calculated, fromVolume) |>
-          dplyr::select(-flow)
+          dplyr::select(-flow) |>
+          mutate(process = "k_Advection")
       })
       # Calculate (fetch) all other processes
       ProcessKaas <- lapply(private$processes, function(procs) {
@@ -473,6 +474,7 @@ SBcore <- R6::R6Class("SBcore",
     
     #' @description Tries to create all non-data reactives that current processes and all flows need
     build_DAG = function(flowNames, ModeProcesses) {
+      #browser()
       ns <- getNamespace("sboo")
       my_ls <- ls(ns)
       
