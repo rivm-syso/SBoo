@@ -11,16 +11,16 @@
 FRinaers <- function (Kaers, Kaerw, FRACs, FRACw, parent) {
   
   out <- FRACw |>
-    dplyr::full_join(FRACs, by = c("Scale", "SubCompart")) |>
-    dplyr::full_join(Kaerw, by = c("Scale", "SubCompart")) |>
-    dplyr::full_join(Kaers, by = "SubCompart") |>
+    dplyr::full_join(FRACs) |>
+    dplyr::full_join(Kaerw) |>
+    dplyr::full_join(Kaers) |>
     parent$states$clipStates(NoSpeciesKey=TRUE) |>
     dplyr::mutate(
       FRinaers = FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
     ) |>
+    dplyr::select(Scale, SubCompart, FRinaers) |>
     dplyr::filter(!is.na(FRinaers)) |>
-    dplyr::arrange(Scale, SubCompart) |>
-    dplyr::select(Scale, SubCompart, FRinaers)
+    dplyr::arrange(Scale, SubCompart)
   
   return(data.frame(out))
   

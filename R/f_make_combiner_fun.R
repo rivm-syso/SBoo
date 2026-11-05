@@ -39,7 +39,24 @@ make_combiner_fun <- function(inputs) {
   body_expr <- quote({
     # formal args (a, b, c, ...) exist as active bindings created by ReactiveDAG
     vals <- mget(ls(), inherits = FALSE)  # get all formal args from this env
-    sum(unlist(vals))
+    
+    vals_air <- vals |>
+      purrr::map_dfr(\(df) {
+        # find the k_* column
+        k_col <- names(df)[stringr::str_detect(names(df), "^k_")]
+        
+        df |>
+          dplyr::select(from.SubCompart, Scale, Species, dplyr::all_of(k_col)) |>
+          dplyr::rename(
+            SubCompart = from.SubCompart,
+            k          = !!k_col
+          ) |>
+          dplyr::filter(SubCompart == "air")
+      }) |>
+      dplyr::group_by(SubCompart, Scale, Species) |>
+      dplyr::summarise(k = sum(k), .groups = "drop")
+    
+    vals_air
   })
   
   f <- function() {}

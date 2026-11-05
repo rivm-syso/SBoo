@@ -30,35 +30,60 @@ k_Deposition <- function(FRingas,
                          twet ,
                          tdry ,
                          COLLECTeff, 
-                         AEROSOLdeprate , 
+                         AEROSOLdeprate, 
                          Kacompw,
                          FRorig,
                          SpeciesName,
-                         other_MolAir_sinks, # created in SBcore !!
+                         OtherkAir, # created in SBcore !!
                          Area,
                          Kaers,
                          Kaerw,
                          FRinaerw,
-                         FRinaers){ 
+                         FRinaers,
+                         parent){ 
   
-  if (SpeciesName %in% c("Molecular")) {
+  if ("Unbound" %in% OtherkAir$Species) {
     
-    DRYDEPaerosol <- AEROSOLdeprate*(FRinaerw+FRinaers)
-    AerosolWashout <- FRinaers*(tdry+twet)/twet*COLLECTeff*RAINrate
-    GasWashout <- FRingas*(tdry+twet)/twet*RAINrate/(Kacompw*FRorig) # (Kacompw * GRorig) == Aerosol collection efficiency
+    out <- OtherkAir |>
+      dplyr::left_join(FRinaerw) |>
+      dplyr::left_join(FRinaers) |>
+      dplyr::left_join(tdry) |>
+      dplyr::left_join(twet) |> 
+      dplyr::left_join(COLLECTeff ) |>
+      dplyr::left_join(RAINrate) |>
+      dplyr::left_join(FRingas |> dplyr::filter( SubCompart == "air") ) |>
+      dplyr::left_join(FRorig |> dplyr::filter( SubCompart == "air") ) |>
+      dplyr::left_join(VertDistance |> dplyr::filter( SubCompart == "air") ) |>
+      dplyr::left_join(Kacompw) |>
+      dplyr::left_join(AEROSOLdeprate) |>
+      
+      dplyr::mutate(DRYDEPaerosol = AEROSOLdeprate*(FRinaerw+FRinaers),
+                    AerosolWashout = FRinaers*(tdry+twet)/twet*COLLECTeff*RAINrate,
+                    GasWashout = FRingas*(tdry+twet)/twet*RAINrate/(Kacompw*FRorig), # (Kacompw * GRorig) == Aerosol collection efficiency)
+
+                    kdry = DRYDEPaerosol/VertDistance  + k, # from OtherkAir
+                    kwet = (AerosolWashout+GasWashout)/VertDistance + k, # from OtherkAir
+                    
+                    MeanRemAir = ((1/kdry)*tdry/(tdry+twet)+(1/kwet)*twet/(tdry+twet)-
+                                     ((1/kwet-1/kdry)^2/(tdry+twet))*
+                                     (1-exp(-kdry*tdry))*(1-exp(-kwet*twet))/(1-exp(-kdry*tdry-kwet*twet)))^-1
+      )
     
-    kdry <- DRYDEPaerosol/VertDistance  + OtherkAir
+    fromto <- parent$FromDataAndTo("k_Deposition") 
+    outnames <- c(names(fromto), "k_Deposition")
     
-    kwet <- (AerosolWashout+GasWashout)/VertDistance + OtherkAir
+    fromto <- fromto |>
+      dplyr::left_join(Area, by = c("Scale", "from.SubCompart" = "SubCompart")) |>
+      dplyr::rename(from.Area = Area) |>
+      dplyr::left_join(Area, by = c("Scale", "to.SubCompart" = "SubCompart")) |>
+      dplyr::rename(to.Area = Area) |>
+      dplyr::filter(!is.na(to.Area)) |> # should not be possible?, given fromandto checking for existing states?
+      
+      dplyr::left_join(out) |>
+      
+      dplyr::mutate(k_Deposition = (MeanRemAir - k) * (to.Area/from.Area))
     
-    
-    MeanRemAir <- ((1/kdry)*tdry/(tdry+twet)+(1/kwet)*twet/(tdry+twet)-
-                     ((1/kwet-1/kdry)^2/(tdry+twet))*
-                     (1-exp(-kdry*tdry))*(1-exp(-kwet*twet))/(1-exp(-kdry*tdry-kwet*twet)))^-1
-    
-    MeanDep <- (MeanRemAir - OtherkAir) * (to.Area/from.Area)
-    
-    return( MeanDep ) # the gasabs here is for the two compartments for which this function is run (air to soil/water)
+    return(dplyr::select(fromto, dplyr::all_of(outnames) )) # the gasabs here is for the two compartments for which this function is run (air to soil/water)
     
   } else { # 
     return(NA)

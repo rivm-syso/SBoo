@@ -513,12 +513,12 @@ SBcore <- R6::R6Class("SBcore",
         #   unique()
 
         # create the airsinks reactive
-        node_name <- "other_MolAir_sinks"
+        node_name <- "OtherkAir"
         
-        other_MolAir_sinks <- make_combiner_fun(otherairsinks)
+        OtherkAir <- make_combiner_fun(otherairsinks)
         
         # assign the function into the environment where it will be found
-        assign(node_name, other_MolAir_sinks, envir = .GlobalEnv)  
+        assign(node_name, OtherkAir, envir = .GlobalEnv)  
         
         private$myReactiveDAG$add_node_reactive(
           node_name      = node_name,
