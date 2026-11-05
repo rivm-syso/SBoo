@@ -42,7 +42,7 @@ k_HeteroAgglomeration.a <- function(rad_species, RadNuc,RadCOL,RadCP,rho_species
   }
 
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_HeteroAgglomeration.a")))
+  outnames <- dplyr::all_of(names(parent$FromDataAndTo("k_HeteroAgglomeration.a")))
 
   # Build grid
   args <- c("Matrix", "rad_species" ,"RadCOL","RadCP","rho_species" ,"RhoCOL","RhoCP", "Temp" ,"NumConcNuc", "NumConcAcc", "NumConcCP")
@@ -79,8 +79,7 @@ k_HeteroAgglomeration.a <- function(rad_species, RadNuc,RadCOL,RadCP,rho_species
       )
     ) |>
     dplyr::filter(!is.na(k_HeteroAgglomeration.a)) |>
-    dplyr::select(names, k_HeteroAgglomeration.a) |>
-    dplyr::arrange(dplyr::across(names))
+    dplyr::select(outnames, k_HeteroAgglomeration.a)
 
   return(data.frame(out))
   

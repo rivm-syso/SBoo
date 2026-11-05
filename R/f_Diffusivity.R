@@ -28,10 +28,8 @@ f_Diffusivity <- function(Matrix, Temp, DynVisc, rad_species, Cunningham = NULL)
   
   kboltz <- constants::syms$k
   if (any(is.null(Cunningham))){
-    fillCunningham <- f_Cunningham(rad_species)
-    Cunningham[is.null(Cunningham)] <- fillCunningham[is.null(Cunningham)]
+    Cunningham <- f_Cunningham(rad_species)
   }
-    
   
   # Allow vectors
   return(ifelse(Matrix == 'air', 

@@ -8,23 +8,19 @@
 #' @return The fraction of a chemical in the aerosol gas phase. Total: FRingas + FRinaerw + FRinaers = 1.
 #' @seealso [Fringas(), FRinw(), FRins()]
 #' @export
-FRingas <- function(FRACw, FRACs, Kaerw, Kaers, ScaleName, SubCompartName, parent, ...){ #, FRcldw
+FRingas <- function(FRACw, FRACs, Kaerw, Kaers, parent){ #, FRcldw
   
-  out <- ScaleName |>
-    tidyr::expand_grid(SubCompartName) |>
+  out <- FRACw |>
+    dplyr::left_join(FRACs) |>
     parent$states$clipStates(NoSpeciesKey=TRUE) |>
-    dplyr::left_join(FRACw, by = c("Scale", "SubCompart")) |>
-    dplyr::left_join(FRACs, by = c("Scale", "SubCompart")) |>
-    dplyr::left_join(Kaerw, by = c("Scale", "SubCompart")) |>
-    dplyr::left_join(Kaers, by = c("SubCompart")) |>
+    dplyr::left_join(Kaerw) |>
+    dplyr::left_join(Kaers) |>
     dplyr::mutate(
       FRingas = 1-FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) -FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
-    ) |>
-    dplyr::filter(!is.na(FRingas)) |>
-    dplyr::arrange(Scale, SubCompart) |>
-    dplyr::select(Scale, SubCompart, FRingas)
+    )
   
-  return(data.frame(out))
+  keepcolumns <- colnames(out)[colnames(out) %in% c(The3D, "FRingas")]
+  return(out |> dplyr::select(all_of(keepcolumns)))
   
   # 1-FRACw*Kaerw/(1+FRACw*Kaerw+FRACs*Kaers) -FRACs*Kaers/(1+FRACw*Kaerw+FRACs*Kaers)
 }

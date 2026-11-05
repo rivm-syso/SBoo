@@ -19,18 +19,18 @@
 #'@param SubCompartName name of the subcompartname that is from/to 
 #'@param ScaleName name of scale
 #'@param Test Test = TRUE or FALSE, depending on if SBExcel version should be copied
-#'@param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
+#'paramremoved Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #'@returns The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]
 #'@export
 k_Adsorption <- function (FRingas, FRinw, MTC_2sd, FRorig_spw,
                           MTC_2w, MTC_2a, MTC_2s, FRorig, Kacompw, 
                           Kscompw, Matrix, VertDistance, 
                           AreaLand, AreaSea, Area,
-                          SubCompartName, ScaleName, Test, Regional_and_Continental_deepocean,
+                          SubCompartName, ScaleName, Test,
                           parent, SpeciesName) {
   
   # Names of dataframe
-  names <- dplyr::all_of(names(parent$FromDataAndTo("k_Adsorption")))
+  outnames <- dplyr::all_of(names(parent$FromDataAndTo("k_Adsorption")))
   
   # copies of whole dataframes for the test argument
   FRorig_og = FRorig
@@ -85,8 +85,7 @@ k_Adsorption <- function (FRingas, FRinw, MTC_2sd, FRorig_spw,
       )
     ) |>
     dplyr::filter(!is.na(k_Adsorption)) |>
-    dplyr::select(names, k_Adsorption) |>
-    dplyr::arrange(dplyr::across(names))
+    dplyr::select(outnames, k_Adsorption)
 
   return(data.frame(out))
 

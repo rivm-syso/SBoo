@@ -12,7 +12,7 @@
 #' @param SpeciesName name of the considered species 
 #' @param SubCompartName name of the subcompartment 
 #' @param ScaleName name of the considered scale
-#' @param Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
+#' removedparam Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed
 #' @return Degradation rate constant for molecular species
 #' @export
 k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad, 
@@ -22,14 +22,15 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
  
   out <- parent$FromDataAndTo("k_Degradation") 
   # Names of dataframe
-  names <- dplyr::all_of(names(out))
+  outnames <- dplyr::all_of(names(out))
   #removal process from==to, so for easy joining/reading
   out <- dplyr::rename(out, SubCompart = from.SubCompart) 
   
   # Build 
   args <- c("out", "FRingas", "KdegDorC", "C.OHrad","Tempfactor","FRinw","BACTcomp","Matrix", "SpeciesName")
   dfs <- mget(args, envir = environment())
-  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y))
+  out <- purrr::reduce(dfs, ~ dplyr::left_join(.x, .y)) |>
+    parent$states$clipStates()
   
   if (nrow(kdis) > 0) { #can be omitted
     out <- dplyr::left_join(out, kdis)
@@ -60,8 +61,7 @@ k_Degradation <- function(FRingas, KdegDorC, C.OHrad.n, C.OHrad,
     dplyr::filter(!is.na(k_Degradation)) |>
     # back renamename
     dplyr::rename(from.SubCompart = SubCompart) |> 
-    dplyr::select(names, k_Degradation) |>
-    dplyr::arrange(dplyr::across(names))
+    dplyr::select(outnames, k_Degradation) 
   
   return(data.frame(out))
   
