@@ -455,7 +455,7 @@ SBcore <- R6::R6Class("SBcore",
         flow_calculated <- self$fetchData(fl)
         k2_Advection(flow_calculated, fromVolume) |>
           dplyr::select(-flow) |>
-          mutate(process = "k_Advection")
+          dplyr::mutate(process = "k_Advection")
       })
       # Calculate (fetch) all other processes
       ProcessKaas <- lapply(private$processes, function(procs) {
