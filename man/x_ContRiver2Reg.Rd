@@ -4,24 +4,18 @@
 \alias{x_ContRiver2Reg}
 \title{Continental surface water to Regional [s-1]}
 \usage{
-x_ContRiver2Reg(
-  ScaleName,
-  SubCompartName,
-  all.RunoffFlow,
-  all.RainOnFreshwater,
-  dischargeFRAC
-)
+x_ContRiver2Reg(RunoffFlow, RainOnFreshwater, dischargeFRAC, parent)
 }
 \arguments{
-\item{ScaleName}{Name of the relevant scale}
-
-\item{SubCompartName}{Name of the relevant sub-compartment}
-
-\item{dischargeFRAC}{Fraction discharge of freshwater between regional and continental scales and vice versa [-]}
-
 \item{RunoffFlow}{RunoffFlow flow from soil to river [m3.s-1]}
 
 \item{RainOnFreshwater}{Water flow of rain directly on lake/river [m3.s-1]}
+
+\item{dischargeFRAC}{Fraction discharge of freshwater between regional and continental scales and vice versa [-]}
+
+\item{ScaleName}{Name of the relevant scale}
+
+\item{SubCompartName}{Name of the relevant sub-compartment}
 }
 \value{
 River Discharge for scale Continental [s-1]

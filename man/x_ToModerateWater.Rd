@@ -7,11 +7,10 @@
 x_ToModerateWater(
   Volume,
   TAUsea,
-  all.x_RegSea2Cont,
+  x_RegSea2Cont,
   OceanCurrent,
-  SubCompartName,
-  ScaleName,
-  Remove_global
+  Remove_global,
+  parent
 )
 }
 \arguments{
@@ -19,15 +18,15 @@ x_ToModerateWater(
 
 \item{TAUsea}{Residence time of water in sea - scale variable [s]}
 
-\item{all.x_RegSea2Cont}{All flows from regional to continental seawater [s-1]}
-
 \item{OceanCurrent}{Global ocean circulation current [m3.s-1]}
+
+\item{Remove_global}{If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed}
+
+\item{all.x_RegSea2Cont}{All flows from regional to continental seawater [s-1]}
 
 \item{SubCompartName}{Name of the subcompartment of the box at hand}
 
 \item{ScaleName}{Name of the scale of the box at hand}
-
-\item{Remove_global}{If this variable is TRUE, the global scales (Arctic, Moderate and Tropic) are removed}
 }
 \value{
 Water flow to Moderate scale surface and deepocean waters [m3 s-1]

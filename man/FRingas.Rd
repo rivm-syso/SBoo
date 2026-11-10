@@ -4,7 +4,7 @@
 \alias{FRingas}
 \title{FRACTION of chemical in gas phase of air}
 \usage{
-FRingas(FRACw, FRACs, Kaerw, Kaers, ...)
+FRingas(FRACw, FRACs, Kaerw, Kaers, parent)
 }
 \arguments{
 \item{FRACw}{Fraction aerosol water in air}

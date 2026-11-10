@@ -4,19 +4,14 @@
 \alias{k_Fragmentation}
 \title{Fragmentation and degradation of plastics}
 \usage{
-k_Fragmentation(
-  kfrag,
-  SubCompartName,
-  ScaleName,
-  Regional_and_Continental_deepocean
-)
+k_Fragmentation(kfrag, parent, SpeciesName)
 }
 \arguments{
 \item{kfrag}{fragmentation rate of plastic in certain subcompartment}
 
-\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
-
 \item{kmpdeg}{degradation rate of plastic in certain subcompartment [s-1]}
+
+\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 }
 \value{
 k_Fragmentation, the combined degradation and fragmentation rate of microplastics [s-1]

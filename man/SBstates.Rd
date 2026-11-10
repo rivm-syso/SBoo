@@ -7,117 +7,223 @@
 object in both SBcore as in SolverModule (slimmed down to existing kaas).
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{asDataFrame}}{convienent returning states in a data.frame}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{asDataFrame}}{convienent returning states in a data.frame}
 
-\item{\code{nStates}}{just 4 convenience}
-}
-\if{html}{\out{</div>}}
+    \item{\code{nStates}}{just 4 convenience}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-SBstates-new}{\code{SBstates$new()}}
-\item \href{#method-SBstates-findState}{\code{SBstates$findState()}}
-\item \href{#method-SBstates-sortFactors}{\code{SBstates$sortFactors()}}
-\item \href{#method-SBstates-findDim}{\code{SBstates$findDim()}}
-\item \href{#method-SBstates-clone}{\code{SBstates$clone()}}
-}
+  \itemize{
+    \item \href{#method-SBstates-initialize}{\code{SBstates$new()}}
+    \item \href{#method-SBstates-buildStates}{\code{SBstates$buildStates()}}
+    \item \href{#method-SBstates-filterStates}{\code{SBstates$filterStates()}}
+    \item \href{#method-SBstates-filterStatesByMode}{\code{SBstates$filterStatesByMode()}}
+    \item \href{#method-SBstates-clipStates}{\code{SBstates$clipStates()}}
+    \item \href{#method-SBstates-findState}{\code{SBstates$findState()}}
+    \item \href{#method-SBstates-sortFactors}{\code{SBstates$sortFactors()}}
+    \item \href{#method-SBstates-findDim}{\code{SBstates$findDim()}}
+    \item \href{#method-SBstates-clone}{\code{SBstates$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SBstates-new"></a>}}
-\if{latex}{\out{\hypertarget{method-SBstates-new}{}}}
-\subsection{Method \code{new()}}{
-init, based on
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBstates$new(StatesAsDataFrame)}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-SBstates-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-initialize}{}}}
+\subsection{\code{SBstates$new()}}{
+  init, based on
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$new(ScaleSheet, SubCompartSheet, SpeciesSheet)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{StatesAsDataFrame}}{dataframe of states with columns The3D Abbr and counter i}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{StatesAsDataFrame}}{dataframe of states with columns The3D Abbr and counter i}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBstates-buildStates"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-buildStates}{}}}
+\subsection{\code{SBstates$buildStates()}}{
+  Build the States table from the three dimension sheets
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$buildStates(ScaleSheet, SubCompartSheet, SpeciesSheet)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{ScaleSheet}}{data.frame with at least columns: Scale, AbbrS, Default}
+      \item{\code{SubCompartSheet}}{data.frame with at least columns: SubCompart, AbbrC, Default}
+      \item{\code{SpeciesSheet}}{data.frame with at least columns: Species, AbbrP, Default}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Invisibly, the constructed States data.frame; also stores it in private$AsDataFrame
+  }
 }
-\if{html}{\out{</div>}}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBstates-filterStates"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-filterStates}{}}}
+\subsection{\code{SBstates$filterStates()}}{
+  Filter the States table using a set of rule rows
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$filterStates(rules)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rules}}{data.frame with columns: Scale, SubCompart, Species, Operator, Value, Keep}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Invisibly, the filtered States data.frame; also updates private$AsDataFrame
+  }
 }
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBstates-filterStatesByMode"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-filterStatesByMode}{}}}
+\subsection{\code{SBstates$filterStatesByMode()}}{
+  Filter the States table using mode-specific rules
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$filterStatesByMode(mode, mode_rules)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{mode}}{scalar (character/numeric) indicating the mode to apply}
+      \item{\code{mode_rules}}{data.frame with columns: mode, Scale, SubCompart, Species, Keep}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Invisibly, the filtered States data.frame; also updates private$AsDataFrame
+  }
 }
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SBstates-clipStates"></a>}}
+\if{latex}{\out{\hypertarget{method-SBstates-clipStates}{}}}
+\subsection{\code{SBstates$clipStates()}}{
+  Clip a data.frame to rows matching existing valid states
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$clipStates(aDFwithD, NoSpeciesKey = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{aDFwithD}}{A data.frame containing either all The3D columns
+(Scale, SubCompart, Species) or only column 'Abbr'}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Filtered data.frame containing only valid rows
+  }
+}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBstates-findState"></a>}}
 \if{latex}{\out{\hypertarget{method-SBstates-findState}{}}}
-\subsection{Method \code{findState()}}{
-map vector abbr for scale species subcompart to index in State
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBstates$findState(abbr)}\if{html}{\out{</div>}}
+\subsection{\code{SBstates$findState()}}{
+  map vector abbr for scale species subcompart to index in State
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$findState(abbr)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{abbr}}{Oldschool abbreviation (character vector)}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    integer vector of indices in private$AsDataFrame$Abbr (NA if not found)
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{abbr}}{Oldschool abbreviation}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-vector of indices
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBstates-sortFactors"></a>}}
 \if{latex}{\out{\hypertarget{method-SBstates-sortFactors}{}}}
-\subsection{Method \code{sortFactors()}}{
-change any of the 3 Dim into factors and sort a data.frame accordingly
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBstates$sortFactors(aDFwithD)}\if{html}{\out{</div>}}
+\subsection{\code{SBstates$sortFactors()}}{
+  Change any of the 3D columns into ordered factors and sort a data.frame accordingly
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$sortFactors(aDFwithD)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{aDFwithD}}{A data.frame to sort; must contain at least one of The3D or column 'Abbr'}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Sorted data.frame, with The3D columns converted to ordered factors using Dlevels
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{aDFwithD}}{a data.frame to sort}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-sorted dataframe with dimensions from 3D as factor with levels/labels according data sheets
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBstates-findDim"></a>}}
 \if{latex}{\out{\hypertarget{method-SBstates-findDim}{}}}
-\subsection{Method \code{findDim()}}{
-find an element in any dimension, or the name of a dimension NOT FINISHED
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBstates$findDim(aDimension)}\if{html}{\out{</div>}}
+\subsection{\code{SBstates$findDim()}}{
+  find an element in any dimension, or the name of a dimension NOT FINISHED
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$findDim(aDimension)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{aDimension}}{a dimension or an element therein}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    list(the found dimension = the member) or list(the found dimension = dimension). 
+The found dimension is 1 of the 3dim
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{aDimension}}{a dimension or an element therein}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-list(the found dimension = the member) or list(the found dimension = dimension). 
-The found dimension is 1 of the 3dim
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SBstates-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-SBstates-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SBstates$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{SBstates$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SBstates$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

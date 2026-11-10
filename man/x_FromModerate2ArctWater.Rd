@@ -4,7 +4,7 @@
 \alias{x_FromModerate2ArctWater}
 \title{Mixing of upper and deeper sea water layers (w2 and w3)}
 \usage{
-x_FromModerate2ArctWater(OceanCurrent, SubCompartName, ScaleName)
+x_FromModerate2ArctWater(OceanCurrent, parent)
 }
 \arguments{
 \item{OceanCurrent}{current implemented in the ocean [m3.s-1]}

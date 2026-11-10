@@ -8,10 +8,11 @@ Area(
   AreaLand,
   AreaSea,
   landFRAC,
-  all.landFRAC,
   SubCompartName,
   ScaleName,
-  Regional_and_Continental_deepocean
+  Regional_and_Continental_deepocean,
+  parent,
+  SpeciesName
 )
 }
 \arguments{

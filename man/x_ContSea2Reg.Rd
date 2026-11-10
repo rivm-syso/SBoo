@@ -4,7 +4,7 @@
 \alias{x_ContSea2Reg}
 \title{ContSea2Reg}
 \usage{
-x_ContSea2Reg(all.x_RiverDischarge)
+x_ContSea2Reg(x_RiverDischarge, parent)
 }
 \arguments{
 \item{RiverDischarge}{river discharge rate, see x_RiverDischarge [s-1]}

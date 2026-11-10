@@ -4,7 +4,7 @@
 \alias{AirFlow}
 \title{AirFlow}
 \usage{
-AirFlow(Volume, Area, WINDspeed, SubCompartName)
+AirFlow(Volume, Area, WINDspeed, SubCompartName, parent, ScaleName)
 }
 \arguments{
 \item{Volume}{volume in [m3]}

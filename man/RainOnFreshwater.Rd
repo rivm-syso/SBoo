@@ -4,7 +4,7 @@
 \alias{RainOnFreshwater}
 \title{RainOnFreshwater}
 \usage{
-RainOnFreshwater(RAINrate, Area, SubCompartName)
+RainOnFreshwater(RAINrate, Area, SubCompartName, parent)
 }
 \arguments{
 \item{RAINrate}{m.s-1}

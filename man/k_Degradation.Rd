@@ -15,11 +15,9 @@ k_Degradation(
   BACTcomp,
   Matrix,
   SpeciesName,
-  SubCompartName,
-  ScaleName,
   Test,
-  kdis = NA,
-  Regional_and_Continental_deepocean
+  kdis = data.frame(),
+  parent
 )
 }
 \arguments{
@@ -43,9 +41,8 @@ k_Degradation(
 
 \item{SubCompartName}{name of the subcompartment}
 
-\item{ScaleName}{name of the considered scale}
-
-\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
+\item{ScaleName}{name of the considered scale
+removedparam Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed}
 }
 \value{
 Degradation rate constant for molecular species

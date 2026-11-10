@@ -6,7 +6,7 @@
 Moderate scale waters flow into Tropical scale through deep ocean currents 
 based on a set ocean current of r World$fetchData("OceanCurrent")/(60*60*24) m3/day.}
 \usage{
-x_FromModerate2TropWater(OceanCurrent, SubCompartName, ScaleName)
+x_FromModerate2TropWater(OceanCurrent, SubCompartName, ScaleName, parent)
 }
 \arguments{
 \item{OceanCurrent}{Ocean Current between global zones [m3.s-1]}

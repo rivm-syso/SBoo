@@ -4,16 +4,7 @@
 \alias{Kp}
 \title{Kp}
 \usage{
-Kp(
-  FRorig,
-  KswDorC,
-  Ksw.alt,
-  all.rhoMatrix,
-  Corg,
-  CorgStandard,
-  Matrix,
-  ChemClass
-)
+Kp(FRorig, KswDorC, Ksw.alt, rhoMatrix, Corg, CorgStandard, Matrix, ChemClass)
 }
 \arguments{
 \item{FRorig, }{fraction of species in its original form [-]}
@@ -29,8 +20,6 @@ Kp(
 \item{ChemClass}{Chemical class, e.g. neutral or metal}
 
 \item{RHOsolid}{density of the solid [kg m-3]}
-
-\item{ksw.alt}{}
 }
 \description{
 subcompartment/water partitioning coefficient

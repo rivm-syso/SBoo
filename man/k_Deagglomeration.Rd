@@ -4,12 +4,7 @@
 \alias{k_Deagglomeration}
 \title{Fragmentation and degradation of plastics}
 \usage{
-k_Deagglomeration(
-  kdeag,
-  SubCompartName,
-  ScaleName,
-  Regional_and_Continental_deepocean
-)
+k_Deagglomeration(kdeag, SubCompartName, ScaleName, parent)
 }
 \arguments{
 \item{kdeag}{Falling appart or fragmenting of heteroaglomerates [s-1]}

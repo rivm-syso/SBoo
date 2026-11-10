@@ -18,9 +18,12 @@ k_HeteroAgglomeration.a(
   NumConcNuc,
   NumConcAcc,
   NumConcCP,
+  SpeciesName,
+  Test = "FALSE",
+  ScaleName,
+  SubCompartName,
   Matrix,
-  to.SpeciesName,
-  Test = "FALSE"
+  parent
 )
 }
 \arguments{
@@ -48,11 +51,9 @@ k_HeteroAgglomeration.a(
 
 \item{NumConcCP}{number concentration coarse particulate mode aerosol particle [# m-3]}
 
-\item{Matrix}{type of subcompartment}
-
-\item{to.SpeciesName}{type of species considered}
-
 \item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
+
+\item{Matrix}{type of subcompartment}
 
 \item{to.alpha}{Attachment Efficiency of ENPs with other particulates, constants [-]}
 
@@ -67,6 +68,8 @@ k_HeteroAgglomeration.a(
 \item{f_Fuchs}{function describing Fuch's correction factor [-]}
 
 \item{rho_Otherparticle}{Density (specific weight) of natural particle [kg/m3]}
+
+\item{to.SpeciesName}{type of species considered}
 
 \item{ThermVel}{thermal veloicty of species [m s-1]}
 }

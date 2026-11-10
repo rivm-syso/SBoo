@@ -4,20 +4,14 @@
 \alias{x_FromModerate2ContWater}
 \title{Mixing of upper and deeper sea water layers (w2 and w3)}
 \usage{
-x_FromModerate2ContWater(
-  all.Volume,
-  all.TAUsea,
-  all.x_RegSea2Cont,
-  SubCompartName,
-  ScaleName
-)
+x_FromModerate2ContWater(Volume, TAUsea, x_RegSea2Cont, parent)
 }
 \arguments{
+\item{OceanCurrent}{[m3.s-1]}
+
 \item{SubCompartName}{name of the subcompartment of the box at hand}
 
 \item{ScaleName}{name of the scale of the box at hand}
-
-\item{OceanCurrent}{[m3.s-1]}
 }
 \value{
 Advection sea - deepocean

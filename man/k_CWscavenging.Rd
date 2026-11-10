@@ -12,8 +12,7 @@ k_CWscavenging(
   COLLECTeff,
   rad_species,
   rho_species,
-  to.rhoMatrix,
-  from.rhoMatrix,
+  rhoMatrix,
   DynViscAirStandard,
   DynViscWaterStandard,
   SettlingVelocity,
@@ -21,7 +20,9 @@ k_CWscavenging(
   Matrix,
   SpeciesName,
   VertDistance,
-  SubCompartName
+  SubCompartName,
+  ScaleName,
+  parent
 )
 }
 \arguments{
@@ -39,7 +40,7 @@ k_CWscavenging(
 
 \item{rho_species}{particle density [kg m-3]}
 
-\item{to.rhoMatrix}{density of cloud water [kg m-3]}
+\item{rhoMatrix}{density of air [kg m-3]}
 
 \item{DynViscAirStandard}{dynamic viscosity of air [kg m-3 s-1]}
 
@@ -59,7 +60,7 @@ k_CWscavenging(
 
 \item{rad_Raindrop}{radius of the raindrop [m]}
 
-\item{rhoMatrix}{density of air [kg m-3]}
+\item{to.rhoMatrix}{density of cloud water [kg m-3]}
 
 \item{CritStokesNumb.cw}{Critical stokes number, based on Wang et al. (2010)}
 

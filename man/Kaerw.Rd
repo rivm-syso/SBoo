@@ -4,7 +4,7 @@
 \alias{Kaerw}
 \title{Aerosol water - air Partition coefficient}
 \usage{
-Kaerw(Kacompw, FRorig, SubCompartName)
+Kaerw(Kacompw, FRorig, SubCompartName, parent, ScaleName)
 }
 \arguments{
 \item{Kacompw}{air water partitioning coefficient [-]}

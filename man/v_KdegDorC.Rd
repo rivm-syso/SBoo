@@ -6,6 +6,8 @@
 \title{Degradation rate constant measured or calculated}
 \usage{
 KdegDorC(
+  species,
+  Compartment,
   DegApproach,
   kdeg,
   C.OHrad.n,
@@ -18,7 +20,6 @@ KdegDorC(
   CorgStandard,
   rhoMatrix,
   Matrix,
-  SpeciesName,
   Shortest_side,
   Intermediate_side,
   Longest_side,
@@ -38,6 +39,8 @@ KdegDorC(
 )
 }
 \arguments{
+\item{species}{mode: which species are needed (Molecular, Small, Large ...)}
+
 \item{kdeg}{degradation rate (as input, e.g. based on half life) [s-1]}
 
 \item{C.OHrad.n}{general OH radical concentration, based on Wania & Daly (2002) [mol m-3]}
@@ -58,11 +61,11 @@ KdegDorC(
 
 \item{Matrix}{compartment type considered}
 
-\item{SpeciesName}{species name considered}
-
 \item{C.OHrad}{OH radical concentration specific to compartment, based on Wania & Daly (2002) [mol m-3]}
 
 \item{BioDeg}{biodegradability test result [-]}
+
+\item{SpeciesName}{species name considered}
 }
 \value{
 Degradation rate constant for molecular species

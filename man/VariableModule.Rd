@@ -7,66 +7,81 @@
 Module dealing with computing and initializing the variables
 }
 \section{Super class}{
-\code{\link[sboo:CalcGraphModule]{sboo::CalcGraphModule}} -> \code{VariableModule}
+\code{\link[sboo:CalcGraphModule]{CalcGraphModule}} -> \code{VariableModule}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-VariableModule-execute}{\code{VariableModule$execute()}}
-\item \href{#method-VariableModule-new}{\code{VariableModule$new()}}
-\item \href{#method-VariableModule-prepdata}{\code{VariableModule$prepdata()}}
-\item \href{#method-VariableModule-clone}{\code{VariableModule$clone()}}
+  \itemize{
+    \item \href{#method-VariableModule-execute}{\code{VariableModule$execute()}}
+    \item \href{#method-VariableModule-initialize}{\code{VariableModule$new()}}
+    \item \href{#method-VariableModule-prepdata}{\code{VariableModule$prepdata()}}
+    \item \href{#method-VariableModule-clone}{\code{VariableModule$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>CalcGraphModule$fetch_current()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-VariableModule-execute"></a>}}
 \if{latex}{\out{\hypertarget{method-VariableModule-execute}{}}}
-\subsection{Method \code{execute()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VariableModule$execute(debugAt = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{VariableModule$execute()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{VariableModule$execute(debugAt = NULL)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-VariableModule-new"></a>}}
-\if{latex}{\out{\hypertarget{method-VariableModule-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VariableModule$new(TheCore, exeFunction, IsVectorised = F, AggrBy, AggrFun)}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-VariableModule-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-VariableModule-initialize}{}}}
+\subsection{\code{VariableModule$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{VariableModule$new(TheCore, exeFunction, IsVectorised = F, AggrBy, AggrFun)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{TheCore}}{the SBcore, parent object of self}
+      \item{\code{exeFunction}}{defining function, usually the name of, as character, 
+for identification (a function does not know its own name)}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-VariableModule-prepdata"></a>}}
 \if{latex}{\out{\hypertarget{method-VariableModule-prepdata}{}}}
-\subsection{Method \code{prepdata()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VariableModule$prepdata(squeezeVar = NULL, debugAt = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{VariableModule$prepdata()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{VariableModule$prepdata(squeezeVar = NULL, debugAt = NULL)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-VariableModule-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-VariableModule-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VariableModule$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{VariableModule$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{VariableModule$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

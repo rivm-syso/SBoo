@@ -5,7 +5,7 @@
 \alias{RunoffFlow}
 \title{Runoff flow from soil to water}
 \usage{
-RunoffFlow(FRACrun, Area, RAINrate, Compartment)
+RunoffFlow(FRACrun, Area, RAINrate, Compartment, parent)
 }
 \arguments{
 \item{FRACrun}{volume fraction of precipitation on regional and 

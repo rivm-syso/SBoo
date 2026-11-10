@@ -12,7 +12,8 @@ MTC_2a(
   Matrix,
   SpeciesName,
   ScaleName,
-  SubCompartName
+  SubCompartName,
+  parent
 )
 }
 \arguments{

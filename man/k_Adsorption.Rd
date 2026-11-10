@@ -7,49 +7,32 @@
 k_Adsorption(
   FRingas,
   FRinw,
-  from.MTC_2sd,
-  to.FRorig_spw,
-  to.MTC_2w,
-  from.MTC_2w,
-  to.MTC_2a,
-  from.MTC_2s,
-  to.FRorig,
+  MTC_2sd,
+  FRorig_spw,
+  MTC_2w,
+  MTC_2a,
+  MTC_2s,
+  FRorig,
   Kacompw,
-  to.Kscompw,
-  to.Matrix,
+  Kscompw,
+  Matrix,
   VertDistance,
   AreaLand,
   AreaSea,
-  to.Area,
-  all.FRorig,
-  all.FRorig_spw,
-  from.SubCompartName,
-  to.SubCompartName,
+  Area,
+  SubCompartName,
   ScaleName,
   Test,
-  Regional_and_Continental_deepocean
+  parent,
+  SpeciesName
 )
 }
 \arguments{
 \item{FRinw}{fraction of species in water,see FRinw()}
 
-\item{Kacompw}{partitioning coefficient for air, see SBvariable}
-
-\item{VertDistance}{Vertical distance of the compartment}
-
-\item{AreaLand}{calculated land area of the scale considered, see SBvariable}
-
-\item{AreaSea}{calculated sea area of the scale considered, see SBvariable}
-
-\item{to.Area}{Area of the receiving compartent}
-
-\item{ScaleName}{name of scale}
-
-\item{Test}{Test = TRUE or FALSE, depending on if SBExcel version should be copied}
-
-\item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
-
 \item{MTC_2sd}{mass transfer coefficient to sediment, see MTC_2sd()}
+
+\item{FRorig_spw}{fraction of original species in soil pore water}
 
 \item{MTC_2w}{mass transfer coefficient to water, see SBvariable}
 
@@ -59,13 +42,26 @@ k_Adsorption(
 
 \item{FRorig}{fraction of species in original form, see SBvariable}
 
+\item{Kacompw}{partitioning coefficient for air, see SBvariable}
+
 \item{Kscompw}{partitioning coefficient for soil, see SB variable}
 
 \item{Matrix}{Receiving compartment type}
 
-\item{FRorig_spw}{fraction of original species in soil pore water}
+\item{VertDistance}{Vertical distance of the compartment}
+
+\item{AreaLand}{calculated land area of the scale considered, see SBvariable}
+
+\item{AreaSea}{calculated sea area of the scale considered, see SBvariable}
 
 \item{SubCompartName}{name of the subcompartname that is from/to}
+
+\item{ScaleName}{name of scale}
+
+\item{Test}{Test = TRUE or FALSE, depending on if SBExcel version should be copied
+paramremoved Regional_and_Continental_deepocean If this variable is TRUE, Regional and Continental deepocean compartments are removed}
+
+\item{to.Area}{Area of the receiving compartent}
 }
 \value{
 The adsorption rate constant relevant for the receiving compartments soil, water or sediment [s-1]

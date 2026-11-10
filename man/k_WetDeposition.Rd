@@ -4,7 +4,15 @@
 \alias{k_WetDeposition}
 \title{Rate constant for wet deposition of particulate species due to rain}
 \usage{
-k_WetDeposition(to.Area, from.Volume, RAINrate)
+k_WetDeposition(
+  Area,
+  Volume,
+  RAINrate,
+  ScaleName,
+  SubCompartName,
+  SpeciesName,
+  parent
+)
 }
 \arguments{
 \item{RAINrate}{average rain rate [m s-1]}

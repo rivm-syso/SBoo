@@ -4,7 +4,7 @@
 \alias{Volume}
 \title{Volume of the SubCompartment}
 \usage{
-Volume(VertDistance, Area, FRACcldw, SubCompartName)
+Volume(VertDistance, Area, FRACcldw, SubCompartName, parent, ScaleName)
 }
 \arguments{
 \item{VertDistance}{height or depth for subcompartments below the horizon [m]}

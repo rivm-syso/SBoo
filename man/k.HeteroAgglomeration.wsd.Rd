@@ -6,7 +6,7 @@
 \title{Heteroagglomeration (20181102)}
 \usage{
 k_HeteroAgglomeration.wsd(
-  to.alpha,
+  alpha,
   COL,
   SUSP,
   Shear,
@@ -21,22 +21,21 @@ k_HeteroAgglomeration.wsd(
   RhoCP,
   rhoMatrix,
   Udarcy,
-  to.FRACs,
+  FRACs,
   hamakerSP.w,
   Matrix,
-  to.SpeciesName,
+  SpeciesName,
   SubCompartName,
   ScaleName,
   Longest_side,
   Intermediate_side,
   Shortest_side,
   DragMethod,
-  Regional_and_Continental_deepocean
+  Regional_and_Continental_deepocean,
+  parent
 )
 }
 \arguments{
-\item{to.alpha}{Attachment Efficiency of ENPs with other particulates [-]}
-
 \item{COL}{mass concentration natural colloids in water [kg m-3]}
 
 \item{SUSP}{mass concentration suspended matter in water [kg m-3]}
@@ -59,6 +58,8 @@ k_HeteroAgglomeration.wsd(
 
 \item{Udarcy}{Darcy velocity [m s-1]}
 
+\item{FRACs}{fraction of solids in the matrix [-]}
+
 \item{hamakerSP.w}{Hamaker constant for heteroagglomerates [J]}
 
 \item{Matrix}{type of subcompartment considered}
@@ -76,6 +77,8 @@ k_HeteroAgglomeration.wsd(
 \item{DragMethod}{Drag method [character string]}
 
 \item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
+
+\item{to.alpha}{Attachment Efficiency of ENPs with other particulates [-]}
 
 \item{MasConc_Otherparticle}{Mass concentration of other particulates [kg.m-3]}
 
@@ -96,8 +99,6 @@ k_HeteroAgglomeration.wsd(
 \item{rho_CP}{density of coarse particulate mode of particle [kg m-3]}
 
 \item{radCP}{radius of accumulation mode of particle [m]}
-
-\item{FRACs}{fraction of solids in the matrix [-]}
 }
 \value{
 k.HeteroAgglomeration, the rate constant for 1rst order process: heteroagglomeration [s-1]
