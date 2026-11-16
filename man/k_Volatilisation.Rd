@@ -5,12 +5,12 @@
 \title{Volatilisation rate constant}
 \usage{
 k_Volatilisation(
-  to.MTC_2w,
-  from.MTC_2a,
-  to.MTC_2s,
+  MTC_2w,
+  MTC_2a,
+  MTC_2s,
   Kacompw,
-  from.FRorig,
-  from.FRorig_spw,
+  FRorig,
+  FRorig_spw,
   FRinw,
   Kscompw,
   VertDistance,
@@ -18,10 +18,9 @@ k_Volatilisation(
   Matrix,
   relevant_depth_s,
   penetration_depth_s,
-  from.SubCompartName,
-  from.ScaleName,
-  to.SubCompartName,
-  to.ScaleName
+  SubCompartName,
+  ScaleName,
+  parent
 )
 }
 \arguments{

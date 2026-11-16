@@ -21,7 +21,9 @@ SettlingVelocity(
   DragMethod,
   MinSettVel,
   Regional_and_Continental_deepocean,
-  VelInput
+  VelInput,
+  parent,
+  SpeciesName
 )
 }
 \arguments{

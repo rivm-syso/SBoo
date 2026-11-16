@@ -4,7 +4,7 @@
 \alias{MTC_2w}
 \title{PARTIAL MASS TRANSFER COEFFICIENT air and sediment to water}
 \usage{
-MTC_2w(WINDspeed, MW, kwsd.sed, Matrix)
+MTC_2w(WINDspeed, MW, kwsd.sed, Matrix, parent, ScaleName)
 }
 \arguments{
 \item{WINDspeed}{Windspeed in compartment/scale [m.s-1]}

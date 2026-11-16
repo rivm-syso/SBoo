@@ -4,7 +4,17 @@
 \alias{Kscompw}
 \title{Dimensionless soil/water Partition Coefficient of molecular species specific to soil subcompartment}
 \usage{
-Kscompw(FRACw, FRACa, Kacompw, FRorig_spw, Kp, all.rhoMatrix, Matrix)
+Kscompw(
+  FRACw,
+  FRACa,
+  Kacompw,
+  FRorig_spw,
+  Kp,
+  rhoMatrix,
+  Matrix,
+  parent,
+  ScaleName
+)
 }
 \arguments{
 \item{FRACw}{fraction of water in compartment [-]}
@@ -15,9 +25,9 @@ Kscompw(FRACw, FRACa, Kacompw, FRorig_spw, Kp, all.rhoMatrix, Matrix)
 
 \item{Kp}{subcompartment/water partitioning coefficient [-]}
 
-\item{Matrix}{type of compartment}
-
 \item{rhoMatrix}{density of the matrix [-]}
+
+\item{Matrix}{type of compartment}
 }
 \value{
 Kscompw

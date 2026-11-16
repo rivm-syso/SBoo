@@ -5,37 +5,34 @@
 \title{Dry deposition from air to surface soil or water of particulate species}
 \usage{
 k_DryDeposition(
-  to.Area,
-  from.Volume,
+  Area,
+  Volume,
   AEROresist,
-  to.gamma.surf,
+  gamma.surf,
   FricVel,
   DynViscAirStandard,
   rhoMatrix,
-  to.ColRad,
+  ColRad,
   rad_species,
   rho_species,
   Temp,
-  to.alpha.surf,
+  alpha.surf,
   SettlingVelocity,
   SpeciesName,
   SubCompartName,
   AEROSOLdeprate,
   Test = FALSE,
-  to.Matrix,
+  Matrix,
   RAINrate,
-  from.Matrix,
-  from.rhoMatrix,
   FRACtwet,
-  to.SubCompartName
+  ScaleName,
+  parent
 )
 }
 \arguments{
-\item{to.Area}{Surface area of receiving land or water compartment [m2]}
-
-\item{from.Volume}{Volume of air compartment [m3]}
-
 \item{AEROresist}{aerodynamic resistance (Constant set to 74) [s.m-1]}
+
+\item{gamma.surf}{resistance parameter depending on average surface type as taken from the LOTOS-EUROS reference guide table A.1}
 
 \item{FricVel}{Friction velocity [m s-1] (19 according to Van Jaarsveld, table 2.2)}
 
@@ -43,13 +40,13 @@ k_DryDeposition(
 
 \item{rhoMatrix}{density of the matrix [kg m3]}
 
+\item{ColRad}{Land surface particle collector radius [m] appendix A of LOTEUR.}
+
 \item{rad_species}{rad_particle [m]}
 
 \item{rho_species}{rho_particle [kg m3]}
 
 \item{Temp}{Temperature [K]}
-
-\item{to.alpha.surf}{depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016}
 
 \item{SpeciesName}{name of the species considered}
 
@@ -57,17 +54,19 @@ k_DryDeposition(
 
 \item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
 
+\item{Matrix}{type of compartment [-]}
+
 \item{FRACtwet}{fraction of wet periods [-]}
 
-\item{ColRad}{Land surface particle collector radius [m] appendix A of LOTEUR.}
+\item{to.Area}{Surface area of receiving land or water compartment [m2]}
 
-\item{gamma.surf}{resistance parameter depending on average surface type as taken from the LOTOS-EUROS reference guide table A.1}
+\item{from.Volume}{Volume of air compartment [m3]}
+
+\item{to.alpha.surf}{depends on the vegetation type, see table A.1 in ref guide LOTEUR v2.0 2016}
 
 \item{SubcompartName}{name of the Subcompartment}
 
 \item{from.SettlingVelocity}{Settlings Velocity of particulate species in air [m.s-1]}
-
-\item{Matrix}{type of compartment [-]}
 
 \item{Cunningham}{collision frequency of ENPs with other particles [-] see f_Cunnningham}
 

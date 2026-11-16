@@ -7,20 +7,20 @@
 k_Resuspension(
   VertDistance,
   DynViscWaterStandard,
-  to.rhoMatrix,
-  to.NETsedrate,
-  to.RadCP,
-  to.RhoCP,
-  from.RhoCP,
+  rhoMatrix,
+  NETsedrate,
+  RadCP,
+  RhoCP,
   FRACs,
-  to.SUSP,
-  to.Matrix,
+  SUSP,
+  Matrix,
   SpeciesName,
   ScaleName,
-  to.SubCompartName,
-  from.SubCompartName,
+  SubCompartName,
   Test,
-  Regional_and_Continental_deepocean
+  Regional_and_Continental_deepocean,
+  SettlingVelocity,
+  parent
 )
 }
 \arguments{
@@ -28,27 +28,27 @@ k_Resuspension(
 
 \item{DynViscWaterStandard}{Dynamic viscosity of water [kg m-1 s-1]}
 
+\item{rhoMatrix}{density of the Matrix [kg m-3]}
+
+\item{NETsedrate}{net sedimentation rate, data input [s] (Schoorl et al., 2015)}
+
+\item{RadCP}{radius of coarse particulate particles [m]}
+
+\item{RhoCP}{Mineral density of sediment and soil #[kg/m3]}
+
 \item{FRACs}{Volume fraction solids in sediment #[-]}
+
+\item{SUSP}{mass concentration of suspended matter [kg m-3]}
 
 \item{SpeciesName}{species considered}
 
 \item{ScaleName}{scale considered}
 
+\item{SubCompartName}{subcompartment considered}
+
 \item{Test}{determines if SB4-Excel approach is taken or enhanced method from R version [boolean]}
 
 \item{Regional_and_Continental_deepocean}{If this variable is TRUE, Regional and Continental deepocean compartments are removed}
-
-\item{rhoMatrix}{density of the Matrix [kg m-3]}
-
-\item{NETsedrate}{net sedimentation rate, data input [s] (Schoorl et al., 2015)}
-
-\item{RhoCP}{Mineral density of sediment and soil #[kg/m3]}
-
-\item{RadCP}{radius of coarse particulate particles [m]}
-
-\item{SUSP}{mass concentration of suspended matter [kg m-3]}
-
-\item{SubCompartName}{subcompartment considered}
 
 \item{SettlingVelocitySPM}{settling velocity of suspended matter particles}
 }

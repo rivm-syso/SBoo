@@ -5,12 +5,12 @@
 \alias{OtherkAir}
 \title{v_OtherkAir}
 \usage{
-OtherkAir(all.kaas, ScaleName, SpeciesName)
+OtherkAir(kaas_air, ScaleName, SpeciesName)
 }
 \arguments{
-\item{all.kaas}{all other transfer rates in air, used in deposition flux}
-
 \item{ScaleName}{scale name considered}
+
+\item{all.kaas}{all other transfer rates in air, used in deposition flux}
 
 \item{Species}{species type considered (molecular)}
 }

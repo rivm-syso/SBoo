@@ -4,7 +4,7 @@
 \alias{x_RegSea2Cont}
 \title{RegSea2Cont}
 \usage{
-x_RegSea2Cont(all.x_RiverDischarge, all.x_ContSea2Reg)
+x_RegSea2Cont(x_RiverDischarge, x_ContSea2Reg, parent)
 }
 \arguments{
 \item{RiverDischarge}{find the flux in all. RiverDischarge fluxes}

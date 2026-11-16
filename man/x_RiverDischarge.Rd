@@ -5,24 +5,19 @@
 \title{RiverDischarge [s-1]}
 \usage{
 x_RiverDischarge(
-  all.RunoffFlow,
-  all.RainOnFreshwater,
+  RunoffFlow,
+  RainOnFreshwater,
   dischargeFRAC,
-  all.x_ContRiver2Reg,
-  ScaleName,
-  SubCompartName
+  x_ContRiver2Reg,
+  parent
 )
 }
 \arguments{
-\item{dischargeFRAC}{Fraction discharge of freshwater between regional and continental scales and vice versa [-]}
-
-\item{ScaleName}{Name of the scale of the box at hand}
-
-\item{SubCompartName}{Name of the subcompartment of the box at hand}
-
 \item{RunoffFlow}{RunoffFlow flow from soil to river [m3.s-1]}
 
 \item{RainOnFreshwater}{Water flow of rain directly on lake/river [m3.s-1]}
+
+\item{dischargeFRAC}{Fraction discharge of freshwater between regional and continental scales and vice versa [-]}
 
 \item{x_ContRiver2Reg}{Flow from continental to regional river water [s-1]}
 }

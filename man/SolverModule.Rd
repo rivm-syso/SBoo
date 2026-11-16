@@ -9,78 +9,89 @@ like preparing K matrix and matching emission vector and
 the general ODE for SimpleBox
 }
 \section{Super class}{
-\code{\link[sboo:CalcGraphModule]{sboo::CalcGraphModule}} -> \code{SolverModule}
+\code{\link[sboo:CalcGraphModule]{CalcGraphModule}} -> \code{SolverModule}
 }
 \section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{states}}{injected from States}
-}
-\if{html}{\out{</div>}}
+  \if{html}{\out{<div class="r6-fields">}}
+  \describe{
+    \item{\code{states}}{injected from States}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{needVars}}{getter for parameters, derived from the defining function}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{needVars}}{getter for parameters, derived from the defining function}
 
-\item{\code{states}}{injected from States}
+    \item{\code{states}}{injected from States}
 
-\item{\code{SB.k}}{r.o. matrix of k's, after preparing, mostly abuse of identity for removal processes}
+    \item{\code{SB.k}}{r.o. matrix of k's, after preparing, mostly abuse of identity for removal processes}
 
-\item{\code{RUNs}}{LHS samples; TODO more generally named scenarios?}
-}
-\if{html}{\out{</div>}}
+    \item{\code{RUNs}}{LHS samples; TODO more generally named scenarios?}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-SolverModule-new}{\code{SolverModule$new()}}
-\item \href{#method-SolverModule-execute}{\code{SolverModule$execute()}}
-\item \href{#method-SolverModule-RemoveUnusedCols}{\code{SolverModule$RemoveUnusedCols()}}
-\item \href{#method-SolverModule-GetMasses}{\code{SolverModule$GetMasses()}}
-\item \href{#method-SolverModule-GetK_matrix}{\code{SolverModule$GetK_matrix()}}
-\item \href{#method-SolverModule-GetEmissions}{\code{SolverModule$GetEmissions()}}
-\item \href{#method-SolverModule-GetVarValues}{\code{SolverModule$GetVarValues()}}
-\item \href{#method-SolverModule-GetConcentrations}{\code{SolverModule$GetConcentrations()}}
-\item \href{#method-SolverModule-GetConcentrationPlot}{\code{SolverModule$GetConcentrationPlot()}}
-\item \href{#method-SolverModule-GetMassesPlot}{\code{SolverModule$GetMassesPlot()}}
-\item \href{#method-SolverModule-GetMassDist}{\code{SolverModule$GetMassDist()}}
-\item \href{#method-SolverModule-PrepKaasM}{\code{SolverModule$PrepKaasM()}}
-\item \href{#method-SolverModule-PrepemisV}{\code{SolverModule$PrepemisV()}}
-\item \href{#method-SolverModule-emissions}{\code{SolverModule$emissions()}}
-\item \href{#method-SolverModule-PrepLHS}{\code{SolverModule$PrepLHS()}}
-\item \href{#method-SolverModule-ScaleLHS}{\code{SolverModule$ScaleLHS()}}
-\item \href{#method-SolverModule-TransformCorrelatedLHS}{\code{SolverModule$TransformCorrelatedLHS()}}
-\item \href{#method-SolverModule-ExpandLHS}{\code{SolverModule$ExpandLHS()}}
-\item \href{#method-SolverModule-DiffSB.K}{\code{SolverModule$DiffSB.K()}}
-\item \href{#method-SolverModule-ConcentrationToGrams}{\code{SolverModule$ConcentrationToGrams()}}
-\item \href{#method-SolverModule-MassesAsRelational}{\code{SolverModule$MassesAsRelational()}}
-\item \href{#method-SolverModule-clone}{\code{SolverModule$clone()}}
+  \itemize{
+    \item \href{#method-SolverModule-initialize}{\code{SolverModule$new()}}
+    \item \href{#method-SolverModule-execute}{\code{SolverModule$execute()}}
+    \item \href{#method-SolverModule-RemoveUnusedCols}{\code{SolverModule$RemoveUnusedCols()}}
+    \item \href{#method-SolverModule-GetMasses}{\code{SolverModule$GetMasses()}}
+    \item \href{#method-SolverModule-GetK_matrix}{\code{SolverModule$GetK_matrix()}}
+    \item \href{#method-SolverModule-GetEmissions}{\code{SolverModule$GetEmissions()}}
+    \item \href{#method-SolverModule-GetVarValues}{\code{SolverModule$GetVarValues()}}
+    \item \href{#method-SolverModule-GetConcentrations}{\code{SolverModule$GetConcentrations()}}
+    \item \href{#method-SolverModule-GetConcentrationPlot}{\code{SolverModule$GetConcentrationPlot()}}
+    \item \href{#method-SolverModule-GetMassesPlot}{\code{SolverModule$GetMassesPlot()}}
+    \item \href{#method-SolverModule-GetMassDist}{\code{SolverModule$GetMassDist()}}
+    \item \href{#method-SolverModule-PrepKaasM}{\code{SolverModule$PrepKaasM()}}
+    \item \href{#method-SolverModule-PrepemisV}{\code{SolverModule$PrepemisV()}}
+    \item \href{#method-SolverModule-emissions}{\code{SolverModule$emissions()}}
+    \item \href{#method-SolverModule-PrepLHS}{\code{SolverModule$PrepLHS()}}
+    \item \href{#method-SolverModule-ScaleLHS}{\code{SolverModule$ScaleLHS()}}
+    \item \href{#method-SolverModule-TransformCorrelatedLHS}{\code{SolverModule$TransformCorrelatedLHS()}}
+    \item \href{#method-SolverModule-ExpandLHS}{\code{SolverModule$ExpandLHS()}}
+    \item \href{#method-SolverModule-DiffSB.K}{\code{SolverModule$DiffSB.K()}}
+    \item \href{#method-SolverModule-ConcentrationToGrams}{\code{SolverModule$ConcentrationToGrams()}}
+    \item \href{#method-SolverModule-MassesAsRelational}{\code{SolverModule$MassesAsRelational()}}
+    \item \href{#method-SolverModule-clone}{\code{SolverModule$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>CalcGraphModule$fetch_current()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SolverModule-new"></a>}}
-\if{latex}{\out{\hypertarget{method-SolverModule-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$new(TheCore, exeFunction, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-SolverModule-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-SolverModule-initialize}{}}}
+\subsection{\code{SolverModule$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$new(TheCore, exeFunction, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{TheCore}}{the SBcore, parent object of self}
+      \item{\code{exeFunction}}{defining function, usually the name of, as character, 
+for identification (a function does not know its own name)}
+      \item{\code{...}}{other parameters for various uses, end up in private$MoreParams}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-execute"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-execute}{}}}
-\subsection{Method \code{execute()}}{
-Solve matrix / emissions
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$execute(
+\subsection{\code{SolverModule$execute()}}{
+  Solve matrix / emissions
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$execute(
   needdebug = F,
   emissions = NULL,
   var_box_df = data.frame(),
@@ -90,296 +101,329 @@ Solve matrix / emissions
   LHSmatrix = NULL,
   correlations = NULL,
   ...
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{needdebug}}{if T, the solver defining function execute in debugmode}
+      \item{\code{var_box_df}}{= data.frame(),}
+      \item{\code{var_invFun}}{= list(),}
+      \item{\code{nRUNs}}{= NULL}
+      \item{\code{ParallelPreparation}}{= F}
+      \item{\code{LHSmatrix}}{= NULL}
+      \item{\code{correlations}}{= NULL}
+      \item{\code{emis_invFun}}{= list(),}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{needdebug}}{if T, the solver defining function execute in debugmode}
-
-\item{\code{var_box_df}}{= data.frame(),}
-
-\item{\code{var_invFun}}{= list(),}
-
-\item{\code{nRUNs}}{= NULL}
-
-\item{\code{ParallelPreparation}}{= F}
-
-\item{\code{LHSmatrix}}{= NULL}
-
-\item{\code{correlations}}{= NULL}
-
-\item{\code{emis_invFun}}{= list(),}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-RemoveUnusedCols"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-RemoveUnusedCols}{}}}
-\subsection{Method \code{RemoveUnusedCols()}}{
-return dataframe without time and RUNs column if they
+\subsection{\code{SolverModule$RemoveUnusedCols()}}{
+  return dataframe without time and RUNs column if they
 only have one unique entry
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$RemoveUnusedCols(df)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$RemoveUnusedCols(df)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetMasses"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetMasses}{}}}
-\subsection{Method \code{GetMasses()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetMasses()}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetMasses()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetMasses()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetK_matrix"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetK_matrix}{}}}
-\subsection{Method \code{GetK_matrix()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetK_matrix()}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetK_matrix()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetK_matrix()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetEmissions"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetEmissions}{}}}
-\subsection{Method \code{GetEmissions()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetEmissions()}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetEmissions()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetEmissions()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetVarValues"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetVarValues}{}}}
-\subsection{Method \code{GetVarValues()}}{
-Function that returns the values for the LHS samples scaled to the distributions given by the user
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetVarValues()}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetVarValues()}}{
+  Function that returns the values for the LHS samples scaled to the distributions given by the user
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetVarValues()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetConcentrations"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetConcentrations}{}}}
-\subsection{Method \code{GetConcentrations()}}{
-Function that returns the concentration calculated from masses
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetConcentrations()}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetConcentrations()}}{
+  Function that returns the concentration calculated from masses
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetConcentrations()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetConcentrationPlot"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetConcentrationPlot}{}}}
-\subsection{Method \code{GetConcentrationPlot()}}{
-Function that creates the appropriate concentration plot
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetConcentrationPlot(scale = NULL, subcompart = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetConcentrationPlot()}}{
+  Function that creates the appropriate concentration plot
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetConcentrationPlot(scale = NULL, subcompart = NULL)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetMassesPlot"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetMassesPlot}{}}}
-\subsection{Method \code{GetMassesPlot()}}{
-Function that creates the appropriate solution plot
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetMassesPlot(scale = NULL, subcompart = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$GetMassesPlot()}}{
+  Function that creates the appropriate solution plot
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetMassesPlot(scale = NULL, subcompart = NULL)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-GetMassDist"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-GetMassDist}{}}}
-\subsection{Method \code{GetMassDist()}}{
-Function that creates a mass distribution tree map for
+\subsection{\code{SolverModule$GetMassDist()}}{
+  Function that creates a mass distribution tree map for
 steady state solutions
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$GetMassDist(scale = NULL)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$GetMassDist(scale = NULL)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-PrepKaasM"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-PrepKaasM}{}}}
-\subsection{Method \code{PrepKaasM()}}{
-prepare kaas for matrix calculations
+\subsection{\code{SolverModule$PrepKaasM()}}{
+  prepare kaas for matrix calculations
 1 Convert relational i,j,kaas into a matrix (matrify, pivot..)
 including aggregation of kaas with identical (i,j)
 2 The kaas are only describing removal, the where-to needs to be
 added to the from-masses by putting it to into the diagonal
 NB emission depend on order of states; if available: resort!
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$PrepKaasM(kaas = NULL)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$PrepKaasM(kaas = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{kaas}}{k's}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    matrix with kaas; ready to go
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{kaas}}{k's}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-matrix with kaas; ready to go
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-PrepemisV"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-PrepemisV}{}}}
-\subsection{Method \code{PrepemisV()}}{
-sync emissions as relational table with states into vector
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$PrepemisV(emis)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$PrepemisV()}}{
+  sync emissions as relational table with states into vector
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$PrepemisV(emis)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{emissions}}{named vector /}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    emissions; ready to solve for the appropriate solver
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{emissions}}{named vector /}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-emissions; ready to solve for the appropriate solver
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-emissions"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-emissions}{}}}
-\subsection{Method \code{emissions()}}{
-Function that returns the emissions for a specific RUN
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$emissions(scenario = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$emissions()}}{
+  Function that returns the emissions for a specific RUN
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$emissions(scenario = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{scenario}}{run number}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    emissions for the given run
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{scenario}}{run number}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-emissions for the given run
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-PrepLHS"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-PrepLHS}{}}}
-\subsection{Method \code{PrepLHS()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$PrepLHS(
+\subsection{\code{SolverModule$PrepLHS()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$PrepLHS(
   var_box_df = data.frame(),
   var_invFun = list(),
   emis_invFun = list(),
   nRUNs = 100
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-ScaleLHS"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-ScaleLHS}{}}}
-\subsection{Method \code{ScaleLHS()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$ScaleLHS(lhsRUNs, var_invfun, correlations)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$ScaleLHS()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$ScaleLHS(lhsRUNs, var_invfun, correlations)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-TransformCorrelatedLHS"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-TransformCorrelatedLHS}{}}}
-\subsection{Method \code{TransformCorrelatedLHS()}}{
-Function that transforms LHS samples for correlated variables
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$TransformCorrelatedLHS(lhsRUNs, correlations, var_invfun)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$TransformCorrelatedLHS()}}{
+  Function that transforms LHS samples for correlated variables
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$TransformCorrelatedLHS(lhsRUNs, correlations, var_invfun)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-ExpandLHS"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-ExpandLHS}{}}}
-\subsection{Method \code{ExpandLHS()}}{
-Function that copies LHS columns for variables when a SubCompart is Water, Sediment or Soil
+\subsection{\code{SolverModule$ExpandLHS()}}{
+  Function that copies LHS columns for variables when a SubCompart is Water, Sediment or Soil
 or when a variable that should be present is NA
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$ExpandLHS(lhsRUNs)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$ExpandLHS(lhsRUNs)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-DiffSB.K"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-DiffSB.K}{}}}
-\subsection{Method \code{DiffSB.K()}}{
-diff between kaas in this and k's in OtherSB.K
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$DiffSB.K(OtherSB.K, tiny = 1e-20)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{OtherSB.K}}{the 'other' kaas}
-
-\item{\code{tiny}}{(epsilon) permitted rounding error (we might be dealing with excel/csv files ! :( )
+\subsection{\code{SolverModule$DiffSB.K()}}{
+  diff between kaas in this and k's in OtherSB.K
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$DiffSB.K(OtherSB.K, tiny = 1e-20)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{OtherSB.K}}{the 'other' kaas}
+      \item{\code{tiny}}{(epsilon) permitted rounding error (we might be dealing with excel/csv files ! :( )
 Multiply to gram
 ConcentrationToGrams returns a dataframe with concentrations and units column
 This is a generic function to get
 g/m3 or g/kg w instead of kg/m3 or kg/kg w}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-ConcentrationToGrams"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-ConcentrationToGrams}{}}}
-\subsection{Method \code{ConcentrationToGrams()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$ConcentrationToGrams(Concentration_df)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$ConcentrationToGrams()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$ConcentrationToGrams(Concentration_df)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{Concentration_df}}{The concentration dafatfame as calculated using Mass2Conc}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{Concentration_df}}{The concentration dafatfame as calculated using Mass2Conc}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-MassesAsRelational"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-MassesAsRelational}{}}}
-\subsection{Method \code{MassesAsRelational()}}{
-return dataframe with
+\subsection{\code{SolverModule$MassesAsRelational()}}{
+  return dataframe with
 state in three columns,
 time input in one or t[est]vars in separate columns,
 and the Mass in the Mass column
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$MassesAsRelational(fullStates = FALSE)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$MassesAsRelational(fullStates = FALSE)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SolverModule-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-SolverModule-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SolverModule$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{SolverModule$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SolverModule$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

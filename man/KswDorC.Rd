@@ -4,10 +4,12 @@
 \alias{KswDorC}
 \title{Ksw}
 \usage{
-KswDorC(KocDorC, CorgStandard, all.rhoMatrix, Ksw, ChemClass)
+KswDorC(KocDorC, CorgStandard, rhoMatrix, Ksw, ChemClass)
 }
 \arguments{
 \item{CorgStandard}{Standard mass FRACTION organic carbon in soil/sediment [-]}
+
+\item{rhoMatrix}{density of the matrix [kg/m3]}
 
 \item{Ksw}{soil water partitioning coefficient in data}
 
@@ -18,8 +20,6 @@ KswDorC(KocDorC, CorgStandard, all.rhoMatrix, Ksw, ChemClass)
 \item{a}{see QSAR table}
 
 \item{b}{see QSAR table}
-
-\item{rhoMatrix}{density of the matrix [kg/m3]}
 
 \item{pKa}{Dissociation constant of (conjugated) acid (default = 70}
 }

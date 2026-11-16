@@ -11,12 +11,14 @@ FRinw(
   FRACa,
   FRACs,
   Kp,
-  all.rhoMatrix,
+  rhoMatrix,
   KpCOL,
   Kacompw,
   SUSP,
   COL,
-  Matrix
+  Matrix,
+  parent,
+  ScaleName
 )
 }
 \arguments{
@@ -30,6 +32,8 @@ FRinw(
 
 \item{Kp}{soil/water partitioning coefficient [-]}
 
+\item{rhoMatrix}{density of the matrix [kg.m-3]}
+
 \item{Kacompw}{Dimensionless air/water partitioning coefficient of original species at compartment temperature [-]}
 
 \item{SUSP}{Concentration suspended matter in water [mg.L-1]}
@@ -37,8 +41,6 @@ FRinw(
 \item{COL}{Concentration of colloidal organic matter in water [mg.L-1]}
 
 \item{Matrix}{Type of compartment matrix (soil, water, sediment or air)}
-
-\item{rhoMatrix}{density of the matrix [kg.m-3]}
 }
 \description{
 Everything that is not attached

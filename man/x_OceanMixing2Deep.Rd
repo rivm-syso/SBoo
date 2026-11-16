@@ -4,12 +4,10 @@
 \alias{x_OceanMixing2Deep}
 \title{Mixing of upper to deeper sea water layer (w2 and w3)}
 \usage{
-x_OceanMixing2Deep(Volume, TAUsea, OceanCurrent, ScaleName, SubCompartName)
+x_OceanMixing2Deep(Volume, TAUsea, OceanCurrent, parent)
 }
 \arguments{
 \item{OceanCurrent}{[m3.s-1]}
-
-\item{ScaleName}{name of the scale of the box at hand}
 
 \item{to.Volume}{Volume of the to box}
 
@@ -18,6 +16,8 @@ x_OceanMixing2Deep(Volume, TAUsea, OceanCurrent, ScaleName, SubCompartName)
 \item{to.TAUsea}{TAU - Residence time in sea; scale variable}
 
 \item{from.TAUsea}{TAU - Residence time in sea; for the "to" box}
+
+\item{ScaleName}{name of the scale of the box at hand}
 }
 \value{
 Mixing flow surface to deep ocean [m3.s-1]

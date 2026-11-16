@@ -4,7 +4,14 @@
 \alias{IntrcptFrac}
 \title{Fraction of intercepted particles in soil from Runoff}
 \usage{
-IntrcptFrac(VegInterceptFrac, SizeRunoff, rad_species, Matrix)
+IntrcptFrac(
+  VegInterceptFrac,
+  SizeRunoff,
+  rad_species,
+  Matrix,
+  parent,
+  SpeciesName
+)
 }
 \arguments{
 \item{Matrix}{type of compartment}

@@ -4,18 +4,18 @@
 \alias{FracROWatComp}
 \title{FracRoWatComp}
 \usage{
-FracROWatComp(all.landFRAC, all.Matrix, Matrix, SubCompartName, ScaleName)
+FracROWatComp(landFRAC, Matrix, SubCompartName, ScaleName, parent, SpeciesName)
 }
 \arguments{
-\item{all.landFRAC}{Fractions of land compartments #[-]}
-
-\item{all.Matrix}{Matrix compartment the subcompartments belong to #[-]}
-
 \item{Matrix}{Current matrix the function calculates for [-]}
 
 \item{SubCompartName}{Subcompartment the function calculates for [-]}
 
 \item{ScaleName}{The scale the function calculates for [-]}
+
+\item{all.landFRAC}{Fractions of land compartments #[-]}
+
+\item{all.Matrix}{Matrix compartment the subcompartments belong to #[-]}
 }
 \value{
 Fraction of water component of .to subcompartment #[-]

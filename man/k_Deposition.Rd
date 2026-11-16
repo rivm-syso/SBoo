@@ -15,9 +15,8 @@ k_Deposition(
   Kacompw,
   FRorig,
   SpeciesName,
-  OtherkAir,
-  to.Area,
-  from.Area,
+  other_MolAir_sinks,
+  Area,
   Kaers,
   Kaerw,
   FRinaerw,
@@ -45,7 +44,7 @@ k_Deposition(
 
 \item{SpeciesName}{Name of the species the function is applied to}
 
-\item{OtherkAir}{correction term for processes other than deposition affecting the air compartment, see OtherKair [s-1]}
+\item{Area}{area of the compartment [-]}
 
 \item{Kaers}{aerosol solid air partitioning coefficient  [-]}
 
@@ -59,7 +58,7 @@ k_Deposition(
 
 \item{AREAFRAC}{Fraction of area compartment relative to the whole surface area of this scale (systemarea) [-]}
 
-\item{Area}{area of the compartment [-]}
+\item{OtherkAir}{correction term for processes other than deposition affecting the air compartment, see OtherKair [s-1]}
 }
 \value{
 Transfer rate constant gaseous species air to soil or water #[s-1]

@@ -5,7 +5,7 @@
 \title{Calculate volume of sphere assuming (20181102)}
 \usage{
 f_SurfaceAreaParticle(
-  Shape,
+  Shape = NULL,
   Longest_side = NULL,
   Intermediate_side = NULL,
   Shortest_side = NULL,

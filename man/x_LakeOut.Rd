@@ -4,20 +4,14 @@
 \alias{x_LakeOut}
 \title{LakeOut}
 \usage{
-x_LakeOut(
-  RainOnFreshwater,
-  all.RunoffFlow,
-  FracROWatComp,
-  SubCompartName,
-  ScaleName
-)
+x_LakeOut(RainOnFreshwater, RunoffFlow, FracROWatComp, parent)
 }
 \arguments{
 \item{RainOnFreshwater}{The direct rain on the freshwater compartment (e.g. a lake).}
 
-\item{all.RunoffFlow}{RunoffFlow from soil to the freshwater compartment}
-
 \item{FracROWatComp}{The fraction runoff discharging into the separate w0 freshwater compartment based on surface area fraction.}
+
+\item{all.RunoffFlow}{RunoffFlow from soil to the freshwater compartment}
 
 \item{SubCompartName}{Only applies to lake compartment, so the compartment name is needed.}
 

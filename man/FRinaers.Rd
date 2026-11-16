@@ -4,7 +4,7 @@
 \alias{FRinaers}
 \title{Fraction of chemical in aerosol solids}
 \usage{
-FRinaers(Kaers, Kaerw, FRACs, FRACw)
+FRinaers(Kaers, Kaerw, FRACs, FRACw, parent)
 }
 \arguments{
 \item{Kaers}{Dimensionless aerosol solid / air Partitioning Coefficient [-]}

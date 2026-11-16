@@ -7,24 +7,23 @@
 k_Runoff(
   RunoffFlow,
   VertDistance,
-  to.FracROWatComp,
+  FracROWatComp,
   Volume,
   Kscompw,
   relevant_depth_s,
   penetration_depth_s,
-  ScaleName,
-  to.SubCompartName,
-  to.ScaleName,
   SpeciesName,
   Matrix,
-  all.Matrix,
-  IntrcptFrac
+  IntrcptFrac,
+  parent
 )
 }
 \arguments{
 \item{RunoffFlow}{RunoffFlow, as computed by v_RunoffFlow [s-1]}
 
 \item{VertDistance}{Mixing depth soil #[m]}
+
+\item{FracROWatComp}{fraction of water component runoff can flow to [-]}
 
 \item{Volume}{volume of compartment}
 
@@ -34,13 +33,11 @@ k_Runoff(
 
 \item{penetration_depth_s}{assumed penetration depth from Hollander et al. (2007), see f_CORRsoil [m]}
 
-\item{ScaleName}{considered ScaleName}
-
 \item{SpeciesName}{considered species}
 
 \item{Matrix}{type of supcompartment}
 
-\item{FracROWatComp}{fraction of water component runoff can flow to [-]}
+\item{ScaleName}{considered ScaleName}
 
 \item{SubCompartName}{subcompartment considered}
 

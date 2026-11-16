@@ -4,7 +4,7 @@
 \alias{Ksdcompw}
 \title{Dimensionless sed/water PARTITION COEFFICIENT for molecular species specific to sediment compartment}
 \usage{
-Ksdcompw(FRACw, FRACs, Kp, all.rhoMatrix, Matrix)
+Ksdcompw(FRACw, FRACs, Kp, rhoMatrix, Matrix, parent, ScaleName)
 }
 \arguments{
 \item{FRACw}{fraction of water in compartment [-]}
@@ -13,9 +13,9 @@ Ksdcompw(FRACw, FRACs, Kp, all.rhoMatrix, Matrix)
 
 \item{Kp}{general sediment water partitioning coefficient [-]}
 
-\item{Matrix}{type of compartment considered}
-
 \item{rhoMatrix}{density of the matrix [kg m-3]}
+
+\item{Matrix}{type of compartment considered}
 }
 \value{
 Ksdcompw

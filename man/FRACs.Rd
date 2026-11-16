@@ -4,7 +4,7 @@
 \alias{FRACs}
 \title{FRACs}
 \usage{
-FRACs(subFRACa, subFRACw, subFRACs, Matrix)
+FRACs(subFRACa, subFRACw, subFRACs, Matrix, parent, ScaleName)
 }
 \arguments{
 \item{subFRACa}{fraction of air in a non-air subcompartment [-]}

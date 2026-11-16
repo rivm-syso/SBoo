@@ -4,16 +4,16 @@
 \alias{AreaLand}
 \title{AreaLand}
 \usage{
-AreaLand(all.TotalArea, all.FRACsea, ScaleName)
+AreaLand(TotalArea, FRACsea, ScaleName)
 }
 \arguments{
+\item{ScaleName}{indicating for which scale the function is called}
+
 \item{all.TotalArea}{total AREA of Scale, possibly including other scales,
 hence the all. It uses nesting to compute the final value.}
 
 \item{all.FRACsea}{sea fraction of scale, possibly including other scales,
 hence the all. It uses nesting to compute the final value.}
-
-\item{ScaleName}{indicating for which scale the function is called}
 }
 \value{
 Land in SystemArea

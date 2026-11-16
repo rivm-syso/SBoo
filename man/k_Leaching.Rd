@@ -11,7 +11,8 @@ k_Leaching(
   VertDistance,
   SpeciesName,
   penetration_depth_s,
-  Kscompw
+  Kscompw,
+  parent
 )
 }
 \arguments{

@@ -4,7 +4,7 @@
 \alias{Tempfactor}
 \title{Temperature correction degradation rate water/sed/soil}
 \usage{
-Tempfactor(Q.10, Temp, T25, Ea.OHrad, Matrix, SpeciesName)
+Tempfactor(Q.10, Temp, T25, Ea.OHrad, Matrix, SpeciesName, parent, ScaleName)
 }
 \arguments{
 \item{Q.10}{Degradation rate increase factor per  10 C [-]}

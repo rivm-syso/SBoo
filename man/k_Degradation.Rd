@@ -15,11 +15,9 @@ k_Degradation(
   BACTcomp,
   Matrix,
   SpeciesName,
-  SubCompartName,
-  ScaleName,
   Test,
-  kdis = NA,
-  Regional_and_Continental_deepocean
+  kdis = dataframe(),
+  parent
 )
 }
 \arguments{

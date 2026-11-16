@@ -7,12 +7,14 @@
 k_Desorption(
   Ksdcompw,
   MTC_2w,
-  to.MTC_2sd,
+  MTC_2sd,
   VertDistance,
   SpeciesName,
   to.SubCompartName,
+  SubCompartName,
   ScaleName,
-  Test
+  Test,
+  parent
 )
 }
 \arguments{
@@ -20,17 +22,17 @@ k_Desorption(
 
 \item{MTC_2w}{partial mass transfer coefficient to water, see MTC_2w [m s-1]}
 
+\item{MTC_2sd}{partial mass transfer coefficient to sediment, see MTC_2sd [m s-1]}
+
 \item{VertDistance}{vertical distance of compartment [m]}
 
 \item{SpeciesName}{name of the species considered}
 
+\item{SubCompartName}{subcompartment considered}
+
 \item{ScaleName}{scale considered}
 
 \item{Test}{Test = TRUE mimics SB4 in Excel version, Test = FALSE includes SB enhancements}
-
-\item{MTC_2sd}{partial mass transfer coefficient to sediment, see MTC_2sd [m s-1]}
-
-\item{SubCompartName}{subcompartment considered}
 }
 \value{
 Desorption rate constant from sediment to water [s-1]

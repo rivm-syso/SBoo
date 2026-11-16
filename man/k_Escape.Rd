@@ -4,7 +4,7 @@
 \alias{k_Escape}
 \title{escape}
 \usage{
-k_Escape(t_half_Escape, to.SubCompartName, from.SubCompartName)
+k_Escape(t_half_Escape, parent)
 }
 \arguments{
 \item{t_half_Escape}{Half life time in air [s]}

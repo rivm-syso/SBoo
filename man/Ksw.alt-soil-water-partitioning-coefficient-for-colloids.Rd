@@ -5,10 +5,12 @@
 \alias{Ksw.alt}
 \title{Ksw.alt}
 \usage{
-Ksw.alt(KocAltDorC, CorgStandard, all.rhoMatrix)
+Ksw.alt(KocAltDorC, CorgStandard, rhoMatrix)
 }
 \arguments{
 \item{CorgStandard}{Standard mass FRACTION organic carbon in soil/sediment [-]}
+
+\item{rhoMatrix}{density of the matrix [kg/m3]}
 
 \item{ChemClass}{Class of chemical, see QSAR table (REACH, 2012)}
 
@@ -17,8 +19,6 @@ Ksw.alt(KocAltDorC, CorgStandard, all.rhoMatrix)
 \item{a}{see QSAR table}
 
 \item{b}{see QSAR table}
-
-\item{rhoMatrix}{density of the matrix [kg/m3]}
 
 \item{pKa}{Dissociation constant of (conjugated) acid (default = 7}
 

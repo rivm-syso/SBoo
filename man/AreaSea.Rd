@@ -4,16 +4,16 @@
 \alias{AreaSea}
 \title{AreaSea}
 \usage{
-AreaSea(all.TotalArea, all.FRACsea, ScaleName)
+AreaSea(TotalArea, FRACsea, ScaleName)
 }
 \arguments{
+\item{ScaleName}{name of the scale of the box}
+
 \item{all.TotalArea}{total AREA of Scale, possibly including other scales,
 hence the all. It uses nesting to compute the final value.}
 
 \item{all.FRACsea}{sea fraction of scale, possibly including other scales,
 hence the all. It uses nesting to compute the final value.}
-
-\item{ScaleName}{name of the scale of the box}
 }
 \value{
 Area of Sea for scale with name ScaleName

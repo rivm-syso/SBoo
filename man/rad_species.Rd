@@ -18,7 +18,8 @@ rad_species(
   Intermediate_side,
   Longest_side,
   Shape,
-  Regional_and_Continental_deepocean
+  Regional_and_Continental_deepocean,
+  parent
 )
 }
 \arguments{

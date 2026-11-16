@@ -7,47 +7,56 @@
 Initializes processes with their from and to dimensions
 }
 \section{Super class}{
-\code{\link[sboo:CalcGraphModule]{sboo::CalcGraphModule}} -> \code{ProcessModule}
+\code{\link[sboo:CalcGraphModule]{CalcGraphModule}} -> \code{ProcessModule}
+}
+\section{Active bindings}{
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{FromAndTo}}{used for processes and flows; from which state(box) to what other state}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-ProcessModule-execute}{\code{ProcessModule$execute()}}
-\item \href{#method-ProcessModule-clone}{\code{ProcessModule$clone()}}
+  \itemize{
+    \item \href{#method-ProcessModule-execute}{\code{ProcessModule$execute()}}
+    \item \href{#method-ProcessModule-clone}{\code{ProcessModule$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>sboo::CalcGraphModule$fetch_current()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="initialize"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-initialize'><code>sboo::CalcGraphModule$initialize()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="fetch_current"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-fetch_current'><code>CalcGraphModule$fetch_current()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="sboo" data-topic="CalcGraphModule" data-id="initialize"><a href='../../sboo/html/CalcGraphModule.html#method-CalcGraphModule-initialize'><code>CalcGraphModule$initialize()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ProcessModule-execute"></a>}}
 \if{latex}{\out{\hypertarget{method-ProcessModule-execute}{}}}
-\subsection{Method \code{execute()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProcessModule$execute(debugAt = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{ProcessModule$execute()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProcessModule$execute(debugAt = NULL)}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ProcessModule-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-ProcessModule-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProcessModule$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{ProcessModule$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProcessModule$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }
