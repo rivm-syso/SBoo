@@ -259,6 +259,16 @@ SBcore <- R6::R6Class("SBcore",
       private$solver$PrepKaasM()
     },
     
+    #'@description Export reactive values from private$myReactiveDAG and kaas  
+    exportDAGk = function(RDSfile){
+      kaas <- self$UpdateKaas()
+      listAllReactvs <- private$myReactiveDAG$list_all_data(nodes_only = T)
+      fileExist <- file.exists(RDSfile)
+      dirExist <- dir.exists(dirname(RDSfile))
+      if (!dirExist) stop("no such folder (in exportDAGk)")
+      saveRDS(c(listAllReactvs, list(kaas = kaas)), file = RDSfile)
+    },
+    
     #'@description Save the last calculated masses in the core
     K_matrix = function(){
       #browser()

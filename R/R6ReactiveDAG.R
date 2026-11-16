@@ -63,6 +63,24 @@ ReactiveDAG <- R6::R6Class(
       } else {
         stop("Unknown dependency: ", name, call. = FALSE)
       }
+    },
+    
+    list_all_data = function(nodes_only = F) {
+      if (nodes_only) {
+        vars_in_DAG <- names(self$nodes)
+      } else {
+        vars_in_DAG <- self$knowns
+      }
+      list_of_data <- list()
+      for (v_ar in vars_in_DAG) {
+        v_arvalue <- self$get_value(v_ar)
+        if (any(class(v_arvalue) %in% c("numeric", "data.frame"))) {
+          list_of_data[[v_ar]] <- v_arvalue
+        } else {# indicate other type, no values
+          list_of_data[[v_ar]] <- class(v_ar)
+        }
+      }
+      return(list_of_data)
     }
   ),
   
